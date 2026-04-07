@@ -27,7 +27,6 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
     _controller = PageController(initialPage: currentIndex);
   }
 
-
   bool _isVideo(String url) {
     final lower = url.toLowerCase();
     return lower.endsWith('.mp4') ||

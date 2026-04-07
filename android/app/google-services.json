@@ -1,0 +1,105 @@
+{
+  "project_info": {
+    "project_number": "599203249787",
+    "project_id": "maamaas-3c567",
+    "storage_bucket": "maamaas-3c567.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599203249787:android:a1c0bb6334418145dd6cde",
+        "android_client_info": {
+          "package_name": "com.example.delivery_partner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8xMDdg7cjxhBugci5CkJXWptPRjq_ebQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599203249787:android:04e1931ecbcbc1c2dd6cde",
+        "android_client_info": {
+          "package_name": "com.food.appmaamaas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8xMDdg7cjxhBugci5CkJXWptPRjq_ebQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599203249787:android:67e418c447726c95dd6cde",
+        "android_client_info": {
+          "package_name": "com.maamaas.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8xMDdg7cjxhBugci5CkJXWptPRjq_ebQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599203249787:android:95f96a55da52d306dd6cde",
+        "android_client_info": {
+          "package_name": "com.maamaas.enterprise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8xMDdg7cjxhBugci5CkJXWptPRjq_ebQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599203249787:android:7e9e72b96ae44ff6dd6cde",
+        "android_client_info": {
+          "package_name": "com.maamaas.partner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8xMDdg7cjxhBugci5CkJXWptPRjq_ebQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

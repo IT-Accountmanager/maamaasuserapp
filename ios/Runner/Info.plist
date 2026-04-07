@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+   <!-- App Info -->
+   <key>CFBundleDisplayName</key>
+   <string>Maamaas App</string>
+   <key>CFBundleExecutable</key>
+   <string>$(EXECUTABLE_NAME)</string>
+   <key>CFBundleIdentifier</key>
+   <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+   <key>CFBundleVersion</key>
+   <string>$(FLUTTER_BUILD_NUMBER)</string>
+   <key>CFBundleShortVersionString</key>
+   <string>$(FLUTTER_BUILD_NAME)</string>
+   <key>LSRequiresIPhoneOS</key>
+   <true/>
+
+
+   <!-- Flutter background modes -->
+   <key>UIBackgroundModes</key>
+   <array>
+       <string>remote-notification</string>
+   </array>
+
+
+   <!-- Orientation -->
+   <key>UISupportedInterfaceOrientations</key>
+   <array>
+       <string>UIInterfaceOrientationPortrait</string>
+       <string>UIInterfaceOrientationLandscapeLeft</string>
+       <string>UIInterfaceOrientationLandscapeRight</string>
+   </array>
+   <key>UISupportedInterfaceOrientations~ipad</key>
+   <array>
+       <string>UIInterfaceOrientationPortrait</string>
+       <string>UIInterfaceOrientationPortraitUpsideDown</string>
+       <string>UIInterfaceOrientationLandscapeLeft</string>
+       <string>UIInterfaceOrientationLandscapeRight</string>
+   </array>
+
+
+   <!-- Permissions -->
+
+
+   <!-- Location -->
+   <key>NSLocationWhenInUseUsageDescription</key>
+   <string>We use your location to show nearby restaurants, grocery stores, and delivery services near you.</string>
+
+
+   <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+   <string>Your location helps us provide accurate nearby services and delivery options even when the app is in the background.</string>
+
+
+   <!-- Notifications -->
+   <key>NSUserNotificationUsageDescription</key>
+   <string>We use notifications to update you about your orders, offers, and app updates.</string>
+
+
+   <!-- Camera / Photos -->
+   <key>NSCameraUsageDescription</key>
+   <string>We may use your camera to scan QR codes or upload images for orders and profiles.</string>
+
+
+   <key>NSPhotoLibraryUsageDescription</key>
+   <string>We may use your photo library to upload images for orders and profiles.</string>
+
+
+   <!-- Microphone (if needed) -->
+   <key>NSMicrophoneUsageDescription</key>
+   <string>We may use your microphone for audio input, if required.</string>
+
+
+   <!-- Contacts (if needed) -->
+   <key>NSContactsUsageDescription</key>
+   <string>We may use your contacts to share referral codes or invite friends.</string>
+
+
+   <!-- Tracking (for ads, optional) -->
+   <key>NSUserTrackingUsageDescription</key>
+   <string>We use tracking to show relevant ads and promotions.</string>
+
+
+   <!-- Launch / Status -->
+   <key>UILaunchStoryboardName</key>
+   <string>LaunchScreen</string>
+   <key>UIViewControllerBasedStatusBarAppearance</key>
+   <false/>
+   <key>CADisableMinimumFrameDurationOnPhone</key>
+   <true/>
+   <key>UIApplicationSupportsIndirectInputEvents</key>
+   <true/>
+</dict>
+</plist>
+
