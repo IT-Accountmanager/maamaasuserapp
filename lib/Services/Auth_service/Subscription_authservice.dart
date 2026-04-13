@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Models/subscrptions/address_model.dart';
 
-import '../../Models/subscrptions/coupon_model.dart';
 import '../../Models/subscrptions/location_model.dart';
 import '../../Models/subscrptions/transaction_model.dart';
 import '../../Models/subscrptions/user_account.dart';
@@ -20,6 +19,90 @@ class subscription_AuthService {
   static final String baseUrlgateway =
       // "https://backend.maamaas.com/subscription";
       "http://testing.maamaas.com:8080/subscription";
+
+  Future<String> registerUser({
+    required String userName,
+    required String password,
+    required String emailId,
+    required String mobileNumber,
+    required String userType,
+    String? referralCodeUsed,
+    String? companyName,
+  }) async {
+    final Uri url = Uri.parse('$baseUrlgateway/api/user/registration');
+    final String localDateTime = DateTime.now().toLocal().toIso8601String();
+
+    final Map<String, dynamic> body = {
+      "userName": userName,
+      "password": password,
+      "emailId": emailId,
+      "mobileNumber": mobileNumber,
+      "role": "ROLE_USER",
+      "userType": userType,
+      "registeredTime": localDateTime,
+      "referralCodeUsed": referralCodeUsed,
+    };
+
+    if (userType == "PROFESSIONAL" &&
+        companyName != null &&
+        companyName.isNotEmpty) {
+      body["companyName"] = companyName;
+    }
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      // ✅ SUCCESS
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return "success";
+      }
+
+      // ❌ ERROR
+      try {
+        final errorJson = jsonDecode(response.body);
+        return errorJson["message"] ?? errorJson["error"] ?? "Signup failed";
+      } catch (_) {
+        return response.body;
+      }
+    } catch (e) {
+      return "Something went wrong. Please check your internet connection.";
+    }
+  }
+
+  Future<String> verifyOTP({
+    required String mobile,
+    required String otp,
+  }) async {
+    try {
+      final Uri url = Uri.parse(
+        '$baseUrlgateway/api/user/registration/verifyotp',
+      ).replace(queryParameters: {'mobile': mobile.trim(), 'otp': otp.trim()});
+
+      final response = await http.post(url);
+
+      // ✅ Success
+      if (response.statusCode == 200) {
+        return "success";
+      }
+
+      // ❌ Error
+      try {
+        final errorJson = jsonDecode(response.body);
+        return errorJson["message"] ??
+            errorJson["error"] ??
+            "OTP verification failed";
+      } catch (_) {
+        // backend returns plain text
+        return response.body;
+      }
+    } catch (e) {
+      return "Something went wrong. Please check your internet connection.";
+    }
+  }
 
   static Future<String> login({
     required String identifier,
@@ -113,90 +196,6 @@ class subscription_AuthService {
     }
   }
 
-  Future<String> registerUser({
-    required String userName,
-    required String password,
-    required String emailId,
-    required String mobileNumber,
-    required String userType,
-    String? referralCodeUsed,
-    String? companyName,
-  }) async {
-    final Uri url = Uri.parse('$baseUrlgateway/api/user/registration');
-    final String localDateTime = DateTime.now().toLocal().toIso8601String();
-
-    final Map<String, dynamic> body = {
-      "userName": userName,
-      "password": password,
-      "emailId": emailId,
-      "mobileNumber": mobileNumber,
-      "role": "ROLE_USER",
-      "userType": userType,
-      "registeredTime": localDateTime,
-      "referralCodeUsed": referralCodeUsed,
-    };
-
-    if (userType == "PROFESSIONAL" &&
-        companyName != null &&
-        companyName.isNotEmpty) {
-      body["companyName"] = companyName;
-    }
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
-
-      // ✅ SUCCESS
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return "success";
-      }
-
-      // ❌ ERROR
-      try {
-        final errorJson = jsonDecode(response.body);
-        return errorJson["message"] ?? errorJson["error"] ?? "Signup failed";
-      } catch (_) {
-        return response.body;
-      }
-    } catch (e) {
-      return "Something went wrong. Please check your internet connection.";
-    }
-  }
-
-  Future<String> verifyOTP({
-    required String mobile,
-    required String otp,
-  }) async {
-    try {
-      final Uri url = Uri.parse(
-        '$baseUrlgateway/api/user/registration/verifyotp',
-      ).replace(queryParameters: {'mobile': mobile.trim(), 'otp': otp.trim()});
-
-      final response = await http.post(url);
-
-      // ✅ Success
-      if (response.statusCode == 200) {
-        return "success";
-      }
-
-      // ❌ Error
-      try {
-        final errorJson = jsonDecode(response.body);
-        return errorJson["message"] ??
-            errorJson["error"] ??
-            "OTP verification failed";
-      } catch (_) {
-        // backend returns plain text
-        return response.body;
-      }
-    } catch (e) {
-      return "Something went wrong. Please check your internet connection.";
-    }
-  }
-
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
     final endpoint = '$baseUrlgateway/api/user/forget/password';
 
@@ -274,7 +273,6 @@ class subscription_AuthService {
         return [];
       }
     } catch (e) {
-      ;
       return [];
     }
   }
@@ -554,16 +552,78 @@ class subscription_AuthService {
       final userId = prefs.getInt("userId") ?? 0;
       final url = "$baseUrlgateway/api/user/get/current/location/$userId";
 
+      print("🌐 GET URL: $url");
+
       var response = await http.get(Uri.parse(url));
 
-      if (response.statusCode == 200) {
+      print("📥 STATUS: ${response.statusCode}");
+      print("📥 BODY: ${response.body}");
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
         final jsonData = jsonDecode(response.body);
         return UserLocationModel.fromJson(jsonData);
       } else {
         return null;
       }
     } catch (e) {
+      print("❌ FETCH ERROR: $e");
       return null;
+    }
+  }
+
+  static Future<UserAccount?> getAccount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userId');
+
+    if (userId == null) {
+      return null;
+    }
+
+    final response = await ApiClient.get(
+      "api/user/account/get/$userId",
+      service: "subscription",
+    );
+
+    if (response.statusCode == 200) {
+      return UserAccount.fromJson(jsonDecode(response.body));
+    } else {
+      return null; // don't throw exception
+    }
+  }
+
+  static Future<bool> saveAccount(UserAccount account) async {
+    final endpoint = "api/user/account/save"; // POST endpoint
+
+    debugPrint("📤 [saveAccount] Request started");
+    debugPrint("➡️ Endpoint: $endpoint");
+    debugPrint("📦 Payload: ${account.toJson()}");
+
+    try {
+      final response = await ApiClient.post(
+        endpoint,
+        account.toJson(),
+        service: 'subscription',
+      );
+
+      debugPrint("📥 [saveAccount] Response received");
+      debugPrint("🔢 Status Code: ${response.request}");
+      debugPrint("🔢 Status Code: ${response.statusCode}");
+      debugPrint("📄 Response Body: ${response.body}");
+
+      final isSuccess =
+          response.statusCode == 200 || response.statusCode == 201;
+
+      debugPrint(
+        isSuccess ? "✅ Account saved successfully" : "❌ Failed to save account",
+      );
+
+      return isSuccess;
+    } catch (e, stackTrace) {
+      debugPrint("🚨 [saveAccount] Exception occurred");
+      debugPrint("❗ Error: $e");
+      debugPrint("🧵 StackTrace: $stackTrace");
+
+      return false;
     }
   }
 
@@ -610,36 +670,5 @@ class subscription_AuthService {
     }
 
     return true;
-  }
-
-  static Future<UserAccount?> getAccount() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userId');
-
-    if (userId == null) {
-      return null;
-    }
-
-    final response = await ApiClient.get(
-      "api/user/account/get/$userId",
-      service: "subscription",
-    );
-
-    if (response.statusCode == 200) {
-      return UserAccount.fromJson(jsonDecode(response.body));
-    } else {
-      return null; // don't throw exception
-    }
-  }
-
-  static Future<bool> saveAccount(UserAccount account) async {
-    final endpoint = "api/user/account/save"; // POST endpoint
-    final response = await ApiClient.post(
-      endpoint,
-      account.toJson(),
-      service: 'subscription',
-    );
-
-    return response.statusCode == 200 || response.statusCode == 201;
   }
 }

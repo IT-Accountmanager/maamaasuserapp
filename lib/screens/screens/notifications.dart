@@ -9,6 +9,7 @@ class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _NotificationScreenState createState() => _NotificationScreenState();
 }
 
@@ -59,7 +60,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> markSingleAsRead(String notifId) async {
-    final success = await NotificationService.markSingleNotificationRead(notifId);
+    final success = await NotificationService.markSingleNotificationRead(
+      notifId,
+    );
     if (success) {
       setState(() {
         final index = notifications.indexWhere((n) => n.id == notifId);
@@ -253,14 +256,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
               notifications.removeAt(index);
             });
 
-            final success = await NotificationService.deleteNotification(notif.id);
+            final success = await NotificationService.deleteNotification(
+              notif.id,
+            );
 
             if (success) {
-              AppAlert.success(context,  "Notification deleted");
+              // ignore: use_build_context_synchronously
+              AppAlert.success(context, "Notification deleted");
             } else {
               setState(() {
                 notifications.insert(index, deletedNotif);
               });
+              // ignore: use_build_context_synchronously
               AppAlert.error(context, "Failed to delete notification");
             }
           },

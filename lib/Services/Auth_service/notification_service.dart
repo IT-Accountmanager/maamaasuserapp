@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Models/subscrptions/notification_model.dart';
@@ -183,6 +182,7 @@ class NotificationService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
       } else {}
-    } catch (e, stackTrace) {}
+      // ignore: empty_catches
+    } catch (e) {}
   }
 }

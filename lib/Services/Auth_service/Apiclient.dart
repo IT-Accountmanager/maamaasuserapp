@@ -14,29 +14,26 @@ typedef SessionExpiredHandler = Future<void> Function();
 class ApiClient {
   static const String subscription =
       "http://testing.maamaas.com:8080/subscription";
-  // "https://backend.maamaas.com/subscription";
+      // "https://backend.maamaas.com/subscription";
   static const String food_beverages =
       "http://testing.maamaas.com:8080/food";
-  // "https://backend.maamaas.com/food";
+      // "https://backend.maamaas.com/food";
 
   static const String notification =
       "http://testing.maamaas.com:8080/notify";
-  // "https://backend.maamaas.com/notify";
+      // "https://delivery.maamaas.com/notify";
 
   static const String catering =
       "http://testing.maamaas.com:8080/catering";
-  // "https://backend.maamaas.com/catering";
+      // "https://backend.maamaas.com/catering";
 
   static const String delivery =
       "http://testing.maamaas.com:8080/delivery";
-  // "https://backend.maamaas.com/delivery";
-  static const String grocery =
-      "http://testing.maamaas.com:8080/groceries";
-  // "https://backend.maamaas.com/groceries";
+      // "https://delivery.maamaas.com/delivery";
 
   static const String promotions =
       "http://testing.maamaas.com:8080/promotions";
-  // "https://backend.maamaas.com/promotions";
+      // "https://backend.maamaas.com/promotions";
 
   static SessionExpiredHandler? onSessionExpired;
 
@@ -55,8 +52,7 @@ class ApiClient {
         return notification;
       case 'delivery':
         return delivery;
-      case 'grocery':
-        return grocery;
+
       case 'promotions':
         return promotions;
       default:
@@ -97,7 +93,6 @@ class ApiClient {
           if (error.response?.statusCode == 401 &&
               !error.requestOptions.path.contains("/auth/refresh") &&
               !error.requestOptions.path.contains("/auth/login")) {
-
             final newToken = await _safeRefresh();
 
             if (newToken != null) {
@@ -141,6 +136,7 @@ class ApiClient {
       Future.delayed(Duration.zero, () => _refreshCompleter = null);
     }
   }
+
   static bool _sessionHandled = false;
   static bool isGuestUser = false;
 
@@ -177,6 +173,7 @@ class ApiClient {
   static void resetSessionFlag() {
     _sessionHandled = false;
   }
+
   static Future<void> clearSession() async {
     await _secureStorage.deleteAll();
     final prefs = await SharedPreferences.getInstance();

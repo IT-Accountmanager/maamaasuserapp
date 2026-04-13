@@ -57,6 +57,7 @@ class _SignupState extends State<Signup> {
         // ignore: use_build_context_synchronously
         AppAlert.success(context, "Signup successful! Please verify OTP.");
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(
             builder: (context) => OTPVerificationPage(
@@ -65,6 +66,7 @@ class _SignupState extends State<Signup> {
           ),
         );
       } else {
+        // ignore: use_build_context_synchronously
         AppAlert.error(context, result);
       }
     }
@@ -121,7 +123,7 @@ class _SignupState extends State<Signup> {
                       // if (!RegExp(r'^[a-z0-9.]+@[a-z]+\.[a-z]+$').hasMatch(v))
                       //   return "Enter a valid email";
                       if (!RegExp(
-                          r'^[a-zA-Z0-9._%+-]+@(gmail|yahoo|outlook)\.(com|in|co\.in)$'
+                        r'^[a-zA-Z0-9._%+-]+@(gmail|yahoo|outlook)\.(com|in|co\.in)$',
                       ).hasMatch(v)) {
                         return "Only Gmail, Yahoo, Outlook (.com, .in, .co.in) allowed";
                       }
@@ -137,8 +139,9 @@ class _SignupState extends State<Signup> {
                     icon: Icons.person_outline_rounded,
                     validator: (v) {
                       if (v == null || v.isEmpty) return "Name is required";
-                      if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(v))
+                      if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(v)) {
                         return "Letters only";
+                      }
                       return null;
                     },
                   ),
@@ -152,8 +155,9 @@ class _SignupState extends State<Signup> {
                     type: TextInputType.phone,
                     validator: (v) {
                       if (v == null || v.isEmpty) return "Phone is required";
-                      if (!RegExp(r'^[0-9]{10}$').hasMatch(v))
+                      if (!RegExp(r'^[0-9]{10}$').hasMatch(v)) {
                         return "Enter a valid 10-digit number";
+                      }
                       return null;
                     },
                   ),
@@ -412,7 +416,7 @@ class _SignupState extends State<Signup> {
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () => launchUrl(
-                        Uri.parse("https://maamaas.com/privacy-policy"),
+                        Uri.parse("https://maamaas.com/privacy-policys"),
                       ),
                   ),
                   const TextSpan(text: " and "),
@@ -424,7 +428,7 @@ class _SignupState extends State<Signup> {
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () => launchUrl(
-                        Uri.parse("https://maamaas.com/privacy-policy"),
+                        Uri.parse("https://maamaas.com/privacy-policys"),
                       ),
                   ),
                 ],

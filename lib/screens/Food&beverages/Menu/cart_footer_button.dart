@@ -1,11 +1,10 @@
-import '../../main.dart';
-import '../../widgets/widgets/food/currentcart_notifier.dart';
-import '../../Services/Auth_service/food_authservice.dart';
-import '../Food&beverages/food_cartscreen.dart';
+import '../../../main.dart';
+import '../../../widgets/widgets/food/currentcart_notifier.dart';
+import '../../../Services/Auth_service/food_authservice.dart';
+import '../food_cartscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 
 // ignore: camel_case_types
 class food_Cart_count extends StatefulWidget {
@@ -35,7 +34,10 @@ class _OrderCartFooterState extends State<food_Cart_count>
       TweenSequenceItem(tween: Tween(begin: 1.06, end: 1.0), weight: 50),
     ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOut));
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCartData());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 500));
+      _loadCartData();
+    });
 
     // Animate whenever count changes
     CartNotifier.count.addListener(_onCountChange);
@@ -43,6 +45,8 @@ class _OrderCartFooterState extends State<food_Cart_count>
 
   void _onCountChange() {
     final newCount = CartNotifier.count.value;
+
+    debugPrint("🔵 Cart count changed → $newCount");
     if (newCount != _previousCount && newCount > 0) {
       _bounceCtrl.forward(from: 0);
       HapticFeedback.lightImpact();
@@ -59,9 +63,17 @@ class _OrderCartFooterState extends State<food_Cart_count>
   Future<void> _loadCartData() async {
     try {
       final count = await food_Authservice.fetchCartCount();
-      CartNotifier.count.value = count < 0 ? 0 : count;
+      final safeCount = count < 0 ? 0 : count;
+
+      debugPrint("🟣 API Cart Count → $count");
+
+      // ✅ Only update if server count is HIGHER than current optimistic count
+      // This prevents server lag from wiping out the optimistic UI update
+      if (safeCount > CartNotifier.count.value) {
+        CartNotifier.count.value = safeCount;
+      }
     } catch (e) {
-      debugPrint('Cart load error: $e');
+      debugPrint('❌ Cart load error: $e');
     }
   }
 
@@ -82,6 +94,8 @@ class _OrderCartFooterState extends State<food_Cart_count>
       child: ValueListenableBuilder<int>(
         valueListenable: CartNotifier.count,
         builder: (context, count, _) {
+          debugPrint("🟢 Cart widget rebuild → count: $count");
+
           final safeCount = count < 0 ? 0 : count;
           if (safeCount == 0) return const SizedBox.shrink();
 
@@ -91,6 +105,7 @@ class _OrderCartFooterState extends State<food_Cart_count>
               count: safeCount,
               savedAmount: widget.savedAmount ?? 0.0,
               onTap: () async {
+                debugPrint("🟡 Cart tapped → count: $safeCount");
                 HapticFeedback.mediumImpact();
                 await Navigator.push(
                   context,

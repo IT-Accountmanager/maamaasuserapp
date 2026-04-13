@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 
@@ -122,10 +121,12 @@ class Order {
   final OrderType orderType;
   final OrderStatus status;
   bool isRated;
+  final String feedback;
   final bool sheduled;
   final String deliveryAddress;
   final String deliveryUserName;
   final String mobileNo;
+  final int ratings;
 
   Order({
     required this.id,
@@ -160,6 +161,8 @@ class Order {
     required this.deliveryAddress,
     required this.deliveryUserName,
     required this.mobileNo,
+    required this.feedback,
+    required this.ratings,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -197,6 +200,8 @@ class Order {
       deliveryAddress: json['deliveryAddress']?.toString() ?? '',
       deliveryUserName: json['deliveryUserName'] ?? '',
       mobileNo: json['mobileNo'] ?? '',
+      feedback: json['feedback'] ?? '',
+      ratings: json['ratings'] ?? 0,
     );
   }
 
@@ -213,33 +218,6 @@ class Order {
     return DateTime.now();
   }
 
-  // static OrderStatus _parseOrderStatus(dynamic status) {
-  //   final s = status?.toString().toUpperCase() ?? '';
-  //   switch (s) {
-  //     case 'HOLD':
-  //       return OrderStatus.hold;
-  //     case 'PENDING':
-  //       return OrderStatus.pending;
-  //     case 'CONFIRMED':
-  //       return OrderStatus.confirmed;
-  //     case 'BEING_PREPARED':
-  //       return OrderStatus.beingPrepared;
-  //     case 'ORDER_IS_READY':
-  //       return OrderStatus.orderIsReady;
-  //     case 'WAITING_FOR_PICKUP':
-  //       return OrderStatus.waitingForPickup;
-  //     case 'ON_THE_WAY':
-  //       return OrderStatus.ontheway;
-  //     case 'DELIVERED':
-  //       return OrderStatus.completed;
-  //     case 'CANCELLED':
-  //       return OrderStatus.cancelled;
-  //
-  //     default:
-  //       return OrderStatus.unknown;
-  //   }
-  // }
-
   bool get isActive =>
       status == OrderStatus.hold ||
       status == OrderStatus.pending ||
@@ -248,10 +226,7 @@ class Order {
       status == OrderStatus.orderIsReady ||
       status == OrderStatus.waitingForPickup ||
       status == OrderStatus.ontheway;
-  Order copyWith({
-    OrderStatus? status,
-    bool? isRated,
-  }) {
+  Order copyWith({OrderStatus? status, bool? isRated}) {
     return Order(
       id: id,
       orderId: orderId,
@@ -285,6 +260,8 @@ class Order {
       deliveryAddress: deliveryAddress,
       deliveryUserName: deliveryUserName,
       mobileNo: mobileNo,
+      feedback: feedback,
+      ratings: ratings,
     );
   }
 }

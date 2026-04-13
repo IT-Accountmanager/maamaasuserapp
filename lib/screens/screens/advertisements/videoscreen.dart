@@ -913,12 +913,16 @@
 //   }
 // }
 
+import 'dart:math';
+
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/promotion_services_Authservice.dart';
 import '../../../Models/promotions_model/promotions_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../main.dart';
 import '../../../widgets/signinrequired.dart';
 import 'package:flutter/material.dart';
 import '../../foodmainscreen.dart';
@@ -926,30 +930,16 @@ import 'enquiryscreen.dart';
 import 'dart:async';
 import 'dart:io';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ReelsScreen — Production-ready
-// Fixes applied:
-//   1. Sound leak  — videos pause on deactivate, resume on activate (route cover/uncover)
-//   2. App-lifecycle leak — pauses when app goes to background, resumes on foreground
-//   3. Zombie controllers — fetch cancellation token prevents race-condition disposes
-//   4. Like UI bug — widget reads from campaigns[index] not captured `campaign` param
-//   5. _isPaused global state — resets to false on every page change
-//   6. Video re-play bug — dispose + re-init controller when revisiting a page
-//   7. Auto-scroll runs when screen is inactive — guarded by _isScreenActive flag
-//   8. Double analytics / double interest-set build — deduplicated
-//   9. No activate() counterpart to deactivate() — added
-//  10. WillPopScope → PopScope (Flutter 3.12+)
-//  11. Proper page-level pause-icon isolation
-// ─────────────────────────────────────────────────────────────────────────────
-
 class ReelsScreen extends StatefulWidget {
-  const ReelsScreen({super.key});
+  final int? campaignId;
+  const ReelsScreen({super.key, this.campaignId});
 
   @override
   ReelsScreenState createState() => ReelsScreenState();
 }
 
-class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
+class ReelsScreenState extends State<ReelsScreen>
+    with WidgetsBindingObserver, RouteAware {
   // ── Controllers ─────────────────────────────────────────────────────────────
   final PageController _pageController = PageController();
 
@@ -1007,6 +997,20 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
 
   // ── Lifecycle ────────────────────────────────────────────────────────────────
 
+  bool _isRefreshing = false;
+
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing) return;
+
+    _isRefreshing = true;
+
+    debugPrint("🔄 Pull-to-refresh triggered");
+
+    await _fetchCampaigns(); // reshuffle happens here
+
+    _isRefreshing = false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1014,8 +1018,6 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     _fetchCampaigns();
   }
 
-  /// Called when another route is pushed ON TOP of this screen
-  /// (e.g. enquiry form, detail screen, bottom-sheet).
   @override
   void deactivate() {
     _isScreenActive = false;
@@ -1024,8 +1026,6 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     super.deactivate();
   }
 
-  /// Called when this screen becomes the topmost route again
-  /// (e.g. user pops the screen that was on top).
   @override
   void activate() {
     super.activate();
@@ -1055,6 +1055,12 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _autoScrollTimer?.cancel();
@@ -1064,6 +1070,7 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     }
     _videoControllers.clear();
     _pageController.dispose();
+    routeObserver.unsubscribe(this);
     super.dispose();
   }
 
@@ -1097,6 +1104,24 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
   void _disposeController(int index) {
     final controller = _videoControllers.remove(index);
     controller?.dispose();
+  }
+
+  @override
+  void didPushNext() {
+    // 🔥 Another screen opened on top
+    _isScreenActive = false;
+    _autoScrollTimer?.cancel();
+    pauseAllVideos();
+  }
+
+  @override
+  void didPopNext() {
+    // 🔥 Returned to this screen
+    _isScreenActive = true;
+    if (!_isPaused) {
+      resumeCurrentVideo();
+    }
+    _startAutoScrollTimer();
   }
 
   /// Initialize (or re-initialize) the video for [index].
@@ -1139,6 +1164,7 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     if (_isScreenActive && !_isPaused) {
       controller.play();
     }
+    _sendAnalytics(index);
 
     _videoControllers[index] = controller;
 
@@ -1161,10 +1187,92 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
 
   // ── Data fetching ────────────────────────────────────────────────────────────
 
+  // Future<void> _fetchCampaigns() async {
+  //   if (!mounted) return;
+  //
+  //   // Increment token so any in-flight _initializeVideo calls become stale
+  //   final int token = ++_fetchToken;
+  //
+  //   setState(() => isLoading = true);
+  //
+  //   _autoScrollTimer?.cancel();
+  //   _imageDisplayTime.clear();
+  //
+  //   // Dispose ALL existing controllers before clearing the map
+  //   for (final c in _videoControllers.values) {
+  //     c.dispose();
+  //   }
+  //   _videoControllers.clear();
+  //
+  //   _currentPage = 0;
+  //   _isPaused = false;
+  //   _expandedDescriptions.clear();
+  //
+  //   // Reset page position (post-frame to avoid "hasClients = false" crash)
+  //   if (_pageController.hasClients) {
+  //     WidgetsBinding.instance.addPostFrameCallback((_) {
+  //       if (_pageController.hasClients) {
+  //         _pageController.jumpToPage(0);
+  //       }
+  //     });
+  //   }
+  //
+  //   try {
+  //     final result = await promotion_Authservice.fetchcampaign();
+  //
+  //     // Bail if a newer fetch was triggered while we awaited
+  //     if (!mounted || _fetchToken != token) return;
+  //
+  //     // ── Filter: base conditions ──────────────────────────────────────────
+  //     final baseCampaigns = result.where((c) {
+  //       return c.addDisplayPosition == AddDisplayPosition.ADD_SCREEN &&
+  //           c.medium == Medium.APP;
+  //     }).toList();
+  //
+  //     // ── Extract unique interests (only once) ─────────────────────────────
+  //     final Set<Interest> interestSet = {};
+  //     for (final c in baseCampaigns) {
+  //       if (c.interests != null) interestSet.addAll(c.interests!);
+  //     }
+  //     _allInterests = interestSet.toList();
+  //
+  //     // ── Apply interest filter ────────────────────────────────────────────
+  //     campaigns = baseCampaigns.where((c) {
+  //       if (_selectedInterest == null) return true;
+  //       return c.interests?.contains(_selectedInterest) ?? false;
+  //     }).toList();
+  //
+  //     // ── Seed liked state ─────────────────────────────────────────────────
+  //     _likedCampaigns.clear();
+  //     for (final c in campaigns) {
+  //       if (c.likedByCurrentUser == true) {
+  //         _likedCampaigns.add(c.campaignId);
+  //       }
+  //     }
+  //
+  //     _sentCampaignAnalytics.clear();
+  //     _videoStartTime = campaigns.isNotEmpty ? DateTime.now() : null;
+  //
+  //     // Initialize first video
+  //     if (campaigns.isNotEmpty) {
+  //       await _initializeVideo(0, token: token);
+  //     }
+  //
+  //     if (!mounted || _fetchToken != token) return;
+  //
+  //     _startAutoScrollTimer();
+  //   } catch (e) {
+  //     debugPrint('❌ Campaign API Error: $e');
+  //   } finally {
+  //     if (mounted && _fetchToken == token) {
+  //       setState(() => isLoading = false);
+  //     }
+  //   }
+  // }
+
   Future<void> _fetchCampaigns() async {
     if (!mounted) return;
 
-    // Increment token so any in-flight _initializeVideo calls become stale
     final int token = ++_fetchToken;
 
     setState(() => isLoading = true);
@@ -1172,7 +1280,7 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     _autoScrollTimer?.cancel();
     _imageDisplayTime.clear();
 
-    // Dispose ALL existing controllers before clearing the map
+    // Dispose all video controllers
     for (final c in _videoControllers.values) {
       c.dispose();
     }
@@ -1182,7 +1290,6 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     _isPaused = false;
     _expandedDescriptions.clear();
 
-    // Reset page position (post-frame to avoid "hasClients = false" crash)
     if (_pageController.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_pageController.hasClients) {
@@ -1194,29 +1301,33 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     try {
       final result = await promotion_Authservice.fetchcampaign();
 
-      // Bail if a newer fetch was triggered while we awaited
       if (!mounted || _fetchToken != token) return;
 
-      // ── Filter: base conditions ──────────────────────────────────────────
+      // ── STEP 1: Base filter ───────────────────────────────
       final baseCampaigns = result.where((c) {
         return c.addDisplayPosition == AddDisplayPosition.ADD_SCREEN &&
             c.medium == Medium.APP;
       }).toList();
 
-      // ── Extract unique interests (only once) ─────────────────────────────
+      // ── STEP 2: Extract interests ─────────────────────────
       final Set<Interest> interestSet = {};
       for (final c in baseCampaigns) {
-        if (c.interests != null) interestSet.addAll(c.interests!);
+        if (c.interests != null) {
+          interestSet.addAll(c.interests!);
+        }
       }
       _allInterests = interestSet.toList();
 
-      // ── Apply interest filter ────────────────────────────────────────────
+      // ── STEP 3: Apply interest filter ─────────────────────
       campaigns = baseCampaigns.where((c) {
         if (_selectedInterest == null) return true;
         return c.interests?.contains(_selectedInterest) ?? false;
       }).toList();
 
-      // ── Seed liked state ─────────────────────────────────────────────────
+      // ── STEP 4: 🔥 RANDOMIZE ORDER ────────────────────────
+      campaigns.shuffle(Random(DateTime.now().millisecondsSinceEpoch));
+
+      // ── STEP 5: Seed liked state ─────────────────────────
       _likedCampaigns.clear();
       for (final c in campaigns) {
         if (c.likedByCurrentUser == true) {
@@ -1227,9 +1338,10 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
       _sentCampaignAnalytics.clear();
       _videoStartTime = campaigns.isNotEmpty ? DateTime.now() : null;
 
-      // Initialize first video
+      // ── STEP 6: Init first video ─────────────────────────
       if (campaigns.isNotEmpty) {
         await _initializeVideo(0, token: token);
+        _sendAnalytics(0);
       }
 
       if (!mounted || _fetchToken != token) return;
@@ -1244,17 +1356,37 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     }
   }
 
+  void setScreenActive(bool active) {
+    _isScreenActive = active;
+
+    if (!active) {
+      debugPrint("⛔ Reels paused (tab hidden)");
+      _autoScrollTimer?.cancel();
+      pauseAllVideos();
+    } else {
+      debugPrint("▶️ Reels resumed (tab visible)");
+      if (!_isPaused) {
+        resumeCurrentVideo();
+        _startAutoScrollTimer();
+      }
+    }
+  }
+
   // ── Auto-scroll timer ────────────────────────────────────────────────────────
 
   void _startAutoScrollTimer() {
     _autoScrollTimer?.cancel();
 
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      // FIX 4/7: Don't advance when screen is inactive or user has paused
-      if (!mounted || !_isScreenActive || _isPaused) return;
+      if (!mounted || !_isScreenActive || _isPaused) {
+        debugPrint("⛔ Timer blocked (inactive screen)");
+        return;
+      }
+
       if (campaigns.isEmpty || _currentPage >= campaigns.length) return;
 
       final campaign = campaigns[_currentPage];
+
       if ((campaign.mediaType ?? '').toLowerCase() == 'image') {
         _imageDisplayTime[_currentPage] =
             (_imageDisplayTime[_currentPage] ?? 0) + 1;
@@ -1264,7 +1396,6 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
         if (elapsed == 4) _sendAnalytics(_currentPage);
         if (elapsed >= 5) _nextPage();
       }
-      // Videos auto-advance via their addListener (video-end detection above)
     });
   }
 
@@ -1318,15 +1449,77 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     };
   }
 
+  // Future<void> _sendAnalytics(int index) async {
+  //   if (campaigns.isEmpty || index >= campaigns.length) return;
+  //   final campaign = campaigns[index];
+  //   if (_sentCampaignAnalytics.contains(campaign.campaignId)) return;
+  //   _sentCampaignAnalytics.add(
+  //     campaign.campaignId,
+  //   ); // mark first to prevent double-send
+  //
+  //   // Optimistic UI update
+  //   if (mounted) {
+  //     setState(() {
+  //       campaigns[index].viewedByCurrentUser = true;
+  //       campaigns[index].viewsCount = (campaigns[index].viewsCount ?? 0) + 1;
+  //     });
+  //   }
+  //
+  //   final isVideoMedia = isVideo(campaign.imageUrl);
+  //   final duration = _calculateWatchDuration(index);
+  //   final scrollDepth = isVideoMedia
+  //       ? _calculateScrollDepth(index)
+  //       : _calculateImageScrollDepth(index);
+  //
+  //   final payload = await _buildPayload(campaign.campaignId);
+  //   payload.addAll({
+  //     'distanceKm': 0,
+  //     'durationSeconds': duration,
+  //     'scrollDepthPercent': scrollDepth.clamp(0, 100).toInt(),
+  //   });
+  //
+  //   try {
+  //     await promotion_Authservice.sendViewAnalytics(payload);
+  //     debugPrint('✅ Analytics sent: $payload');
+  //   } catch (e) {
+  //     // If API fails, remove from sent-set so it can retry next time
+  //     _sentCampaignAnalytics.remove(campaign.campaignId);
+  //     debugPrint('❌ Analytics error: $e');
+  //   }
+  // }
   Future<void> _sendAnalytics(int index) async {
+    // 🔥 ADD THIS
+    if (!_isScreenActive || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    if (!_isScreenActive) {
+      debugPrint("⛔ Analytics blocked (screen inactive)");
+      return;
+    }
     if (campaigns.isEmpty || index >= campaigns.length) return;
-    final campaign = campaigns[index];
-    if (_sentCampaignAnalytics.contains(campaign.campaignId)) return;
-    _sentCampaignAnalytics.add(
-      campaign.campaignId,
-    ); // mark first to prevent double-send
 
-    // Optimistic UI update
+    final campaign = campaigns[index];
+
+    if (_sentCampaignAnalytics.contains(campaign.campaignId)) {
+      debugPrint("⚠️ Already sent for campaign ${campaign.campaignId}");
+      return;
+    }
+
+    if (campaigns.isEmpty || index >= campaigns.length) {
+      debugPrint("⚠️ Invalid index or empty campaigns");
+      return;
+    }
+
+    if (_sentCampaignAnalytics.contains(campaign.campaignId)) {
+      debugPrint("⚠️ Already sent for campaign ${campaign.campaignId}");
+      return;
+    }
+
+    debugPrint("🚀 Sending analytics for index: $index");
+    debugPrint("🎯 Campaign ID: ${campaign.campaignId}");
+
+    _sentCampaignAnalytics.add(campaign.campaignId);
+
     if (mounted) {
       setState(() {
         campaigns[index].viewedByCurrentUser = true;
@@ -1341,22 +1534,27 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
         : _calculateImageScrollDepth(index);
 
     final payload = await _buildPayload(campaign.campaignId);
+
+    debugPrint("📦 Base Payload: $payload");
+
     payload.addAll({
       'distanceKm': 0,
       'durationSeconds': duration,
       'scrollDepthPercent': scrollDepth.clamp(0, 100).toInt(),
     });
 
+    debugPrint("📦 Final Payload: $payload");
+
     try {
+      debugPrint("📡 Calling API...");
       await promotion_Authservice.sendViewAnalytics(payload);
-      debugPrint('✅ Analytics sent: $payload');
-    } catch (e) {
-      // If API fails, remove from sent-set so it can retry next time
+      debugPrint("✅ Analytics API SUCCESS");
+    } catch (e, s) {
       _sentCampaignAnalytics.remove(campaign.campaignId);
-      debugPrint('❌ Analytics error: $e');
+      debugPrint("❌ Analytics FAILED: $e");
+      debugPrint("📚 Stack: $s");
     }
   }
-
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   bool isVideo(String? url) {
@@ -1388,33 +1586,54 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
               ? const Center(child: CircularProgressIndicator())
               : campaigns.isEmpty
               ? _buildEmptyState()
-              : PageView.builder(
-                  scrollDirection: Axis.vertical,
-                  controller: _pageController,
-                  itemCount: campaigns.length,
-                  onPageChanged: (index) async {
-                    // Send analytics for the page we're LEAVING
-                    final leaving = _currentPage;
-                    _sendAnalytics(leaving); // fire-and-forget, intentional
+              : Stack(
+                  children: [
+                    NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        if (notification is OverscrollNotification) {
+                          if (_currentPage == 0 &&
+                              notification.overscroll < 0) {
+                            _handleRefresh();
+                          }
+                        }
+                        return false;
+                      },
+                      child: PageView.builder(
+                        scrollDirection: Axis.vertical,
+                        controller: _pageController,
+                        itemCount: campaigns.length,
+                        onPageChanged: (index) async {
+                          final leaving = _currentPage;
+                          _sendAnalytics(leaving);
 
-                    // Stop the leaving page's video
-                    _stopVideo(leaving);
+                          _stopVideo(leaving);
 
-                    // FIX 5: Reset per-page state on every page change
-                    _isPaused = false;
-                    _showPauseIcon = false;
+                          _isPaused = false;
+                          _showPauseIcon = false;
 
-                    _currentPage = index;
-                    _videoStartTime = DateTime.now();
+                          _currentPage = index;
+                          _videoStartTime = DateTime.now();
 
-                    // Initialize the new page's video
-                    await _initializeVideo(index, token: _fetchToken);
-                  },
-                  itemBuilder: (_, index) {
-                    // FIX 3: Always read from campaigns[index], never from
-                    //         a captured `campaign` closure variable.
-                    return _buildMediaItem(index);
-                  },
+                          await _initializeVideo(index, token: _fetchToken);
+                          _sendAnalytics(index);
+                        },
+                        itemBuilder: (_, index) {
+                          return _buildMediaItem(index);
+                        },
+                      ),
+                    ),
+
+                    // 🔥 Optional: Top Loader UI
+                    if (_isRefreshing)
+                      const Positioned(
+                        top: 40,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        ),
+                      ),
+                  ],
                 ),
         ),
       ),
@@ -1763,6 +1982,39 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
     );
   }
 
+  Future<String> createDynamicLink(int campaignId) async {
+    try {
+      final params = DynamicLinkParameters(
+        uriPrefix: 'https://maamaas.page.link',
+        link: Uri.parse('https://maamaas.com/campaign?id=$campaignId'),
+        androidParameters: const AndroidParameters(
+          packageName: 'com.maamaas.app',
+        ),
+        iosParameters: const IOSParameters(bundleId: 'com.maamaas.app'),
+      );
+
+      final shortLink = await FirebaseDynamicLinks.instance.buildShortLink(
+        params,
+      );
+
+      return shortLink.shortUrl.toString();
+    } catch (e) {
+      debugPrint("⚠️ Short link failed, using long link");
+
+      final fallback = await FirebaseDynamicLinks.instance.buildLink(
+        DynamicLinkParameters(
+          uriPrefix: 'https://maamaas.page.link',
+          link: Uri.parse('https://maamaas.com/campaign?id=$campaignId'),
+          androidParameters: const AndroidParameters(
+            packageName: 'com.maamaas.app',
+          ),
+        ),
+      );
+
+      return fallback.toString();
+    }
+  }
+
   // ── Share button ─────────────────────────────────────────────────────────────
 
   Widget _buildShareButton(int index, Campaign campaign) {
@@ -1770,24 +2022,45 @@ class ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
       children: [
         IconButton(
           icon: const Icon(Icons.share, color: Colors.white, size: 30),
+          // onPressed: () async {
+          //   final appLink = Platform.isAndroid
+          //       ? 'https://play.google.com/store/apps/details?id=com.maamaas.app'
+          //       : Platform.isIOS
+          //       ? 'https://apps.apple.com/us/app/maamaas/id6759244693'
+          //       : 'https://maamaas.com';
+          //   final dynamicLink = await createDynamicLink(campaign.campaignId);
+          //
+          //   final message =
+          //       '🔥 Check this campaign!\n\n'
+          //       '📲 Open in App: $dynamicLink';
+          //
+          //   await Share.share(message);
+          //
+          //   final payload = await _buildPayload(campaign.campaignId);
+          //   try {
+          //     await promotion_Authservice.sendShareAnalytics(payload);
+          //   } catch (e) {
+          //     debugPrint('❌ Share analytics error: $e');
+          //   }
+          //
+          //   if (mounted && index < campaigns.length) {
+          //     setState(() {
+          //       campaigns[index].sharesCount =
+          //           (campaigns[index].sharesCount ?? 0) + 1;
+          //     });
+          //   }
+          // },
           onPressed: () async {
-            final appLink = Platform.isAndroid
-                ? 'https://play.google.com/store/apps/details?id=com.maamaas.app'
-                : Platform.isIOS
-                ? 'https://apps.apple.com/us/app/maamaas/id6759244693'
-                : 'https://maamaas.com';
-
-            final campaignLink =
-                'https://maamaas.com/campaign?id=${campaign.campaignId}';
+            final dynamicLink = await createDynamicLink(campaign.campaignId);
 
             final message =
                 '🔥 Check this campaign!\n\n'
-                '📲 Download App: $appLink\n'
-                '🔗 View Campaign: $campaignLink';
-
+                '👉 $dynamicLink';
+            debugPrint("Generated Link: $dynamicLink");
             await Share.share(message);
 
             final payload = await _buildPayload(campaign.campaignId);
+
             try {
               await promotion_Authservice.sendShareAnalytics(payload);
             } catch (e) {

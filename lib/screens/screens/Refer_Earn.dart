@@ -403,7 +403,6 @@
 //   }
 // }
 
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -412,7 +411,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../Models/subscrptions/user_account.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/scaffoldmessenger/messenger.dart';
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
 
 // ─── Tokens ────────────────────────────────────────────────────────────────
 
@@ -422,7 +420,6 @@ const _kPrimaryDark = Color(0xFF5A3DD8);
 const _kSurface = Color(0xFFF8F7FF);
 const _kTextDark = Color(0xFF1A1A2E);
 const _kTextMid = Color(0xFF6B6B8A);
-const _kTextLight = Color(0xFFAAABC4);
 const _kDivider = Color(0xFFECEBF5);
 const _kSuccess = Color(0xFF22C55E);
 
@@ -448,8 +445,11 @@ class ReferEarn extends StatelessWidget {
               borderRadius: BorderRadius.circular(10.r),
               border: Border.all(color: _kDivider),
             ),
-            child: Icon(Icons.arrow_back_ios_new_rounded,
-                size: 16.sp, color: _kTextDark),
+            child: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 16.sp,
+              color: _kTextDark,
+            ),
           ),
         ),
         title: Text(
@@ -557,16 +557,20 @@ class _ErrorState extends StatelessWidget {
                 color: const Color(0xFFFEF2F2),
                 shape: BoxShape.circle,
               ),
-              child:
-              Icon(Icons.wifi_off_rounded, size: 28.sp, color: Colors.red),
+              child: Icon(
+                Icons.wifi_off_rounded,
+                size: 28.sp,
+                color: Colors.red,
+              ),
             ),
             SizedBox(height: 12.h),
             Text(
               'Could not load referral code',
               style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w600,
-                  color: _kTextDark),
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w600,
+                color: _kTextDark,
+              ),
             ),
             SizedBox(height: 4.h),
             Text(
@@ -598,7 +602,7 @@ class _Content extends StatelessWidget {
         : 'https://play.google.com/store/apps/details?id=com.maamaas.app';
     Share.share(
       '🎉 Join Maamaas using my referral code: $referralCode\n\n'
-          '📲 Download here: $appLink',
+      '📲 Download here: $appLink',
     );
   }
 
@@ -610,9 +614,10 @@ class _Content extends StatelessWidget {
         // _HeroBanner(),
         // SizedBox(height: 20.h),
         _ReferralCodeCard(
-            referralCode: referralCode,
-            onCopy: () => _copy(context),
-            onShare: _share),
+          referralCode: referralCode,
+          onCopy: () => _copy(context),
+          onShare: _share,
+        ),
         // SizedBox(height: 20.h),
         // // _StatsRow(),
         // SizedBox(height: 20.h),
@@ -683,8 +688,11 @@ class _HeroBanner extends StatelessWidget {
                   color: Colors.white.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
-                child: Icon(Icons.redeem_rounded,
-                    size: 24.sp, color: Colors.white),
+                child: Icon(
+                  Icons.redeem_rounded,
+                  size: 24.sp,
+                  color: Colors.white,
+                ),
               ),
               SizedBox(height: 16.h),
               Text(
@@ -732,26 +740,24 @@ class _ReferralCodeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Your Referral Code',
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w600,
-              color: _kTextMid,
-              letterSpacing: 0.2,
-            ),
-          ),
-          SizedBox(height: 12.h),
+          // Text(
+          //   'Your Referral Code',
+          //   style: TextStyle(
+          //     fontSize: 13.sp,
+          //     fontWeight: FontWeight.w600,
+          //     color: _kTextMid,
+          //     letterSpacing: 0.2,
+          //   ),
+          // ),
+          // SizedBox(height: 12.h),
           // Code pill
           Container(
             width: double.infinity,
-            padding:
-            EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
             decoration: BoxDecoration(
               color: _kPrimaryLight,
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(
-                  color: _kPrimary.withOpacity(0.2), width: 1.5),
+              border: Border.all(color: _kPrimary.withOpacity(0.2), width: 1.5),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -773,8 +779,11 @@ class _ReferralCodeCard extends StatelessWidget {
                       color: _kPrimary.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
-                    child: Icon(Icons.copy_rounded,
-                        size: 18.sp, color: _kPrimary),
+                    child: Icon(
+                      Icons.copy_rounded,
+                      size: 18.sp,
+                      color: _kPrimary,
+                    ),
                   ),
                 ),
               ],
@@ -815,25 +824,31 @@ class _StatsRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-            child: _StatTile(
-                icon: Icons.people_alt_rounded,
-                value: '0',
-                label: 'Referred',
-                color: const Color(0xFF7C5CFC))),
+          child: _StatTile(
+            icon: Icons.people_alt_rounded,
+            value: '0',
+            label: 'Referred',
+            color: const Color(0xFF7C5CFC),
+          ),
+        ),
         SizedBox(width: 12.w),
         Expanded(
-            child: _StatTile(
-                icon: Icons.emoji_events_rounded,
-                value: '0',
-                label: 'Rewards',
-                color: const Color(0xFFF59E0B))),
+          child: _StatTile(
+            icon: Icons.emoji_events_rounded,
+            value: '0',
+            label: 'Rewards',
+            color: const Color(0xFFF59E0B),
+          ),
+        ),
         SizedBox(width: 12.w),
         Expanded(
-            child: _StatTile(
-                icon: Icons.check_circle_rounded,
-                value: '0',
-                label: 'Joined',
-                color: _kSuccess)),
+          child: _StatTile(
+            icon: Icons.check_circle_rounded,
+            value: '0',
+            label: 'Joined',
+            color: _kSuccess,
+          ),
+        ),
       ],
     );
   }
@@ -968,7 +983,9 @@ class _Step extends StatelessWidget {
               width: 36.w,
               height: 36.w,
               decoration: const BoxDecoration(
-                  color: _kPrimary, shape: BoxShape.circle),
+                color: _kPrimary,
+                shape: BoxShape.circle,
+              ),
               child: Center(
                 child: Text(
                   '$step',
@@ -989,7 +1006,7 @@ class _Step extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       _kPrimary.withOpacity(0.4),
-                      _kPrimary.withOpacity(0.05)
+                      _kPrimary.withOpacity(0.05),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -1029,8 +1046,7 @@ class _Step extends StatelessWidget {
                       SizedBox(height: 3.h),
                       Text(
                         subtitle,
-                        style:
-                        TextStyle(fontSize: 12.sp, color: _kTextMid),
+                        style: TextStyle(fontSize: 12.sp, color: _kTextMid),
                       ),
                     ],
                   ),
@@ -1072,8 +1088,11 @@ class _Card extends StatelessWidget {
 }
 
 class _FilledButton extends StatelessWidget {
-  const _FilledButton(
-      {required this.icon, required this.label, required this.onTap});
+  const _FilledButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
   final IconData icon;
   final String label;
   final VoidCallback onTap;
@@ -1103,9 +1122,10 @@ class _FilledButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white),
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -1115,8 +1135,11 @@ class _FilledButton extends StatelessWidget {
 }
 
 class _OutlineButton extends StatelessWidget {
-  const _OutlineButton(
-      {required this.icon, required this.label, required this.onTap});
+  const _OutlineButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
   final IconData icon;
   final String label;
   final VoidCallback onTap;
@@ -1140,9 +1163,10 @@ class _OutlineButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w700,
-                  color: _kPrimary),
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w700,
+                color: _kPrimary,
+              ),
             ),
           ],
         ),

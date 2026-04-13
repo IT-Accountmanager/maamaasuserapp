@@ -5,7 +5,6 @@ import 'package:open_file/open_file.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'dart:io';
-import 'dart:typed_data';
 
 class FoodPdf {
   // ---------------- Download invoice ----------------
@@ -70,7 +69,7 @@ class FoodPdf {
                 ),
               ),
             ),
-            pw.SizedBox(width: 6),
+            pw.Spacer(),
             pw.Expanded(
               child: pw.Text(
                 value,
@@ -129,7 +128,7 @@ class FoodPdf {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      keyValue('Order ID', safeText(data['orderId'])),
+                      keyValue('Order ID', "#${safeText(data['orderId'])}"),
                       if (data['orderDateAndTime'] != null)
                         () {
                           final dt = DateTime.tryParse(
@@ -160,7 +159,9 @@ class FoodPdf {
                         'Payment',
                         safeText(data['paymentMethod']).replaceAll('_', ' '),
                       ),
-                      if (data['transactionId'] != null)
+                      if (data['transactionId'] != null &&
+                          data['transactionId'].toString().trim().isNotEmpty &&
+                          data['paymentMethod'] != "Maamaas_Wallet")
                         keyValue(
                           'Transaction ID',
                           safeText(data['transactionId']),
@@ -337,7 +338,17 @@ class FoodPdf {
           // ---------------- FOOTER ----------------
           pw.Center(
             child: pw.Text(
-              'Thank you for ordering with MAAMAAS \n www.maamaas.com',
+              'Thank you for ordering with MAAMAAS ',
+              style: pw.TextStyle(
+                font: ttf,
+                fontSize: 10,
+                fontStyle: pw.FontStyle.italic,
+              ),
+            ),
+          ),
+          pw.Center(
+            child: pw.Text(
+              'www.maamaas.com',
               style: pw.TextStyle(
                 font: ttf,
                 fontSize: 10,

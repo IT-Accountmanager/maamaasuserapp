@@ -1,3 +1,8 @@
+// ignore: file_names
+// ignore: file_names
+// ignore: file_names
+// ignore: file_names
+// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -34,6 +39,9 @@ class _cartwalletState extends State<cartwallet> {
   Map<String, dynamic>? checkoutData;
   late ScrollController _scrollController;
   Set<String> selectedSubWallets = {};
+
+  bool _isPaymentProcessing = false;
+  String _loadingText = "Processing...";
 
   @override
   void initState() {
@@ -144,17 +152,36 @@ class _cartwalletState extends State<cartwallet> {
 
                       Navigator.pop(context);
 
+                      /// ✅ START LOADER HERE
+                      setState(() {
+                        _isPaymentProcessing = true;
+                        _loadingText = "Creating order...";
+                      });
+
                       final orderId = await subscription_AuthService
                           .createOrder(amount);
 
                       if (orderId == null) {
+                        setState(() {
+                          _isPaymentProcessing = false;
+                        });
+
                         AppAlert.error(context, "Failed to create order ❌");
                         return;
                       }
 
                       final razorpay = RazorpayService();
 
+                      /// ✅ BEFORE OPENING RAZORPAY
+                      setState(() {
+                        _loadingText = "Opening payment gateway...";
+                      });
+
                       razorpay.onSuccess = (response) async {
+                        setState(() {
+                          _loadingText = "Verifying payment...";
+                        });
+
                         final paymentId = response.paymentId!;
 
                         final captured = await subscription_AuthService
@@ -164,20 +191,40 @@ class _cartwalletState extends State<cartwallet> {
                             );
 
                         if (captured) {
+                          setState(() {
+                            _loadingText = "Updating wallet...";
+                          });
+
                           await subscription_AuthService.addCashToWallet(
                             paymentId: paymentId,
                             orderId: orderId,
                             amount: amount,
                           );
+
+                          setState(() {
+                            _isPaymentProcessing = false;
+                          });
+
                           if (!mounted) return;
-                          AppAlert.success(parentContext, "Wallet recharged 🎉");
-                          // await loadWallet();
+
+                          AppAlert.success(
+                            parentContext,
+                            "Wallet recharged 🎉",
+                          );
                         } else {
+                          setState(() {
+                            _isPaymentProcessing = false;
+                          });
+
                           AppAlert.error(parentContext, "Capture failed ❌");
                         }
                       };
 
                       razorpay.onError = (response) {
+                        setState(() {
+                          _isPaymentProcessing = false;
+                        });
+
                         AppAlert.error(
                           context,
                           "Payment Failed: ${response.message}",
@@ -229,12 +276,44 @@ class _cartwalletState extends State<cartwallet> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return SingleChildScrollView(
-      controller: _scrollController, // ✅ ATTACH IT
-      physics: const BouncingScrollPhysics(),
-      child: Padding(
-        padding: EdgeInsets.only(bottom: 20.h),
-        child: _buildPaymentSection(theme, colorScheme),
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 20.h),
+            child: _buildPaymentSection(theme, colorScheme),
+          ),
+        ),
+
+        /// ✅ Overlay on top
+        _buildOverlay(),
+      ],
+    );
+  }
+
+  Widget _buildOverlay() {
+    if (!_isPaymentProcessing) return const SizedBox();
+
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 16),
+            Text(
+              _loadingText,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -419,16 +498,17 @@ class _cartwalletState extends State<cartwallet> {
   }
 
   Widget _buildSubWalletselfloadedOption(
-      String title,
-      double amount,
-      ThemeData theme,
-      ColorScheme colorScheme, {
-        required VoidCallback onAdd,
-      }) {
+    String title,
+    double amount,
+    ThemeData theme,
+    ColorScheme colorScheme, {
+    required VoidCallback onAdd,
+  }) {
     final isSelected = selectedSubWallets.contains(title);
 
     return Material(
       color: isSelected
+          // ignore: deprecated_member_use
           ? colorScheme.primary.withOpacity(0.05)
           : Colors.white,
       borderRadius: BorderRadius.circular(12.r),
@@ -482,8 +562,11 @@ class _cartwalletState extends State<cartwallet> {
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
                             color: colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10.r),
                           ),

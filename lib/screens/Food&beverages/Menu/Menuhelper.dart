@@ -1,8 +1,7 @@
 import '../../../Models/caterings/dish.dart';
-import '../../../Models/food/category_dish.dart';
 
 class MenuResponse {
-  final List<CategoryDish> categories;
+  final List<Dish> categories;
   final List<Dish> dishes;
   final String? errorMessage;
   final bool hasError;

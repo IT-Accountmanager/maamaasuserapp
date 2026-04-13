@@ -1,15 +1,16 @@
-
 import 'dart:async';
 import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/providers/provider.dart';
+import 'package:maamaas/screens/screens/advertisements/videoscreen.dart';
 import 'package:maamaas/screens/screens/splash_screen.dart';
 import 'package:maamaas/session_controller.dart';
 import 'package:maamaas/widgets/app_navigator.dart';
@@ -76,6 +77,7 @@ class _BootstrapAppState extends State<BootstrapApp> {
   void initState() {
     super.initState();
     _initializeStartupServices();
+    _initDynamicLinks();
   }
 
   Future<void> _initializeStartupServices() async {
@@ -107,6 +109,48 @@ class _BootstrapAppState extends State<BootstrapApp> {
     }
   }
 
+  Future<void> _initDynamicLinks() async {
+    try {
+      // ✅ App opened from terminated state
+      final PendingDynamicLinkData? initialLink = await FirebaseDynamicLinks
+          .instance
+          .getInitialLink();
+
+      if (initialLink != null) {
+        _handleDeepLink(initialLink.link);
+      }
+
+      // ✅ App opened from background / foreground
+      FirebaseDynamicLinks.instance.onLink
+          .listen((dynamicLinkData) {
+            _handleDeepLink(dynamicLinkData.link);
+          })
+          .onError((error) {
+            debugPrint('❌ Dynamic link error: $error');
+          });
+    } catch (e) {
+      debugPrint('❌ initDynamicLinks error: $e');
+    }
+  }
+
+  void _handleDeepLink(Uri link) {
+    debugPrint("🔗 Deep Link Received: $link");
+
+    final campaignIdStr = link.queryParameters['id'];
+
+    if (campaignIdStr != null) {
+      final campaignId = int.tryParse(campaignIdStr);
+
+      if (campaignId != null) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => ReelsScreen(campaignId: campaignId),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ProviderScope(
@@ -127,7 +171,6 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 👇 Watch the theme — any palette change triggers a full ThemeData rebuild
     final colorScheme = ref.watch(themeProvider);
-
 
     return ScreenUtilInit(
       designSize: const Size(390, 844),

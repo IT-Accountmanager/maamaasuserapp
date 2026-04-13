@@ -3,8 +3,6 @@ import '../../../Services/Auth_service/food_authservice.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 
-
-
 class VideoPreviewContainer extends StatefulWidget {
   const VideoPreviewContainer({Key? key}) : super(key: key);
 

@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -171,6 +172,7 @@ class _AccountScreenState extends State<AccountScreen> {
         languagePreference: language,
       ),
     );
+    // ignore: use_build_context_synchronously
     AppAlert.success(context, "Basic profile saved");
   });
 
@@ -184,6 +186,7 @@ class _AccountScreenState extends State<AccountScreen> {
         city: cityCtrl.text,
       ),
     );
+    // ignore: use_build_context_synchronously
     AppAlert.success(context, "Personal profile saved");
   });
 
@@ -195,6 +198,7 @@ class _AccountScreenState extends State<AccountScreen> {
         fieldOfStudy: educationField,
       ),
     );
+    // ignore: use_build_context_synchronously
     AppAlert.success(context, "Education saved");
   });
 
@@ -206,6 +210,7 @@ class _AccountScreenState extends State<AccountScreen> {
         occupationSubField: subType,
       ),
     );
+    // ignore: use_build_context_synchronously
     AppAlert.success(context, "Occupation saved");
   });
 
@@ -216,6 +221,7 @@ class _AccountScreenState extends State<AccountScreen> {
         interests: selectedInterests.toList(),
       ),
     );
+    // ignore: use_build_context_synchronously
     AppAlert.success(context, "Interests saved");
   });
 
@@ -397,14 +403,14 @@ class _AccountScreenState extends State<AccountScreen> {
               ],
             ),
           ),
-          SizedBox(width: 16.w),
-          Text(
-            completion < 100
-                ? "Fill all sections\nto earn ₹50"
-                : "Profile\ncomplete!",
-            textAlign: TextAlign.right,
-            style: TextStyle(fontSize: 11, color: _T.muted, height: 1.5),
-          ),
+          // SizedBox(width: 16.w),
+          // Text(
+          //   completion < 100
+          //       ? "Fill all sections\nto earn ₹50"
+          //       : "Profile\ncomplete!",
+          //   textAlign: TextAlign.right,
+          //   style: TextStyle(fontSize: 11, color: _T.muted, height: 1.5),
+          // ),
         ],
       ),
     );
@@ -503,8 +509,8 @@ class _AccountScreenState extends State<AccountScreen> {
         icon: Icons.phone_outlined,
         type: TextInputType.phone,
       ),
-      SizedBox(height: 16.h),
-      _saveBtn(saveBasic),
+      // SizedBox(height: 16.h),
+      // _saveBtn(saveBasic),
     ],
   );
 
@@ -696,7 +702,8 @@ class _AccountScreenState extends State<AccountScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Complete your profile & earn ₹50",
+                  "Complete your profile",
+                  // " & earn ₹50",
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -757,7 +764,7 @@ class _AccountScreenState extends State<AccountScreen> {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: items.contains(value) ? value : null,
+      initialValue: items.contains(value) ? value : null,
       items: items
           .map(
             (e) => DropdownMenuItem(

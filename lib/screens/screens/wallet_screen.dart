@@ -745,6 +745,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       amount,
                     );
                     if (orderId == null) {
+                      // ignore: use_build_context_synchronously
                       AppAlert.error(context, 'Failed to create order ❌');
                       return;
                     }
@@ -760,9 +761,11 @@ class _WalletScreenState extends State<WalletScreen> {
                           orderId: orderId,
                           amount: amount,
                         );
+                        // ignore: use_build_context_synchronously
                         AppAlert.success(context, 'Wallet recharged 🎉');
                         await loadWallet();
                       } else {
+                        // ignore: use_build_context_synchronously
                         AppAlert.error(context, 'Capture failed ❌');
                       }
                     };

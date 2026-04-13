@@ -25,7 +25,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   bool _isLoading = false;
-  bool _isResendLoading = false;
   int _resendTimer = 60;
   Timer? _timer;
 
@@ -66,8 +65,12 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
   void dispose() {
     _timer?.cancel();
     _animController.dispose();
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -106,25 +109,23 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
     setState(() => _isLoading = false);
 
     if (result.toLowerCase().trim() == 'success') {
+      // ignore: use_build_context_synchronously
       AppAlert.success(context, 'OTP verified successfully!');
       Navigator.pushAndRemoveUntil(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),
         (route) => false,
       );
     } else {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, result);
-      for (final c in _controllers) c.clear();
+      for (final c in _controllers) {
+        c.clear();
+      }
+      // ignore: use_build_context_synchronously
       FocusScope.of(context).requestFocus(_focusNodes[0]);
     }
-  }
-
-  Future<void> _resendOTP() async {
-    setState(() => _isResendLoading = true);
-    // Call your resend API here if available
-    await Future.delayed(const Duration(seconds: 1)); // placeholder
-    setState(() => _isResendLoading = false);
-    _startResendTimer();
   }
 
   @override
@@ -418,35 +419,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
   }
 
   // ── Resend row
-  Widget _buildResendRow() {
-    final canResend = _resendTimer == 0;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "Didn't receive the code? ",
-          style: TextStyle(fontSize: 13.sp, color: _textSecondary),
-        ),
-        _isResendLoading
-            ? SizedBox(
-                width: 14.w,
-                height: 14.h,
-                child: CircularProgressIndicator(color: _brand, strokeWidth: 2),
-              )
-            : GestureDetector(
-                onTap: canResend ? _resendOTP : null,
-                child: Text(
-                  canResend ? 'Resend OTP' : 'Resend in ${_resendTimer}s',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w700,
-                    color: canResend ? _brand : _textSecondary,
-                  ),
-                ),
-              ),
-      ],
-    );
-  }
 
   // ── Small circle icon button
   Widget _circleButton({required IconData icon, required VoidCallback onTap}) {

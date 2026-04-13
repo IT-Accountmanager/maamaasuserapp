@@ -157,6 +157,8 @@ import 'package:flutter/material.dart';
 import 'package:maamaas/Services/Auth_service/food_authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../../Models/food/dish.dart';
+import '../../../Services/Auth_service/Subscription_authservice.dart';
+import '../../signinrequired.dart';
 
 class FavoriteButton extends StatefulWidget {
   final Dish dish;
@@ -197,9 +199,38 @@ class _FavoriteButtonState extends State<FavoriteButton> {
     }
   }
 
+  Future<bool> _checkLogin(BuildContext context) async {
+    final isLoggedIn = await subscription_AuthService.isLoggedIn();
+
+    if (!isLoggedIn) {
+      // ignore: use_build_context_synchronously
+      showAuthRequiredSheet(context);
+      return false;
+    }
+
+    return true;
+  }
+
+  void showAuthRequiredSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const AuthRequiredWidget(),
+    );
+  }
+
   Future<void> toggleFavorite() async {
     if (isLoading) return;
 
+    // ✅ FIRST: check login
+    final allowed = await _checkLogin(context);
+    if (!allowed) return;
+
+    // ✅ THEN update UI
     setState(() {
       isLoading = true;
       isLiked = !isLiked;
@@ -215,14 +246,12 @@ class _FavoriteButtonState extends State<FavoriteButton> {
 
         if (!res) throw Exception();
 
-        // ⚠️ Ideally API should return favId
         newFavId = null;
 
         AppAlert.success(context, "Added to favorites ❤️");
       } else {
         if (widget.favId != null) {
-          final res =
-          await food_Authservice.unfavoriteDish(widget.favId!);
+          final res = await food_Authservice.unfavoriteDish(widget.favId!);
 
           if (!res) throw Exception();
         }
@@ -252,15 +281,15 @@ class _FavoriteButtonState extends State<FavoriteButton> {
       onTap: toggleFavorite,
       child: isLoading
           ? const SizedBox(
-        width: 18,
-        height: 18,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      )
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
           : Icon(
-        isLiked ? Icons.favorite : Icons.favorite_border,
-        color: isLiked ? Colors.red : Colors.grey,
-        size: 18,
-      ),
+              isLiked ? Icons.favorite : Icons.favorite_border,
+              color: isLiked ? Colors.red : Colors.grey,
+              size: 18,
+            ),
     );
   }
 }

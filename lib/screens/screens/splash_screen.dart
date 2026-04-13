@@ -1,4 +1,3 @@
-
 // DROP-IN replacement for: lib/screens/screens/splash_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -105,11 +104,14 @@ class _SplashScreenState extends State<SplashScreen>
         return;
       }
       final position = await Geolocator.getCurrentPosition(
+        // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.high,
       ).timeout(const Duration(seconds: 8));
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('latitude', position.latitude);
       await prefs.setDouble('longitude', position.longitude);
+      debugPrint("latitide: ${position.latitude}");
+      debugPrint("longitude: ${position.longitude}");
     } catch (_) {}
   }
 

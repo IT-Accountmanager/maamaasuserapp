@@ -11,6 +11,7 @@ class UploadableProfileAvatar extends StatefulWidget {
   final Uint8List? imageBytes;
   final String? networkImageUrl; // 👈 add this
 
+  // ignore: use_super_parameters
   const UploadableProfileAvatar({
     Key? key,
     required this.heroTag,

@@ -7,9 +7,9 @@ import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../Models/food/cart_model.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/utils.dart';
-import '../../signinrequired.dart';
-import 'currentcart_notifier.dart';
-import 'cartmode.dart';
+import '../../../widgets/signinrequired.dart';
+import '../../../widgets/widgets/food/currentcart_notifier.dart';
+import '../../../widgets/widgets/food/cartmode.dart';
 
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
 
@@ -34,6 +34,7 @@ class CartButton extends StatefulWidget {
 
 class _CartButtonState extends State<CartButton> {
   int itemCount = 0;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -81,21 +82,40 @@ class _CartButtonState extends State<CartButton> {
     }
   }
 
+  // Future<void> _removeFromCart() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final itemId = prefs.getInt("dish_${widget.dishId}_itemId");
+  //
+  //   if (itemId == null) return;
+  //
+  //   // INSTANT SUBTRACT FROM CART BADGE
+  //   CartNotifier.count.value -= itemCount;
+  //
+  //   final removed = await food_Authservice.removeCartItem(itemId);
+  //
+  //   if (removed) {
+  //     prefs.remove("dish_${widget.dishId}_quantity");
+  //     prefs.remove("dish_${widget.dishId}_itemId");
+  //
+  //     setState(() => itemCount = 0);
+  //   }
+  // }
+
   Future<void> _removeFromCart() async {
     final prefs = await SharedPreferences.getInstance();
     final itemId = prefs.getInt("dish_${widget.dishId}_itemId");
-
     if (itemId == null) return;
-
-    // INSTANT SUBTRACT FROM CART BADGE
-    CartNotifier.count.value -= itemCount;
 
     final removed = await food_Authservice.removeCartItem(itemId);
 
     if (removed) {
+      // ✅ Only subtract AFTER confirmed removal
+      CartNotifier.count.value = (CartNotifier.count.value - itemCount).clamp(
+        0,
+        9999,
+      );
       prefs.remove("dish_${widget.dishId}_quantity");
       prefs.remove("dish_${widget.dishId}_itemId");
-
       setState(() => itemCount = 0);
     }
   }
@@ -119,6 +139,7 @@ class _CartButtonState extends State<CartButton> {
     final isLoggedIn = await subscription_AuthService.isLoggedIn();
 
     if (!isLoggedIn) {
+      // ignore: use_build_context_synchronously
       showAuthRequiredSheet(context);
       return false;
     }
@@ -157,16 +178,18 @@ class _CartButtonState extends State<CartButton> {
                 padding: EdgeInsets.symmetric(horizontal: 10.w),
               ),
 
-              onPressed: () async {
-                final allowed = await _checkLogin(context);
-                if (!allowed) return;
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      final allowed = await _checkLogin(context);
+                      if (!allowed) return;
 
-                final schedule = widget.balanceQuantity <= 0;
+                      final schedule = widget.balanceQuantity <= 0;
 
-                setState(() => itemCount = 1);
-                await _addToCart(1, sheduleorder: schedule);
-                CartMode.type.value = CartType.normal;
-              },
+                      setState(() => itemCount = 1);
+                      await _addToCart(1, sheduleorder: schedule);
+                      CartMode.type.value = CartType.normal;
+                    },
 
               child: Text(
                 widget.balanceQuantity <= 0 ? "Schedule" : "Add Cart",

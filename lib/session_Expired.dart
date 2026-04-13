@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:maamaas/screens/screens/login_page.dart';
 import 'package:maamaas/widgets/app_navigator.dart';

@@ -138,20 +138,20 @@ class _MainScreenState extends State<MainScreenfood> {
       type: BottomNavigationBarType.fixed,
       selectedItemColor: AppColors.primary,
       unselectedItemColor: Colors.grey,
-      onTap: (index) {
-        // If leaving reels tab → pause videos
-        if (_currentIndex == 1 && index != 1) {
-          reelsKey.currentState?.pauseAllVideos();
-        }
-        // If coming back to reels tab → resume video
-        if (index == 1) {
-          reelsKey.currentState?.resumeCurrentVideo();
-        }
-        setState(() {
-          _currentIndex = index;
-          _showBottomBar = true;
-        });
-      },
+        onTap: (index) {
+          if (_currentIndex == 1 && index != 1) {
+            reelsKey.currentState?.setScreenActive(false);
+          }
+
+          if (index == 1) {
+            reelsKey.currentState?.setScreenActive(true);
+          }
+
+          setState(() {
+            _currentIndex = index;
+            _showBottomBar = true;
+          });
+        },
       items: [
         const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         const BottomNavigationBarItem(

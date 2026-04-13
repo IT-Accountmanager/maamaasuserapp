@@ -1,6 +1,3 @@
-
-
-
 import 'package:maamaas/screens/screens/supportteam/tickets_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -85,7 +82,6 @@ class Supportteam extends StatefulWidget {
 class _SupportteamState extends State<Supportteam> {
   String? _openFaq;
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,8 +91,11 @@ class _SupportteamState extends State<Supportteam> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 18, color: _T.ink),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: _T.ink,
+          ),
           onPressed: () => Navigator.maybePop(context),
         ),
         title: const Text(
@@ -119,8 +118,7 @@ class _SupportteamState extends State<Supportteam> {
           children: [
             // _heroBanner(),
             Padding(
-              padding:
-              EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -137,7 +135,8 @@ class _SupportteamState extends State<Supportteam> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => CreateTicketScreen()),
+                              builder: (_) => CreateTicketScreen(),
+                            ),
                           ),
                         ),
                       ),
@@ -148,15 +147,16 @@ class _SupportteamState extends State<Supportteam> {
                           label: "My Tickets",
                           color: _T.green,
                           onTap: () async {
-                            final prefs =
-                            await SharedPreferences.getInstance();
+                            final prefs = await SharedPreferences.getInstance();
                             final userId = prefs.getInt('userId') ?? 0;
                             if (!mounted) return;
                             Navigator.push(
+                              // ignore: use_build_context_synchronously
                               context,
                               MaterialPageRoute(
-                                  builder: (_) =>
-                                      TicketListScreen(userId: userId)),
+                                builder: (_) =>
+                                    TicketListScreen(userId: userId),
+                              ),
                             );
                           },
                         ),
@@ -191,7 +191,6 @@ class _SupportteamState extends State<Supportteam> {
 
   // ── Hero ──────────────────────────────────────────────────────────────────
 
-
   // ── Section Label ─────────────────────────────────────────────────────────
   Widget _sectionLabel(String text) {
     return Row(
@@ -200,7 +199,9 @@ class _SupportteamState extends State<Supportteam> {
           width: 6,
           height: 6,
           decoration: const BoxDecoration(
-              color: _T.ink, shape: BoxShape.circle),
+            color: _T.ink,
+            shape: BoxShape.circle,
+          ),
         ),
         SizedBox(width: 8.w),
         Text(text.toUpperCase(), style: _T.label.copyWith(color: _T.ink)),
@@ -284,33 +285,29 @@ class _SupportteamState extends State<Supportteam> {
       child: Column(
         children: [
           InkWell(
-            onTap: () =>
-                setState(() => _openFaq = isOpen ? null : title),
+            onTap: () => setState(() => _openFaq = isOpen ? null : title),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(12.r),
               bottom: Radius.circular(isOpen ? 0 : 12.r),
             ),
             child: Padding(
-              padding:
-              EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: isOpen
-                          ? _T.accentLight
-                          : const Color(0xFFF3F4F6),
+                      color: isOpen ? _T.accentLight : const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
-                    child: Icon(icon,
-                        size: 16,
-                        color: isOpen ? _T.accent : _T.muted),
+                    child: Icon(
+                      icon,
+                      size: 16,
+                      color: isOpen ? _T.accent : _T.muted,
+                    ),
                   ),
                   SizedBox(width: 12.w),
-                  Expanded(
-                    child: Text(title, style: _T.h2),
-                  ),
+                  Expanded(child: Text(title, style: _T.h2)),
                   Icon(
                     isOpen
                         ? Icons.keyboard_arrow_up_rounded
@@ -325,31 +322,34 @@ class _SupportteamState extends State<Supportteam> {
           if (isOpen) ...[
             Divider(height: 1, color: _T.border),
             Padding(
-              padding:
-              EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
               child: Column(
                 children: items
-                    .map((q) => Padding(
-                  padding: EdgeInsets.only(bottom: 10.h),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 5,
-                        height: 5,
-                        margin: EdgeInsets.only(top: 5.h, right: 10.w),
-                        decoration: const BoxDecoration(
-                          color: _T.accent,
-                          shape: BoxShape.circle,
+                    .map(
+                      (q) => Padding(
+                        padding: EdgeInsets.only(bottom: 10.h),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              margin: EdgeInsets.only(top: 5.h, right: 10.w),
+                              decoration: const BoxDecoration(
+                                color: _T.accent,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                q,
+                                style: _T.body.copyWith(fontSize: 13),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Expanded(
-                        child: Text(q,
-                            style: _T.body.copyWith(fontSize: 13)),
-                      ),
-                    ],
-                  ),
-                ))
+                    )
                     .toList(),
               ),
             ),

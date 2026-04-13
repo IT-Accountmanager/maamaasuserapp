@@ -436,7 +436,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Models/subscrptions/coupon_model.dart';
-import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────

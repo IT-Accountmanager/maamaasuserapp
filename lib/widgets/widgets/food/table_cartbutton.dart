@@ -89,6 +89,7 @@ class _TableCartButtonState extends State<TableCartButton> {
     int? seatingId = prefs.getInt('id');
 
     if (seatingId == null) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, "Please mark your arrival first");
       return;
     }
@@ -135,6 +136,7 @@ class _TableCartButtonState extends State<TableCartButton> {
     int? seatingId = prefs.getInt('id');
 
     Navigator.push(
+      // ignore: use_build_context_synchronously
       context,
       MaterialPageRoute(builder: (_) => tablecart(seatingId: seatingId!)),
     );
@@ -160,6 +162,7 @@ class _TableCartButtonState extends State<TableCartButton> {
 
                 await _handleAddToCart(1);
 
+                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text("1 item added to cart"),
@@ -244,6 +247,7 @@ class _TableCartButtonState extends State<TableCartButton> {
                         );
                       }
 
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text("$itemCount item(s) in cart"),

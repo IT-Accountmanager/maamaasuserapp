@@ -629,9 +629,11 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
           _paymentCompleted = true;
         });
 
+        // ignore: use_build_context_synchronously
         AppAlert.success(context, "Payment recorded successfully");
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, e.toString());
     } finally {
       setState(() => isLoading = false);
@@ -679,6 +681,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
           }
         } catch (e) {
           debugPrint("❌ Payment capture/record failed: $e");
+          // ignore: use_build_context_synchronously
           AppAlert.error(context, "Payment completed but recording failed.");
         } finally {
           setState(() => isLoading = false);
@@ -705,6 +708,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
       );
     } catch (e) {
       debugPrint("❌ Error in _confirmOrder: $e");
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, "Failed to initiate payment: $e");
       setState(() => isLoading = false);
     }
@@ -910,11 +914,13 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                             }).toList();
                           });
                           AppAlert.success(
+                            // ignore: use_build_context_synchronously
                             context,
                             'Quotation accepted successfully',
                           );
                         }
                       } catch (e) {
+                        // ignore: use_build_context_synchronously
                         AppAlert.error(context, e.toString());
                       }
                     },

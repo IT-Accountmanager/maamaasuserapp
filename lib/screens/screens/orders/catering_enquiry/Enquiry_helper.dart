@@ -1,8 +1,9 @@
-import 'dart:ui';
+// ignore: file_names
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+// ignore: camel_case_types
 class Enquiry_helpers {
   static String paymentTypeToEnum(String type) {
     switch (type.toLowerCase()) {

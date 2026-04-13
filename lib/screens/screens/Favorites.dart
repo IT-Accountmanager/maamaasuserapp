@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../Models/food/favorites_model.dart';
 import '../../Services/Auth_service/food_authservice.dart';
-import '../../widgets/widgets/food/cart_button.dart';
 import '../../widgets/widgets/food/favoritesbutton_1.dart';
+import '../Food&beverages/Menu/cart_button.dart';
+import '../../Models/food/favorites_model.dart';
+import 'package:flutter/material.dart';
 
 class Favorites extends StatefulWidget {
   const Favorites({super.key});
@@ -14,7 +13,7 @@ class Favorites extends StatefulWidget {
 }
 
 class _FavoritesState extends State<Favorites> {
-  int? userId;
+  // int? userId;
   List<FavoriteDish> favoriteDishes = [];
   bool isLoading = true;
 
@@ -43,19 +42,15 @@ class _FavoritesState extends State<Favorites> {
   );
 
   Future<void> _loadFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getInt('userId');
-    if (userId != null) {
-      try {
-        final fetched = await food_Authservice.getFavoritesByUserId();
-        setState(() {
-          favoriteDishes = fetched;
-          isLoading = false;
-        });
-      } catch (e) {
-        setState(() => isLoading = false);
-        debugPrint("Error: $e");
-      }
+    try {
+      final fetched = await food_Authservice.getFavoritesByUserId();
+      setState(() {
+        favoriteDishes = fetched;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      debugPrint("Error: $e");
     }
   }
 
@@ -92,7 +87,6 @@ class _FavoritesState extends State<Favorites> {
           ),
         ),
         centerTitle: true,
-
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -112,15 +106,20 @@ class _FavoritesState extends State<Favorites> {
                         delegate: SliverChildBuilderDelegate((context, index) {
                           final dish = favoriteDishes[index];
                           return ModernDishCard(
+                            key: ValueKey(dish.favId), // ✅ ADD THIS
                             imageWidget: _buildImage(dish.dishImage),
                             name: dish.dishName ?? '',
                             price: '₹${dish.price}',
                             effectivePrice: '₹${dish.effectivePrice}',
                             favoriteButton: FavoriteButton1(
                               favId: dish.favId,
-                              onFavoriteToggled: () => setState(
-                                () => favoriteDishes.removeAt(index),
-                              ),
+                              onFavoriteToggled: () {
+                                setState(() {
+                                  favoriteDishes.removeWhere(
+                                    (d) => d.favId == dish.favId,
+                                  );
+                                });
+                              },
                             ),
                             cartButton: CartButton(
                               dishId: dish.dishId ?? 0,

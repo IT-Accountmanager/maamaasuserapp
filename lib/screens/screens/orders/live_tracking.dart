@@ -1731,6 +1731,7 @@ class ModernDeliveryTracking extends StatefulWidget {
   final DeliveryOrderModel? deliveryModel;
   final VoidCallback? onRefresh;
 
+  // ignore: use_super_parameters
   const ModernDeliveryTracking({
     Key? key,
     required this.orderId,
@@ -1937,8 +1938,10 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
     // Debounce: don't hammer the Distance Matrix API
     final now = DateTime.now();
-    if (_lastEtaFetch != null && now.difference(_lastEtaFetch!) < _etaDebounce)
+    if (_lastEtaFetch != null &&
+        now.difference(_lastEtaFetch!) < _etaDebounce) {
       return;
+    }
     _lastEtaFetch = now;
 
     if (mounted) setState(() => _etaLoading = true);
@@ -2146,6 +2149,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     final picture = recorder.endRecording();
     final image = await picture.toImage(size.toInt(), size.toInt());
     final byteData = await image.toByteData(format: ImageByteFormat.png);
+    // ignore: deprecated_member_use
     return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
   }
 
@@ -2171,6 +2175,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     final picture = recorder.endRecording();
     final image = await picture.toImage(size.toInt(), size.toInt());
     final byteData = await image.toByteData(format: ImageByteFormat.png);
+    // ignore: deprecated_member_use
     return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
   }
 
@@ -2224,6 +2229,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       rotation: bearing,
       anchor: const Offset(0.5, 0.5),
       flat: true,
+      // ignore: deprecated_member_use
       zIndex: 2,
       infoWindow: const InfoWindow(title: 'Delivery Partner'),
     );
@@ -2408,6 +2414,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         rotation: bearing,
         anchor: const Offset(0.5, 0.5),
         flat: true,
+        // ignore: deprecated_member_use
         zIndex: 2,
         infoWindow: const InfoWindow(title: 'Delivery Partner'),
       );
@@ -3295,8 +3302,10 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
 
     // Debounce
     final now = DateTime.now();
-    if (_lastEtaFetch != null && now.difference(_lastEtaFetch!) < _etaDebounce)
+    if (_lastEtaFetch != null &&
+        now.difference(_lastEtaFetch!) < _etaDebounce) {
       return;
+    }
     if (_lastPosition != null) {
       final moved = Geolocator.distanceBetween(
         _lastPosition!.latitude,
@@ -3408,8 +3417,9 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
   // ── Bearing ───────────────────────────────────────────────────────────────
 
   double _calculateBearing(LatLng start, LatLng end) {
-    if (start.latitude == end.latitude && start.longitude == end.longitude)
+    if (start.latitude == end.latitude && start.longitude == end.longitude) {
       return 0;
+    }
     final lat1 = start.latitude * pi / 180;
     final lat2 = end.latitude * pi / 180;
     final dLon = (end.longitude - start.longitude) * pi / 180;
@@ -3576,14 +3586,16 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
   // ── Initial camera target ─────────────────────────────────────────────────
 
   LatLng get _initialTarget {
-    if (widget.initialPartnerPosition != null)
+    if (widget.initialPartnerPosition != null) {
       return widget.initialPartnerPosition!;
+    }
     final partner = widget.initialMarkers.where(
       (m) => m.markerId.value == 'partner',
     );
     if (partner.isNotEmpty) return partner.first.position;
-    if (widget.initialMarkers.isNotEmpty)
+    if (widget.initialMarkers.isNotEmpty) {
       return widget.initialMarkers.first.position;
+    }
     return const LatLng(17.385044, 78.486671);
   }
 

@@ -67,8 +67,10 @@ class _RestaurentsState extends State<Restaurents> {
   final ValueNotifier<String?> selectedOrderTypeNotifier = ValueNotifier(null);
 
   final GlobalKey _orderTypeKey = GlobalKey();
+  bool _hasShownLocationDialog = false;
 
   int _refreshKey = 0;
+  String? _locationCategory;
 
   // ── Banner height ──────────────────────────────────────────────────────────
   double get _bannerHeight {
@@ -148,17 +150,74 @@ class _RestaurentsState extends State<Restaurents> {
     }
   }
 
-  void _loadLocationFromAPI() async {
-    final loc = await subscription_AuthService.fetchCurrentLocation();
-    if (!mounted) return;
-    if (loc != null) {
-      setState(() => _currentLocation = loc.address);
-    } else {
-      setState(() => _currentLocation = 'Fetching location...');
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _showUpdateLocationDialog(),
-      );
+  // void _loadLocationFromAPI() async {
+  //   final loc = await subscription_AuthService.fetchCurrentLocation();
+  //   if (!mounted) return;
+  //   if (loc != null) {
+  //     setState(() => _currentLocation = loc.address);
+  //     _locationCategory = loc.category;
+  //   } else {
+  //     setState(() => _currentLocation = 'Fetching location...');
+  //     WidgetsBinding.instance.addPostFrameCallback(
+  //       (_) => _showUpdateLocationDialog(),
+  //     );
+  //   }
+  // }
+
+  Future<void> _loadLocationFromAPI() async {
+    try {
+      final loc = await subscription_AuthService.fetchCurrentLocation();
+
+      if (!mounted) return;
+
+      print("📍 RAW LOC: $loc");
+      print("📍 ADDRESS CHECK: ${loc?.address}");
+      print("📍 VALID: ${loc?.address?.trim().isNotEmpty}");
+
+      // ✅ VALID LOCATION CHECK
+      final isValidLocation =
+          loc != null &&
+          loc.address != null &&
+          loc.address!.trim().isNotEmpty &&
+          loc.latitude != null &&
+          loc.longitude != null;
+
+      if (isValidLocation) {
+        setState(() {
+          _currentLocation = loc!.address!;
+          _locationCategory = loc.category;
+        });
+
+        // ✅ Reset dialog flag (important if user later deletes address)
+        _hasShownLocationDialog = false;
+      } else {
+        _handleInvalidLocation();
+      }
+    } catch (e) {
+      debugPrint("❌ Location API Error: $e");
+      if (!mounted) return;
+
+      _handleInvalidLocation();
     }
+  }
+
+  void _handleInvalidLocation() {
+    // ❌ Don't immediately show popup
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+
+      if (_currentLocation == 'Fetching location...') {
+        if (!_hasShownLocationDialog) {
+          _hasShownLocationDialog = true;
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _showUpdateLocationDialog();
+            }
+          });
+        }
+      }
+    });
   }
 
   void _showUpdateLocationDialog() {
@@ -202,14 +261,18 @@ class _RestaurentsState extends State<Restaurents> {
       context,
       MaterialPageRoute(
         builder: (_) => SavedAddress(
-          onAddressSelected: (address) {
+          onAddressSelected: (address) async {
             setState(() {
-              _currentLocation =
-                  '${address.city}, ${address.state} - ${address.pincode}';
+              // _currentLocation =
+              //     '${address.},${address.city}, ${address.state} - ${address.pincode}';
+              // _locationCategory = address.category;
+              _currentLocation = address.fullAddress;
 
               print("Category: ${address.category}");
               print("Full Address: ${address.fullAddress}");
             });
+            _hasShownLocationDialog = false;
+            await _refreshAll();
           },
         ),
       ),
@@ -254,9 +317,26 @@ class _RestaurentsState extends State<Restaurents> {
   }
 
   Future<void> _refreshAll() async {
-    await Future.wait([_fetchCategories(), _loadAds()]);
-    if (mounted)
-      setState(() => _refreshKey++); // ← forces restaurant widget rebuild
+    debugPrint("🔄 _refreshAll() STARTED");
+
+    try {
+      await Future.wait([_fetchCategories(), _loadAds()]);
+
+      debugPrint("✅ APIs completed successfully");
+    } catch (e) {
+      debugPrint("❌ Error in _refreshAll(): $e");
+    }
+
+    if (mounted) {
+      setState(() {
+        _refreshKey++;
+      });
+      debugPrint("🔁 UI refreshed, refreshKey: $_refreshKey");
+    } else {
+      debugPrint("⚠️ Widget not mounted, skipping setState");
+    }
+
+    debugPrint("🏁 _refreshAll() FINISHED");
   }
 
   // ── Update ─────────────────────────────────────────────────────────────────
@@ -294,20 +374,10 @@ class _RestaurentsState extends State<Restaurents> {
 
     final mapped = RestaurentsHelper.typeMapping[normalized];
 
-    debugPrint("🧠 UI Type: '$raw'");
-    debugPrint("🔁 Normalized: '$normalized'");
     debugPrint("📦 API Type: $mapped");
 
     return mapped;
   }
-
-  // Future<void> _handleOrderTypeSelection(String type) async {
-  //   setState(() => selectedOrderType = type);
-  //   selectedOrderTypeNotifier.value = type;
-  //   if (type == 'catering') return;
-  //   final api = _getApiOrderType();
-  //   if (api != null) await food_Authservice.createCart(api);
-  // }
 
   Future<void> _handleOrderTypeSelection(String type) async {
     final cleanType = type.toLowerCase().trim();
@@ -543,6 +613,7 @@ class _RestaurentsState extends State<Restaurents> {
                     ),
                   ),
                 ),
+                SliverToBoxAdapter(child: SizedBox(height: 4.h)),
 
                 // ── 10. Restaurant cards ────────────────────────────────
                 SliverToBoxAdapter(child: _buildRestaurantList()),
@@ -703,34 +774,46 @@ class _RestaurentsState extends State<Restaurents> {
         : _buildGuestAppBar(isDark: isDark, isExpanded: isExpanded);
   }
 
+  IconData _getCategoryIcon() {
+    final cat = (_locationCategory ?? '').toLowerCase();
+
+    switch (cat) {
+      case 'home':
+        return Icons.home_rounded;
+      case 'office':
+        return Icons.work_rounded;
+      case 'others':
+        return Icons.work_rounded;
+      default:
+        return Icons.location_on_rounded;
+    }
+  }
+
   Widget _buildAppBarContent({required bool isDark, required bool isExpanded}) {
     final color = isDark ? _T.text : Colors.white;
-    final subColor = isDark ? _T.textMuted : Colors.white70;
 
     return GestureDetector(
       onTap: _changeLocation,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(
-            Icons.location_on_rounded,
-            color: color,
-            size: isExpanded ? 18 : 16,
-          ),
+          Icon(_getCategoryIcon(), color: color, size: isExpanded ? 18 : 16),
           SizedBox(width: isExpanded ? 6.w : 4.w),
 
           Expanded(
-            child:
-                // Column(
-                //   crossAxisAlignment: CrossAxisAlignment.start,
-                //   mainAxisSize: MainAxisSize.min,
-                //   children: [
-                // /// 👇 Show only in expanded (Hero)
-                // if (isExpanded)
-                //   Text(
-                //     'Delivering to',
-                //     style: TextStyle(fontSize: 10.sp, color: subColor),
-                //   ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                /// 👇 Show only in expanded (Hero)
+                if (isExpanded)
+                  Text(
+                    (_locationCategory ?? 'Delivering to').replaceFirstMapped(
+                      RegExp(r'^[a-z]'),
+                      (m) => m.group(0)!.toUpperCase(),
+                    ),
+                    style: TextStyle(fontSize: 10.sp, color: Colors.grey),
+                  ),
                 Text(
                   _currentLocation,
                   maxLines: 1,
@@ -741,8 +824,8 @@ class _RestaurentsState extends State<Restaurents> {
                     color: color,
                   ),
                 ),
-            //   ],
-            // ),
+              ],
+            ),
           ),
 
           Icon(
@@ -784,6 +867,11 @@ class _RestaurentsState extends State<Restaurents> {
           if (_isGuestLocationLoading)
             Row(
               children: [
+                Icon(
+                  Icons.location_on_rounded,
+                  color: color,
+                  size: isExpanded ? 18 : 16,
+                ),
                 SizedBox(
                   width: isExpanded ? 14.w : 12.w,
                   height: isExpanded ? 14.w : 12.w,
@@ -819,14 +907,6 @@ class _RestaurentsState extends State<Restaurents> {
                       color: color,
                     ),
                   ),
-                ),
-
-                SizedBox(width: 4.w),
-
-                Icon(
-                  Icons.location_on_rounded,
-                  color: color,
-                  size: isExpanded ? 18 : 16,
                 ),
               ],
             ),
@@ -1584,7 +1664,7 @@ class _RestaurantCard extends StatelessWidget {
             builder: (_) => MenuScreen(
               vendorId: banner.vendorId,
               initialCategoryName: selectedCategoryName,
-              banner: banner,
+              // banner: banner,
             ),
           ),
         );

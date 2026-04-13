@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../Models/caterings/orders_model.dart';
 
+// ignore: camel_case_types
 class cateringorders_helper {
   static IconData getChipIcon(String type) {
     switch (type) {

@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../Models/food/aboutus_model.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
 import '../../../Models/food/team_model.dart';
-import '../distancehelpermethod.dart';
 import 'colours.dart';
 import 'menu_screen.dart';
 
@@ -422,24 +421,23 @@ class _BannerSectionState extends State<BannerSection> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (banner?.distance != null)
-                        Text(
-                          "📍 ${Distancehelpermethod.formatDistance(banner!.distance)}",
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-
+                      // if (banner?.distance != null)
+                      //   Text(
+                      //     " ${Distancehelpermethod.formatDistance(banner!.distance)}",
+                      //     style: TextStyle(
+                      //       fontSize: 12.sp,
+                      //       fontWeight: FontWeight.w600,
+                      //       color: Colors.white,
+                      //     ),
+                      //   ),
                       if ((banner?.addressLine ?? '').isNotEmpty)
                         Text(
-                          "${banner!.addressLine}, ${banner.city}",
+                          "📍${banner!.addressLine}, ${banner.city}",
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 11.sp,
-                            color: Colors.white70,
+                            color: Colors.white,
                           ),
                         ),
                     ],
@@ -459,7 +457,8 @@ class _BannerSectionState extends State<BannerSection> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (banner?.startTime != null)
+                        if (banner?.startTime != null &&
+                            banner!.startTime.trim().isNotEmpty)
                           Row(
                             children: [
                               Text(
@@ -471,7 +470,7 @@ class _BannerSectionState extends State<BannerSection> {
                                 ),
                               ),
                               Text(
-                                banner!.startTime,
+                                banner.startTime,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 14.sp,
@@ -483,7 +482,8 @@ class _BannerSectionState extends State<BannerSection> {
 
                         SizedBox(height: 4.h),
 
-                        if (banner?.lastTime != null)
+                        if (banner?.lastTime != null &&
+                            banner!.lastTime.trim().isNotEmpty)
                           Row(
                             children: [
                               Text(
@@ -495,7 +495,7 @@ class _BannerSectionState extends State<BannerSection> {
                                 ),
                               ),
                               Text(
-                                banner!.lastTime,
+                                banner.lastTime,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 14.sp,

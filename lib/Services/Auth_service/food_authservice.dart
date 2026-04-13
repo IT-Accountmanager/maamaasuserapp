@@ -183,6 +183,7 @@ class food_Authservice {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
+
     final endpoint = "api/orders/shedule/order/$cartId?userId=$userId";
 
     final body = {
@@ -198,20 +199,37 @@ class food_Authservice {
       if (amount != null) "amount": amount,
     };
 
-    // ✅ No try/catch — let exceptions bubble up naturally
+    // 🔥 DEBUG START
+    debugPrint("🟡 SCHEDULE ORDER API CALL");
+    debugPrint("📍 Endpoint: $endpoint");
+    debugPrint("📦 Body: $body");
+
+    final startTime = DateTime.now();
+
     final response = await ApiClient.post(endpoint, body, service: "food");
 
+    final duration = DateTime.now().difference(startTime).inMilliseconds;
+
+    debugPrint("⏱ Response Time: ${duration}ms");
+    debugPrint("📡 Status Code: ${response.statusCode}");
+    debugPrint("📨 Raw Response: ${response.body}");
+
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      debugPrint("✅ Schedule Order SUCCESS");
+      debugPrint("📥 Parsed Response: $data");
+      return data;
     } else {
       final parsed = jsonDecode(response.body);
       final msg =
           parsed['message'] ?? parsed['error'] ?? "Failed to schedule order";
-      throw Exception(msg); // ✅ real backend message thrown
+
+      debugPrint("❌ Schedule Order FAILED: $msg");
+
+      throw Exception(msg);
     }
   }
 
-  // ── placeDirectOrder ───────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> placeDirectOrder({
     required int cartId,
     required String paymentMethod,
@@ -225,27 +243,51 @@ class food_Authservice {
 
     final buffer = StringBuffer(
       "api/orders/orders/create/$cartId?userId=$userId"
-      "&paymentMethod=$paymentMethod&razorpayPaymentId=$razorpayPaymentId&razorpayOrderId=$razorpayOrderId",
+      "&paymentMethod=$paymentMethod"
+      "&razorpayPaymentId=$razorpayPaymentId"
+      "&razorpayOrderId=$razorpayOrderId",
     );
+
     for (final type in walletTypes ?? []) {
       buffer.write("&walletTypes=$type");
     }
+
     buffer.write("&amount=${amount.toStringAsFixed(2)}");
 
-    // ✅ No try/catch — let exceptions bubble up naturally
-    final response = await ApiClient.post(
-      buffer.toString(),
-      {},
-      service: "food",
-    );
+    final endpoint = buffer.toString();
+
+    // 🔥 DEBUG START
+    debugPrint("🟢 PLACE ORDER API CALL");
+    debugPrint("📍 Endpoint: $endpoint");
+    debugPrint("💰 Amount: $amount");
+    debugPrint("💳 Payment Method: $paymentMethod");
+    debugPrint("🪪 Razorpay Payment ID: $razorpayPaymentId");
+    debugPrint("🧾 Razorpay Order ID: $razorpayOrderId");
+    debugPrint("👛 Wallet Types: $walletTypes");
+
+    final startTime = DateTime.now();
+
+    final response = await ApiClient.post(endpoint, {}, service: "food");
+
+    final duration = DateTime.now().difference(startTime).inMilliseconds;
+
+    debugPrint("⏱ Response Time: ${duration}ms");
+    debugPrint("📡 Status Code: ${response.statusCode}");
+    debugPrint("📨 Raw Response: ${response.body}");
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      debugPrint("✅ Place Order SUCCESS");
+      debugPrint("📥 Parsed Response: $data");
+      return data;
     } else {
       final parsed = jsonDecode(response.body);
       final msg =
           parsed['message'] ?? parsed['error'] ?? "Failed to place order";
-      throw Exception(msg); // ✅ real backend message thrown
+
+      debugPrint("❌ Place Order FAILED: $msg");
+
+      throw Exception(msg);
     }
   }
 
@@ -416,7 +458,7 @@ class food_Authservice {
         for (final item in items) {
           // ✅ Actually print something
           final map = item as Map<String, dynamic>;
-          print('dish: ${map['dishName']}, shedule: ${map['shedule']}');
+          debugPrint('dish: ${map['dishName']}, shedule: ${map['shedule']}');
         }
 
         return CartModel.fromJson(cartJson);
@@ -709,15 +751,22 @@ class food_Authservice {
     }
   }
 
-  static Future<bool> submitRating(int userId, int orderId, int rating) async {
+  static Future<bool> submitRating(
+    int orderId,
+    int rating,
+    String feedback,
+  ) async {
     final endpoint = "api/orders/feedback/$orderId";
 
     try {
       final response = await ApiClient.put(endpoint, {
         "ratings": rating,
+        "feedback": feedback,
+        "ratedAt": DateTime.now().toIso8601String(),
       }, service: 'food');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("response:${response.body}");
         return true;
       } else {
         return false;
@@ -743,9 +792,9 @@ class food_Authservice {
         endpoint,
         service: "food",
       ); // Using Services helper
-      // debugPrint(
-      //   "📥 Confirmed list response: ${response.statusCode} ${response.body}",
-      // );
+      debugPrint(
+        "📥 Confirmed list response: ${response.statusCode} ${response.body}",
+      );
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);

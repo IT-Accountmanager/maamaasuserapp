@@ -19,7 +19,6 @@ import 'forgetpassword_screen.dart';
 class _C {
   static const bg = Color(0xFFF6F7FB);
   static const surface = Color(0xFFFFFFFF);
-  static const brand = Color(0xFF4F46E5);
   static const ink = Color(0xFF111827);
   static const sub = Color(0xFF6B7280);
   static const muted = Color(0xFFD1D5DB);
@@ -74,56 +73,119 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    debugPrint("🔐 Login started");
+
+    if (!_formKey.currentState!.validate()) {
+      debugPrint("❌ Form validation failed");
+      return;
+    }
+
     HapticFeedback.lightImpact();
     setState(() => _isLoading = true);
 
     try {
+      debugPrint("📤 Sending login request...");
       final result = await subscription_AuthService.login(
         identifier: _emailCtrl.text.trim(),
         password: _passCtrl.text.trim(),
       );
+
+      debugPrint("📥 Login response: $result");
+
       if (!mounted) return;
 
       if (result != 'success') {
+        debugPrint("❌ Login failed: $result");
         AppAlert.error(context, result);
         return;
       }
+
+      debugPrint("✅ Login successful");
+
       ApiClient.isGuestUser = false;
       ApiClient.resetSessionFlag();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
+      debugPrint("💾 Saved isLoggedIn = true");
 
-      // Location
+      // 📍 Location
       try {
+        debugPrint("📍 Fetching current location...");
         final location = await LocationService.getCurrentLocationWithAddress();
+
         if (location != null) {
+          debugPrint("📍 Location fetched:");
+          debugPrint("   Lat: ${location.latitude}");
+          debugPrint("   Lng: ${location.longitude}");
+          debugPrint("   Address: ${location.fullAddress}");
+          debugPrint("   City: ${location.city}");
+
           final ok = await subscription_AuthService.updateLocation(
             latitude: location.latitude,
             longitude: location.longitude,
             address: location.fullAddress,
             city: location.city,
           );
-          if (ok) await prefs.setBool('locationSet', true);
+
+          debugPrint("📡 Location update API status: $ok");
+
+          if (ok) {
+            await prefs.setBool('locationSet', true);
+            debugPrint("💾 locationSet = true");
+          }
+        } else {
+          debugPrint("⚠️ Location is NULL");
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint("❌ Location error: $e");
+      }
 
-      // FCM
-      final token = await _fcm.getToken();
-      if (token != null) await NotificationService.registerFcmToken(token);
+      // 🔔 FCM
+      try {
+        debugPrint("🔔 Fetching FCM token...");
+        final token = await _fcm.getToken();
 
-      await [Permission.location, Permission.notification].request();
+        if (token != null) {
+          debugPrint("🔑 FCM Token: $token");
+          await NotificationService.registerFcmToken(token);
+          debugPrint("📡 FCM token sent to server");
+        } else {
+          debugPrint("⚠️ FCM token is NULL");
+        }
+      } catch (e) {
+        debugPrint("❌ FCM error: $e");
+      }
+
+      // 🔐 Permissions
+      debugPrint("🔐 Requesting permissions...");
+      final permissions = await [
+        Permission.location,
+        Permission.notification,
+      ].request();
+
+      debugPrint("📊 Permission results: $permissions");
 
       if (!mounted) return;
+
+      debugPrint("➡️ Navigating to MainScreenfood");
+
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MainScreenfood()),
         (r) => false,
       );
-    } catch (_) {
-      if (mounted) AppAlert.error(context, 'Something went wrong');
+    } catch (e, st) {
+      debugPrint("❌ Login exception: $e");
+      debugPrint("📍 StackTrace: $st");
+
+      if (mounted) {
+        AppAlert.error(context, 'Something went wrong');
+      }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        debugPrint("🔄 Loading stopped");
+      }
     }
   }
 

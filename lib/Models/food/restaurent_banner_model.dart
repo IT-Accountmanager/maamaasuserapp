@@ -1,3 +1,4 @@
+// ignore: camel_case_types
 class Restaurent_Banner {
   final int vendorId;
   final int bannerId;

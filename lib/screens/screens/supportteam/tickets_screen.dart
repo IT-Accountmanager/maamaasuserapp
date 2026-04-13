@@ -39,9 +39,10 @@ class _T {
 // ═══════════════════════════════════════════════════════════════════════════════
 class TicketListScreen extends StatefulWidget {
   final int userId;
-  const TicketListScreen({Key? key, required this.userId}) : super(key: key);
+  const TicketListScreen({super.key, required this.userId});
 
   @override
+  // ignore: library_private_types_in_public_api
   _TicketListScreenState createState() => _TicketListScreenState();
 }
 
@@ -400,7 +401,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                   // Meta row
                   // Column(
                   //   children: [
-                  _metaChip(Icons.tag_rounded, '${ticket.ticketNumber}'),
+                  _metaChip(Icons.tag_rounded, ticket.ticketNumber),
                   SizedBox(width: 8.w),
                   _metaChip(Icons.calendar_today_rounded, date),
                   SizedBox(width: 8.w),
@@ -985,8 +986,7 @@ class _DetailItem {
 class CreateTicketScreen extends ConsumerStatefulWidget {
   final int? orderId;
   final String? serviceType;
-  const CreateTicketScreen({Key? key, this.orderId, this.serviceType})
-    : super(key: key);
+  const CreateTicketScreen({super.key, this.orderId, this.serviceType});
 
   @override
   ConsumerState<CreateTicketScreen> createState() => _CreateTicketScreenState();

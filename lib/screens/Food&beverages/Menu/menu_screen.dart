@@ -1910,9 +1910,8 @@ import '../../../Models/food/team_model.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../widgets/widgets/food/favorite_button.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
-import '../../../widgets/widgets/food/cart_button.dart';
-import '../../../Models/food/category_dish.dart';
-import '../../screens/cart_footer_button.dart';
+import 'cart_button.dart';
+import 'cart_footer_button.dart';
 import '../../skeleton/menu_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1926,7 +1925,7 @@ import 'colours.dart';
 import 'fullscreen.dart';
 
 class MenuResponse {
-  final List<CategoryDish> categories;
+  final List<Dish> categories;
   final List<Dish> dishes;
   final String? errorMessage;
   final bool hasError;
@@ -1944,13 +1943,13 @@ enum BannerContentType { none, about, gallery }
 class MenuScreen extends StatefulWidget {
   final int vendorId;
   final String? initialCategoryName;
-  final Restaurent_Banner? banner;
+  // final Restaurent_Banner? banner;
 
   const MenuScreen({
     super.key,
     required this.vendorId,
     this.initialCategoryName,
-    this.banner,
+    // this.banner,
   });
 
   @override
@@ -1965,7 +1964,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   bool? isVeg;
   int selectedTabIndex = 0;
   int? selectedCategoryId;
-  List<CategoryDish> categories = [];
+  List<Dish> categories = [];
   String orderType = "";
   String searchQuery = "";
   Restaurent_Banner? _bannerItem;
@@ -1995,7 +1994,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
     // Single future — FutureBuilder waits on this, no separate call
     _screenFuture = _initializeScreen();
-    _bannerItem = widget.banner;
+    // _bannerItem = widget.banner;
 
     _scrollController.addListener(() {
       final collapsed =
@@ -2009,7 +2008,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   Future<void> _initializeScreen() async {
     await _loadPrefs();
     await Future.wait([
-      // _loadBannerData(),
+      _loadBannerData(),
       _loadMenu(),
       _loadaboutus(),
       _loadteam(),
@@ -2035,16 +2034,16 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     }
   }
 
-  // Future<void> _loadBannerData() async {
-  //   try {
-  //     final banner = await Authservice().fetchVendorBanner(widget.vendorId);
-  //     if (mounted) {
-  //       setState(() {
-  //         _bannerItem = banner;
-  //       });
-  //     }
-  //   } catch (_) {}
-  // }
+  Future<void> _loadBannerData() async {
+    try {
+      final banner = await Authservice().fetchVendorBanner(widget.vendorId);
+      if (mounted) {
+        setState(() {
+          _bannerItem = banner;
+        });
+      }
+    } catch (_) {}
+  }
 
   Future<void> _loadaboutus() async {
     try {
@@ -2266,7 +2265,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 favoriteMap: favoriteMap,
                 cartButton: (dish) => CartButton(
                   dishId: dish.dishId,
-                  balanceQuantity: dish.balanceQuantity ?? 0,
+                  balanceQuantity: dish.balanceQuantity,
                 ),
                 // favoriteButton: favbutton(),
                 isOutOfStock: (dish) => dish.stock?.toLowerCase() != 'in stock',
@@ -2665,7 +2664,7 @@ class _StickyTabsDelegate extends SliverPersistentHeaderDelegate {
 
 // ── Sticky tabs content ───────────────────────────────────────────────────────
 class _StickyTabsContent extends StatelessWidget {
-  final List<CategoryDish> categories;
+  final List<Dish> categories;
   final bool showTableTab;
   final int vendorId;
   final int? selectedCategoryId;
@@ -2706,7 +2705,7 @@ class _StickyTabsContent extends StatelessWidget {
 
 // ── Category tab strip ────────────────────────────────────────────────────────
 class _CategoryTabStrip extends StatelessWidget {
-  final List<CategoryDish> categories;
+  final List<Dish> categories;
   final int? selectedCategoryId;
   final Function(int?) onCategorySelected;
 
@@ -3005,7 +3004,7 @@ class VegToggle extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 class MenuTabContent extends StatefulWidget {
   final bool? isVeg;
-  final Widget Function(CategoryDish dish) cartButton;
+  final Widget Function(Dish dish) cartButton;
   final bool Function(Dish) isOutOfStock;
   final int vendorId;
   final int selectedVendorId;

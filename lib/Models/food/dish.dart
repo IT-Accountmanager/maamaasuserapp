@@ -7,13 +7,12 @@ class Dish {
   final double? price;
   final double? effectivePrice;
   final String? dishImage;
-  final String ?description;
+  final String? description;
   // bool? favorite;
   int? stockQuantity;
   final int balanceQuantity;
   final num discount;
-  final String menuStatus;
-
+  final String? menuStatus;
   Dish({
     required this.dishId,
     this.dishName,
@@ -28,7 +27,7 @@ class Dish {
     // this.favorite = false,
     required this.balanceQuantity,
     required this.discount,
-    required this.menuStatus
+    required this.menuStatus,
   });
 
   factory Dish.fromJson(Map<String, dynamic> json) {
@@ -45,7 +44,7 @@ class Dish {
       description: json['description']?.toString(),
       // favorite: json['favorite'] ?? false,
       balanceQuantity: json['balanceQuantity'] ?? 0,
-      discount: json['discount']?? 0,
+      discount: json['discount'] ?? 0,
       menuStatus: json['menuStatus'],
     );
   }

@@ -15,7 +15,6 @@ import 'package:maamaas/screens/screens/selectaddress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Models/subscrptions/address_model.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
-import '../../Services/googleservices/googleapiservice.dart';
 import '../../providers/addressmodel_provider.dart';
 import '../../Services/googleservices/Location_servces.dart';
 
@@ -58,7 +57,6 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   bool isLoading = false;
   List<Address> addressList = [];
   Future<List<Address>>? _futureAddresses;
-  String? _googleApiKey;
   bool _isLoading = false;
   Position? _currentPosition;
   String? _currentAddress;
@@ -89,6 +87,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   // }
 
   void _refreshTable() {
+    debugPrint("📦 Refreshing address list...");
     setState(() {
       _futureAddresses = subscription_AuthService.fetchAddresses();
     });
@@ -156,10 +155,12 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
     try {
       final ok = await subscription_AuthService.deleteAddress(addressId);
       if (ok) {
+        // ignore: use_build_context_synchronously
         AppAlert.success(context, 'Address deleted');
         _refreshTable();
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, '$e');
     }
   }
@@ -229,6 +230,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
       final detail = await places.getDetailsByPlaceId(p.placeId!);
       final loc = detail.result.geometry!.location;
       _updateLocation(LatLng(loc.lat, loc.lng));
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
     }
   }
@@ -377,13 +379,53 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   Widget _buildCurrentLocation() {
     if (_isLoading) {
       return Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Center(
-          child: SizedBox(
-            width: 20.r,
-            height: 20.r,
-            child: CircularProgressIndicator(strokeWidth: 2, color: _A.violet),
-          ),
+        padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
+        child: Row(
+          children: [
+            /// 🔄 Icon / Loader
+            Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: BoxDecoration(
+                color: _A.violet.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: SizedBox(
+                  width: 18.r,
+                  height: 18.r,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _A.violet,
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(width: 12.w),
+
+            /// 📍 Text info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Detecting current location...',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    'Please wait while we fetch your location',
+                    style: TextStyle(fontSize: 11.sp, color: _A.textMuted),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -415,10 +457,17 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
       iconColor: _A.green,
       title: 'Add New Address',
       subtitle: 'Save a home, office or custom address',
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => AddressFormScreen()),
-      ),
+      onTap: () async {
+        final ok = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(builder: (_) => AddressFormScreen()),
+        );
+
+        if (ok == true) {
+          debugPrint("🔄 Refreshing after adding address");
+          _refreshTable();
+        }
+      },
     );
   }
 
@@ -585,6 +634,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
             ].where((e) => e.toString().isNotEmpty).join(', '),
           ),
         );
+        // ignore: use_build_context_synchronously
         Navigator.pop(context);
       },
       child: Container(
@@ -805,12 +855,17 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   late TextEditingController phoneNumberController;
   late TextEditingController otherCategoryController;
 
+  String _fullAddress = '';
+
   double? _latitude;
   double? _longitude;
+  bool _isEditable = false;
 
   @override
   void initState() {
     super.initState();
+
+    _loadUserProfile();
     final a = widget.existingAddress;
     categoryController = TextEditingController(text: a?.category ?? '');
     otherCategoryController = TextEditingController();
@@ -824,6 +879,17 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     stateController = TextEditingController(text: a?.state ?? '');
     nameController = TextEditingController(text: a?.name ?? '');
     phoneNumberController = TextEditingController(text: a?.phoneNumber ?? '');
+
+    for (final c in [
+      doorNumberController,
+      addressLineController,
+      landMarkController,
+      cityController,
+      stateController,
+      pincodeController,
+    ]) {
+      c.addListener(_updateFullAddress);
+    }
   }
 
   @override
@@ -850,6 +916,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
     if (userId == null) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, 'User not logged in');
       return;
     }
@@ -857,9 +924,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       doorNumberController.text.trim(),
       addressLineController.text.trim(),
       landMarkController.text.trim(),
-      cityController.text.trim(),
-      stateController.text.trim(),
-      pincodeController.text.trim(),
+      // cityController.text.trim(),
+      // stateController.text.trim(),
+      // pincodeController.text.trim(),
     ];
 
     final address = addressParts
@@ -896,15 +963,41 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             );
       if (ok) {
         AppAlert.success(
+          // ignore: use_build_context_synchronously
           context,
           widget.addressId == null ? 'Address added!' : 'Address updated!',
         );
+        // ignore: use_build_context_synchronously
         Navigator.pop(context, true);
       } else {
+        // ignore: use_build_context_synchronously
         AppAlert.error(context, 'Failed to save address');
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, 'Error: $e');
+    }
+  }
+
+  void _updateFullAddress() {
+    setState(() {
+      _fullAddress = [
+        doorNumberController.text,
+        addressLineController.text,
+        landMarkController.text,
+        cityController.text,
+        stateController.text,
+        pincodeController.text,
+      ].where((e) => e.isNotEmpty).join(', ');
+    });
+  }
+
+  Future<void> _loadUserProfile() async {
+    final profile = await subscription_AuthService.getAccount();
+
+    if (profile != null) {
+      nameController.text = profile.userName ?? '';
+      phoneNumberController.text = profile.phoneNumber ?? '';
     }
   }
 
@@ -945,29 +1038,55 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       // ── Map ──────────────────────────────────────
                       _buildMapSection(),
                       SizedBox(height: 20.h),
+                      if (_fullAddress.isNotEmpty)
+                        Container(
+                          width: double.infinity,
+                          margin: EdgeInsets.only(bottom: 16.h),
+                          padding: EdgeInsets.all(14.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(color: _A.border),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.location_on_rounded,
+                                color: _A.violet,
+                                size: 18.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  _fullAddress,
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    color: _A.textPrimary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
 
                       // ── Form card ────────────────────────────────
-                      _sectionCard(
-                        title: 'Address Type',
-                        child: _buildAddressTypeSelector(),
-                      ),
-                      SizedBox(height: 14.h),
-
                       _sectionCard(
                         title: 'Address Details',
                         child: Column(
                           children: [
                             _field(
                               doorNumberController,
-                              'House / Flat Number',
-                              'e.g. 4B, Plot 12',
+                              'House / Flat Number/Tower Name',
+                              'e.g. 4B, Plot 12, ...Homes',
                               Icons.home_rounded,
                               validator: _required,
                             ),
                             SizedBox(height: 14.h),
                             _field(
                               addressLineController,
-                              'Street Address',
+                              'Address',
                               'Enter street / area',
                               Icons.place_rounded,
                               validator: _required,
@@ -996,8 +1115,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                               keyboard: TextInputType.number,
                               validator: (v) {
                                 if (v == null || v.isEmpty) return 'Required';
-                                if (int.tryParse(v) == null)
+                                if (int.tryParse(v) == null) {
                                   return 'Invalid pincode';
+                                }
                                 return null;
                               },
                             ),
@@ -1013,9 +1133,34 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                         ),
                       ),
                       SizedBox(height: 14.h),
+                      _sectionCard(
+                        title: 'Address Type',
+                        child: _buildAddressTypeSelector(),
+                      ),
+                      SizedBox(height: 14.h),
 
                       _sectionCard(
                         title: 'Contact Info',
+                        trailing: TextButton(
+                          // 👈 HERE
+                          onPressed: () {
+                            setState(() {
+                              _isEditable = !_isEditable;
+
+                              if (!_isEditable) {
+                                _loadUserProfile(); // reset data
+                              }
+                            });
+                          },
+                          child: Text(
+                            _isEditable ? 'Use My Info' : 'For Others',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: _A.violet,
+                            ),
+                          ),
+                        ),
                         child: Column(
                           children: [
                             _field(
@@ -1024,6 +1169,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                               'Enter your full name',
                               Icons.person_rounded,
                               validator: _required,
+                              enabled: _isEditable, // 👈 ADD THIS
                             ),
                             SizedBox(height: 14.h),
                             _phoneField(),
@@ -1060,13 +1206,23 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16.r),
         child: GoogleMapsPage(
-          onAddressSelected: (city, pincode, state, lat, lng) {
+          onAddressSelected: (fullAddress, city, pincode, state, lat, lng) {
             setState(() {
+              addressLineController.text = fullAddress;
               cityController.text = city;
               pincodeController.text = pincode;
               stateController.text = state;
               _latitude = lat;
               _longitude = lng;
+
+              _fullAddress = [
+                // doorNumberController.text,
+                addressLineController.text,
+                landMarkController.text,
+                // city,
+                // state,
+                // pincode,
+              ].where((e) => e.isNotEmpty).join(', ');
             });
           },
         ),
@@ -1074,7 +1230,11 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     );
   }
 
-  Widget _sectionCard({required String title, required Widget child}) {
+  Widget _sectionCard({
+    required String title,
+    required Widget child,
+    Widget? trailing, // 👈 ADD THIS
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: _A.surface,
@@ -1093,13 +1253,20 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 0),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w700,
-                color: _A.textPrimary,
-              ),
+            child: Row(
+              // 👈 CHANGE HERE
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: _A.textPrimary,
+                  ),
+                ),
+                if (trailing != null) trailing, // 👈 ADD THIS
+              ],
             ),
           ),
           Padding(padding: EdgeInsets.all(16.w), child: child),
@@ -1116,64 +1283,56 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     ];
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
           children: types.map((t) {
             final type = t['type'] as String;
             final icon = t['icon'] as IconData;
             final color = t['color'] as Color;
             final sel = categoryController.text == type;
 
-            return Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    categoryController.text = type;
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  categoryController.text = type;
 
-                    // clear custom field when switching
-                    if (type != 'Other') {
-                      otherCategoryController.clear();
-                    }
-                  });
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  decoration: BoxDecoration(
-                    color: sel ? color.withOpacity(0.10) : _A.bg,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(
-                      color: sel ? color : _A.border,
-                      width: sel ? 2 : 1,
+                  if (type != 'Other') {
+                    otherCategoryController.clear();
+                  }
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: sel ? color.withOpacity(0.12) : _A.bg,
+                  borderRadius: BorderRadius.circular(30.r), // pill shape
+                  border: Border.all(color: sel ? color : _A.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, size: 16.sp, color: sel ? color : _A.textMuted),
+                    SizedBox(width: 6.w),
+                    Text(
+                      type,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: sel ? color : _A.textSecondary,
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        icon,
-                        size: 20.sp,
-                        color: sel ? color : _A.textMuted,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        type,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
-                          color: sel ? color : _A.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             );
           }).toList(),
         ),
 
-        // 🔥 SHOW TEXTFIELD WHEN "Other" SELECTED
+        /// 🔥 Show input for "Other"
         if (categoryController.text == 'Other') ...[
           SizedBox(height: 12.h),
           _field(
@@ -1199,6 +1358,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     String label,
     String hint,
     IconData icon, {
+    bool enabled = true, // 👈 ADD THIS
     bool readOnly = false,
     TextInputType keyboard = TextInputType.text,
     String? Function(String?)? validator,
@@ -1268,6 +1428,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             keyboardType: TextInputType.phone,
             maxLength: 10,
             style: TextStyle(fontSize: 14.sp, color: _A.textPrimary),
+            enabled: _isEditable,
             cursorColor: _A.violet,
             decoration: InputDecoration(
               border: InputBorder.none,
@@ -1292,8 +1453,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             ),
             validator: (v) {
               if (v == null || v.isEmpty) return 'Required';
-              if (!RegExp(r'^[0-9]{10}$').hasMatch(v))
+              if (!RegExp(r'^[0-9]{10}$').hasMatch(v)) {
                 return 'Enter valid 10-digit number';
+              }
               return null;
             },
           ),
@@ -1350,6 +1512,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 // ═══════════════════════════════════════════════════════════════════════════════
 class GoogleMapsPage extends StatefulWidget {
   final Function(
+    String fullAddress,
     String city,
     String pincode,
     String state,
@@ -1371,7 +1534,6 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
     zoom: 14,
   );
 
-  String? _googleApiKey;
   LatLng _current = _init;
   bool _isLoading = false;
   bool _hasPermission = true;
@@ -1383,9 +1545,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
     _loadKey();
   }
 
-  Future<void> _loadKey() async {
-    _googleApiKey = await ApiKeyService.getApiKey();
-  }
+  Future<void> _loadKey() async {}
 
   Future<void> _getCurrentLocation() async {
     final result = await LocationService.getCurrentLocationWithAddress();
@@ -1411,7 +1571,19 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
       );
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
+        final fullAddress = [
+          (p.street != null && p.street!.isNotEmpty)
+              ? p.street
+              : p.name, // street
+          p.subLocality, // area / colony
+          p.locality, // city
+          p.subAdministrativeArea,
+          p.administrativeArea, // state
+          p.postalCode, // pincode
+          p.country, // country
+        ].where((e) => e != null && e!.isNotEmpty).join(', ');
         widget.onAddressSelected?.call(
+          fullAddress,
           p.locality ?? '',
           p.postalCode ?? '',
           p.administrativeArea ?? '',

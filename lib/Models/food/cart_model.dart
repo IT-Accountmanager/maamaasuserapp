@@ -1,3 +1,16 @@
+String? safeString(dynamic value) {
+  if (value == null) return null;
+  if (value is String) return value;
+  if (value is num || value is bool) return value.toString();
+  // If it's a Map (like couponCode object), return null or extract known key
+  return null;
+}
+
+/// Same but with a fallback default
+String safeStringOrDefault(dynamic value, [String fallback = '']) {
+  return safeString(value) ?? fallback;
+}
+
 class CartModel {
   final int cartId;
   final int userId;
@@ -18,7 +31,7 @@ class CartModel {
 
   final int seatingId;
   final String tableCode;
-  final String orderStatus;
+  final String? orderStatus;
 
   String? couponCode;
   final int couponId;
@@ -50,7 +63,7 @@ class CartModel {
     required this.sgst,
     required this.seatingId,
     required this.tableCode,
-    required this.orderStatus,
+    this.orderStatus,
     this.couponCode,
     required this.couponId,
     required this.discountAmount,
@@ -63,11 +76,20 @@ class CartModel {
   });
 
   factory CartModel.fromJson(Map<String, dynamic> json) {
+    // Robust couponCode extraction
+    final rawCoupon = json['couponCode'];
+    String? parsedCouponCode;
+    if (rawCoupon is String) {
+      parsedCouponCode = rawCoupon;
+    } else if (rawCoupon is Map) {
+      parsedCouponCode = rawCoupon['code']?.toString();
+    }
+
     return CartModel(
       cartId: json['cartId'] ?? 0,
       userId: json['userId'] ?? 0,
       vendorId: json['vendorId'] ?? 0,
-      orderType: json['orderType'] ?? '',
+      orderType: safeStringOrDefault(json['orderType']), // ← safe
       cartItems:
           (json['cartItems'] as List<dynamic>?)
               ?.map((item) => CartItem.fromJson(item))
@@ -84,15 +106,15 @@ class CartModel {
       sgst: (json['sgst'] ?? 0).toDouble(),
       seatingId: json['seatingId'] ?? 0,
       couponId: json['couponId'] ?? 0,
-      tableCode: json['tableCode'] ?? '',
-      orderStatus: json['orderStatus'] ?? '',
-      couponCode: json['couponCode'],
+      tableCode: safeStringOrDefault(json['tableCode']), // ← safe
+      orderStatus: safeString(json['orderStatus']), // ← safe (nullable)
+      couponCode: parsedCouponCode,
       discountAmount: (json['discountAmount'] ?? 0).toDouble(),
       savedAmount: (json['savedAmount'] ?? 0).toDouble(),
-      userCompany: json['userCompany'] ?? '',
-      deliveryAddress: json['deliveryAddress'] ?? '',
-      mobileNo: json['mobileNo'] ?? '',
-      name: json['name'] ?? '',
+      userCompany: safeStringOrDefault(json['userCompany']), // ← safe
+      deliveryAddress: safeStringOrDefault(json['deliveryAddress']),
+      mobileNo: safeStringOrDefault(json['mobileNo']),
+      name: safeStringOrDefault(json['name']),
       vendorOrderType: (json['vendorOrderType'] as List?)
           ?.map((e) => e.toString())
           .toList(),
@@ -129,6 +151,18 @@ class CartModel {
   }
 }
 
+// Add at top of cart_model.dart (outside any class)
+String? _safeStr(dynamic v) {
+  if (v == null) return null;
+  if (v is String) return v;
+  if (v is num || v is bool) return v.toString();
+  if (v is Map)
+    return v['url']?.toString() ?? v['path']?.toString() ?? v.toString();
+  return null;
+}
+
+String _safeStrOr(dynamic v, [String fallback = '']) => _safeStr(v) ?? fallback;
+
 class CartItem {
   final int itemId;
   num price;
@@ -163,7 +197,6 @@ class CartItem {
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
-    // FIX: Properly handle dynamic bool from JSON
     bool parseBool(dynamic value) {
       if (value == null) return false;
       if (value is bool) return value;
@@ -179,21 +212,17 @@ class CartItem {
           json['scheduled'],
     );
 
-    print(
-      'Item: ${json['dishName']}, raw shedule: ${json['shedule']}, parsed: $parsedShedule',
-    );
-
     return CartItem(
       itemId: json['itemId'] ?? 0,
       price: (json['price'] ?? 0).toDouble(),
-      dishName: json['dishName'] ?? '',
+      dishName: _safeStrOr(json['dishName']), // ✅ safe
       dishId: json['dishId'] ?? 0,
       gst: (json['gst'] ?? 0).toDouble(),
       packingCharges: (json['packingCharges'] ?? 0).toDouble(),
       quantity: json['quantity'] ?? 0,
-      chefType: json['chefType'] ?? '',
+      chefType: _safeStrOr(json['chefType']), // ✅ safe
       totalPrice: (json['totalPrice'] ?? 0).toDouble(),
-      dishImage: json['dishImage'],
+      dishImage: _safeStr(json['dishImage']), // ✅ safe (nullable — Map → url)
       actualPrice: (json['actualPrice'] ?? 0).toDouble(),
       balanceQuantity: json['balanceQuantity'] ?? 0,
       available: json['available'] == true,

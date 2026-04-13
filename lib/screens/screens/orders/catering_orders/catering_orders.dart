@@ -18,6 +18,7 @@ class CateringOrdersScreen extends StatefulWidget {
   const CateringOrdersScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _CateringOrdersScreenState createState() => _CateringOrdersScreenState();
 }
 
@@ -623,10 +624,12 @@ class _OrderDetailsFullScreenState extends State<OrderDetailsFullScreen> {
         feedback: feedback,
         rating: rating,
       );
+      // ignore: use_build_context_synchronously
       AppAlert.success(context, 'Thank you for your $rating★ rating!');
 
       widget.onRatingSubmitted?.call();
     } catch (e) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, 'Failed to submit feedback. Please try again.');
     } finally {
       setState(() {
@@ -665,8 +668,10 @@ class _OrderDetailsFullScreenState extends State<OrderDetailsFullScreen> {
             razorpayOrderId: response.orderId,
           );
 
+          // ignore: use_build_context_synchronously
           AppAlert.success(context, "Payment successful");
         } catch (e) {
+          // ignore: use_build_context_synchronously
           AppAlert.error(context, "Payment captured but recording failed");
         } finally {
           setState(() => isLoading = false);
@@ -686,6 +691,7 @@ class _OrderDetailsFullScreenState extends State<OrderDetailsFullScreen> {
         description: "Remaining payment for Order #${widget.order.id}",
       );
     } catch (e) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, "Failed to start payment");
       setState(() => isLoading = false);
     }
@@ -721,9 +727,11 @@ class _OrderDetailsFullScreenState extends State<OrderDetailsFullScreen> {
       );
 
       if (success) {
+        // ignore: use_build_context_synchronously
         AppAlert.success(context, "Payment recorded successfully");
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, e.toString());
     } finally {
       setState(() => isLoading = false);
@@ -930,7 +938,7 @@ class _OrderDetailsFullScreenState extends State<OrderDetailsFullScreen> {
           SizedBox(height: 8.h),
           Text("Addons", style: AppStyles.titleStyle),
           SizedBox(height: 8.h),
-          ...widget.order.addOns.map((item) => buildOrderaddon(item)).toList(),
+          ...widget.order.addOns.map((item) => buildOrderaddon(item)),
           Divider(height: 24.h),
 
           const SizedBox(height: 16),

@@ -89,6 +89,7 @@ class ThemePicker extends ConsumerWidget {
                     orElse: () => AppPalettes.all.first,
                   )
                   .name,
+              // ignore: deprecated_member_use
               key: ValueKey(current.primary.value),
               style: TextStyle(
                 fontSize: 12.sp,

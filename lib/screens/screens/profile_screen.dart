@@ -9,6 +9,7 @@ import 'package:media_compressor/media_compressor.dart';
 import '../../Models/subscrptions/user_account.dart';
 import '../../widgets/widgets/profileavataor.dart';
 import 'Refer_Earn.dart';
+import 'Reviewsandratings.dart';
 import 'profile screen/Profile_Account.dart';
 import '../../widgets/signinrequired.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,6 @@ import 'package:flutter/services.dart';
 import 'coupons_rewards_screen.dart';
 import 'orders/orders_screen.dart';
 import '../foodmainscreen.dart';
-import 'dart:typed_data';
 import 'login_page.dart';
 import 'Favorites.dart';
 import 'dart:io';
@@ -98,9 +98,11 @@ class _ProfileState extends State<Profile> {
         AppAlert.success(context, "Profile photo updated");
         _loadProfileImage();
       } else {
+        // ignore: use_build_context_synchronously
         AppAlert.error(context, "Failed to update profile photo");
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, "Error uploading image");
     }
   }
@@ -340,6 +342,7 @@ class _AvatarWithRing extends StatelessWidget {
                 );
                 if (result.isSuccess) {
                   final compressedFile = File(result.path!);
+                  // ignore: use_build_context_synchronously
                   await onUpload(context, compressedFile);
                 }
               },
@@ -404,32 +407,41 @@ class _CompletionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final remaining = 100 - percent;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: _T.brandSoft,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.edit_outlined, size: 14, color: _T.brand),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Complete your profile — $remaining% remaining',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: _T.brand,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => AccountScreen()),
+        );
+      },
+
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: _T.brandSoft,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.edit_outlined, size: 14, color: _T.brand),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Complete your profile — $remaining% remaining',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: _T.brand,
+                ),
               ),
             ),
-          ),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 11,
-            color: _T.brand,
-          ),
-        ],
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 11,
+              color: _T.brand,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -548,6 +560,12 @@ class _MenuListState extends State<_MenuList> {
           'color': Color(0xFFF59E0B),
           'key': 'Refer',
         },
+        {
+          'icon': Icons.rate_review,
+          'label': 'Review',
+          'color': Color(0xFF8B5CF6),
+          'key': 'review',
+        },
       ],
     },
     {
@@ -578,7 +596,7 @@ class _MenuListState extends State<_MenuList> {
       case 'address':
         return SavedAddress(
           onAddressSelected: (address) {
-            print(address.category);
+            debugPrint(address.category);
           },
         );
       case 'favorites':
@@ -587,6 +605,8 @@ class _MenuListState extends State<_MenuList> {
         return CouponsAndRewards();
       case 'Refer':
         return ReferEarn();
+      case 'review':
+        return ReviewScreen();
       case 'support':
         return Supportteam();
       case 'account':

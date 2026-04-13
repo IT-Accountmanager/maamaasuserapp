@@ -209,8 +209,11 @@ enum Interest {
   FOOD,
   // ignore: constant_identifier_names
   EDUCATION,
+  // ignore: constant_identifier_names
   OFFERS,
+  // ignore: constant_identifier_names
   REAL_ESTATE,
+  // ignore: constant_identifier_names
   ONLINE_COURSES,
   BAKERY,
   HEALTH,

@@ -3,12 +3,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 import '../../Models/food/restaurent_banner_model.dart';
-import '../../widgets/widgets/food/favorite_button.dart';
 import '../../widgets/widgets/food/table_cartbutton.dart';
 import '../../widgets/widgets/food/tablecartbutton.dart';
 import '../../widgets/widgets/food/switch.dart';
 import '../../Models/food/aboutus_model.dart';
-import '../../Models/food/category_dish.dart';
 import 'package:flutter/material.dart';
 import '../../Models/food/dish.dart';
 import 'dart:async';
@@ -40,7 +38,7 @@ class _tablemenuscreenState extends State<tablemenuscreen> {
   bool? isVeg;
   int selectedTabIndex = 0;
   int? selectedCategoryId; // Track selected category
-  List<CategoryDish> categories = []; // Store categories
+  List<Dish> categories = []; // Store categories
   int? userId;
   String planType = "";
   String orderType = "";
@@ -341,7 +339,7 @@ class _tablemenuscreenState extends State<tablemenuscreen> {
                     // favoriteButton: (dish) => FavoriteButton(dish: dish),
                     cartButton: (dish) => TableCartButton(
                       dishId: dish.dishId,
-                      balanceQuantity: dish.balanceQuantity ?? 0,
+                      balanceQuantity: dish.balanceQuantity,
                       id: widget.seatingId,
                     ),
                     isOutOfStock: (dish) =>
@@ -1035,7 +1033,7 @@ class _MenuFilterBarState extends State<MenuFilterBar> {
 
 class MenuTabContent extends StatefulWidget {
   final bool? isVeg;
-  final Widget Function(CategoryDish dish) cartButton;
+  final Widget Function(Dish dish) cartButton;
   final bool Function(Dish) isOutOfStock;
   final int vendorId;
   final int selectedVendorId;
