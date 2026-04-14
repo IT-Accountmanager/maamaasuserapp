@@ -13,20 +13,16 @@ class RestaurentsHelper {
       'icon': Icons.delivery_dining_outlined,
       'type': 'delivery',
     },
-    // {
-    //   'label': 'Dine-out',
-    //   'icon': Icons.table_restaurant,
-    //   'type': 'dineout',
-    // },
-    // {'label': 'Catering', 'icon': Icons.restaurant, 'type': 'catering'},
+    {'label': 'Dine-out', 'icon': Icons.table_restaurant, 'type': 'dineout'},
+    {'label': 'Catering', 'icon': Icons.restaurant, 'type': 'catering'},
   ];
 
   static final Map<String, String> typeMapping = {
     'dinein': 'DINE_IN',
     'takeaway': 'TAKEAWAY',
     'delivery': 'DELIVERY',
-    // 'dineout': 'TABLE_DINE_IN', // ✅ FIXED
-    // 'catering': 'CATERING', // ✅ FIXED (removed space)
+    'dineout': 'TABLE_DINE_IN', // ✅ FIXED
+    'catering': 'CATERING', // ✅ FIXED (removed space)
   };
 
   static const filters = [

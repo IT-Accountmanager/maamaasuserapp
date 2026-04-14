@@ -462,6 +462,13 @@ class _RestaurentsState extends State<Restaurents> {
                   systemOverlayStyle: _isBannerCollapsed
                       ? SystemUiOverlayStyle.dark
                       : SystemUiOverlayStyle.light,
+                  leading: _isBannerCollapsed
+                      ? IconButton(
+                          icon: const Icon(Icons.arrow_back_ios),
+                          color: Colors.black,
+                          onPressed: () => Navigator.pop(context),
+                        )
+                      : null,
                   automaticallyImplyLeading: false,
 
                   title: _isBannerCollapsed ? _buildCollapsedBar() : null,
@@ -595,24 +602,25 @@ class _RestaurentsState extends State<Restaurents> {
                 // SliverToBoxAdapter(child: _buildOfferStrip()),
 
                 // ── 9. Restaurant list header ───────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 4.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Restaurants Near You',
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            color: _T.text,
+                if (selectedOrderType != 'catering')
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 4.h),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Restaurants Near You',
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w700,
+                              color: _T.text,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
                 SliverToBoxAdapter(child: SizedBox(height: 4.h)),
 
                 // ── 10. Restaurant cards ────────────────────────────────

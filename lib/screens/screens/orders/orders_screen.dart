@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../Models/delivery/fooddelivery.dart';
 import '../../../Models/food/orders_model.dart';
+import '../../Food&beverages/table_bookings.dart';
 import 'catering_orders/catering_orders.dart';
 import 'food orders/food_orders.dart';
 
@@ -9,7 +10,7 @@ enum OrderVertical {
   food,
   catering,
   // groceries,
-  // table,
+  table,
 }
 
 class OrdersScreen extends StatefulWidget {
@@ -46,19 +47,19 @@ class _OrdersScreenState extends State<OrdersScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // appBar: AppBar(
-      //   backgroundColor: Colors.white,
-      //   elevation: 0,
-      //
-      //   // 👇 this actually increases usable height
-      //   toolbarHeight: 100,
-      //
-      //   automaticallyImplyLeading: true,
-      //
-      //   flexibleSpace: SafeArea(child: Center(child: _buildVerticalChips())),
-      // ),
-      appBar: _buildAppBar(),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
 
+        // 👇 this actually increases usable height
+        toolbarHeight: 100,
+
+        automaticallyImplyLeading: true,
+
+        flexibleSpace: SafeArea(child: Center(child: _buildVerticalChips())),
+      ),
+
+      // appBar: _buildAppBar(),
       body: SafeArea(child: _buildOrdersByVertical()),
     );
   }
@@ -153,8 +154,8 @@ class _OrdersScreenState extends State<OrdersScreen>
     switch (v) {
       case OrderVertical.food:
         return "Food";
-      // case OrderVertical.table:
-      //   return "Table";
+      case OrderVertical.table:
+        return "Table";
       case OrderVertical.catering:
         return "Catering";
       // case OrderVertical.groceries:
@@ -166,8 +167,8 @@ class _OrdersScreenState extends State<OrdersScreen>
     switch (v) {
       case OrderVertical.food:
         return Icons.fastfood;
-      // case OrderVertical.table:
-      //   return Icons.event_seat;
+      case OrderVertical.table:
+        return Icons.event_seat;
       case OrderVertical.catering:
         return Icons.restaurant;
       // case OrderVertical.groceries:
@@ -179,8 +180,8 @@ class _OrdersScreenState extends State<OrdersScreen>
     switch (_selectedVertical) {
       case OrderVertical.food:
         return food_orders();
-      // case OrderVertical.table:
-      //   return TableBookings();
+      case OrderVertical.table:
+        return TableBookings();
       case OrderVertical.catering:
         return CateringOrdersScreen();
       //   case OrderVertical.groceries:

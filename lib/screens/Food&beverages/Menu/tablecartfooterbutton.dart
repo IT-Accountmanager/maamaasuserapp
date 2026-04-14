@@ -6,17 +6,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-// ignore: camel_case_types
-class food_Cart_count extends StatefulWidget {
-  final double? savedAmount;
+import '../tablecart.dart';
 
-  const food_Cart_count({super.key, this.savedAmount});
+// ignore: camel_case_types
+class table_food_Cart_count extends StatefulWidget {
+  final int? savedAmount;
+  final int seatingId;
+
+  const table_food_Cart_count({
+    super.key,
+    this.savedAmount,
+    required this.seatingId,
+  });
 
   @override
-  State<food_Cart_count> createState() => _OrderCartFooterState();
+  State<table_food_Cart_count> createState() => _OrderCartFooterState();
 }
 
-class _OrderCartFooterState extends State<food_Cart_count>
+class _OrderCartFooterState extends State<table_food_Cart_count>
     with RouteAware, SingleTickerProviderStateMixin {
   late AnimationController _bounceCtrl;
   late Animation<double> _scaleAnim;
@@ -103,18 +110,12 @@ class _OrderCartFooterState extends State<food_Cart_count>
             scale: _scaleAnim,
             child: _CartBar(
               count: safeCount,
-              savedAmount: widget.savedAmount ?? 0.0,
               onTap: () async {
                 debugPrint("🟡 Cart tapped → count: $safeCount");
                 HapticFeedback.mediumImpact();
                 await Navigator.push(
                   context,
-                  _slideRoute(
-                    food_cartScreen(
-                      savedAmount: widget.savedAmount ?? 0.0,
-                      showSavedPopup: true,
-                    ),
-                  ),
+                  _slideRoute(tablecart(seatingId: widget.seatingId)),
                 );
                 await _loadCartData();
               },
@@ -129,14 +130,9 @@ class _OrderCartFooterState extends State<food_Cart_count>
 // ── The actual cart bar widget ────────────────────────────────────────────────
 class _CartBar extends StatelessWidget {
   final int count;
-  final double savedAmount;
   final VoidCallback onTap;
 
-  const _CartBar({
-    required this.count,
-    required this.savedAmount,
-    required this.onTap,
-  });
+  const _CartBar({required this.count, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -216,17 +212,6 @@ class _CartBar extends StatelessWidget {
                             letterSpacing: 0.1,
                           ),
                         ),
-                        if (savedAmount > 0) ...[
-                          SizedBox(height: 1.h),
-                          Text(
-                            'You saved ₹${savedAmount.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),

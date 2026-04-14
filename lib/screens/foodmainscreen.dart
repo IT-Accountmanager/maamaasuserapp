@@ -12,6 +12,7 @@ import 'Food&beverages/RestaurentsScreen/restaurentsnew.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import '../../utils/utils.dart';
+import 'homescreens/home_page.dart';
 
 class MainScreenfood extends StatefulWidget {
   const MainScreenfood({super.key});
@@ -89,7 +90,6 @@ class _MainScreenState extends State<MainScreenfood> {
     super.dispose();
   }
 
-
   Future<void> loadCartData() async {
     try {
       final count = await food_Authservice.fetchCartCount();
@@ -104,7 +104,8 @@ class _MainScreenState extends State<MainScreenfood> {
   }
 
   late final _screens = [
-    Restaurents(scrollController: _scrollController),
+    // Restaurents(scrollController: _scrollController),
+    HomePage(scrollController: _scrollController),
     ReelsScreen(key: reelsKey),
     const food_cartScreen(),
     Profile(),
@@ -138,20 +139,20 @@ class _MainScreenState extends State<MainScreenfood> {
       type: BottomNavigationBarType.fixed,
       selectedItemColor: AppColors.primary,
       unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          if (_currentIndex == 1 && index != 1) {
-            reelsKey.currentState?.setScreenActive(false);
-          }
+      onTap: (index) {
+        if (_currentIndex == 1 && index != 1) {
+          reelsKey.currentState?.setScreenActive(false);
+        }
 
-          if (index == 1) {
-            reelsKey.currentState?.setScreenActive(true);
-          }
+        if (index == 1) {
+          reelsKey.currentState?.setScreenActive(true);
+        }
 
-          setState(() {
-            _currentIndex = index;
-            _showBottomBar = true;
-          });
-        },
+        setState(() {
+          _currentIndex = index;
+          _showBottomBar = true;
+        });
+      },
       items: [
         const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         const BottomNavigationBarItem(

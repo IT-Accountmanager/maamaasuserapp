@@ -13,6 +13,7 @@ import '../../Services/scaffoldmessenger/messenger.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import '../../widgets/app_navigator.dart';
 import '../foodmainscreen.dart';
+import '../homescreens/home_page.dart';
 import 'forgetpassword_screen.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ class _LoginPageState extends State<LoginPage>
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -170,8 +172,12 @@ class _LoginPageState extends State<LoginPage>
 
       debugPrint("➡️ Navigating to MainScreenfood");
 
+      // Navigator.of(context).pushAndRemoveUntil(
+      //   MaterialPageRoute(builder: (_) => const MainScreenfood()),
+      //   (r) => false,
+      // );
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MainScreenfood()),
+        MaterialPageRoute(builder: (_) => MainScreenfood()),
         (r) => false,
       );
     } catch (e, st) {

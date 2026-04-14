@@ -1,14 +1,16 @@
-
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:maamaas/screens/Food&beverages/Menu/tablecartfooterbutton.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/aboutus_model.dart';
 import '../../../Models/food/team_model.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../widgets/widgets/food/favorite_button.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
+import '../../../widgets/widgets/food/table_cartbutton.dart';
 import 'Menuhelper.dart';
+import 'Top_banner.dart';
 import 'cart_button.dart';
 import 'cart_footer_button.dart';
 import '../../skeleton/menu_skeleton.dart';
@@ -19,10 +21,8 @@ import '../../foodmainscreen.dart';
 import 'dart:convert';
 import 'dart:async';
 import '../Table.dart';
-import 'Top_banner.dart';
 import 'colours.dart';
 import 'fullscreen.dart';
-
 
 class MenuResponse {
   final List<Dish> categories;
@@ -38,23 +38,26 @@ class MenuResponse {
   });
 }
 
-class MenuScreen extends StatefulWidget {
+class tablemneuScreen extends StatefulWidget {
   final int vendorId;
+  final int seatingId;
   final String? initialCategoryName;
   // final Restaurent_Banner? banner;
 
-  const MenuScreen({
+  const tablemneuScreen({
     super.key,
     required this.vendorId,
+    required this.seatingId,
     this.initialCategoryName,
     // this.banner,
   });
 
   @override
-  State<MenuScreen> createState() => _MenuScreenState();
+  State<tablemneuScreen> createState() => _MenuScreenState();
 }
 
-class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
+class _MenuScreenState extends State<tablemneuScreen>
+    with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   Timer? _scrollTimer;
 
@@ -237,7 +240,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
               left: 16,
               right: 16,
               bottom: 16,
-              child: const food_Cart_count(),
+              child: table_food_Cart_count(seatingId: widget.seatingId),
             ),
           ],
         ),
@@ -370,6 +373,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 selectedCategoryId: selectedCategoryId,
                 searchQuery: searchQuery,
                 showCartButton: !showTableTab,
+                seatingId: widget.seatingId,
               ),
             ),
           ),
@@ -783,10 +787,6 @@ class _StickyTabsContent extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (showTableTab) ...[
-            TableTabContent(vendorId: vendorId),
-            Divider(height: 1, thickness: 1, color: Menucolours.borderLight),
-          ],
           Expanded(
             child: _CategoryTabStrip(
               categories: categories,
@@ -1111,6 +1111,7 @@ class MenuTabContent extends StatefulWidget {
   final String searchQuery;
   final bool showCartButton;
   final Map<int, int> favoriteMap;
+  final int seatingId;
 
   const MenuTabContent({
     super.key,
@@ -1124,6 +1125,7 @@ class MenuTabContent extends StatefulWidget {
     required this.searchQuery,
     required this.showCartButton,
     required this.favoriteMap,
+    required this.seatingId,
   });
 
   @override
@@ -1149,6 +1151,7 @@ class _MenuTabContentState extends State<MenuTabContent> {
       searchQuery: widget.searchQuery,
       showCartButton: widget.showCartButton,
       favoriteMap: widget.favoriteMap,
+      seatingId: widget.seatingId,
     );
   }
 }
@@ -1164,6 +1167,7 @@ class DishGridTab extends StatefulWidget {
   final String searchQuery;
   final bool showCartButton;
   final Map<int, int> favoriteMap;
+  final int seatingId;
 
   const DishGridTab({
     super.key,
@@ -1174,6 +1178,7 @@ class DishGridTab extends StatefulWidget {
     required this.searchQuery,
     required this.showCartButton,
     required this.favoriteMap,
+    required this.seatingId,
   });
 
   @override
@@ -1305,8 +1310,10 @@ class _DishGridTabState extends State<DishGridTab> {
                   });
                 },
               ),
-              cartButton: CartButton(
+
+              cartButton: TableCartButton(
                 dishId: dish.dishId,
+                id: widget.seatingId,
                 balanceQuantity: dish.balanceQuantity,
               ),
               isOutOfStock: isOut,
@@ -1775,10 +1782,8 @@ class ProductCard extends StatelessWidget {
                     ],
                   ),
 
-                  if (showCartButton) ...[
-                    const Spacer(),
-                    Center(child: cartButton),
-                  ],
+                  const Spacer(),
+                  Center(child: cartButton),
                 ],
               ),
             ),

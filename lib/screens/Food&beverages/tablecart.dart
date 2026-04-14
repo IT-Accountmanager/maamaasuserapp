@@ -11,6 +11,7 @@ import '../../Models/food/tablecartmodel.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'Menu/table_menu.dart';
 import 'food_invoice.dart';
 
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
@@ -518,22 +519,8 @@ class _tablecartState extends State<tablecart> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Table Info Header
-            // Container(
-            //   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            //   decoration: BoxDecoration(
-            //     color: Color(0xFFF3E5F5),
-            //     borderRadius: BorderRadius.circular(12),
-            //   ),
-            //   child:
             Row(
               children: [
-                // const Icon(
-                //   Icons.table_restaurant,
-                //   color: Color(0xFF7B1FA2),
-                //   size: 20,
-                // ),
-                // const SizedBox(width: 8),
                 Text(
                   "Table No: ${tableCartData?.tableCode ?? ''}", // null-safe
                   style: TextStyle(
@@ -546,8 +533,6 @@ class _tablecartState extends State<tablecart> {
             ),
             // ),
             Divider(height: 24, thickness: 1, color: Colors.grey[200]),
-
-            // SizedBox(height: 10),
 
             // Cart Items List
             ..._cartItems.map((item) {
@@ -810,7 +795,7 @@ class _tablecartState extends State<tablecart> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => tablemenuscreen(
+                      builder: (_) => tablemneuScreen(
                         vendorId: tableCartData!.vendorId,
                         seatingId: tableCartData!.seatingId,
                       ),
@@ -1091,8 +1076,7 @@ class _tablecartState extends State<tablecart> {
 
   void _showCouponBottomSheet() async {
     setState(() => isCouponLoading = true);
-    final List<CouponModel> coupons = await food_Authservice
-        .fetchCoupons();
+    final List<CouponModel> coupons = await food_Authservice.fetchCoupons();
 
     final int? cartVendor = tableCartData?.vendorId;
 

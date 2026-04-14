@@ -1170,8 +1170,7 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
                           itemCount: savedAddresses.length,
                           itemBuilder: (context, index) {
                             final address = savedAddresses[index];
-                            final displayText =
-                                "${address.doorNumber}, ${address.addressLine}, ${address.city} - ${address.pincode}";
+                            final displayText = " ${address.address}";
 
                             return GestureDetector(
                               onTap: () {
@@ -1211,13 +1210,17 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
                                                 color: Colors.blueAccent,
                                               ),
                                               const SizedBox(width: 8),
-                                              Text(
-                                                displayText,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
+                                              Expanded(
+                                                // 👈 important
+                                                child: Text(
+                                                  displayText,
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ],
                                           ),

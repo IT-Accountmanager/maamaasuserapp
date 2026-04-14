@@ -958,10 +958,11 @@ class _MenuFilterBarState extends State<MenuFilterBar> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(() {
-          if (!showMenuTab && showTableTab)
+          if (!showMenuTab && showTableTab) {
             _selectedIndex = 1;
-          else if (showMenuTab && !showTableTab)
+          } else if (showMenuTab && !showTableTab) {
             _selectedIndex = 0;
+          }
         });
       }
     });

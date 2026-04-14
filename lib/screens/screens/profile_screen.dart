@@ -1,3 +1,4 @@
+import 'package:maamaas/screens/homescreens/travel&logistics.dart';
 import 'package:maamaas/screens/screens/supportteam/support_team.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -583,6 +584,12 @@ class _MenuListState extends State<_MenuList> {
           'color': Color(0xFF8B5CF6),
           'key': 'account',
         },
+        {
+          'icon': Icons.manage_accounts_outlined,
+          'label': 'Logistics',
+          'color': Color(0xFF8B5CF6),
+          'key': 'logitics',
+        },
       ],
     },
   ];
@@ -611,6 +618,8 @@ class _MenuListState extends State<_MenuList> {
         return Supportteam();
       case 'account':
         return AccountScreen();
+      case 'logitics':
+        return TravelHomeScreen();
       default:
         return null;
     }

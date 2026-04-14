@@ -9,6 +9,7 @@ import '../../../utils/utils.dart';
 import 'cartmode.dart';
 
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
+
 class TableCartButton extends StatefulWidget {
   final int dishId;
   final int id;
@@ -131,16 +132,16 @@ class _TableCartButtonState extends State<TableCartButton> {
     }
   }
 
-  Future<void> _goToCart() async {
-    final prefs = await SharedPreferences.getInstance();
-    int? seatingId = prefs.getInt('id');
-
-    Navigator.push(
-      // ignore: use_build_context_synchronously
-      context,
-      MaterialPageRoute(builder: (_) => tablecart(seatingId: seatingId!)),
-    );
-  }
+  // Future<void> _goToCart() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   int? seatingId = prefs.getInt('id');
+  //
+  //   Navigator.push(
+  //     // ignore: use_build_context_synchronously
+  //     context,
+  //     MaterialPageRoute(builder: (_) => tablecart(seatingId: seatingId!)),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +153,10 @@ class _TableCartButtonState extends State<TableCartButton> {
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.r),
-                  side: BorderSide(color: AppColors.of(context).primary, width: 1.w),
+                  side: BorderSide(
+                    color: AppColors.of(context).primary,
+                    width: 1.w,
+                  ),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 10.w),
               ),
@@ -163,24 +167,24 @@ class _TableCartButtonState extends State<TableCartButton> {
                 await _handleAddToCart(1);
 
                 // ignore: use_build_context_synchronously
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text("1 item added to cart"),
-                    duration: const Duration(seconds: 2),
-                    backgroundColor: Colors.green,
-                    behavior: SnackBarBehavior.floating,
-                    margin: EdgeInsets.only(
-                      bottom: 10.h,
-                      left: 16.w,
-                      right: 16.w,
-                    ),
-                    action: SnackBarAction(
-                      label: "Go to Cart",
-                      textColor: Colors.white,
-                      onPressed: _goToCart,
-                    ),
-                  ),
-                );
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   SnackBar(
+                //     content: const Text("1 item added to cart"),
+                //     duration: const Duration(seconds: 2),
+                //     backgroundColor: Colors.green,
+                //     behavior: SnackBarBehavior.floating,
+                //     margin: EdgeInsets.only(
+                //       bottom: 10.h,
+                //       left: 16.w,
+                //       right: 16.w,
+                //     ),
+                //     action: SnackBarAction(
+                //       label: "Go to Cart",
+                //       textColor: Colors.white,
+                //       onPressed: _goToCart,
+                //     ),
+                //   ),
+                // );
               },
               child: Text(
                 "Add Cart",
@@ -194,7 +198,10 @@ class _TableCartButtonState extends State<TableCartButton> {
           : Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: AppColors.of(context).primary, width: 1.w),
+                border: Border.all(
+                  color: AppColors.of(context).primary,
+                  width: 1.w,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -211,7 +218,7 @@ class _TableCartButtonState extends State<TableCartButton> {
                         );
 
                         if (itemId != null) {
-                          await food_Authservice.updateCartItem(
+                          await food_Authservice.updateCartItemQuantity(
                             itemId: itemId,
                             quantity: itemCount,
                           );
@@ -241,25 +248,25 @@ class _TableCartButtonState extends State<TableCartButton> {
                       );
 
                       if (itemId != null) {
-                        await food_Authservice.updateCartItem(
+                        await food_Authservice.updateCartItemQuantity(
                           itemId: itemId,
                           quantity: itemCount,
                         );
                       }
 
                       // ignore: use_build_context_synchronously
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("$itemCount item(s) in cart"),
-                          backgroundColor: Colors.green,
-                          behavior: SnackBarBehavior.floating,
-                          action: SnackBarAction(
-                            label: "Go to Cart",
-                            textColor: Colors.white,
-                            onPressed: _goToCart,
-                          ),
-                        ),
-                      );
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   SnackBar(
+                      //     content: Text("$itemCount item(s) in cart"),
+                      //     backgroundColor: Colors.green,
+                      //     behavior: SnackBarBehavior.floating,
+                      //     action: SnackBarAction(
+                      //       label: "Go to Cart",
+                      //       textColor: Colors.white,
+                      //       onPressed: _goToCart,
+                      //     ),
+                      //   ),
+                      // );
                     },
                   ),
                 ],

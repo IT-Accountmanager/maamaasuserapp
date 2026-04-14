@@ -360,42 +360,42 @@ class food_Authservice {
     }
   }
 
-  static Future<bool> updateCartItem({
-    required int itemId,
-    required int quantity,
-  }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final int userId = prefs.getInt('userId') ?? 0;
-
-      final uri =
-          Uri.parse(
-            "http://testing.maamaas.com/food/api/cart/update/item",
-          ).replace(
-            queryParameters: {
-              "userId": userId.toString(),
-              "quantity": quantity.toString(),
-              "itemId": itemId.toString(),
-            },
-          );
-
-      // print("🟡 [UpdateCartItem] PUT → $endpoint");
-
-      final response = await ApiClient.put(
-        uri.toString(),
-        {},
-        service: "food",
-      ); // body optional
-      // print(
-      //   "📩 UpdateCart Response: ${response.statusCode} → ${response.body}",
-      // );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      // print("❌ [UpdateCartItem] Exception: $e");
-      return false;
-    }
-  }
+  // static Future<bool> updateCartItem({
+  //   required int itemId,
+  //   required int quantity,
+  // }) async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final int userId = prefs.getInt('userId') ?? 0;
+  //
+  //     final uri =
+  //         Uri.parse(
+  //           "http://testing.maamaas.com/food/api/cart/update/item",
+  //         ).replace(
+  //           queryParameters: {
+  //             "userId": userId.toString(),
+  //             "quantity": quantity.toString(),
+  //             "itemId": itemId.toString(),
+  //           },
+  //         );
+  //
+  //     // print("🟡 [UpdateCartItem] PUT → $endpoint");
+  //
+  //     final response = await ApiClient.put(
+  //       uri.toString(),
+  //       {},
+  //       service: "food",
+  //     ); // body optional
+  //     // print(
+  //     //   "📩 UpdateCart Response: ${response.statusCode} → ${response.body}",
+  //     // );
+  //
+  //     return response.statusCode == 200;
+  //   } catch (e) {
+  //     // print("❌ [UpdateCartItem] Exception: $e");
+  //     return false;
+  //   }
+  // }
 
   static Future<int?> getItemIdByDishId(int dishId) async {
     try {
@@ -496,30 +496,46 @@ class food_Authservice {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
+    final String customerId = prefs.getString("customerId") ?? '';
 
     final endpoint =
-        "api/cart/add/table/cart/$userId/$seatingId"; // ✅ leading /
+        "api/cart/add/table/cart/add-item?userId=$userId&seatingId=$seatingId&customerId=$customerId";
     final body = {"dishId": dishId, "quantity": quantity};
 
     try {
+      print("🟡 ADD TO TABLE CART START");
+      print("➡️ Endpoint: $endpoint");
+      print("➡️ Body: $body");
+      print("➡️ userId: $userId, seatingId: $seatingId");
+
       final response = await ApiClient.post(endpoint, body, service: "food");
 
+      print("📥 STATUS CODE: ${response.statusCode}");
+      print("📥 RESPONSE BODY: ${response.body}");
+
       if (response.statusCode != 200 && response.statusCode != 201) {
+        print("❌ API FAILED (Invalid status code)");
         return false;
       }
 
-      /// ✅ Decode response
       final data = jsonDecode(response.body);
+      print("✅ DECODED RESPONSE: $data");
 
-      /// adjust key name if backend uses different one
       final int? cartId = data['cartId'];
 
       if (cartId != null) {
         await prefs.setInt('cartId', cartId);
+        print("🟢 CART ID SAVED: $cartId");
+      } else {
+        print("⚠️ cartId NOT FOUND in response");
       }
 
+      print("🟢 ADD TO CART SUCCESS");
       return true;
-    } catch (e) {
+    } catch (e, stack) {
+      print("🔥 ERROR IN addToTableCart");
+      print("❌ Error: $e");
+      print("📍 StackTrace: $stack");
       return false;
     }
   }
@@ -840,7 +856,7 @@ class food_Authservice {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
 
-    final endpoint = "api/cart/$userId/with-seating";
+    final endpoint = "api/cart/get/user/with-seating?userId=$userId";
 
     try {
       final response = await ApiClient.get(endpoint, service: "food");
@@ -896,7 +912,7 @@ class food_Authservice {
       }
 
       final endpoint =
-          "api/cart/update/$userId?quantity=$quantity&itemId=$itemId";
+          "api/cart/update/item?userId=$userId&quantity=$quantity&itemId=$itemId";
 
       // Use an empty body if your Services does not expect one
       final response = await ApiClient.put(endpoint, {}, service: "food");

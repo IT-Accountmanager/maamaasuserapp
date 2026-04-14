@@ -3,8 +3,9 @@ import 'package:maamaas/screens/Food&beverages/tablemenu.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 import '../../Models/food/table_confirmedlist_model.dart';
 import '../../Models/food/table_waitinglist_model.dart';
-
 import 'package:flutter/material.dart';
+
+import 'Menu/table_menu.dart';
 
 class TableBookings extends StatefulWidget {
   const TableBookings({super.key});
@@ -722,7 +723,7 @@ class _ConfirmedListCardState extends State<ConfirmedListCard>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => tablemenuscreen(
+        builder: (context) => tablemneuScreen(
           vendorId: widget.item.vendorId,
           seatingId: widget.item.seatingId,
         ),
