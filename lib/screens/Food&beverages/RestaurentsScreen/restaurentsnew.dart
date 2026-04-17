@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
+import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/screens/Food&beverages/RestaurentsScreen/RestaurentsHelper.dart';
 import '../../../Models/food/food_categries_model.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
@@ -149,20 +150,6 @@ class _RestaurentsState extends State<Restaurents> {
       if (mounted) setState(() => _isGuestLocationLoading = false);
     }
   }
-
-  // void _loadLocationFromAPI() async {
-  //   final loc = await subscription_AuthService.fetchCurrentLocation();
-  //   if (!mounted) return;
-  //   if (loc != null) {
-  //     setState(() => _currentLocation = loc.address);
-  //     _locationCategory = loc.category;
-  //   } else {
-  //     setState(() => _currentLocation = 'Fetching location...');
-  //     WidgetsBinding.instance.addPostFrameCallback(
-  //       (_) => _showUpdateLocationDialog(),
-  //     );
-  //   }
-  // }
 
   Future<void> _loadLocationFromAPI() async {
     try {
@@ -379,21 +366,105 @@ class _RestaurentsState extends State<Restaurents> {
     return mapped;
   }
 
+  // Future<void> _handleOrderTypeSelection(String type) async {
+  //   final cleanType = type.toLowerCase().trim();
+  //
+  //   setState(() => selectedOrderType = cleanType);
+  //   selectedOrderTypeNotifier.value = cleanType;
+  //
+  //   final api = _getApiOrderType();
+  //
+  //   if (api != null) {
+  //     await food_Authservice.createCart(api);
+  //   } else {
+  //     debugPrint("❌ Mapping failed for: $cleanType");
+  //   }
+  // }
+  // Future<void> _handleOrderTypeSelection(String type) async {
+  //   final cleanType = type.toLowerCase().trim();
+  //
+  //   final api = RestaurentsHelper.typeMapping[cleanType];
+  //
+  //   if (api == null) {
+  //     debugPrint("❌ Mapping failed for: $cleanType");
+  //     return;
+  //   }
+  //
+  //   print("🚀 Trying to create cart for: $cleanType");
+  //
+  //   final result = await food_Authservice.createCart(api);
+  //
+  //   /// ✅ SUCCESS → UPDATE UI + FILTER
+  //   if (result["success"] == true) {
+  //     print("✅ Cart created: ${result["cartId"]}");
+  //
+  //     if (!mounted) return;
+  //
+  //     setState(() {
+  //       selectedOrderType = cleanType;
+  //     });
+  //
+  //     selectedOrderTypeNotifier.value = cleanType;
+  //   }
+  //   /// ❌ FAILURE → DO NOT CHANGE UI
+  //   else {
+  //     final message = result["message"] ?? "Something went wrong";
+  //
+  //     print("❌ ERROR: $message");
+  //
+  //     if (!mounted) return;
+  //
+  //     /// 🔴 SHOW ERROR
+  //     AppAlert.error(context, message);
+  //
+  //     /// 🔥 IMPORTANT: DO NOTHING ELSE
+  //     /// (UI stays on previous selection)
+  //   }
+  // }
   Future<void> _handleOrderTypeSelection(String type) async {
     final cleanType = type.toLowerCase().trim();
 
-    setState(() => selectedOrderType = cleanType);
-    selectedOrderTypeNotifier.value = cleanType;
+    /// ✅ 👉 HANDLE CATERING LOCALLY
+    if (cleanType == "catering") {
+      if (!mounted) return;
 
-    final api = _getApiOrderType();
+      setState(() {
+        selectedOrderType = cleanType;
+      });
 
-    if (api != null) {
-      await food_Authservice.createCart(api);
-    } else {
+      selectedOrderTypeNotifier.value = cleanType;
+
+      print("🎯 Catering selected → No API call");
+      return; // 🚫 STOP HERE
+    }
+
+    /// ✅ OTHER TYPES → CALL API
+    final api = RestaurentsHelper.typeMapping[cleanType];
+
+    if (api == null) {
       debugPrint("❌ Mapping failed for: $cleanType");
+      return;
+    }
+
+    print("🚀 Trying to create cart for: $cleanType");
+
+    final result = await food_Authservice.createCart(api);
+
+    if (result["success"] == true) {
+      if (!mounted) return;
+
+      setState(() {
+        selectedOrderType = cleanType;
+      });
+
+      selectedOrderTypeNotifier.value = cleanType;
+    } else {
+      final message = result["message"] ?? "Something went wrong";
+
+      if (!mounted) return;
+      AppAlert.error(context, message);
     }
   }
-
   void _focusOrderTypeSelection() {
     final context = _orderTypeKey.currentContext;
 
@@ -462,13 +533,13 @@ class _RestaurentsState extends State<Restaurents> {
                   systemOverlayStyle: _isBannerCollapsed
                       ? SystemUiOverlayStyle.dark
                       : SystemUiOverlayStyle.light,
-                  leading: _isBannerCollapsed
-                      ? IconButton(
-                          icon: const Icon(Icons.arrow_back_ios),
-                          color: Colors.black,
-                          onPressed: () => Navigator.pop(context),
-                        )
-                      : null,
+                  // leading: _isBannerCollapsed
+                  //     ? IconButton(
+                  //         icon: const Icon(Icons.arrow_back_ios),
+                  //         color: Colors.black,
+                  //         onPressed: () => Navigator.pop(context),
+                  //       )
+                  //     : null,
                   automaticallyImplyLeading: false,
 
                   title: _isBannerCollapsed ? _buildCollapsedBar() : null,
@@ -1186,7 +1257,7 @@ class _RestaurentsState extends State<Restaurents> {
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════_handleOrderTypeSelection═══════════════════════════════════════
   // FILTER CHIPS
   // ══════════════════════════════════════════════════════════════════════════
 

@@ -1,9 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../Services/Auth_service/food_authservice.dart';
+import '../../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
+
 class TableTabContent extends StatefulWidget {
   final int vendorId;
   const TableTabContent({super.key, required this.vendorId});
@@ -122,7 +123,10 @@ class _TableTabContentState extends State<TableTabContent> {
       readOnly: true,
       decoration: InputDecoration(
         labelText: "Select Date",
-        prefixIcon: Icon(Icons.calendar_today, color: AppColors.of(context).primary),
+        prefixIcon: Icon(
+          Icons.calendar_today,
+          color: AppColors.of(context).primary,
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -151,7 +155,10 @@ class _TableTabContentState extends State<TableTabContent> {
       readOnly: true,
       decoration: InputDecoration(
         labelText: "Select Time",
-        prefixIcon: Icon(Icons.access_time, color: AppColors.of(context).primary),
+        prefixIcon: Icon(
+          Icons.access_time,
+          color: AppColors.of(context).primary,
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -235,7 +242,7 @@ class _TableTabContentState extends State<TableTabContent> {
       capacity: int.tryParse(noofpeople.text.trim()) ?? 0,
     );
 
-    if (status == 200) {
+    if (status == 200 || status.toString() == "200") {
       Navigator.pop(context);
 
       _showSuccessDialog(
@@ -244,14 +251,13 @@ class _TableTabContentState extends State<TableTabContent> {
             "📅 Date: ${dateController.text}\n"
             "⏰ Time: ${timeController.text}",
       );
-    } else if (status == 202) {
+    } else if (status == 202 || status.toString() == "202") {
       Navigator.pop(context);
 
       _showSuccessDialog(
         "Added to Waiting List",
         "All tables are currently full.\n\n"
-            "You have been added to the waiting list.\n"
-            "The restaurant may contact you if a table becomes available.",
+            "You have been added to the waiting list.",
       );
     } else {
       _showErrorDialog("Failed to schedule booking");
@@ -266,7 +272,6 @@ class _TableTabContentState extends State<TableTabContent> {
         noofpeople.text.trim().isNotEmpty &&
         selectedTime != null;
   }
-
 
   void _showSuccessDialog(String title, String message) {
     showDialog(

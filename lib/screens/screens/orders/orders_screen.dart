@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../Models/delivery/fooddelivery.dart';
 import '../../../Models/food/orders_model.dart';
-import '../../Food&beverages/table_bookings.dart';
+import '../../Food&beverages/table/table_bookings.dart';
 import 'catering_orders/catering_orders.dart';
 import 'food orders/food_orders.dart';
 
@@ -50,11 +50,18 @@ class _OrdersScreenState extends State<OrdersScreen>
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+          ), // iOS-style back arrow
+          color: Color(0xFF1A1D2E),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        iconTheme: const IconThemeData(color: Colors.black),
 
-        // 👇 this actually increases usable height
         toolbarHeight: 100,
 
-        automaticallyImplyLeading: true,
+        automaticallyImplyLeading: false,
 
         flexibleSpace: SafeArea(child: Center(child: _buildVerticalChips())),
       ),

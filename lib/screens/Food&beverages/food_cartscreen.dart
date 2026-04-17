@@ -7788,9 +7788,6 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     WebSocketManager().subscribeUserCart(userId, _updateCartFromSocket);
   }
 
-  // ✅ FIX: Buffer socket updates whenever _loadCart is in-flight (not just
-  // when cartData==null). This prevents the race where a second _loadCart call
-  // overwrites socket-applied data. Also deduplicates the server's double-fire.
   bool _isLoadingCart = false;
   String? _lastSocketEventKey;
 
@@ -7812,8 +7809,6 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       "🟡 SOCKET UPDATE: cartItems=${(data['cartItems'] as List?)?.length}",
     );
 
-    // Buffer while _loadCart is in-flight — it will flush after it settles.
-    // Keep only the LATEST buffered update (older ones are stale).
     if (_isLoadingCart || cartData == null) {
       print("⏳ _loadCart in-flight → buffering (replacing stale buffer)");
       _pendingSocketUpdates.clear();
@@ -7986,11 +7981,13 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         final amount = (cartData?.grandTotal ?? 0).toDouble();
 
         // ── Show "opening gateway" overlay while createOrder API runs ────
-        if (mounted)
+        if (mounted) {
           setState(() => _overlayState = PaymentOverlayState.openingGateway);
+        }
         final orderId = await food_Authservice.createOrder(amount);
-        if (mounted)
+        if (mounted) {
           setState(() => _overlayState = PaymentOverlayState.openingGateway);
+        }
 
         if (orderId == null) {
           AppAlert.error(context, "❌ Failed to create payment order");
@@ -8001,8 +7998,9 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
           final pid = res.paymentId!;
           final oid = res.orderId!;
           // ── Show "confirming payment" overlay while order API runs ──────
-          if (mounted)
+          if (mounted) {
             setState(() => _overlayState = PaymentOverlayState.processing);
+          }
           final ok = isUserScheduled
               ? await _placeScheduledOrder(
                   paymentMethod: "Online_Payment",
@@ -8016,17 +8014,13 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   razorpayOrderId: oid,
                   amount: amount,
                 );
-          // FIX: hide processing overlay only after order result is known
-          // (_showOrderSuccess takes over visually, so hide _isProcessingPayment
-          //  only when ok==false so there's no blank-flash gap)
+
           if (!ok && mounted) {
             setState(() => _overlayState = PaymentOverlayState.processing);
           }
           ;
 
           if (ok) {
-            // capturePayment runs in background — navigation already happened
-            // inside _placeDirectOrder/_placeScheduledOrder
             food_Authservice
                 .capturePayment(paymentId: pid, amount: amount)
                 .catchError((_) {
@@ -8185,33 +8179,8 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     }
   }
 
-  // Future<void> _onRefresh() async {
-  //   final c = await food_Authservice.fetchCart();
-  //   final w = await subscription_AuthService.fetchWallet();
-  //   if (!mounted) return;
-  //   setState(() {
-  //     cartData = c;
-  //     wallet = w;
-  //   });
-  // }
   Future<void> _onRefresh() async {
     await _loadAllData();
-  }
-
-  Future<void> _loadAds() async {
-    try {
-      final result = await promotion_Authservice.fetchcampaign();
-      setState(
-        () => homepageAds = result
-            .where(
-              (c) =>
-                  c.status == Status.ACTIVE &&
-                  c.approvalStatus == ApprovalStatus.APPROVED &&
-                  c.addDisplayPosition == AddDisplayPosition.CHECKOUT_PAGE,
-            )
-            .toList(),
-      );
-    } catch (_) {}
   }
 
   String _fmt(num? v) => (v ?? 0).toStringAsFixed(2);
@@ -9053,6 +9022,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     final discount = cartData?.discountAmount ?? 0;
     final gst = cartData?.gstTotal ?? 0;
     final grandTotal = cartData?.grandTotal ?? 0;
+    final servicecharges =cartData?.serviceCharges?? 0;
     final type = orderType.toUpperCase();
 
     return _card(

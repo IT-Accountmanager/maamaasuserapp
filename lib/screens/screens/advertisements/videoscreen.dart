@@ -914,7 +914,6 @@
 // }
 
 import 'dart:math';
-
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/promotion_services_Authservice.dart';
@@ -1043,14 +1042,14 @@ class ReelsScreenState extends State<ReelsScreen>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
-      // FIX 1: Hard-pause + cancel timer so NO sound leaks when app is backgrounded
-      pauseAllVideos();
-      _autoScrollTimer?.cancel();
-    } else if (state == AppLifecycleState.resumed) {
-      if (_isScreenActive && !_isPaused) {
-        resumeCurrentVideo();
-        _startAutoScrollTimer();
+      for (final controller in _videoControllers.values) {
+        if (controller.value.isInitialized) {
+          controller.pause();
+          controller.setVolume(0);
+        }
       }
+
+      _autoScrollTimer?.cancel();
     }
   }
 
@@ -1078,7 +1077,11 @@ class ReelsScreenState extends State<ReelsScreen>
 
   /// Pause only the current page's video (not all).
   void pauseAllVideos() {
-    _videoControllers[_currentPage]?.pause();
+    for (final controller in _videoControllers.values) {
+      if (controller.value.isInitialized) {
+        controller.pause();
+      }
+    }
   }
 
   /// Resume only the current page's video.
@@ -1108,10 +1111,14 @@ class ReelsScreenState extends State<ReelsScreen>
 
   @override
   void didPushNext() {
-    // 🔥 Another screen opened on top
     _isScreenActive = false;
     _autoScrollTimer?.cancel();
+
     pauseAllVideos();
+
+    for (final controller in _videoControllers.values) {
+      controller.setVolume(0);
+    }
   }
 
   @override
@@ -1162,6 +1169,7 @@ class ReelsScreenState extends State<ReelsScreen>
 
     // Only play if screen is active and user hasn't manually paused
     if (_isScreenActive && !_isPaused) {
+      pauseAllVideos();
       controller.play();
     }
     _sendAnalytics(index);
@@ -1185,90 +1193,6 @@ class ReelsScreenState extends State<ReelsScreen>
     if (mounted) setState(() {});
   }
 
-  // ── Data fetching ────────────────────────────────────────────────────────────
-
-  // Future<void> _fetchCampaigns() async {
-  //   if (!mounted) return;
-  //
-  //   // Increment token so any in-flight _initializeVideo calls become stale
-  //   final int token = ++_fetchToken;
-  //
-  //   setState(() => isLoading = true);
-  //
-  //   _autoScrollTimer?.cancel();
-  //   _imageDisplayTime.clear();
-  //
-  //   // Dispose ALL existing controllers before clearing the map
-  //   for (final c in _videoControllers.values) {
-  //     c.dispose();
-  //   }
-  //   _videoControllers.clear();
-  //
-  //   _currentPage = 0;
-  //   _isPaused = false;
-  //   _expandedDescriptions.clear();
-  //
-  //   // Reset page position (post-frame to avoid "hasClients = false" crash)
-  //   if (_pageController.hasClients) {
-  //     WidgetsBinding.instance.addPostFrameCallback((_) {
-  //       if (_pageController.hasClients) {
-  //         _pageController.jumpToPage(0);
-  //       }
-  //     });
-  //   }
-  //
-  //   try {
-  //     final result = await promotion_Authservice.fetchcampaign();
-  //
-  //     // Bail if a newer fetch was triggered while we awaited
-  //     if (!mounted || _fetchToken != token) return;
-  //
-  //     // ── Filter: base conditions ──────────────────────────────────────────
-  //     final baseCampaigns = result.where((c) {
-  //       return c.addDisplayPosition == AddDisplayPosition.ADD_SCREEN &&
-  //           c.medium == Medium.APP;
-  //     }).toList();
-  //
-  //     // ── Extract unique interests (only once) ─────────────────────────────
-  //     final Set<Interest> interestSet = {};
-  //     for (final c in baseCampaigns) {
-  //       if (c.interests != null) interestSet.addAll(c.interests!);
-  //     }
-  //     _allInterests = interestSet.toList();
-  //
-  //     // ── Apply interest filter ────────────────────────────────────────────
-  //     campaigns = baseCampaigns.where((c) {
-  //       if (_selectedInterest == null) return true;
-  //       return c.interests?.contains(_selectedInterest) ?? false;
-  //     }).toList();
-  //
-  //     // ── Seed liked state ─────────────────────────────────────────────────
-  //     _likedCampaigns.clear();
-  //     for (final c in campaigns) {
-  //       if (c.likedByCurrentUser == true) {
-  //         _likedCampaigns.add(c.campaignId);
-  //       }
-  //     }
-  //
-  //     _sentCampaignAnalytics.clear();
-  //     _videoStartTime = campaigns.isNotEmpty ? DateTime.now() : null;
-  //
-  //     // Initialize first video
-  //     if (campaigns.isNotEmpty) {
-  //       await _initializeVideo(0, token: token);
-  //     }
-  //
-  //     if (!mounted || _fetchToken != token) return;
-  //
-  //     _startAutoScrollTimer();
-  //   } catch (e) {
-  //     debugPrint('❌ Campaign API Error: $e');
-  //   } finally {
-  //     if (mounted && _fetchToken == token) {
-  //       setState(() => isLoading = false);
-  //     }
-  //   }
-  // }
 
   Future<void> _fetchCampaigns() async {
     if (!mounted) return;
@@ -1362,9 +1286,22 @@ class ReelsScreenState extends State<ReelsScreen>
     if (!active) {
       debugPrint("⛔ Reels paused (tab hidden)");
       _autoScrollTimer?.cancel();
-      pauseAllVideos();
+
+      for (final controller in _videoControllers.values) {
+        if (controller.value.isInitialized) {
+          controller.pause();
+          controller.setVolume(0); // 🔥 IMPORTANT
+        }
+      }
     } else {
       debugPrint("▶️ Reels resumed (tab visible)");
+
+      for (final controller in _videoControllers.values) {
+        if (controller.value.isInitialized) {
+          controller.setVolume(1);
+        }
+      }
+
       if (!_isPaused) {
         resumeCurrentVideo();
         _startAutoScrollTimer();
@@ -1623,7 +1560,20 @@ class ReelsScreenState extends State<ReelsScreen>
                       ),
                     ),
 
-                    // 🔥 Optional: Top Loader UI
+                    /// ✅ 🔥 FULL SCREEN LOADER OVERLAY (NO BLACK SCREEN)
+                    if (isLoading)
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black.withOpacity(0.4),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    /// 🔄 Pull-to-refresh small loader
                     if (_isRefreshing)
                       const Positioned(
                         top: 40,
@@ -1822,21 +1772,21 @@ class ReelsScreenState extends State<ReelsScreen>
             ),
 
           // ── Right action buttons ─────────────────────────────────────────
-          Positioned(
-            right: 16,
-            bottom: 160,
-            child: Column(
-              children: [
-                // ❤️ LIKE
-                _buildLikeButton(index, campaign),
-
-                const SizedBox(height: 16),
-
-                // 🔁 SHARE
-                _buildShareButton(index, campaign),
-              ],
-            ),
-          ),
+          // Positioned(
+          //   right: 16,
+          //   bottom: 160,
+          //   child: Column(
+          //     children: [
+          //       // ❤️ LIKE
+          //       _buildLikeButton(index, campaign),
+          //
+          //       const SizedBox(height: 16),
+          //
+          //       // 🔁 SHARE
+          //       _buildShareButton(index, campaign),
+          //     ],
+          //   ),
+          // ),
 
           // ── Campaign name + description ──────────────────────────────────
           Positioned(
@@ -2022,34 +1972,7 @@ class ReelsScreenState extends State<ReelsScreen>
       children: [
         IconButton(
           icon: const Icon(Icons.share, color: Colors.white, size: 30),
-          // onPressed: () async {
-          //   final appLink = Platform.isAndroid
-          //       ? 'https://play.google.com/store/apps/details?id=com.maamaas.app'
-          //       : Platform.isIOS
-          //       ? 'https://apps.apple.com/us/app/maamaas/id6759244693'
-          //       : 'https://maamaas.com';
-          //   final dynamicLink = await createDynamicLink(campaign.campaignId);
-          //
-          //   final message =
-          //       '🔥 Check this campaign!\n\n'
-          //       '📲 Open in App: $dynamicLink';
-          //
-          //   await Share.share(message);
-          //
-          //   final payload = await _buildPayload(campaign.campaignId);
-          //   try {
-          //     await promotion_Authservice.sendShareAnalytics(payload);
-          //   } catch (e) {
-          //     debugPrint('❌ Share analytics error: $e');
-          //   }
-          //
-          //   if (mounted && index < campaigns.length) {
-          //     setState(() {
-          //       campaigns[index].sharesCount =
-          //           (campaigns[index].sharesCount ?? 0) + 1;
-          //     });
-          //   }
-          // },
+
           onPressed: () async {
             final dynamicLink = await createDynamicLink(campaign.campaignId);
 

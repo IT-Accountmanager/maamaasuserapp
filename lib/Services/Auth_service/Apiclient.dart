@@ -13,27 +13,27 @@ typedef SessionExpiredHandler = Future<void> Function();
 
 class ApiClient {
   static const String subscription =
-      "http://testing.maamaas.com:8080/subscription";
-      // "https://backend.maamaas.com/subscription";
+      // "http://testing.maamaas.com:8080/subscription";
+      "https://backend.maamaas.com/subscription";
   static const String food_beverages =
-      "http://testing.maamaas.com:8080/food";
-      // "https://backend.maamaas.com/food";
+      // "http://testing.maamaas.com:8080/food";
+      "https://backend.maamaas.com/food";
 
   static const String notification =
-      "http://testing.maamaas.com:8080/notify";
-      // "https://delivery.maamaas.com/notify";
+      // "http://testing.maamaas.com:8080/notify";
+      "https://delivery.maamaas.com/notify";
 
   static const String catering =
-      "http://testing.maamaas.com:8080/catering";
-      // "https://backend.maamaas.com/catering";
+      // "http://testing.maamaas.com:8080/catering";
+      "https://backend.maamaas.com/catering";
 
   static const String delivery =
-      "http://testing.maamaas.com:8080/delivery";
-      // "https://delivery.maamaas.com/delivery";
+      // "http://testing.maamaas.com:8080/delivery";
+      "https://delivery.maamaas.com/delivery";
 
   static const String promotions =
-      "http://testing.maamaas.com:8080/promotions";
-      // "https://backend.maamaas.com/promotions";
+      // "http://testing.maamaas.com:8080/promotions";
+      "https://backend.maamaas.com/promotions";
 
   static SessionExpiredHandler? onSessionExpired;
 

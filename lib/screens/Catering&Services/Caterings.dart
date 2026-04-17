@@ -102,8 +102,8 @@ class _CateringsPageState extends State<CateringsPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => RestaurantDetailScreen(
-                              vendorId: banner.vendorId.toString(),
+                            builder: (_) => CateringVendorScreen(
+                              vendorId: banner.vendorId,
                             ),
                           ),
                         );

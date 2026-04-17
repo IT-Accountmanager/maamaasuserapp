@@ -12,7 +12,6 @@ import '../../../widgets/widgets/food/table_cartbutton.dart';
 import 'Menuhelper.dart';
 import 'Top_banner.dart';
 import 'cart_button.dart';
-import 'cart_footer_button.dart';
 import '../../skeleton/menu_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,7 +19,6 @@ import '../../../Models/food/dish.dart';
 import '../../foodmainscreen.dart';
 import 'dart:convert';
 import 'dart:async';
-import '../Table.dart';
 import 'colours.dart';
 import 'fullscreen.dart';
 
@@ -42,14 +40,12 @@ class tablemneuScreen extends StatefulWidget {
   final int vendorId;
   final int seatingId;
   final String? initialCategoryName;
-  // final Restaurent_Banner? banner;
 
   const tablemneuScreen({
     super.key,
     required this.vendorId,
     required this.seatingId,
     this.initialCategoryName,
-    // this.banner,
   });
 
   @override
@@ -77,12 +73,12 @@ class _MenuScreenState extends State<tablemneuScreen>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnim;
   BannerContentType selectedContent = BannerContentType.none;
-  static const double _expandedHeight = 400.0;
 
-  String get normalizedOrderType => orderType.trim().toUpperCase();
-  bool get showMenuTab =>
-      ["DINE_IN", "TAKEAWAY", "DELIVERY"].contains(normalizedOrderType);
-  bool get showTableTab => normalizedOrderType == "TABLE_DINE_IN";
+  // Responsive expanded height based on screen size
+  double get _expandedHeight {
+    final screenHeight = MediaQuery.of(context).size.height;
+    return (screenHeight * 0.42).clamp(280.0, 420.0);
+  }
 
   @override
   void initState() {
@@ -92,12 +88,11 @@ class _MenuScreenState extends State<tablemneuScreen>
       duration: const Duration(milliseconds: 400),
     );
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
-
-    // Single future — FutureBuilder waits on this, no separate call
     _screenFuture = _initializeScreen();
-    // _bannerItem = widget.banner;
 
     _scrollController.addListener(() {
+      // We need context for _expandedHeight, so guard with mounted
+      if (!mounted) return;
       final collapsed =
           _scrollController.offset > (_expandedHeight - kToolbarHeight);
       if (collapsed != _isCollapsed) {
@@ -121,9 +116,7 @@ class _MenuScreenState extends State<tablemneuScreen>
   Future<void> _loadFavorites() async {
     try {
       final favs = await food_Authservice.getFavoritesByUserId();
-
       if (!mounted) return;
-
       setState(() {
         favoriteMap = {
           for (var f in favs)
@@ -138,33 +131,21 @@ class _MenuScreenState extends State<tablemneuScreen>
   Future<void> _loadBannerData() async {
     try {
       final banner = await Authservice().fetchVendorBanner(widget.vendorId);
-      if (mounted) {
-        setState(() {
-          _bannerItem = banner;
-        });
-      }
+      if (mounted) setState(() => _bannerItem = banner);
     } catch (_) {}
   }
 
   Future<void> _loadaboutus() async {
     try {
       final about = await food_Authservice.fetchAboutUsData(widget.vendorId);
-      if (mounted) {
-        setState(() {
-          _aboutus = about;
-        });
-      }
+      if (mounted) setState(() => _aboutus = about);
     } catch (_) {}
   }
 
   Future<void> _loadteam() async {
     try {
       final team = await food_Authservice.fetchteam(widget.vendorId);
-      if (mounted) {
-        setState(() {
-          _team = team;
-        });
-      }
+      if (mounted) setState(() => _team = team);
     } catch (_) {}
   }
 
@@ -189,8 +170,6 @@ class _MenuScreenState extends State<tablemneuScreen>
     if (!mounted) return;
     setState(() {
       categories = menu.categories.where((c) => c.parentId == 0).toList();
-
-      // Auto-select the category passed from Restaurants screen
       if (widget.initialCategoryName != null && categories.isNotEmpty) {
         final match = categories.firstWhere(
           (c) =>
@@ -234,7 +213,6 @@ class _MenuScreenState extends State<tablemneuScreen>
                 );
               },
             ),
-
             // Floating cart bar
             Positioned(
               left: 16,
@@ -339,14 +317,13 @@ class _MenuScreenState extends State<tablemneuScreen>
 
           SliverToBoxAdapter(child: _buildBannerContent()),
 
-          // ── Sticky category + table tabs ────────────────────────────
+          // ── Sticky category tabs ────────────────────────────
           SliverPersistentHeader(
             pinned: true,
             delegate: _StickyTabsDelegate(
               height: _headerHeight,
               child: _StickyTabsContent(
                 categories: categories,
-                showTableTab: !showMenuTab,
                 vendorId: widget.vendorId,
                 selectedCategoryId: selectedCategoryId,
                 onCategorySelected: (id) =>
@@ -368,11 +345,9 @@ class _MenuScreenState extends State<tablemneuScreen>
                   dishId: dish.dishId,
                   balanceQuantity: dish.balanceQuantity,
                 ),
-                // favoriteButton: favbutton(),
                 isOutOfStock: (dish) => dish.stock?.toLowerCase() != 'in stock',
                 selectedCategoryId: selectedCategoryId,
                 searchQuery: searchQuery,
-                showCartButton: !showTableTab,
                 seatingId: widget.seatingId,
               ),
             ),
@@ -382,44 +357,44 @@ class _MenuScreenState extends State<tablemneuScreen>
     );
   }
 
+  // FIX: Responsive header height using MediaQuery instead of raw .h
   double get _headerHeight {
-    double base = 88.h;
-    double table = 52.h;
-    return !showMenuTab ? base + table : base;
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Tablets get a bit more height, phones get compact
+    return screenWidth > 600 ? 96.0 : 80.0;
   }
 
   Widget _buildBannerContent() {
-    if (selectedContent == BannerContentType.none) {
-      return SizedBox();
-    }
-
+    if (selectedContent == BannerContentType.none) return const SizedBox();
     final about = _aboutus;
-    if (about == null) return SizedBox();
+    if (about == null) return const SizedBox();
 
-    // =======================
-    // ✅ ABOUT SECTION
-    // =======================
+    // ── ABOUT SECTION ──────────────────────────────────────────────
     if (selectedContent == BannerContentType.about) {
+      // FIX: clamp image height for small screens
+      final imgH = (MediaQuery.of(context).size.height * 0.2).clamp(
+        100.0,
+        180.0,
+      );
+
       return Container(
         color: Colors.white,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 Top Image
             if (about.image.isNotEmpty)
               Image.network(
                 about.image,
                 width: double.infinity,
-                height: 160.h,
+                height: imgH,
                 fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(),
               ),
-
             Padding(
               padding: EdgeInsets.all(16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🔹 ABOUT TEXT
                   Text(
                     "About Us",
                     style: TextStyle(
@@ -427,9 +402,7 @@ class _MenuScreenState extends State<tablemneuScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   SizedBox(height: 8.h),
-
                   Text(
                     about.aboutUs,
                     style: TextStyle(
@@ -438,28 +411,22 @@ class _MenuScreenState extends State<tablemneuScreen>
                       color: Colors.grey.shade800,
                     ),
                   ),
-
                   SizedBox(height: 20.h),
-
                   if (about.mission.isNotEmpty)
                     _infoCard(
                       title: "Our Mission",
                       description: about.mission,
                       image: about.missionImage,
                     ),
-
                   SizedBox(height: 12.h),
-
-                  // 🔹 Vision Card
                   if (about.vision.isNotEmpty)
                     _infoCard(
                       title: "Our Vision",
                       description: about.vision,
                       image: about.visionImage,
                     ),
-
-                  // 🔹 TEAM ONLY (NO GALLERY HERE)
                   if (_team.isNotEmpty) ...[
+                    SizedBox(height: 16.h),
                     Text(
                       "Our Team",
                       style: TextStyle(
@@ -468,17 +435,19 @@ class _MenuScreenState extends State<tablemneuScreen>
                       ),
                     ),
                     SizedBox(height: 10.h),
-
+                    // FIX: clamp team card height responsively
                     SizedBox(
-                      height: 140.h,
+                      height: (MediaQuery.of(context).size.height * 0.18).clamp(
+                        120.0,
+                        160.0,
+                      ),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount: _team.length,
                         itemBuilder: (context, index) {
                           final member = _team[index];
-
                           return Container(
-                            width: 120.w,
+                            width: 110.w.clamp(90.0, 140.0),
                             margin: EdgeInsets.only(right: 12.w),
                             padding: EdgeInsets.all(10.w),
                             decoration: BoxDecoration(
@@ -488,18 +457,19 @@ class _MenuScreenState extends State<tablemneuScreen>
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.08),
                                   blurRadius: 6,
-                                  offset: Offset(0, 3),
+                                  offset: const Offset(0, 3),
                                 ),
                               ],
                             ),
                             child: Column(
+                              mainAxisSize:
+                                  MainAxisSize.min, // FIX: don't expand
                               children: [
                                 CircleAvatar(
-                                  radius: 26.r,
+                                  radius: 24.r,
                                   backgroundImage: NetworkImage(member.image),
                                 ),
-                                SizedBox(height: 8.h),
-
+                                SizedBox(height: 6.h),
                                 Text(
                                   member.name,
                                   maxLines: 1,
@@ -510,9 +480,7 @@ class _MenuScreenState extends State<tablemneuScreen>
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-
                                 SizedBox(height: 2.h),
-
                                 Text(
                                   member.designation,
                                   maxLines: 1,
@@ -522,11 +490,11 @@ class _MenuScreenState extends State<tablemneuScreen>
                                     color: Colors.grey,
                                   ),
                                 ),
-
-                                Expanded(
+                                // FIX: Flexible instead of Expanded to avoid overflow
+                                Flexible(
                                   child: Text(
                                     member.description,
-                                    maxLines: 3,
+                                    maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
@@ -550,13 +518,14 @@ class _MenuScreenState extends State<tablemneuScreen>
       );
     }
 
-    // =======================
-    // ✅ GALLERY SECTION ONLY
-    // =======================
+    // ── GALLERY SECTION ────────────────────────────────────────────
     if (selectedContent == BannerContentType.gallery) {
-      if (about.allImages.isEmpty) {
-        return SizedBox();
-      }
+      if (about.allImages.isEmpty) return const SizedBox();
+
+      final galleryH = (MediaQuery.of(context).size.height * 0.18).clamp(
+        100.0,
+        160.0,
+      );
 
       return Container(
         color: Colors.white,
@@ -568,27 +537,29 @@ class _MenuScreenState extends State<tablemneuScreen>
               "Gallery",
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
-
             SizedBox(height: 12.h),
-
             SizedBox(
-              height: 140.h,
+              height: galleryH,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: about.allImages.length,
                 itemBuilder: (context, index) {
                   final img = about.allImages[index];
-
                   return GestureDetector(
-                    onTap: () {
-                      _openFullScreenGallery(index);
-                    },
+                    onTap: () => _openFullScreenGallery(index),
                     child: Container(
-                      width: 140.w,
+                      width: 130.w.clamp(100.0, 160.0),
                       margin: EdgeInsets.only(right: 12.w),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12.r),
-                        child: Image.network(img, fit: BoxFit.cover),
+                        child: Image.network(
+                          img,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Menucolours.surfaceAlt,
+                            child: const Icon(Icons.image_not_supported),
+                          ),
+                        ),
                       ),
                     ),
                   );
@@ -600,7 +571,7 @@ class _MenuScreenState extends State<tablemneuScreen>
       );
     }
 
-    return SizedBox();
+    return const SizedBox();
   }
 
   void _openFullScreenGallery(int initialIndex) {
@@ -620,8 +591,15 @@ class _MenuScreenState extends State<tablemneuScreen>
     required String description,
     required String image,
   }) {
+    // FIX: clamp image size for small screens
+    final imgSize = (MediaQuery.of(context).size.width * 0.14).clamp(
+      44.0,
+      70.0,
+    );
+
     return Container(
       padding: EdgeInsets.all(12.w),
+      margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(14.r),
@@ -629,27 +607,26 @@ class _MenuScreenState extends State<tablemneuScreen>
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 6,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔹 Image
           if (image.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(10.r),
               child: Image.network(
                 image,
-                height: 60.h,
-                width: 60.w,
+                height: imgSize,
+                width: imgSize,
                 fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(),
               ),
             ),
-
           if (image.isNotEmpty) SizedBox(width: 10.w),
-
-          // 🔹 Text
+          // FIX: Expanded with flexible text to prevent overflow
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,7 +641,7 @@ class _MenuScreenState extends State<tablemneuScreen>
                 SizedBox(height: 4.h),
                 Text(
                   description,
-                  maxLines: 3,
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 11.sp,
@@ -681,7 +658,7 @@ class _MenuScreenState extends State<tablemneuScreen>
   }
 }
 
-// ── Collapsed filter bar (shown in AppBar when scrolled) ─────────────────────
+// ── Collapsed filter bar ──────────────────────────────────────────────────────
 class _CollapsedFilterBar extends StatefulWidget {
   final bool isVeg;
   final int vendorId;
@@ -734,10 +711,6 @@ class _CollapsedFilterBarState extends State<_CollapsedFilterBar> {
   }
 }
 
-// ── Banner section with filter bar ───────────────────────────────────────────
-
-// ── Shared search field ────────────────────────────────────────────────────────
-
 // ── Sticky tabs delegate ───────────────────────────────────────────────────────
 class _StickyTabsDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
@@ -767,14 +740,12 @@ class _StickyTabsDelegate extends SliverPersistentHeaderDelegate {
 // ── Sticky tabs content ───────────────────────────────────────────────────────
 class _StickyTabsContent extends StatelessWidget {
   final List<Dish> categories;
-  final bool showTableTab;
   final int vendorId;
   final int? selectedCategoryId;
   final Function(int?) onCategorySelected;
 
   const _StickyTabsContent({
     required this.categories,
-    required this.showTableTab,
     required this.vendorId,
     required this.selectedCategoryId,
     required this.onCategorySelected,
@@ -817,7 +788,7 @@ class _CategoryTabStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
       itemCount: categories.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -858,6 +829,11 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // FIX: clamp chip size to avoid overflow on tiny screens
+    final chipSize = isSelected
+        ? (52.r).clamp(40.0, 60.0)
+        : (48.r).clamp(36.0, 56.0);
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -867,12 +843,13 @@ class _CategoryChip extends StatelessWidget {
         margin: EdgeInsets.only(right: 10.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
-              width: isSelected ? 52.r : 48.r,
-              height: isSelected ? 52.r : 48.r,
+              width: chipSize,
+              height: chipSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected ? AppColors.primary : Menucolours.surfaceAlt,
@@ -895,16 +872,16 @@ class _CategoryChip extends StatelessWidget {
                     ? Image(image: image!, fit: BoxFit.cover)
                     : Icon(
                         Icons.restaurant_rounded,
-                        size: 20.sp,
+                        size: 18.sp,
                         color: isSelected
                             ? Menucolours.primary
                             : Menucolours.textM,
                       ),
               ),
             ),
-            SizedBox(height: 4.h),
+            SizedBox(height: 3.h),
             SizedBox(
-              width: 60.w,
+              width: 58.w,
               child: AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 style: Menucolours.label(
@@ -926,9 +903,7 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MenuFilterBar (public, used externally)
-// ─────────────────────────────────────────────────────────────────────────────
+// ── MenuFilterBar (public) ────────────────────────────────────────────────────
 class MenuFilterBar extends StatefulWidget {
   final bool isVeg;
   final Function(bool) onToggle;
@@ -992,6 +967,7 @@ class _MenuFilterBarState extends State<MenuFilterBar> {
   }
 }
 
+// ── Search field ──────────────────────────────────────────────────────────────
 class SearchField extends StatelessWidget {
   final Function(String) onSearch;
   final Color fillColor;
@@ -1001,7 +977,8 @@ class SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 38.h,
+      // FIX: use constraints instead of fixed height to avoid overflow
+      constraints: BoxConstraints(minHeight: 36.h, maxHeight: 44.h),
       decoration: BoxDecoration(
         color: fillColor,
         borderRadius: Menucolours.r12,
@@ -1013,20 +990,14 @@ class SearchField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: 'Search dishes...',
           hintStyle: Menucolours.body(color: Menucolours.textM, size: 13.sp),
-
           prefixIcon: Icon(
             Icons.search_rounded,
             size: 17.sp,
             color: Menucolours.textM,
           ),
-
           border: InputBorder.none,
           isDense: true,
-
-          // ✅ FIX: vertical centering
           contentPadding: EdgeInsets.symmetric(vertical: 10.h),
-
-          // ✅ FIX: reduce prefixIcon extra space
           prefixIconConstraints: BoxConstraints(
             minHeight: 20.h,
             minWidth: 36.w,
@@ -1097,19 +1068,15 @@ class VegToggle extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MenuTabContent
-// ─────────────────────────────────────────────────────────────────────────────
+// ── MenuTabContent ────────────────────────────────────────────────────────────
 class MenuTabContent extends StatefulWidget {
   final bool? isVeg;
   final Widget Function(Dish dish) cartButton;
   final bool Function(Dish) isOutOfStock;
   final int vendorId;
   final int selectedVendorId;
-  // final favoriteButton;
   final int? selectedCategoryId;
   final String searchQuery;
-  final bool showCartButton;
   final Map<int, int> favoriteMap;
   final int seatingId;
 
@@ -1118,12 +1085,10 @@ class MenuTabContent extends StatefulWidget {
     required this.isVeg,
     required this.cartButton,
     required this.isOutOfStock,
-    // required this.favoriteButton,
     required this.selectedVendorId,
     required this.vendorId,
     this.selectedCategoryId,
     required this.searchQuery,
-    required this.showCartButton,
     required this.favoriteMap,
     required this.seatingId,
   });
@@ -1149,23 +1114,19 @@ class _MenuTabContentState extends State<MenuTabContent> {
           ? 'No non-veg dishes found.'
           : 'No dishes available.',
       searchQuery: widget.searchQuery,
-      showCartButton: widget.showCartButton,
       favoriteMap: widget.favoriteMap,
       seatingId: widget.seatingId,
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DishGridTab
-// ─────────────────────────────────────────────────────────────────────────────
+// ── DishGridTab ───────────────────────────────────────────────────────────────
 class DishGridTab extends StatefulWidget {
   final int? parentId;
   final int vendorId;
   final String? filterTag;
   final String emptyMessage;
   final String searchQuery;
-  final bool showCartButton;
   final Map<int, int> favoriteMap;
   final int seatingId;
 
@@ -1176,7 +1137,6 @@ class DishGridTab extends StatefulWidget {
     required this.filterTag,
     required this.emptyMessage,
     required this.searchQuery,
-    required this.showCartButton,
     required this.favoriteMap,
     required this.seatingId,
   });
@@ -1257,15 +1217,21 @@ class _DishGridTabState extends State<DishGridTab> {
       return aOut ? 1 : -1;
     });
 
-    if (filtered.isEmpty) {
-      return _buildEmpty();
-    }
+    if (filtered.isEmpty) return _buildEmpty();
 
     final crossAxis = Radiusc.crossAxis(context);
-    final cardExtent = Radiusc.cardExtent(
-      context,
-      showCart: widget.showCartButton,
-    );
+
+    // FIX: Calculate a proper childAspectRatio based on screen width
+    // so cards are never cut off or overflowed
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = 12.0 * 2 + (crossAxis - 1) * 10.0;
+    final cardWidth = (screenWidth - padding) / crossAxis;
+    // image height + details section height (name 38 + price row ~24 + cart ~36 + spacers ~20)
+    final isPhone = Radiusc.isPhone(context);
+    final imgH = isPhone ? 115.0 : 140.0;
+    final detailsH = 130.0; // generous fixed estimate
+    final cardHeight = imgH + detailsH;
+    final aspectRatio = cardWidth / cardHeight;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
@@ -1276,7 +1242,7 @@ class _DishGridTabState extends State<DishGridTab> {
           crossAxisCount: crossAxis,
           crossAxisSpacing: 10.w,
           mainAxisSpacing: 12.h,
-          mainAxisExtent: cardExtent,
+          childAspectRatio: aspectRatio.clamp(0.55, 0.85),
         ),
         itemCount: filtered.length,
         itemBuilder: (_, i) {
@@ -1301,16 +1267,13 @@ class _DishGridTabState extends State<DishGridTab> {
                 onChanged: (dishId, isLiked, favId) {
                   setState(() {
                     if (isLiked) {
-                      if (favId != null) {
-                        widget.favoriteMap[dishId] = favId;
-                      }
+                      if (favId != null) widget.favoriteMap[dishId] = favId;
                     } else {
                       widget.favoriteMap.remove(dishId);
                     }
                   });
                 },
               ),
-
               cartButton: TableCartButton(
                 dishId: dish.dishId,
                 id: widget.seatingId,
@@ -1320,7 +1283,6 @@ class _DishGridTabState extends State<DishGridTab> {
               balanceQuantity: dish.balanceQuantity,
               discount: dish.discount,
               tag: dish.tag,
-              showCartButton: widget.showCartButton,
             ),
           );
         },
@@ -1515,9 +1477,7 @@ class _AnimatedProductCardState extends State<_AnimatedProductCard>
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ProductCard
-// ─────────────────────────────────────────────────────────────────────────────
+// ── ProductCard ───────────────────────────────────────────────────────────────
 class ProductCard extends StatelessWidget {
   final Widget imageWidget;
   final String name;
@@ -1530,7 +1490,6 @@ class ProductCard extends StatelessWidget {
   final int balanceQuantity;
   final num discount;
   final String? tag;
-  final bool showCartButton;
   final Dish dish;
 
   const ProductCard({
@@ -1546,7 +1505,6 @@ class ProductCard extends StatelessWidget {
     required this.balanceQuantity,
     required this.discount,
     required this.tag,
-    required this.showCartButton,
     required this.dish,
   });
 
@@ -1573,8 +1531,6 @@ class ProductCard extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 imageWidget,
-
-                // Scrim for readability
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -1588,33 +1544,6 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                // Discount badge
-                // if (discount > 0)
-                //   Positioned(
-                //     top: 8,
-                //     left: 8,
-                //     child: Container(
-                //       padding: EdgeInsets.symmetric(
-                //         horizontal: 7.w,
-                //         vertical: 3.h,
-                //       ),
-                //       decoration: BoxDecoration(
-                //         color: _DS.accent,
-                //         borderRadius: _DS.r8,
-                //       ),
-                //       child: Text(
-                //         '-${discount.toStringAsFixed(0)}%',
-                //         style: TextStyle(
-                //           fontSize: 9.sp,
-                //           color: Colors.white,
-                //           fontWeight: FontWeight.w800,
-                //           letterSpacing: 0.2,
-                //         ),
-                //       ),
-                //     ),
-                //   ),
-
                 // Favourite button
                 Positioned(
                   top: 8,
@@ -1635,36 +1564,6 @@ class ProductCard extends StatelessWidget {
                     child: Center(child: favoriteButton),
                   ),
                 ),
-
-                // Info button
-                // Positioned(
-                //   bottom: 8,
-                //   right: 8,
-                //   child: GestureDetector(
-                //     onTap: () =>
-                //         showDishBottomSheet(context, dish, showCartButton),
-                //     child: Container(
-                //       width: 26.r,
-                //       height: 26.r,
-                //       decoration: BoxDecoration(
-                //         color: Colors.white.withOpacity(0.92),
-                //         shape: BoxShape.circle,
-                //         boxShadow: [
-                //           BoxShadow(
-                //             color: Colors.black.withOpacity(0.1),
-                //             blurRadius: 4,
-                //           ),
-                //         ],
-                //       ),
-                //       child: Icon(
-                //         Icons.info_outline_rounded,
-                //         size: 14.sp,
-                //         color: Menucolours.textS,
-                //       ),
-                //     ),
-                //   ),
-                // ),
-
                 // Out-of-stock overlay
                 if (isOutOfStock)
                   Positioned.fill(
@@ -1697,93 +1596,104 @@ class ProductCard extends StatelessWidget {
           ),
 
           // ── Details section ───────────────────────────────────────
+          // FIX: Use Expanded with intrinsic layout instead of nested Spacers
+          // that caused overflow in constrained grid cells
           Expanded(
             child: Padding(
               padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 8.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
                 children: [
-                  SizedBox(
-                    height: 38.h, // 👈 FIXED HEIGHT (adjust if needed)
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                              height: 1.3,
+                  // Name + info button row — FIX: no fixed SizedBox height,
+                  // use flexible height with maxLines clipping
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                      if (description.trim().isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(top: 2.h, left: 4.w),
+                          child: GestureDetector(
+                            onTap: () => showDishBottomSheet(context, dish),
+                            child: Container(
+                              width: 18.r,
+                              height: 18.r,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                'i',
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-
-                        SizedBox(width: 6.w),
-
-                        if (description.trim().isNotEmpty == true)
-                          Padding(
-                            padding: EdgeInsets.only(top: 2.h),
-                            child: GestureDetector(
-                              onTap: () => showDishBottomSheet(
-                                context,
-                                dish,
-                                showCartButton,
-                              ),
-                              child: Container(
-                                width: 20.r,
-                                height: 20.r,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  'i',
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
 
-                  // Name
                   SizedBox(height: 4.h),
 
-                  // Price row
+                  // Price row — FIX: use Flexible instead of Spacer inside Row
+                  // to prevent overflow when price text is long
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       if (discount > 0) ...[
-                        Text(
-                          price,
-                          style: TextStyle(
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor: Menucolours.textM,
-                            fontSize: 10.sp,
-                            color: Menucolours.textM,
+                        Flexible(
+                          child: Text(
+                            price,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              decoration: TextDecoration.lineThrough,
+                              decorationColor: Menucolours.textM,
+                              fontSize: 10.sp,
+                              color: Menucolours.textM,
+                            ),
                           ),
                         ),
                         SizedBox(width: 4.w),
                       ],
-                      Text(effectivePrice, style: Menucolours.price()),
+                      Flexible(
+                        child: Text(
+                          effectivePrice,
+                          overflow: TextOverflow.ellipsis,
+                          style: Menucolours.price(),
+                        ),
+                      ),
                       const Spacer(),
                       vegNonVegIndicator(tag),
                     ],
                   ),
 
+                  // FIX: use Spacer only if enough space — wrap in Expanded
                   const Spacer(),
-                  Center(child: cartButton),
+
+                  // Cart button — centered, constrained
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: double.infinity),
+                      child: cartButton,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1814,7 +1724,7 @@ Widget vegNonVegIndicator(String? tag) {
 }
 
 // ── Dish detail bottom sheet ──────────────────────────────────────────────────
-void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
+void showDishBottomSheet(BuildContext context, Dish dish) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
@@ -1841,7 +1751,6 @@ void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Drag handle
                       Center(
                         child: Container(
                           width: 36,
@@ -1852,17 +1761,13 @@ void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
                           ),
                         ),
                       ),
-
                       SizedBox(height: 16.h),
-
-                      // 🔥 Only Description
                       Text(
                         dish.description?.trim().isNotEmpty == true
                             ? dish.description!
                             : 'No description available.',
                         style: Menucolours.body(color: Menucolours.textS),
                       ),
-
                       SizedBox(height: 10.h),
                     ],
                   ),
@@ -1876,7 +1781,7 @@ void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
   );
 }
 
-// ── Restaurant banner header (public, used externally) ────────────────────────
+// ── Restaurant banner header ──────────────────────────────────────────────────
 class RestaurantBannerHeader extends StatelessWidget {
   final String? bannerImage;
   final String title;

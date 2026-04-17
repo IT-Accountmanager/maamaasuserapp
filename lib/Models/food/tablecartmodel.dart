@@ -1,4 +1,4 @@
-class TaleCartModel {
+class TableCartModel {
   int cartId;
   int userId;
   int vendorId;
@@ -20,7 +20,7 @@ class TaleCartModel {
   final int couponId;
   List<int> itemId;
 
-  TaleCartModel({
+  TableCartModel({
     required this.cartId,
     required this.userId,
     required this.vendorId,
@@ -43,8 +43,8 @@ class TaleCartModel {
     required this.couponId,
   });
 
-  factory TaleCartModel.fromJson(Map<String, dynamic> json) {
-    return TaleCartModel(
+  factory TableCartModel.fromJson(Map<String, dynamic> json) {
+    return TableCartModel(
       cartId: json['cartId'] ?? 0,
       userId: json['userId'] ?? 0,
       vendorId: json['vendorId'] ?? 0,

@@ -67,10 +67,9 @@ class CouponModel {
     );
     return DateTime.now().isAfter(expiry);
   }
-  bool isApplicableForVendor(int? cartVendor) {
-    if (vendorId == null) return true; // GLOBAL COUPON
-    if (cartVendor == null) return true;
-    return vendorId == cartVendor;
+  bool isApplicableForVendor(int? vendorId) {
+    if (this.vendorId == null) return true; // global coupon
+    return this.vendorId == vendorId;
   }
 }
 

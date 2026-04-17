@@ -281,9 +281,11 @@ class _OrderCardState extends State<OrderCard> {
   final Map<int, bool> _submittedOrders = {};
   final Map<int, TextEditingController> _feedbackControllers = {};
 
-  Map<int, String> _submittedFeedback = {};
-  Map<int, int> _submittedRatings = {};
+  final Map<int, String> _submittedFeedback = {};
+  final Map<int, int> _submittedRatings = {};
   final Map<int, int> _currentRatings = {};
+  final Map<int, RatingCategory> _selectedCategories = {};
+  final Map<int, RatingCategory> _submittedCategories = {};
 
   @override
   void initState() {
@@ -291,11 +293,17 @@ class _OrderCardState extends State<OrderCard> {
     isCancelled = widget.order.status == OrderStatus.cancelled;
   }
 
-  Future<bool> _submitRating(int orderId, int rating, String feedback) async {
+  Future<bool> _submitRating(
+    int orderId,
+    int rating,
+    String feedback,
+    RatingCategory category,
+  ) async {
     final success = await food_Authservice.submitRating(
       orderId,
-      rating, // ✅ FIXED
+      rating,
       feedback,
+      ratingCategoryToString(category), // ✅ NEW
     );
 
     if (!mounted) return false;
@@ -312,6 +320,33 @@ class _OrderCardState extends State<OrderCard> {
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
+
+    // ✅ AUTO MARK AS SUBMITTED IF API HAS DATA
+    final bool isAlreadyRated =
+        (order.ratings ?? 0) > 0 ||
+        (order.feedback != null && order.feedback!.trim().isNotEmpty) ||
+        (order.ratingCategory != null &&
+            order.ratingCategory!.trim().isNotEmpty);
+
+    if (isAlreadyRated) {
+      _submittedOrders.putIfAbsent(order.orderId, () => true);
+
+      _submittedRatings.putIfAbsent(
+        order.orderId,
+        () => (order.ratings ?? 0).toInt(),
+      );
+
+      _submittedFeedback.putIfAbsent(order.orderId, () => order.feedback ?? '');
+
+      _submittedCategories.putIfAbsent(
+        order.orderId,
+        () => RatingCategory.values.firstWhere(
+          (e) => e.toString() == order.ratingCategory,
+          orElse: () => RatingCategory.FOOD_QUALITY,
+        ),
+      );
+    }
+    final bool isSubmitted = _submittedOrders[order.orderId] ?? isAlreadyRated;
     final statusColor = FoodOrdersHelper.getStatusColor(order.status);
 
     return Container(
@@ -351,11 +386,13 @@ class _OrderCardState extends State<OrderCard> {
                   _buildCancelledTag(),
                 ],
                 if (!widget.isActive &&
-                    !order.isRated &&
                     order.status == OrderStatus.completed &&
                     !isCancelled) ...[
                   Divider(height: 24.h, color: _T.border),
-                  _buildRatingRow(order.orderId),
+
+                  isSubmitted
+                      ? _buildSubmittedReview(order)
+                      : _buildRatingRow(order.orderId),
                 ],
               ],
             ),
@@ -365,14 +402,27 @@ class _OrderCardState extends State<OrderCard> {
     );
   }
 
+  String getOrderTypeLabel(OrderType type) {
+    switch (type) {
+      case OrderType.DINE_IN:
+        return "Dine In";
+      case OrderType.DELIVERY:
+        return "Delivery";
+      case OrderType.TAKEAWAY:
+        return "Takeaway";
+      case OrderType.TABLE_DINE_IN:
+        return "Dine Out"; // your custom mapping
+      default:
+        return type.name.replaceAll('_', ' ');
+    }
+  }
+
   Widget _buildHeader(Order order, Color statusColor) {
-    final dateTime = DateTime.parse(order.orderDateAndTime);
-    final formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
-    final orderTypeLabel = order.orderType
-        .toString()
-        .split('.')
-        .last
-        .replaceAll('_', ' ');
+    final dateTime = order.parsedDateTime;
+    final formattedDate = dateTime.year == 1970
+        ? "Invalid date"
+        : DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
+    final orderTypeLabel = getOrderTypeLabel(order.orderType);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,145 +611,397 @@ class _OrderCardState extends State<OrderCard> {
 
   Widget _buildRatingRow(int orderId) {
     _feedbackControllers.putIfAbsent(orderId, () => TextEditingController());
-
     final feedbackController = _feedbackControllers[orderId]!;
 
-    // ✅ NOW it's safe to use
-    (_submittedFeedback[orderId] ?? feedbackController.text).toString();
-
-    currentRating = _submittedRatings[orderId] ?? widget.order.ratings;
-    final feedbackText =
-        _submittedFeedback[orderId] ?? widget.order.feedback;
     final isSubmitted = _submittedOrders[orderId] ?? false;
+    final feedbackText = _submittedFeedback[orderId] ?? '';
+    final submittedCategory = _submittedCategories[orderId];
 
     return StatefulBuilder(
       builder: (context, localSetState) {
-        // final hasInput =
-        //     currentRating > 0 || feedbackController.text.trim().isNotEmpty;
         final currentRating = isSubmitted
             ? (_submittedRatings[orderId] ?? widget.order.ratings)
-            : (_currentRatings[orderId] ?? widget.order.ratings);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Rate this order", style: _T.h2.copyWith(fontSize: 13)),
-            SizedBox(height: 8.h),
+            : (_currentRatings[orderId] ?? 0);
+        final selectedCategory =
+            _selectedCategories[orderId] ?? RatingCategory.FOOD_QUALITY;
 
-            Row(
-              children: List.generate(5, (i) {
-                final filled = i < currentRating;
-                return GestureDetector(
-                  onTap: isSubmitted
-                      ? null
-                      : () {
-                          localSetState(() {
-                            _currentRatings[orderId] = i + 1;
-                          });
-                        },
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 4.w),
-                    child: Icon(
-                      filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                      size: 28,
-                      color: filled ? _T.amber : _T.border,
-                    ),
-                  ),
-                );
-              }),
-            ),
-
-            SizedBox(height: 10.h),
-
-            // ✍!️ Feedback Field
-            if (!isSubmitted) ...[
-              Container(
-                decoration: BoxDecoration(
-                  color: _T.bg,
-                  borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(color: _T.border),
+        return Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: _T.bg,
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: _T.border, width: 0.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ────────────────────────────────────────
+              Text(
+                "RATE THIS ORDER",
+                style: _T.body.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _T.muted,
+                  letterSpacing: 0.8,
                 ),
-                child: TextField(
-                  controller: feedbackController,
-                  enabled: !isSubmitted,
-                  maxLines: 2,
-                  style: _T.body,
-                  onChanged: (_) => localSetState(() {}),
+              ),
+              SizedBox(height: 10.h),
+
+              // ── Stars ─────────────────────────────────────────
+              Row(
+                children: List.generate(5, (i) {
+                  final filled = i < currentRating;
+                  return GestureDetector(
+                    onTap: isSubmitted
+                        ? null
+                        : () => localSetState(
+                            () => _currentRatings[orderId] = i + 1,
+                          ),
+                    child: Padding(
+                      padding: EdgeInsets.only(right: 6.w),
+                      child: Icon(
+                        filled
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
+                        size: 30,
+                        color: filled ? _T.amber : _T.border,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+
+              // ── Not yet submitted ──────────────────────────────
+              if (!isSubmitted) ...[
+                SizedBox(height: 14.h),
+                DropdownButtonFormField<RatingCategory>(
+                  value: selectedCategory,
+                  style: _T.body.copyWith(fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: "Write your feedback...",
-                    hintStyle: _T.body.copyWith(color: _T.muted),
-                    border: InputBorder.none,
+                    filled: true,
+                    fillColor: _T.surface,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 12.w,
                       vertical: 10.h,
                     ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                      borderSide: BorderSide(color: _T.border, width: 0.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                      borderSide: BorderSide(color: _T.blue, width: 1),
+                    ),
                   ),
-                ),
-              ),
-            ],
-
-            // if (!isSubmitted) ...[
-            //   SizedBox(height: 10.h),
-            //   Container(
-            //     width: double.infinity,
-            //     padding: EdgeInsets.all(12.w),
-            //     decoration: BoxDecoration(
-            //       color: _T.bg,
-            //       borderRadius: BorderRadius.circular(10.r),
-            //       border: Border.all(color: _T.border),
-            //     ),
-            //     child: Text("$feedbackText....", style: _T.body),
-            //   ),
-            // ],
-
-            // 🚀 Submit Button (ONLY when user interacts)
-            if (!isSubmitted) ...[
-              SizedBox(height: 12.h),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final feedback = feedbackController.text.trim();
-
-                    final success = await _submitRating(
-                      orderId,
-                      currentRating,
-                      feedback,
+                  items: RatingCategory.values.map((cat) {
+                    return DropdownMenuItem(
+                      value: cat,
+                      child: Text(
+                        cat.toString().split('.').last.replaceAll('_', ' '),
+                      ),
                     );
-
-                    if (success) {
-                      setState(() {
-                        _submittedOrders[orderId] = true;
-                        _submittedFeedback[orderId] = feedback;
-                        _submittedRatings[orderId] = currentRating;
-                      });
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      localSetState(() => _selectedCategories[orderId] = value);
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _T.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.r),
+                ),
+                SizedBox(height: 10.h),
+
+                // Feedback field
+                TextField(
+                  controller: feedbackController,
+                  maxLines: 2,
+                  style: _T.body.copyWith(fontSize: 14),
+                  onChanged: (_) => localSetState(() {}),
+                  decoration: InputDecoration(
+                    hintText: "Write your feedback…",
+                    hintStyle: _T.body.copyWith(fontSize: 14, color: _T.muted),
+                    filled: true,
+                    fillColor: _T.surface,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 10.h,
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                      borderSide: BorderSide(color: _T.border, width: 0.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                      borderSide: BorderSide(color: _T.blue, width: 1),
+                    ),
+                  ),
+                ),
+
+                // Category dropdown
+                SizedBox(height: 14.h),
+
+                // Submit button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final feedback = feedbackController.text.trim();
+                      final success = await _submitRating(
+                        orderId,
+                        currentRating,
+                        feedback,
+                        selectedCategory,
+                      );
+                      if (success) {
+                        setState(() {
+                          _submittedOrders[orderId] = true;
+                          _submittedFeedback[orderId] = feedback;
+                          _submittedRatings[orderId] = currentRating;
+                          _submittedCategories[orderId] = selectedCategory;
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _T.blue,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 13.h),
+                    ),
+                    child: Text(
+                      "Submit rating",
+                      style: _T.body.copyWith(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+              // ── Submitted state ────────────────────────────────
+              if (isSubmitted) ...[
+                SizedBox(height: 10.h),
+
+                // Category badge
+                if (submittedCategory != null)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _T.blue.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(99.r),
+                    ),
+                    child: Text(
+                      submittedCategory
+                          .toString()
+                          .split('.')
+                          .last
+                          .replaceAll('_', ' '),
+                      style: _T.body.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: _T.blue,
+                      ),
+                    ),
+                  ),
+
+                // Submitted feedback quote
+                if (feedbackText.isNotEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Text(
+                    '"$feedbackText"',
+                    style: _T.body.copyWith(
+                      fontSize: 13,
+                      color: _T.muted,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+
+                SizedBox(height: 12.h),
+                Divider(color: _T.border, thickness: 0.5, height: 1),
+                SizedBox(height: 12.h),
+
+                // Success pill
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 10.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _T.green.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(
+                      color: _T.green.withOpacity(0.25),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _T.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        "Thanks for your feedback!",
+                        style: _T.body.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: _T.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  RatingCategory? parseRatingCategory(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+
+    try {
+      return RatingCategory.values.firstWhere((e) => e.toString() == raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _buildSubmittedReview(Order order) {
+    final int orderId = order.orderId;
+
+    final double rawRating = (_submittedRatings[orderId] ?? order.ratings ?? 0)
+        .toDouble();
+
+    final int rating = rawRating.toInt().clamp(0, 5);
+
+    final String feedback =
+        _submittedFeedback[orderId] ?? (order.feedback ?? '');
+
+    final RatingCategory? category =
+        _submittedCategories[orderId] ??
+        parseRatingCategory(order.ratingCategory);
+
+    final bool hasRating = rawRating > 0;
+    final bool hasFeedback = feedback.trim().isNotEmpty;
+    final bool hasCategory = category != null;
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: _T.surface,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: _T.border.withOpacity(0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            "YOUR REVIEW",
+            style: _T.body.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: _T.muted,
+              letterSpacing: 0.8,
+            ),
+          ),
+
+          SizedBox(height: 5.h),
+
+          // Stars
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (hasRating)
+                Row(
+                  children: List.generate(5, (i) {
+                    return Icon(
+                      Icons.star_rounded,
+                      size: 22,
+                      color: i < rating ? _T.amber : _T.border,
+                    );
+                  }),
+                ),
+              if (hasCategory) ...[
+                SizedBox(height: 10.h),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 4.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _T.blue.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(99.r),
                   ),
                   child: Text(
-                    "Submit",
-                    // style: Color(Color.gree),
+                    category.toString().split('.').last.replaceAll('_', ' '),
+                    style: _T.body.copyWith(
+                      fontSize: 11,
+                      color: _T.blue,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                ),
+              ],
+            ],
+          ),
+
+          if (hasFeedback) ...[
+            SizedBox(height: 10.h),
+            Text(
+              '"$feedback"',
+              style: _T.body.copyWith(
+                fontSize: 13,
+                color: _T.muted,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+
+          SizedBox(height: 12.h),
+
+          Divider(color: _T.border, thickness: 0.5),
+
+          SizedBox(height: 10.h),
+
+          // success footer
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _T.green,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                "Thanks for your feedback!",
+                style: _T.body.copyWith(
+                  fontSize: 13,
+                  color: _T.green,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
-
-            // ✅ Submitted Text
-            if (isSubmitted) ...[
-              SizedBox(height: 10.h),
-              Text(
-                "Thanks for your feedback!",
-                style: _T.body.copyWith(color: _T.green),
-              ),
-            ],
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -899,7 +1201,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                   _infoRow(
                     Icons.local_dining_outlined,
                     "Order Type",
-                    widget.order.orderType.name.replaceAll('_', ' '),
+                    widget.order.orderType.label,
                   ),
                   if (isScheduled) ...[
                     Divider(height: 16.h, color: _T.border),

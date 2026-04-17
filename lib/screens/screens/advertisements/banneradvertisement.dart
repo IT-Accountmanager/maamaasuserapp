@@ -58,26 +58,34 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
   void _initializeMedia(int index) {
     final ad = widget.ads[index];
 
-    if ((ad.mediaType ?? '').toLowerCase() == "video") {
-      _playVideo(ad.imageUrl ?? '');
+    final isVideo = (ad.mediaType ?? '').toLowerCase() == "video";
+
+    if (isVideo && (ad.imageUrl?.isNotEmpty ?? false)) {
+      _playVideo(ad.imageUrl!); // ✅ FIXED
     } else {
-      _controller?.dispose();
-      _controller = null;
+      _disposeVideo(); // ✅ centralized cleanup
       _startImageTimer();
     }
   }
+  void _disposeVideo() {
+    _imageTimer?.cancel();
+
+    if (_videoListener != null && _controller != null) {
+      _controller!.removeListener(_videoListener!);
+    }
+
+    _controller?.dispose();
+    _controller = null;
+  }
 
   void _playVideo(String url) {
-    _imageTimer?.cancel(); // ✅ stop image timer
-
-    _controller?.removeListener(_videoListener ?? () {});
-    _controller?.dispose();
+    _disposeVideo(); // ✅ always cleanup first
 
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
     _controller = controller;
 
     controller.initialize().then((_) {
-      if (!mounted || _isDisposed) return;
+      if (!mounted || _isDisposed || _controller != controller) return;
 
       setState(() {});
       controller
@@ -87,11 +95,14 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
     });
 
     _videoListener = () {
-      if (!mounted || _isDisposed) return;
+      if (!mounted || _isDisposed || _controller != controller) return;
 
-      final isFinished = controller.value.position >= controller.value.duration;
+      final value = controller.value;
 
-      if (isFinished && !controller.value.isPlaying) {
+      if (value.isInitialized &&
+          value.duration != Duration.zero &&
+          value.position >= value.duration &&
+          !value.isPlaying) {
         _nextAd();
       }
     };
@@ -118,51 +129,6 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
     _initializeMedia(currentIndex);
   }
 
-  @override
-  // Widget build(BuildContext context) {
-  //   if (widget.ads.isEmpty) {
-  //     return SizedBox(
-  //       height: widget.height,
-  //       child: const Center(child: Text("No advertisements available")),
-  //     );
-  //   }
-  //
-  //   final ad = widget.ads[currentIndex]; // ✅ FIXED
-  //
-  //   return GestureDetector(
-  //     onTap: () {},
-  //     // child: SizedBox(
-  //     //   height: widget.height,
-  //     //   child:
-  //     //       (ad.mediaType ?? "").toLowerCase() == "video" && _controller != null
-  //     //       ? (_controller!.value.isInitialized
-  //     //             ? SizedBox.expand(
-  //     //                 child: FittedBox(
-  //     //                   fit:
-  //     //                       BoxFit.cover, // ✅ makes video fullscreen like image
-  //     //                   child: SizedBox(
-  //     //                     width: _controller!.value.size.width,
-  //     //                     height: _controller!.value.size.height,
-  //     //                     child: VideoPlayer(_controller!),
-  //     //                   ),
-  //     //                 ),
-  //     //               )
-  //     //             : const Center(child: CircularProgressIndicator()))
-  //     //       : Image.network(
-  //     //           ad.imageUrl ?? '',
-  //     //           fit: BoxFit.cover, // ✅ IMPORTANT
-  //     //           width: double.infinity,
-  //     //           height: double.infinity,
-  //     //         ),
-  //     // ),
-  //     child: AnimatedSwitcher(
-  //       duration: const Duration(milliseconds: 500),
-  //       switchInCurve: Curves.easeIn,
-  //       switchOutCurve: Curves.easeOut,
-  //       child: _buildAdContent(ad),
-  //     ),
-  //   );
-  // }
   @override
   Widget build(BuildContext context) {
     if (widget.ads.isEmpty) {
@@ -202,51 +168,6 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
     );
   }
 
-  // Widget _buildAdContent(Campaign ad) {
-  //   final isVideo = (ad.mediaType ?? "").toLowerCase() == "video";
-  //
-  //   if (isVideo && _controller != null) {
-  //     return _controller!.value.isInitialized
-  //         ? SizedBox(
-  //             key: ValueKey(ad.imageUrl), // ✅ IMPORTANT for animation
-  //             child: SizedBox.expand(
-  //               child: FittedBox(
-  //                 fit: BoxFit.cover,
-  //                 child: SizedBox(
-  //                   width: _controller!.value.size.width,
-  //                   height: _controller!.value.size.height,
-  //                   child: VideoPlayer(_controller!),
-  //                 ),
-  //               ),
-  //             ),
-  //           )
-  //         : const Center(
-  //             key: ValueKey("video_loader"),
-  //             child: CircularProgressIndicator(),
-  //           );
-  //   }
-  //
-  //   // IMAGE PART WITH LOADER 👇
-  //   return Image.network(
-  //     ad.imageUrl ?? '',
-  //     key: ValueKey(ad.imageUrl), // ✅ IMPORTANT
-  //     fit: BoxFit.cover,
-  //     width: double.infinity,
-  //     height: double.infinity,
-  //
-  //     // ✅ SHOW LOADER WHILE LOADING
-  //     loadingBuilder: (context, child, progress) {
-  //       if (progress == null) return child;
-  //
-  //       return const Center(child: CircularProgressIndicator());
-  //     },
-  //
-  //     // ✅ OPTIONAL: ERROR FALLBACK
-  //     errorBuilder: (context, error, stackTrace) {
-  //       return const Center(child: Icon(Icons.broken_image, size: 40));
-  //     },
-  //   );
-  // }
   Widget _buildAdContent(Campaign ad) {
     final isVideo = (ad.mediaType ?? "").toLowerCase() == "video";
 

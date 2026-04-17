@@ -4,11 +4,13 @@ import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/tablecartmodel.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
-import '../../../screens/Food&beverages/tablecart.dart';
+import '../../../screens/Food&beverages/table/tablecart.dart';
 import '../../../utils/utils.dart';
 import 'cartmode.dart';
 
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
+
+import 'currentcart_notifier.dart';
 
 class TableCartButton extends StatefulWidget {
   final int dishId;
@@ -29,6 +31,7 @@ class TableCartButton extends StatefulWidget {
 
 class _TableCartButtonState extends State<TableCartButton> {
   int itemCount = 0;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -48,8 +51,8 @@ class _TableCartButtonState extends State<TableCartButton> {
       }
 
       // fetchTableCart returns List<TaleCartModel>
-      final List<TaleCartModel> cartList = await food_Authservice
-          .fetchTableCart(seatingId);
+      final List<TableCartModel> cartList = await food_Authservice
+          .fetchTableCart();
 
       if (cartList.isEmpty) {
         setState(() => itemCount = 0);
@@ -57,7 +60,7 @@ class _TableCartButtonState extends State<TableCartButton> {
       }
 
       // take the FIRST cart model
-      final TaleCartModel cart = cartList.first;
+      final TableCartModel cart = cartList.first;
 
       // now this works because cart is a TaleCartModel
       final matchedItems = cart.cartItems
@@ -85,12 +88,40 @@ class _TableCartButtonState extends State<TableCartButton> {
   }
 
   // ✔ Add to Table Cart (same logic as normal cart)
+  // Future<void> _handleAddToCart(int qty) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   int? seatingId = prefs.getInt('id');
+  //
+  //   if (seatingId == null) {
+  //     // ignore: use_build_context_synchronously
+  //     AppAlert.error(context, "Please mark your arrival first");
+  //     return;
+  //   }
+  //
+  //   final added = await food_Authservice.addToTableCart(
+  //     dishId: widget.dishId,
+  //     quantity: qty,
+  //     seatingId: seatingId,
+  //   );
+  //
+  //   if (added) {
+  //     final itemId = await food_Authservice.getTableItemIdByDishId(
+  //       widget.dishId,
+  //       seatingId,
+  //     );
+  //
+  //     if (itemId != null) {
+  //       prefs.setInt("table_dish_${widget.dishId}_itemId", itemId);
+  //       prefs.setInt("table_dish_${widget.dishId}_quantity", qty);
+  //     }
+  //   }
+  // }
+
   Future<void> _handleAddToCart(int qty) async {
     final prefs = await SharedPreferences.getInstance();
     int? seatingId = prefs.getInt('id');
 
     if (seatingId == null) {
-      // ignore: use_build_context_synchronously
       AppAlert.error(context, "Please mark your arrival first");
       return;
     }
@@ -111,10 +142,33 @@ class _TableCartButtonState extends State<TableCartButton> {
         prefs.setInt("table_dish_${widget.dishId}_itemId", itemId);
         prefs.setInt("table_dish_${widget.dishId}_quantity", qty);
       }
+
+      // ✅ IMPORTANT: update global cart count
+      final cartList = await food_Authservice.fetchTableCart();
+      if (cartList.isNotEmpty) {
+        CartNotifier.count.value = cartList.first.cartItems.length;
+      }
     }
   }
 
   // ✔ Remove item (same as cart button)
+  // Future<void> _handleRemoveItem() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final itemId = prefs.getInt("table_dish_${widget.dishId}_itemId");
+  //
+  //   if (itemId == null) return;
+  //
+  //   bool removed = await food_Authservice.removeCartItem(itemId);
+  //
+  //   if (removed) {
+  //     prefs.remove("table_dish_${widget.dishId}_itemId");
+  //     prefs.remove("table_dish_${widget.dishId}_quantity");
+  //
+  //     setState(() => itemCount = 0);
+  //     Utils.itemCount.value = 0;
+  //   }
+  // }
+
   Future<void> _handleRemoveItem() async {
     final prefs = await SharedPreferences.getInstance();
     final itemId = prefs.getInt("table_dish_${widget.dishId}_itemId");
@@ -128,20 +182,16 @@ class _TableCartButtonState extends State<TableCartButton> {
       prefs.remove("table_dish_${widget.dishId}_quantity");
 
       setState(() => itemCount = 0);
-      Utils.itemCount.value = 0;
+
+      // ✅ update global cart
+      final cartList = await food_Authservice.fetchTableCart();
+      if (cartList.isNotEmpty) {
+        CartNotifier.count.value = cartList.first.cartItems.length;
+      } else {
+        CartNotifier.count.value = 0;
+      }
     }
   }
-
-  // Future<void> _goToCart() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   int? seatingId = prefs.getInt('id');
-  //
-  //   Navigator.push(
-  //     // ignore: use_build_context_synchronously
-  //     context,
-  //     MaterialPageRoute(builder: (_) => tablecart(seatingId: seatingId!)),
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -160,40 +210,40 @@ class _TableCartButtonState extends State<TableCartButton> {
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 10.w),
               ),
-              onPressed: () async {
-                setState(() => itemCount = 1);
-                CartMode.type.value = CartType.table;
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      setState(() => _isLoading = true);
 
-                await _handleAddToCart(1);
+                      try {
+                        CartMode.type.value = CartType.table;
 
-                // ignore: use_build_context_synchronously
-                // ScaffoldMessenger.of(context).showSnackBar(
-                //   SnackBar(
-                //     content: const Text("1 item added to cart"),
-                //     duration: const Duration(seconds: 2),
-                //     backgroundColor: Colors.green,
-                //     behavior: SnackBarBehavior.floating,
-                //     margin: EdgeInsets.only(
-                //       bottom: 10.h,
-                //       left: 16.w,
-                //       right: 16.w,
-                //     ),
-                //     action: SnackBarAction(
-                //       label: "Go to Cart",
-                //       textColor: Colors.white,
-                //       onPressed: _goToCart,
-                //     ),
-                //   ),
-                // );
-              },
-              child: Text(
-                "Add Cart",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
+                        await _handleAddToCart(1);
+
+                        setState(() => itemCount = 1);
+                      } catch (e) {
+                        AppAlert.error(context, "Failed to add item");
+                      } finally {
+                        if (mounted) setState(() => _isLoading = false);
+                      }
+                    },
+              child: _isLoading
+                  ? SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : Text(
+                      "Add Cart",
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
             )
           : Container(
               decoration: BoxDecoration(
@@ -208,25 +258,42 @@ class _TableCartButtonState extends State<TableCartButton> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.remove, size: 14.sp),
-                    onPressed: () async {
-                      if (itemCount > 1) {
-                        setState(() => itemCount--);
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            setState(() => _isLoading = true);
 
-                        final prefs = await SharedPreferences.getInstance();
-                        final itemId = prefs.getInt(
-                          "table_dish_${widget.dishId}_itemId",
-                        );
+                            try {
+                              if (itemCount > 1) {
+                                final newQty = itemCount - 1;
 
-                        if (itemId != null) {
-                          await food_Authservice.updateCartItemQuantity(
-                            itemId: itemId,
-                            quantity: itemCount,
-                          );
-                        }
-                      } else {
-                        await _handleRemoveItem();
-                      }
-                    },
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final itemId = prefs.getInt(
+                                  "table_dish_${widget.dishId}_itemId",
+                                );
+
+                                if (itemId != null) {
+                                  await food_Authservice.updateCartItemQuantity(
+                                    itemId: itemId,
+                                    quantity: newQty,
+                                  );
+                                }
+                                final cartList = await food_Authservice.fetchTableCart();
+                                if (cartList.isNotEmpty) {
+                                  CartNotifier.count.value = cartList.first.cartItems.length;
+                                }
+
+                                setState(() => itemCount = newQty);
+                              } else {
+                                await _handleRemoveItem();
+                              }
+                            } catch (e) {
+                              AppAlert.error(context, "Update failed");
+                            } finally {
+                              if (mounted) setState(() => _isLoading = false);
+                            }
+                          },
                     padding: EdgeInsets.zero,
                   ),
                   Text(
@@ -239,35 +306,43 @@ class _TableCartButtonState extends State<TableCartButton> {
                   ),
                   IconButton(
                     icon: Icon(Icons.add, size: 14.sp),
-                    onPressed: () async {
-                      setState(() => itemCount++);
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            setState(() => _isLoading = true);
 
-                      final prefs = await SharedPreferences.getInstance();
-                      final itemId = prefs.getInt(
-                        "table_dish_${widget.dishId}_itemId",
-                      );
+                            try {
+                              if (itemCount >= widget.balanceQuantity) {
+                                AppAlert.error(context, "Item is out of stock");
+                                return;
+                              }
 
-                      if (itemId != null) {
-                        await food_Authservice.updateCartItemQuantity(
-                          itemId: itemId,
-                          quantity: itemCount,
-                        );
-                      }
+                              final newQty = itemCount + 1;
 
-                      // ignore: use_build_context_synchronously
-                      // ScaffoldMessenger.of(context).showSnackBar(
-                      //   SnackBar(
-                      //     content: Text("$itemCount item(s) in cart"),
-                      //     backgroundColor: Colors.green,
-                      //     behavior: SnackBarBehavior.floating,
-                      //     action: SnackBarAction(
-                      //       label: "Go to Cart",
-                      //       textColor: Colors.white,
-                      //       onPressed: _goToCart,
-                      //     ),
-                      //   ),
-                      // );
-                    },
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              final itemId = prefs.getInt(
+                                "table_dish_${widget.dishId}_itemId",
+                              );
+
+                              if (itemId != null) {
+                                await food_Authservice.updateCartItemQuantity(
+                                  itemId: itemId,
+                                  quantity: newQty,
+                                );
+                              }
+                              final cartList = await food_Authservice.fetchTableCart();
+                              if (cartList.isNotEmpty) {
+                                CartNotifier.count.value = cartList.first.cartItems.length;
+                              }
+
+                              setState(() => itemCount = newQty);
+                            } catch (e) {
+                              AppAlert.error(context, "Update failed");
+                            } finally {
+                              if (mounted) setState(() => _isLoading = false);
+                            }
+                          },
                   ),
                 ],
               ),

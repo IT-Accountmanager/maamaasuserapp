@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../Models/food/aboutus_model.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
@@ -38,11 +39,13 @@ class BannerSection extends StatefulWidget {
 
 class _BannerSectionState extends State<BannerSection> {
   late bool _isVeg;
+  String orderType = "";
 
   @override
   void initState() {
     super.initState();
     _isVeg = widget.isVeg;
+    _loadOrderType();
   }
 
   ImageProvider _getImage(String img) {
@@ -87,200 +90,23 @@ class _BannerSectionState extends State<BannerSection> {
     );
   }
 
+  Future<void> _loadOrderType() async {
+    final prefs = await SharedPreferences.getInstance();
+    final type = prefs.getString("orderType") ?? "";
+
+    if (mounted) {
+      setState(() {
+        orderType = type;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final banner = widget.bannerItem;
 
     return Column(
       children: [
-        // Expanded(
-        //   child: Stack(
-        //     fit: StackFit.expand,
-        //     children: [
-        //       // ── Cinematic background ──────────────────────────
-        //       if (banner != null && banner.companyBanner.isNotEmpty)
-        //         Image(image: _getImage(banner.companyBanner), fit: BoxFit.cover)
-        //       else
-        //         Container(
-        //           decoration: const BoxDecoration(
-        //             gradient: LinearGradient(
-        //               begin: Alignment.topLeft,
-        //               end: Alignment.bottomRight,
-        //               colors: [Color(0xFF1A1208), Color(0xFF2A1A0C)],
-        //             ),
-        //           ),
-        //         ),
-        //
-        //       // ── Warm radial glow overlay ──────────────────────
-        //       Container(
-        //         decoration: BoxDecoration(
-        //           gradient: RadialGradient(
-        //             center: const Alignment(0.4, -0.3),
-        //             radius: 1.0,
-        //             colors: [
-        //               const Color(0xFFC88C3C).withOpacity(0.30),
-        //               Colors.transparent,
-        //             ],
-        //           ),
-        //         ),
-        //       ),
-        //
-        //       // ── Bottom-heavy scrim ────────────────────────────
-        //       Container(
-        //         decoration: const BoxDecoration(
-        //           gradient: LinearGradient(
-        //             begin: Alignment.topCenter,
-        //             end: Alignment.bottomCenter,
-        //             stops: [0.0, 0.45, 1.0],
-        //             colors: [
-        //               Color(0x22000000),
-        //               Color(0x88000000),
-        //               Color(0xF5060300),
-        //             ],
-        //           ),
-        //         ),
-        //       ),
-        //
-        //       // ── Thin golden divider line ──────────────────────
-        //       Positioned(
-        //         top: 72.h,
-        //         left: 16.w,
-        //         right: 16.w,
-        //         child: Container(
-        //           height: 0.5,
-        //           decoration: const BoxDecoration(
-        //             gradient: LinearGradient(
-        //               colors: [
-        //                 Color(0x44C88C3C),
-        //                 Color(0x11C88C3C),
-        //                 Colors.transparent,
-        //               ],
-        //             ),
-        //           ),
-        //         ),
-        //       ),
-        //
-        //       // ── Centre brand block ────────────────────────────
-        //       Center(
-        //         child: Padding(
-        //           padding: EdgeInsets.only(bottom: 60.h),
-        //           child: Column(
-        //             mainAxisSize: MainAxisSize.min,
-        //             children: [
-        //               // Cuisine tag
-        //               Text(
-        //                 'EST. ${banner?.establishedYear ?? "2003"}',
-        //                 style: TextStyle(
-        //                   fontSize: 9.sp,
-        //                   fontWeight: FontWeight.w700,
-        //                   letterSpacing: 2.5,
-        //                   color: const Color(0xFFC88C3C),
-        //                 ),
-        //               ),
-        //               SizedBox(height: 10.h),
-        //               // Restaurant name
-        //               if (banner != null && banner.companyName.isNotEmpty)
-        //                 Text(
-        //                   banner.companyName.toUpperCase(),
-        //                   textAlign: TextAlign.center,
-        //                   style: TextStyle(
-        //                     fontFamily: 'YourSerifFont',
-        //                     // e.g. Playfair Display
-        //                     fontSize: 34.sp,
-        //                     fontWeight: FontWeight.w700,
-        //                     color: Colors.white,
-        //                     letterSpacing: -0.5,
-        //                     height: 1.1,
-        //                   ),
-        //                 ),
-        //             ],
-        //           ),
-        //         ),
-        //       ),
-        //
-        //       // ── Status strip ─────────────────────────────────
-        //       Positioned(
-        //         bottom: 104.h,
-        //         left: 16.w,
-        //         right: 16.w,
-        //         child: Row(
-        //           children: [
-        //             const Spacer(),
-        //             if (banner?.startTime != null)
-        //               // Text(
-        //               //   '${banner!.startTime} – ${banner.lastTime}',
-        //               //   style: TextStyle(
-        //               //     color: Colors.white38,
-        //               //     fontSize: 11.sp,
-        //               //   ),
-        //               // ),
-        //               Text(
-        //                 '09:00 – 21:00', // static data for testing
-        //                 style: TextStyle(color: Colors.white, fontSize: 11.sp),
-        //               ),
-        //           ],
-        //         ),
-        //       ),
-        //
-        //       // ── Social icons (left) + Action chips (right) ───
-        //       Positioned(
-        //         bottom: 68.h,
-        //         left: 16.w,
-        //         right: 16.w,
-        //         child: Row(
-        //           children: [
-        //             if (_hasValidLink(banner?.whatsappLink))
-        //               _socialIcon(
-        //                 FontAwesomeIcons.whatsapp,
-        //                 banner!.whatsappLink,
-        //               ),
-        //             if (_hasValidLink(banner?.instagramLink))
-        //               _socialIcon(
-        //                 FontAwesomeIcons.instagram,
-        //                 banner!.instagramLink,
-        //               ),
-        //             if (_hasValidLink(banner?.facebookLink))
-        //               _socialIcon(
-        //                 FontAwesomeIcons.facebook,
-        //                 banner!.facebookLink,
-        //               ),
-        //             if (_hasValidLink(banner?.youtubeLink))
-        //               _socialIcon(
-        //                 FontAwesomeIcons.youtube,
-        //                 banner!.youtubeLink,
-        //               ),
-        //             const Spacer(),
-        //             _actionButton(
-        //               'Gallery',
-        //               () => widget.onContentSelected(BannerContentType.gallery),
-        //             ),
-        //             SizedBox(width: 6.w),
-        //             _actionButton(
-        //               'About Us',
-        //               () => widget.onContentSelected(BannerContentType.about),
-        //               primary: true,
-        //             ),
-        //           ],
-        //         ),
-        //       ),
-        //
-        //       Positioned(
-        //         bottom: 20.h,
-        //         left: 16.w,
-        //         right: 16.w,
-        //         child: SingleChildScrollView(
-        //           scrollDirection: Axis.horizontal,
-        //           child: Row(
-        //             children: [
-        //               if (banner?.distance != null)
-        //                 _metaPill('📍', '${banner!.distance} km', accent: true),
-        //             ],
-        //           ),
-        //         ),
-        //       ),
-        //     ],
-        //   ),
-        // ),
         Expanded(
           child: Stack(
             fit: StackFit.expand,
@@ -447,89 +273,91 @@ class _BannerSectionState extends State<BannerSection> {
               ),
 
               // Action buttons at bottom
-              Positioned(
-                bottom: 60.h,
-                left: 16.w,
-                right: 16.w,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // ⏰ Timing Section
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (banner?.startTime != null &&
-                            banner!.startTime.trim().isNotEmpty)
-                          Row(
-                            children: [
-                              Text(
-                                "Opening: ",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w500,
+              if (orderType != "CATERING")
+                Positioned(
+                  bottom: 50.h,
+                  left: 16.w,
+                  right: 16.w,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // ⏰ Timing Section
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (banner?.startTime != null &&
+                              banner!.startTime.trim().isNotEmpty)
+                            Row(
+                              children: [
+                                Text(
+                                  "Opening: ",
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                banner.startTime,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
+                                Text(
+                                  banner.startTime,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+
+                          SizedBox(height: 4.h),
+
+                          if (banner?.lastTime != null &&
+                              banner!.lastTime.trim().isNotEmpty)
+                            Row(
+                              children: [
+                                Text(
+                                  "Closing: ",
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  banner.lastTime,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+
+                      const Spacer(),
+
+                      // 🎯 Buttons
+                      Row(
+                        children: [
+                          _actionButton(
+                            'About Us',
+                            () => widget.onContentSelected(
+                              BannerContentType.about,
+                            ),
                           ),
-
-                        SizedBox(height: 4.h),
-
-                        if (banner?.lastTime != null &&
-                            banner!.lastTime.trim().isNotEmpty)
-                          Row(
-                            children: [
-                              Text(
-                                "Closing: ",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                banner.lastTime,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                          SizedBox(width: 8.w),
+                          _actionButton(
+                            'Gallery',
+                            () => widget.onContentSelected(
+                              BannerContentType.gallery,
+                            ),
                           ),
-                      ],
-                    ),
-
-                    const Spacer(),
-
-                    // 🎯 Buttons
-                    Row(
-                      children: [
-                        _actionButton(
-                          'About Us',
-                          () =>
-                              widget.onContentSelected(BannerContentType.about),
-                        ),
-                        SizedBox(width: 8.w),
-                        _actionButton(
-                          'Gallery',
-                          () => widget.onContentSelected(
-                            BannerContentType.gallery,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),

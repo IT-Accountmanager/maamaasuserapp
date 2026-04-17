@@ -127,6 +127,7 @@ class Order {
   final String deliveryUserName;
   final String mobileNo;
   final int ratings;
+  final String ratingCategory;
 
   Order({
     required this.id,
@@ -163,6 +164,7 @@ class Order {
     required this.mobileNo,
     required this.feedback,
     required this.ratings,
+    required this.ratingCategory,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -194,7 +196,7 @@ class Order {
       platformCharges: (json['platformCharges'] as num?)?.toDouble() ?? 0.0,
       deliveryCharges: (json['deliveryCharges'] as num?)?.toDouble() ?? 0.0,
       people: json['people'] ?? 0,
-      orderType: OrderTypeExtension.fromString(json['orderType']),
+      orderType: OrderType.fromString(json['orderType']),
       status: OrderStatus.fromString(json['status']),
       sheduled: json['sheduled'],
       deliveryAddress: json['deliveryAddress']?.toString() ?? '',
@@ -202,20 +204,31 @@ class Order {
       mobileNo: json['mobileNo'] ?? '',
       feedback: json['feedback'] ?? '',
       ratings: json['ratings'] ?? 0,
+      ratingCategory: json['ratingCategory'] ?? '',
     );
   }
 
   static DateTime _parseOrderDate(dynamic rawDate) {
     try {
-      if (rawDate is String) return DateTime.parse(rawDate);
+      if (rawDate is String && rawDate.trim().isNotEmpty) {
+        return DateTime.parse(rawDate);
+      }
+
       if (rawDate is Map) {
-        final combined = "${rawDate['date']} ${rawDate['time']}";
-        return DateFormat("yyyy-MM-dd HH:mm:ss").parse(combined);
+        final date = rawDate['date'];
+        final time = rawDate['time'];
+
+        if (date != null && time != null) {
+          final combined = "$date $time";
+          return DateFormat("yyyy-MM-dd HH:mm:ss").parse(combined);
+        }
       }
     } catch (e) {
-      debugPrint("Date parsing error: $e");
+      debugPrint("❌ Date parsing error: $e | RAW: $rawDate");
     }
-    return DateTime.now();
+
+    // ❌ DO NOT use DateTime.now()
+    return DateTime.fromMillisecondsSinceEpoch(0); // safe fallback
   }
 
   bool get isActive =>
@@ -262,19 +275,49 @@ class Order {
       mobileNo: mobileNo,
       feedback: feedback,
       ratings: ratings,
+      ratingCategory: ratingCategory,
     );
   }
 }
 
-// ignore: constant_identifier_names
-enum OrderType { DINE_IN, DELIVERY, TAKEAWAY }
+enum OrderType {
+  DINE_IN,
+  DELIVERY,
+  TAKEAWAY,
+  TABLE_DINE_IN;
+
+  static OrderType fromString(dynamic type) {
+    if (type == null) return OrderType.DINE_IN;
+
+    final normalized = type
+        .toString()
+        .trim()
+        .toUpperCase()
+        .replaceAll(' ', '_')
+        .replaceAll('-', '_');
+
+    const map = {
+      'DINE_IN': OrderType.DINE_IN,
+      'DELIVERY': OrderType.DELIVERY,
+      'TAKEAWAY': OrderType.TAKEAWAY,
+      'TABLE_DINE_IN': OrderType.TABLE_DINE_IN,
+    };
+
+    return map[normalized] ?? OrderType.DINE_IN;
+  }
+}
 
 extension OrderTypeExtension on OrderType {
-  static OrderType fromString(String? value) {
-    if (value == null) return OrderType.DINE_IN; // default
-    return OrderType.values.firstWhere(
-      (e) => e.toString().split('.').last == value,
-      orElse: () => OrderType.DINE_IN, // default if no match
-    );
+  String get label {
+    switch (this) {
+      case OrderType.DINE_IN:
+        return "Dine In";
+      case OrderType.DELIVERY:
+        return "Delivery";
+      case OrderType.TAKEAWAY:
+        return "Takeaway";
+      case OrderType.TABLE_DINE_IN:
+        return "Dine Out"; // custom fix
+    }
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:maamaas/screens/screens/advertisements/popup_message.dart';
 import 'package:firebase_in_app_messaging/firebase_in_app_messaging.dart';
 import 'package:maamaas/screens/screens/advertisements/videoscreen.dart';
@@ -7,8 +9,9 @@ import '../../widgets/widgets/food/currentcart_notifier.dart';
 import 'package:maamaas/screens/screens/profile_screen.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 import '../Models/promotions_model/promotions_model.dart';
-import 'Food&beverages/food_cartscreen.dart';
 import 'Food&beverages/RestaurentsScreen/restaurentsnew.dart';
+import 'Food&beverages/commonCartscreen.dart';
+import 'Food&beverages/food_cartscreen.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import '../../utils/utils.dart';
@@ -74,10 +77,14 @@ class _MainScreenState extends State<MainScreenfood> {
 
       if (filteredAds.isEmpty) return;
 
+      /// 🎯 Pick random ad
+      final random = Random();
+      final randomAd = filteredAds[random.nextInt(filteredAds.length)];
+
       Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return;
 
-        PromotionPopup.show(context, filteredAds.first);
+        PromotionPopup.show(context, randomAd);
       });
     } catch (e) {
       debugPrint("Promotion error: $e");
@@ -104,10 +111,11 @@ class _MainScreenState extends State<MainScreenfood> {
   }
 
   late final _screens = [
-    // Restaurents(scrollController: _scrollController),
-    HomePage(scrollController: _scrollController),
+    Restaurents(scrollController: _scrollController),
+    // HomePage(scrollController: _scrollController),
     ReelsScreen(key: reelsKey),
-    const food_cartScreen(),
+    // const food_cartScreen(),
+    CommonCartScreen(),
     Profile(),
   ];
 
@@ -139,6 +147,20 @@ class _MainScreenState extends State<MainScreenfood> {
       type: BottomNavigationBarType.fixed,
       selectedItemColor: AppColors.primary,
       unselectedItemColor: Colors.grey,
+      // onTap: (index) {
+      //   if (_currentIndex == 1 && index != 1) {
+      //     reelsKey.currentState?.setScreenActive(false);
+      //   }
+      //
+      //   if (index == 1) {
+      //     reelsKey.currentState?.setScreenActive(true);
+      //   }
+      //
+      //   setState(() {
+      //     _currentIndex = index;
+      //     _showBottomBar = true;
+      //   });
+      // },
       onTap: (index) {
         if (_currentIndex == 1 && index != 1) {
           reelsKey.currentState?.setScreenActive(false);
@@ -146,6 +168,12 @@ class _MainScreenState extends State<MainScreenfood> {
 
         if (index == 1) {
           reelsKey.currentState?.setScreenActive(true);
+        }
+
+        /// 🟢 IMPORTANT: Reload cart when opening cart tab
+        if (index == 2) {
+          final cartScreen = _screens[2] as CommonCartScreen;
+          cartScreen.reloadCart?.call(); // we'll add this
         }
 
         setState(() {

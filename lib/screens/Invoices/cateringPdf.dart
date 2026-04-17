@@ -6,8 +6,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'dart:io';
 
-
-
 class cateringpdf {
   Future<void> downloadInvoice(int id) async {
     final data = await catering_authservice().fetchOrderById(id);
@@ -60,6 +58,26 @@ class cateringpdf {
     }
   }
 
+  String _formatDate(dynamic raw) {
+    try {
+      final dt = DateTime.parse(raw.toString());
+      return "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}";
+    } catch (e) {
+      return "N/A";
+    }
+  }
+
+  String _formatTime(dynamic raw) {
+    try {
+      final dt = DateTime.parse(raw.toString());
+      final hour = dt.hour.toString().padLeft(2, '0');
+      final min = dt.minute.toString().padLeft(2, '0');
+      return "$hour:$min";
+    } catch (e) {
+      return "N/A";
+    }
+  }
+
   Future<Uint8List> generateCateringInvoice(Map<String, dynamic> data) async {
     final pdf = pw.Document();
 
@@ -74,16 +92,35 @@ class cateringpdf {
       return double.tryParse(value.toString())?.toStringAsFixed(2) ?? '0.00';
     }
 
-    final List items = List.from(data['items'] ?? []);
+    List items = [];
 
-    pw.Widget keyValue(String key, String value, {bool bold = false}) {
+    if (data['orderItems'] is List) {
+      items = List.from(data['orderItems']);
+    } else if (data['data'] != null && data['data']['orderItems'] is List) {
+      items = List.from(data['data']['orderItems']);
+    }
+
+    print("FINAL ITEMS: $items");
+
+    print("FULL DATA: $data");
+    print("ORDER ITEMS: ${data['orderItems']}");
+
+    pw.Widget keyValue(String key, dynamic value, {bool bold = false}) {
+      if (value == null) return pw.SizedBox();
+
+      final text = value.toString().trim();
+      if (text.isEmpty || text.toLowerCase() == "null") {
+        return pw.SizedBox();
+      }
+      final List items = List.from(data['items'] ?? []);
+
       return pw.Padding(
         padding: const pw.EdgeInsets.symmetric(vertical: 2),
         child: pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.start, // 👈 important
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.SizedBox(
-              width: 90, // 👈 fixed width for label
+              width: 100,
               child: pw.Text(
                 key,
                 style: pw.TextStyle(
@@ -94,9 +131,8 @@ class cateringpdf {
             ),
             pw.SizedBox(width: 6),
             pw.Expanded(
-              // 👈 allows wrapping
               child: pw.Text(
-                value,
+                text,
                 style: pw.TextStyle(
                   fontSize: 10,
                   fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
@@ -123,20 +159,13 @@ class cateringpdf {
                   pw.Container(width: 60, height: 60, child: pw.Image(image)),
                   pw.SizedBox(width: 10),
                   pw.Text(
-                    'MAAMAAS CATERING',
+                    'MAAMAAS',
                     style: pw.TextStyle(
                       fontSize: 18,
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
                 ],
-              ),
-              pw.Text(
-                'CATERING INVOICE',
-                style: pw.TextStyle(
-                  fontSize: 22,
-                  fontWeight: pw.FontWeight.bold,
-                ),
               ),
             ],
           ),
@@ -149,46 +178,57 @@ class cateringpdf {
               border: pw.Border.all(color: PdfColors.grey400),
               borderRadius: pw.BorderRadius.circular(6),
             ),
-            child: pw.Row(
+            child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                // LEFT SIDE - ORDER DETAILS
-                pw.Expanded(
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      keyValue(
-                        'Order ID',
-                        data['orderId']?.toString() ?? 'N/A',
-                      ),
-                      keyValue('Order Date', data['orderDate'] ?? 'N/A'),
-                      keyValue(
-                        'Payment Method',
-                        data['paymentMethod'] ?? 'N/A',
-                      ),
-                      keyValue(
-                        'Transaction ID',
-                        data['transactionId'] ?? 'N/A',
-                      ),
-                    ],
-                  ),
-                ),
+                // ───── ORDER INFO ─────
+                if (data['orderId'] != null)
+                  keyValue('Order ID', data['orderId']),
 
-                pw.SizedBox(width: 20),
+                if (data['orderDateTime'] != null) ...[
+                  keyValue("Order Date", _formatDate(data['orderDateTime'])),
 
-                // RIGHT SIDE - EVENT DETAILS
-                pw.Expanded(
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      keyValue('Event Type', data['eventType'] ?? 'N/A'),
-                      keyValue('Event Date', data['eventDate'] ?? 'N/A'),
-                      keyValue('Event Time', data['eventTime'] ?? 'N/A'),
-                      keyValue('Guests', data['people']?.toString() ?? '0'),
-                      keyValue('Location', data['location'] ?? 'N/A'),
-                    ],
-                  ),
-                ),
+                  keyValue("Order Time", _formatTime(data['orderDateTime'])),
+                ],
+
+                if (data['paymentMethod'] != null)
+                  keyValue('Payment Method', data['paymentMethod']),
+
+                if (data['transactionId'] != null)
+                  keyValue('Transaction ID', data['transactionId']),
+
+                pw.SizedBox(height: 8),
+
+                // ───── VENDOR INFO ─────
+                if (data['vendorRegisteredName'] != null)
+                  keyValue('Vendor Name', data['vendorRegisteredName']),
+
+                if (data['vendorFssai'] != null)
+                  keyValue('Vendor FSSAI', data['vendorFssai']),
+
+                if (data['vendorFullAddress'] != null)
+                  keyValue('Vendor Address', data['vendorFullAddress']),
+
+                if (data['vendorGstIn'] != null)
+                  keyValue('Vendor GSTIN', data['vendorGstIn']),
+
+                pw.SizedBox(height: 8),
+
+                // ───── CATERING INFO ─────
+                if (data['cateringDate'] != null)
+                  keyValue('Catering Date', data['cateringDate']),
+
+                if (data['cateringTime'] != null)
+                  keyValue('Catering Time', data['cateringTime']),
+
+                if (data['deliveryUserName'] != null)
+                  keyValue('Customer Name', data['deliveryUserName']),
+
+                if (data['mobileNo'] != null)
+                  keyValue('Phone', "+91${data['mobileNo']}"),
+
+                if (data['deliveryAddress'] != null)
+                  keyValue('Location', data['deliveryAddress']),
               ],
             ),
           ),
@@ -209,21 +249,50 @@ class cateringpdf {
               fontWeight: pw.FontWeight.bold,
             ),
             cellStyle: pw.TextStyle(fontSize: 9),
-            cellPadding: const pw.EdgeInsets.symmetric(
-              vertical: 6,
-              horizontal: 4,
-            ),
-            headers: ['#', 'Item', 'Qty', 'Price', 'Total'],
-            data: List.generate(items.length, (index) {
-              final item = items[index];
-              return [
-                (index + 1).toString(),
-                item['name'] ?? 'N/A',
-                item['quantity'].toString(),
-                "₹${formatAmount(item['price'])}",
-                "₹${formatAmount(item['totalPrice'])}",
-              ];
-            }),
+
+            headers: ['#', 'Package', 'Items', 'Qty', 'Price', 'Total'],
+
+            data: items.isEmpty
+                ? [
+                    ['-', 'No items found', '-', '-', '-', '-'],
+                  ]
+                : List.generate(items.length, (index) {
+                    final item = items[index];
+
+                    final packageName =
+                        item['packageName']?.toString() ?? 'N/A';
+                    final qty = item['quantity'] ?? 0;
+
+                    // ✅ Handle price safely
+                    final price =
+                        double.tryParse(
+                          item['packagePrice']?.toString() ?? '',
+                        ) ??
+                        0;
+
+                    final total = qty * price;
+
+                    // ✅ Handle BOTH structures
+                    String itemNames = '';
+
+                    if (item['packageItems'] is List &&
+                        item['packageItems'].isNotEmpty) {
+                      itemNames = (item['packageItems'] as List)
+                          .map((e) => e['itemName'] ?? '')
+                          .join(', ');
+                    } else if (item['itemsName'] != null) {
+                      itemNames = item['itemsName'];
+                    }
+
+                    return [
+                      (index + 1).toString(),
+                      packageName,
+                      itemNames.isEmpty ? 'N/A' : itemNames,
+                      qty.toString(),
+                      "₹${price.toStringAsFixed(2)}",
+                      "₹${total.toStringAsFixed(2)}",
+                    ];
+                  }),
           ),
 
           pw.SizedBox(height: 20),
@@ -242,20 +311,33 @@ class cateringpdf {
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Text(
-                    'Billing Summary',
+                    'Order Summary',
                     style: pw.TextStyle(
+                      font: ttf,
                       fontSize: 14,
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
                   pw.SizedBox(height: 8),
-
                   keyValue('Sub Total', "₹${formatAmount(data['subtotal'])}"),
                   keyValue('SGST', "₹${formatAmount(data['sgst'])}"),
                   keyValue('CGST', "₹${formatAmount(data['cgst'])}"),
+
+                  if ((data['platformFeeAmount'] ?? 0) > 0)
+                    keyValue(
+                      'Platform Fee',
+                      "₹${formatAmount(data['platformFeeAmount'])}",
+                    ),
+
+                  if ((data['discountAmount'] ?? 0) > 0)
+                    keyValue(
+                      'Discount',
+                      "- ₹${formatAmount(data['discountAmount'])}",
+                    ),
+
                   keyValue(
-                    'Platform Fee',
-                    "₹${formatAmount(data['platformFeeAmount'])}",
+                    'Delivery Charges',
+                    "₹${formatAmount(data['deliveryFee'])}",
                   ),
 
                   pw.Divider(height: 12),
@@ -275,8 +357,22 @@ class cateringpdf {
           // ================= FOOTER =================
           pw.Center(
             child: pw.Text(
-              'Thank you for choosing MAAMAAS Catering Services',
-              style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic),
+              'Thank you for ordering with MAAMAAS ',
+              style: pw.TextStyle(
+                font: ttf,
+                fontSize: 10,
+                fontStyle: pw.FontStyle.italic,
+              ),
+            ),
+          ),
+          pw.Center(
+            child: pw.Text(
+              'www.maamaas.com',
+              style: pw.TextStyle(
+                font: ttf,
+                fontSize: 10,
+                fontStyle: pw.FontStyle.italic,
+              ),
             ),
           ),
         ],

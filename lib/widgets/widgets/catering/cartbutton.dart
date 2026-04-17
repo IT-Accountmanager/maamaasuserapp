@@ -6,8 +6,10 @@ import '../../../Models/caterings/catering_cart_model.dart';
 import '../../../Models/caterings/packages_model.dart';
 import '../../../Services/Auth_service/catering_authservice.dart';
 import '../../../utils/utils.dart';
-
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
+
+import '../food/currentcart_notifier.dart';
+
 class CateringCartButton extends StatefulWidget {
   final Package package; // ✅ Strongly type it
   const CateringCartButton({super.key, required this.package});
@@ -188,31 +190,18 @@ class _CateringCartButtonState extends State<CateringCartButton> {
     try {
       setState(() => _isLoading = true);
 
-      final prefs = await SharedPreferences.getInstance();
-      final packageId = widget.package.id;
-      final currentCartId =
-          cartId ?? prefs.getInt("package_${packageId}_cartId");
+      final removed = await catering_authservice.clearCart();
 
-      if (currentCartId != null) {
-        final removed = await catering_authservice.clearCart();
+      if (removed) {
+        setState(() {
+          itemCount = 0;
+          cartId = null;
+        });
 
-        if (removed) {
-          await prefs.remove("package_${packageId}_quantity");
-          await prefs.remove("package_${packageId}_cartId");
+        CartNotifier.count.value = 0;
 
-          setState(() {
-            itemCount = 0;
-            cartId = null;
-          });
-
-          Utils.itemCount.value--;
-
-          // ignore: use_build_context_synchronously
-          AppAlert.success(context, "Item removed from cart");
-        }
+        AppAlert.success(context, "Item removed from cart");
       }
-    } catch (e) {
-      debugPrint("❌ Error removing from cart: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -255,14 +244,18 @@ class _CateringCartButtonState extends State<CateringCartButton> {
               ),
               onPressed: () async {
                 setState(() => _isLoading = true);
+
                 final success = await _handleAddToCart(1);
+
                 setState(() => _isLoading = false);
 
                 if (success) {
                   setState(() {
                     itemCount = 1;
                   });
-                  Utils.itemCount.value++;
+
+                  // 🔥 GLOBAL SYNC FIX
+                  CartNotifier.count.value = CartNotifier.count.value + 1;
                 }
               },
               child: Text(
@@ -312,8 +305,14 @@ class _CateringCartButtonState extends State<CateringCartButton> {
                     icon: const Icon(Icons.add, color: Colors.white, size: 16),
                     onPressed: () async {
                       final newCount = itemCount + 1;
+
                       setState(() => itemCount = newCount);
-                      await _updateCartQuantity(newCount);
+
+                      final success = await _updateCartQuantity(newCount);
+
+                      if (success) {
+                        CartNotifier.count.value = CartNotifier.count.value + 1;
+                      }
                     },
                   ),
                 ],

@@ -516,82 +516,67 @@ class _MenuList extends StatefulWidget {
 class _MenuListState extends State<_MenuList> {
   bool _isLoggingOut = false;
 
-  static const _sections = [
+  static const _items = [
     {
-      'title': 'Orders & Wallet',
-      'items': [
-        {
-          'icon': Icons.shopping_bag_outlined,
-          'label': 'My Orders',
-          'color': Color(0xFF4F46E5),
-          'key': 'orders',
-        },
-        {
-          'icon': Icons.account_balance_wallet_outlined,
-          'label': 'Wallet',
-          'color': Color(0xFF0EA5E9),
-          'key': 'wallet',
-        },
-      ],
+      'icon': Icons.shopping_bag_outlined,
+      'label': 'My Orders',
+      'color': Color(0xFF4F46E5),
+      'key': 'orders',
     },
     {
-      'title': 'Preferences',
-      'items': [
-        {
-          'icon': Icons.location_on_outlined,
-          'label': 'Address Book',
-          'color': Color(0xFF10B981),
-          'key': 'address',
-        },
-        {
-          'icon': Icons.favorite_border_rounded,
-          'label': 'Favorites',
-          'color': Color(0xFFF43F5E),
-          'key': 'favorites',
-        },
-        {
-          'icon': Icons.card_giftcard_outlined,
-          'label': 'Rewards & Coupons',
-          'color': Color(0xFF0EA5E9),
-          'key': 'rewards',
-        },
-        {
-          'icon': Icons.room_preferences,
-          'label': 'Refer',
-          'color': Color(0xFFF59E0B),
-          'key': 'Refer',
-        },
-        {
-          'icon': Icons.rate_review,
-          'label': 'Review',
-          'color': Color(0xFF8B5CF6),
-          'key': 'review',
-        },
-      ],
+      'icon': Icons.account_balance_wallet_outlined,
+      'label': 'Wallet',
+      'color': Color(0xFF0EA5E9),
+      'key': 'wallet',
     },
     {
-      'title': 'Account',
-      'items': [
-        {
-          'icon': Icons.support_agent_outlined,
-          'label': 'Support',
-          'color': Color(0xFF06B6D4),
-          'key': 'support',
-        },
-        {
-          'icon': Icons.manage_accounts_outlined,
-          'label': 'Account Settings',
-          'color': Color(0xFF8B5CF6),
-          'key': 'account',
-        },
-        {
-          'icon': Icons.manage_accounts_outlined,
-          'label': 'Logistics',
-          'color': Color(0xFF8B5CF6),
-          'key': 'logitics',
-        },
-      ],
+      'icon': Icons.location_on_outlined,
+      'label': 'Address Book',
+      'color': Color(0xFF10B981),
+      'key': 'address',
     },
+    {
+      'icon': Icons.favorite_border_rounded,
+      'label': 'Favorites',
+      'color': Color(0xFFF43F5E),
+      'key': 'favorites',
+    },
+    {
+      'icon': Icons.card_giftcard_outlined,
+      'label': 'Rewards & Coupons',
+      'color': Color(0xFF0EA5E9),
+      'key': 'rewards',
+    },
+    {
+      'icon': Icons.room_preferences,
+      'label': 'Refer',
+      'color': Color(0xFFF59E0B),
+      'key': 'Refer',
+    },
+    {
+      'icon': Icons.rate_review,
+      'label': 'Review',
+      'color': Color(0xFF8B5CF6),
+      'key': 'review',
+    },
+    {
+      'icon': Icons.support_agent_outlined,
+      'label': 'Support',
+      'color': Color(0xFF06B6D4),
+      'key': 'support',
+    },
+    {
+      'icon': Icons.manage_accounts_outlined,
+      'label': 'Account Settings',
+      'color': Color(0xFF8B5CF6),
+      'key': 'account',
+    },
+    // {
+    //   'icon': Icons.manage_accounts_outlined,
+    //   'label': 'Logistics',
+    //   'color': Color(0xFF8B5CF6),
+    //   'key': 'logitics',
+    // },
   ];
 
   Widget? _pageForKey(String key, BuildContext context) {
@@ -618,8 +603,8 @@ class _MenuListState extends State<_MenuList> {
         return Supportteam();
       case 'account':
         return AccountScreen();
-      case 'logitics':
-        return TravelHomeScreen();
+      // case 'logitics':
+      //   return TravelHomeScreen();
       default:
         return null;
     }
@@ -663,43 +648,37 @@ class _MenuListState extends State<_MenuList> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Sections
-          for (final section in _sections) ...[
-            _SectionLabel(section['title'] as String),
-            Container(
-              decoration: BoxDecoration(
-                color: _T.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: _T.card,
-              ),
-              child: Column(
-                children: [
-                  for (
-                    int i = 0;
-                    i < (section['items'] as List).length;
-                    i++
-                  ) ...[
-                    _MenuItem(
-                      icon: (section['items'] as List)[i]['icon'] as IconData,
-                      label: (section['items'] as List)[i]['label'] as String,
-                      color: (section['items'] as List)[i]['color'] as Color,
-                      isLast: i == (section['items'] as List).length - 1,
-                      onTap: () {
-                        final key =
-                            (section['items'] as List)[i]['key'] as String;
-                        final page = _pageForKey(key, context);
-                        if (page != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => page),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ],
-              ),
+          // for (final section in _sections) ...[
+          //   _SectionLabel(section['title'] as String),
+          Container(
+            decoration: BoxDecoration(
+              color: _T.surface,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: _T.card,
             ),
-          ],
+            child: Column(
+              children: [
+                for (int i = 0; i < _items.length; i++)
+                  _MenuItem(
+                    icon: _items[i]['icon'] as IconData,
+                    label: _items[i]['label'] as String,
+                    color: _items[i]['color'] as Color,
+                    isLast: i == _items.length - 1,
+                    onTap: () {
+                      final key = _items[i]['key'] as String;
+                      final page = _pageForKey(key, context);
+                      if (page != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => page),
+                        );
+                      }
+                    },
+                  ),
+              ],
+            ),
+          ),
+          // ],
 
           // Logout
           const SizedBox(height: 8),

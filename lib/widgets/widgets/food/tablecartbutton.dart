@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
-import '../../../screens/Food&beverages/tablecart.dart';
+import '../../../screens/Food&beverages/table/tablecart.dart';
 import '../../widgets/food/currentcart_notifier.dart';
 
 // ignore: camel_case_types
 class food_tableCart_count extends StatefulWidget {
-  final double? savedAmount;
+  final double? savedAmount; // final VoidCallback? onCartUpdated;
 
   const food_tableCart_count({super.key, this.savedAmount});
 

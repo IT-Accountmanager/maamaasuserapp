@@ -1,4 +1,3 @@
-
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,11 +17,10 @@ import '../../../Models/food/dish.dart';
 import '../../foodmainscreen.dart';
 import 'dart:convert';
 import 'dart:async';
-import '../Table.dart';
+import '../table/Table.dart';
 import 'Top_banner.dart';
 import 'colours.dart';
 import 'fullscreen.dart';
-
 
 class MenuResponse {
   final List<Dish> categories;
@@ -232,13 +230,14 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
               },
             ),
 
-            // Floating cart bar
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: const food_Cart_count(),
-            ),
+            // Floating cart bars
+            if (showMenuTab)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: const food_Cart_count(),
+              ),
           ],
         ),
       ),
@@ -1583,30 +1582,30 @@ class ProductCard extends StatelessWidget {
                 ),
 
                 // Discount badge
-                // if (discount > 0)
-                //   Positioned(
-                //     top: 8,
-                //     left: 8,
-                //     child: Container(
-                //       padding: EdgeInsets.symmetric(
-                //         horizontal: 7.w,
-                //         vertical: 3.h,
-                //       ),
-                //       decoration: BoxDecoration(
-                //         color: _DS.accent,
-                //         borderRadius: _DS.r8,
-                //       ),
-                //       child: Text(
-                //         '-${discount.toStringAsFixed(0)}%',
-                //         style: TextStyle(
-                //           fontSize: 9.sp,
-                //           color: Colors.white,
-                //           fontWeight: FontWeight.w800,
-                //           letterSpacing: 0.2,
-                //         ),
-                //       ),
-                //     ),
-                //   ),
+                if (discount > 0)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 7.w,
+                        vertical: 3.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Menucolours.accent,
+                        borderRadius: Menucolours.r8,
+                      ),
+                      child: Text(
+                        '${discount.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          fontSize: 9.sp,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ),
 
                 // Favourite button
                 Positioned(
@@ -1629,34 +1628,7 @@ class ProductCard extends StatelessWidget {
                   ),
                 ),
 
-                // Info button
-                // Positioned(
-                //   bottom: 8,
-                //   right: 8,
-                //   child: GestureDetector(
-                //     onTap: () =>
-                //         showDishBottomSheet(context, dish, showCartButton),
-                //     child: Container(
-                //       width: 26.r,
-                //       height: 26.r,
-                //       decoration: BoxDecoration(
-                //         color: Colors.white.withOpacity(0.92),
-                //         shape: BoxShape.circle,
-                //         boxShadow: [
-                //           BoxShadow(
-                //             color: Colors.black.withOpacity(0.1),
-                //             blurRadius: 4,
-                //           ),
-                //         ],
-                //       ),
-                //       child: Icon(
-                //         Icons.info_outline_rounded,
-                //         size: 14.sp,
-                //         color: Menucolours.textS,
-                //       ),
-                //     ),
-                //   ),
-                // ),
+
 
                 // Out-of-stock overlay
                 if (isOutOfStock)

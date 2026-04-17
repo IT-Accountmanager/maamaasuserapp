@@ -82,24 +82,7 @@ class _CartButtonState extends State<CartButton> {
     }
   }
 
-  // Future<void> _removeFromCart() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final itemId = prefs.getInt("dish_${widget.dishId}_itemId");
-  //
-  //   if (itemId == null) return;
-  //
-  //   // INSTANT SUBTRACT FROM CART BADGE
-  //   CartNotifier.count.value -= itemCount;
-  //
-  //   final removed = await food_Authservice.removeCartItem(itemId);
-  //
-  //   if (removed) {
-  //     prefs.remove("dish_${widget.dishId}_quantity");
-  //     prefs.remove("dish_${widget.dishId}_itemId");
-  //
-  //     setState(() => itemCount = 0);
-  //   }
-  // }
+
 
   Future<void> _removeFromCart() async {
     final prefs = await SharedPreferences.getInstance();
@@ -186,19 +169,36 @@ class _CartButtonState extends State<CartButton> {
 
                       final schedule = widget.balanceQuantity <= 0;
 
-                      setState(() => itemCount = 1);
-                      await _addToCart(1, sheduleorder: schedule);
-                      CartMode.type.value = CartType.normal;
+                      setState(() => _isLoading = true);
+
+                      try {
+                        await _addToCart(1, sheduleorder: schedule);
+                        setState(() => itemCount = 1);
+                        CartMode.type.value = CartType.normal;
+                      } catch (e) {
+                        AppAlert.error(context, "Failed to add item");
+                      } finally {
+                        if (mounted) setState(() => _isLoading = false);
+                      }
                     },
 
-              child: Text(
-                widget.balanceQuantity <= 0 ? "Schedule" : "Add Cart",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: TextColors.whiteText, // 👈 NEVER greyed out
-                ),
-              ),
+              child: _isLoading
+                  ? SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      widget.balanceQuantity <= 0 ? "Schedule" : "Add Cart",
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: TextColors.whiteText,
+                      ),
+                    ),
             )
           : Container(
               decoration: BoxDecoration(
@@ -214,15 +214,25 @@ class _CartButtonState extends State<CartButton> {
                   /// ➖ Minus
                   IconButton(
                     icon: Icon(Icons.remove, size: 14.sp),
-                    onPressed: () async {
-                      if (itemCount > 1) {
-                        setState(() => itemCount--);
-                        await _updateQuantity(itemCount);
-                      } else {
-                        await _removeFromCart();
-                        setState(() => itemCount = 0);
-                      }
-                    },
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            setState(() => _isLoading = true);
+
+                            try {
+                              if (itemCount > 1) {
+                                await _updateQuantity(itemCount - 1);
+                                setState(() => itemCount--);
+                              } else {
+                                await _removeFromCart();
+                                setState(() => itemCount = 0);
+                              }
+                            } catch (e) {
+                              AppAlert.error(context, "Update failed");
+                            } finally {
+                              if (mounted) setState(() => _isLoading = false);
+                            }
+                          },
                   ),
 
                   Text(
@@ -254,13 +264,23 @@ class _CartButtonState extends State<CartButton> {
                             Colors.black,
                       ),
 
-                      onPressed: () async {
-                        final allowed = await _checkLogin(context);
-                        if (!allowed) return;
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              final allowed = await _checkLogin(context);
+                              if (!allowed) return;
 
-                        setState(() => itemCount++);
-                        await _updateQuantity(itemCount);
-                      },
+                              setState(() => _isLoading = true);
+
+                              try {
+                                await _updateQuantity(itemCount + 1);
+                                setState(() => itemCount++);
+                              } catch (e) {
+                                AppAlert.error(context, "Update failed");
+                              } finally {
+                                if (mounted) setState(() => _isLoading = false);
+                              }
+                            },
                     ),
                   ),
                 ],

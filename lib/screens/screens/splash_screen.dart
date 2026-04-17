@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../Services/App_color_service/app_colours.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/fcmservice/fcm_services.dart';
+import '../../Services/googleservices/Location_servces.dart';
 import '../foodmainscreen.dart';
 import 'login_page.dart';
 
@@ -72,6 +73,10 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       await _checkLogin();
       unawaited(_requestPermissions());
+      // ✅ ONLY if already logged in → send location to API
+      if (isLoggedIn) {
+        await _sendLocationToApi();
+      }
     } catch (e) {
       debugPrint('Splash init failed: $e');
     }
@@ -117,6 +122,42 @@ class _SplashScreenState extends State<SplashScreen>
     } catch (_) {}
   }
 
+  Future<void> _sendLocationToApi() async {
+    try {
+      debugPrint("📡 Sending location to API (Splash)...");
+
+      final prefs = await SharedPreferences.getInstance();
+
+      final lat = prefs.getDouble('latitude');
+      final lng = prefs.getDouble('longitude');
+
+      if (lat == null || lng == null) {
+        debugPrint("⚠️ No stored location found");
+        return;
+      }
+
+      // If you have reverse geocoding service, use it here
+      final location = await LocationService.getCurrentLocationWithAddress();
+
+      if (location != null) {
+        final ok = await subscription_AuthService.updateLocation(
+          latitude: location.latitude,
+          longitude: location.longitude,
+          address: location.fullAddress,
+          city: location.city,
+        );
+
+        debugPrint("📡 Splash Location API status: $ok");
+
+        if (ok) {
+          await prefs.setBool('locationSet', true);
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ Splash location API error: $e");
+    }
+  }
+
   void _navigate() {
     if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -125,9 +166,7 @@ class _SplashScreenState extends State<SplashScreen>
         PageRouteBuilder(
           pageBuilder: (_, __, ___) =>
               // isLoggedIn ? const MainScreenfood() : const LoginPage(),
-              isLoggedIn
-              ? MainScreenfood()
-              : const LoginPage(),
+              isLoggedIn ? MainScreenfood() : const LoginPage(),
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),
           transitionDuration: const Duration(milliseconds: 500),

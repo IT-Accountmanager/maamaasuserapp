@@ -64,7 +64,7 @@ class catering_authservice {
     }
   }
 
-  static Future<List<Package>> fetchPackageById(String vendorId) async {
+  static Future<List<Package>> fetchPackageById(int vendorId) async {
     final endpoint = "api/package/$vendorId";
 
     try {
@@ -114,75 +114,90 @@ class catering_authservice {
     }
   }
 
-  // static Future<bool> createEnquiry({
-  //   required String fullName,
-  //   required String email,
-  //   required String phoneNumber,
-  //   required String eventType,
-  //   required String eventDate,
-  //   required String eventTime,
-  //   required String people,
-  //   required String budget,
-  //   required String fullAddress,
-  //   required String country,
-  //   required String state,
-  //   required String city,
-  //   required String vegPlates,
-  //   required String nonVegPlates,
-  //   required String mixedPlates,
-  //   required String specialRequests,
-  //   required List<int> selectedItems,
-  //   int? addressId,
-  // }) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final userId = prefs.getInt('userId');
-  //   final url = "api/user/enquiry/create/$userId";
-  //
-  //   final now = DateTime.now();
-  //
-  //   final body = {
-  //     "fullName": fullName,
-  //     "email": email,
-  //     "phoneNumber": phoneNumber,
-  //     "eventType": eventType,
-  //     "eventDate": eventDate,
-  //     "eventTime": eventTime,
-  //     "people": people,
-  //     "budget": budget,
-  //     "fullAddress": fullAddress,
-  //     "country": country,
-  //     "state": state,
-  //     "city": city,
-  //     "vegPlates": vegPlates,
-  //     "nonVegPlates": nonVegPlates,
-  //     "mixedPlates": mixedPlates,
-  //     "specialRequests": specialRequests,
-  //     "dishId": selectedItems,
-  //     if (addressId != null) "addressId": addressId,
-  //     "createdAt": now.toIso8601String(),
-  //     "updatedAt": now.toIso8601String(),
-  //   };
-  //
-  //   try {
-  //     debugPrint("📤 Enquiry POST → $url");
-  //     debugPrint("📦 Payload → ${jsonEncode(body)}");
-  //
-  //     final response = await ApiClient.post(url, body, service: "catering");
-  //
-  //     debugPrint("📬 Response Code: ${response.statusCode}");
-  //     debugPrint("📬 Response Body: ${response.body}");
-  //
-  //     if (response.statusCode == 200 || response.statusCode == 201) {
-  //       return true;
-  //     } else {
-  //       debugPrint("❌ Failed Enquiry Creation → ${response.body}");
-  //       return false;
-  //     }
-  //   } catch (e) {
-  //     debugPrint("❌ Exception in createEnquiry(): $e");
-  //     return false;
-  //   }
-  // }
+
+  static Future<int> fetchCartCount() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('userId');
+      final customerId = prefs.getString('customerId');
+
+      if (userId == null) return 0;
+
+      final response = await ApiClient.get(
+        "api/user/count/cartitems?userId=$userId",
+        service: "catering",
+      );
+
+      debugPrint("🟣 CART COUNT RAW RESPONSE → ${response.body}");
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+
+        int count = 0;
+
+        if (decoded is int) {
+          count = decoded;
+        }
+        else if (decoded is Map) {
+          count =
+              decoded['count'] ??
+                  decoded['cartCount'] ??
+                  decoded['data'] ??
+                  0;
+        }
+        else {
+          count = int.tryParse(decoded.toString()) ?? 0;
+        }
+
+        debugPrint("🟢 FINAL CART COUNT → $count");
+        return count;
+      } else {
+        debugPrint("❌ Failed → ${response.statusCode}");
+        return 0;
+      }
+    } catch (e) {
+      debugPrint("💥 Error fetching cart count: $e");
+      return 0;
+    }
+  }
+
+
+  static Future<bool> deleteCart() async {
+    debugPrint("🧹 [deleteCart] Started ---------------------");
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final int userId = prefs.getInt("userId") ?? 0;
+
+      debugPrint("👤 User ID: $userId");
+
+      final endpoint = "api/user/clear/cart?userId=$userId";
+      debugPrint("🌐 Endpoint: $endpoint");
+
+      final response = await ApiClient.delete(
+        endpoint,
+        service: "catering",
+      );
+
+      debugPrint("📥 Status Code: ${response.statusCode}");
+      debugPrint("📦 Body: ${response.body}");
+
+      // ✅ FIX: support 204 + all success codes
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint("✅ Cart deleted successfully");
+        return true;
+      } else {
+        debugPrint("❌ Failed to delete cart");
+        return false;
+      }
+    } catch (e, stackTrace) {
+      debugPrint("🔥 Exception: $e");
+      debugPrint("📍 StackTrace: $stackTrace");
+      return false;
+    } finally {
+      debugPrint("🧹 [deleteCart] Ended -----------------------");
+    }
+  }
 
   static Future<bool> createEnquiry({
     required String fullName,
@@ -390,8 +405,10 @@ class catering_authservice {
       );
 
       if (walletTypes != null && walletTypes.isNotEmpty) {
-        buffer.write("&walletType=$walletTypes");
-        debugPrint("🏦 [placeOrder] walletType appended: $walletTypes");
+        for (var wallet in walletTypes) {
+          buffer.write("&walletTypes=$wallet"); // 🔥 IMPORTANT CHANGE
+          debugPrint("🏦 [placeOrder] walletTypes appended: $wallet");
+        }
       }
 
       final endpoint = buffer.toString();
@@ -857,31 +874,7 @@ class catering_authservice {
     }
   }
 
-  static Future<int> fetchCartCount() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('userId');
 
-      if (userId == null) return 0;
-
-      final response = await ApiClient.get(
-        "api/user/count/cartitems?userId=$userId",
-        service: "catering", // or "Mamaswebsite" depending on your setup
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        debugPrint("🛒 Cart count → $data");
-        return data is int ? data : int.tryParse(data.toString()) ?? 0;
-      } else {
-        debugPrint("❌ Failed to fetch cart count → ${response.statusCode}");
-        return 0;
-      }
-    } catch (e) {
-      debugPrint("💥 Error fetching cart count: $e");
-      return 0;
-    }
-  }
 
   static Future<List<VendorQuotation>> loadQuotations({
     required String leadId,

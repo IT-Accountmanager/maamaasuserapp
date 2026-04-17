@@ -1,14 +1,14 @@
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../Services/Auth_service/food_authservice.dart';
-import '../../Models/food/restaurent_banner_model.dart';
-import '../../widgets/widgets/food/table_cartbutton.dart';
-import '../../widgets/widgets/food/tablecartbutton.dart';
-import '../../widgets/widgets/food/switch.dart';
-import '../../Models/food/aboutus_model.dart';
+import '../../../Services/Auth_service/food_authservice.dart';
+import '../../../Models/food/restaurent_banner_model.dart';
+import '../../../widgets/widgets/food/table_cartbutton.dart';
+import '../../../widgets/widgets/food/tablecartbutton.dart';
+import '../../../widgets/widgets/food/switch.dart';
+import '../../../Models/food/aboutus_model.dart';
 import 'package:flutter/material.dart';
-import '../../Models/food/dish.dart';
+import '../../../Models/food/dish.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -154,20 +154,7 @@ class _tablemenuscreenState extends State<tablemenuscreen> {
     await _loadMenu();
   }
 
-  // Future<void> _loadDishes() async {
-  //   if (!mounted) return;
-  //
-  //   final data = (widget.parentId == null || widget.parentId == 0)
-  //       ? await food_Authservice.getAllDishes(widget.vendorId)
-  //       : await food_Authservice.getDishesByParentId(
-  //           widget.parentId!,
-  //           widget.vendorId,
-  //         );
-  //
-  //   if (!mounted) return;
-  //
-  //   setState(() {});
-  // }
+
 
   @override
   void dispose() {
@@ -1128,24 +1115,6 @@ class _DishGridTabState extends State<DishGridTab> {
     }
   }
 
-  //
-  // Future<void> _loadDishes() async {
-  //   setState(() => _isLoading = true);
-  //
-  //   final data = (widget.parentId == null || widget.parentId == 0)
-  //       ? await food_Authservice.getAllDishes(widget.vendorId)
-  //       : await food_Authservice.getDishesByParentId(
-  //           widget.parentId!,
-  //           widget.vendorId,
-  //         );
-  //
-  //   if (!mounted) return;
-  //
-  //   setState(() {
-  //     _allDishes = data;
-  //     _isLoading = false;
-  //   });
-  // }
   Future<void> _loadDishes() async {
     setState(() => _isLoading = true);
 
@@ -1485,19 +1454,7 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Veg / Non-Veg indicator
-                  // Positioned(top: 8, left: 8, child: vegNonVegIndicator(tag)),
 
-                  // Favorite button
-                  // Positioned(
-                  //   top: 8,
-                  //   right: 8,
-                  //   child: CircleAvatar(
-                  //     backgroundColor: Colors.white,
-                  //     radius: 14,
-                  //     child: Center(child: favoriteButton),
-                  //   ),
-                  // ),
 
                   // 🔥 OUT OF STOCK OVERLAY (CORRECT)
                   if (isOutOfStock)

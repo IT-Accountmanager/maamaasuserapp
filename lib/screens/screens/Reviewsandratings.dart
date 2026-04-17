@@ -16,17 +16,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
     ordersFuture = _loadOrders();
   }
 
-  // Future<List<Order>> _loadOrders() async {
-  //   try {
-  //     final response = await food_Authservice.getAllOrders();
-  //     return response
-  //         .map<Order>((json) => Order.fromJson(json))
-  //         .where((order) => (order.ratings) > 0)
-  //         .toList();
-  //   } catch (e) {
-  //     throw Exception("Error loading orders: $e");
-  //   }
-  // }
   Future<List<Order>> _loadOrders() async {
     try {
       final response = await food_Authservice.getAllOrders();
@@ -136,6 +125,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   Widget _buildReviewCard(Order order) {
     final int rating = (order.ratings).toInt().clamp(0, 5);
+    final hasRating = (order.ratings) > 0;
+    final hasCategory =
+        order.ratingCategory != null &&
+        order.ratingCategory!.toLowerCase() != 'null' &&
+        order.ratingCategory!.trim().isNotEmpty;
+    final hasFeedback = order.feedback.trim().isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -191,22 +186,35 @@ class _ReviewScreenState extends State<ReviewScreen> {
           const SizedBox(height: 10),
 
           // Stars row
-          Row(
-            children: List.generate(5, (i) {
-              return Icon(
-                Icons.star_rounded,
-                size: 18,
-                color: i < rating
-                    ? const Color(0xFFF5A623)
-                    : const Color(0xFFE8E5DF),
-              );
-            }),
-          ),
+          if (hasRating) ...[
+            Row(
+              children: List.generate(5, (i) {
+                return Icon(
+                  Icons.star_rounded,
+                  size: 18,
+                  color: i < rating
+                      ? const Color(0xFFF5A623)
+                      : const Color(0xFFE8E5DF),
+                );
+              }),
+            ),
+            const SizedBox(height: 10),
+          ],
 
-          const SizedBox(height: 10),
+          if (hasCategory) ...[
+            Text(
+              order.ratingCategory.replaceAll('_', ' ').toLowerCase(),
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF52504B),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
 
           // Feedback bubble
-          if (order.feedback.isNotEmpty)
+          if (hasFeedback)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

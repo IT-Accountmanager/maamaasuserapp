@@ -419,13 +419,13 @@ class food_Authservice {
 
   static Future<int?> getTableItemIdByDishId(int dishId, int seatingId) async {
     try {
-      final List<TaleCartModel> cartList = await fetchTableCart(seatingId);
+      final List<TableCartModel> cartList = await fetchTableCart();
 
       if (cartList.isEmpty) {
         return null;
       }
 
-      final TaleCartModel cart = cartList.first;
+      final TableCartModel cart = cartList.first;
 
       final matched = cart.cartItems
           .where((item) => item.dishId == dishId)
@@ -567,7 +567,7 @@ class food_Authservice {
     } finally {}
   }
 
-  static Future<bool> submitBooking({
+  static Future<int> submitBooking({
     required int vendorId,
     required String guestName,
     required String phoneNumber,
@@ -577,13 +577,15 @@ class food_Authservice {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
+
     if (userId == 0) {
       debugPrint("❌ No userId provided");
-      return false;
+      return 0;
     }
 
     final endpoint =
         "api/seatingdetails/shedule/advance/booking/$userId/$vendorId";
+
     final body = {
       "guestName": guestName,
       "phoneNumber": phoneNumber,
@@ -600,10 +602,10 @@ class food_Authservice {
         "📥 Booking response: ${response.statusCode} ${response.body}",
       );
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      return response.statusCode; // ✅ IMPORTANT
     } catch (e) {
       debugPrint("⚠️ Error submitting booking: $e");
-      return false;
+      return 0;
     }
   }
 
@@ -771,6 +773,7 @@ class food_Authservice {
     int orderId,
     int rating,
     String feedback,
+    String category,
   ) async {
     final endpoint = "api/orders/feedback/$orderId";
 
@@ -778,6 +781,7 @@ class food_Authservice {
       final response = await ApiClient.put(endpoint, {
         "ratings": rating,
         "feedback": feedback,
+        "ratingCategory": category,
         "ratedAt": DateTime.now().toIso8601String(),
       }, service: 'food');
 
@@ -797,7 +801,6 @@ class food_Authservice {
     final int userId = prefs.getInt('userId') ?? 0;
 
     if (userId == 0) {
-      // debugPrint("❌ No userId found in SharedPreferences");
       return [];
     }
 
@@ -834,25 +837,45 @@ class food_Authservice {
     final endpoint = "api/seatingdetails/seating-details/$seatingId";
     final body = {'arrivalStatus': 'ARRIVED'};
 
+    debugPrint("🚀 [sendArrivalStatus] START ----------------------");
+    debugPrint("📍 seatingId: $seatingId");
+    debugPrint("🌐 endpoint: $endpoint");
+    debugPrint("📦 body: $body");
+
     try {
       final response = await ApiClient.put(endpoint, body, service: "food");
 
+      debugPrint("📡 Response Status Code: ${response.statusCode}");
+      debugPrint("📡 Response Body: ${response.body}");
+
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // SAVE TO LOCAL STORAGE
+        debugPrint("✅ API SUCCESS - Saving to local storage");
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('id', seatingId);
 
-        // debugPrint("Stored seatingId = $seatingId");
+        debugPrint("💾 Stored seatingId in SharedPreferences: $seatingId");
+        debugPrint("🎉 [sendArrivalStatus] SUCCESS -------------------");
 
         return true;
+      } else {
+        debugPrint("⚠️ API FAILED with status: ${response.statusCode}");
+
+        // 🔥 Print backend error
+        debugPrint("🧾 Error Response Body: ${response.body}");
+
+        debugPrint("❌ [sendArrivalStatus] FAILED -------------------");
+        return false;
       }
-      return false;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("🔥 Exception in sendArrivalStatus: $e");
+      debugPrint("🧵 StackTrace: $stackTrace");
+      debugPrint("❌ [sendArrivalStatus] ERROR --------------------");
       return false;
     }
   }
 
-  static Future<List<TaleCartModel>> fetchTableCart(int seatingId) async {
+  static Future<List<TableCartModel>> fetchTableCart() async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
 
@@ -867,7 +890,7 @@ class food_Authservice {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => TaleCartModel.fromJson(json)).toList();
+        return data.map((json) => TableCartModel.fromJson(json)).toList();
       } else {
         debugPrint('❌ Failed to load cart data: ${response.statusCode}');
         return [];
@@ -1056,7 +1079,7 @@ class food_Authservice {
     }
   }
 
-  static Future<bool> createCart(String orderType) async {
+  static Future<Map<String, dynamic>> createCart(String orderType) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
 
@@ -1066,24 +1089,29 @@ class food_Authservice {
     try {
       final response = await ApiClient.post(endpoint, {}, service: "food");
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        final int? cartId = data['cartId'];
+      final body = jsonDecode(response.body);
 
-        if (cartId != null) {
-          // Store cartId and orderType in local storage
+      print("📡 STATUS: ${response.statusCode}");
+      print("📥 BODY: $body");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final int? cartId = body['cartId'];
+
+        if (cartId != null && cartId > 0) {
           await prefs.setInt('cartId', cartId);
           await prefs.setString('orderType', orderType);
 
-          return true;
-        } else {
-          return false;
+          return {"success": true, "cartId": cartId};
         }
-      } else {
-        return false;
       }
+
+      /// ❌ Handle backend error message
+      return {
+        "success": false,
+        "message": body['message'] ?? "Something went wrong",
+      };
     } catch (e) {
-      return false;
+      return {"success": false, "message": "Network error"};
     }
   }
 

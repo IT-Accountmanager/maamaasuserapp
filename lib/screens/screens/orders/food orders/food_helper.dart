@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../Models/food/orders_model.dart';
+import 'food_orders.dart';
 
 class FoodOrdersHelper {
-
   static Color getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.cancelled:
@@ -21,11 +21,7 @@ class FoodOrdersHelper {
         return Colors.blueGrey;
     }
   }
-
-
-
 }
-
 
 extension OrderStatusX on OrderStatus {
   String get label {
@@ -53,3 +49,9 @@ extension OrderStatusX on OrderStatus {
     }
   }
 }
+
+String ratingCategoryToString(RatingCategory category) {
+  return category.toString().split('.').last;
+}
+
+enum RatingCategory { FOOD_QUALITY, PACKAGING, DELIVERY, SERVICE, OTHERS }

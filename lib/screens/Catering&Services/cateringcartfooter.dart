@@ -1,99 +1,214 @@
-import '../../../main.dart';
-import '../../../widgets/widgets/food/currentcart_notifier.dart';
-import '../../../Services/Auth_service/food_authservice.dart';
-import '../food_cartscreen.dart';
+// import '../../../main.dart';
+// import '../../../widgets/widgets/food/currentcart_notifier.dart';
+// import '../../../Services/Auth_service/food_authservice.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter/services.dart';
+// import 'package:flutter_screenutil/flutter_screenutil.dart';
+// import '../../Services/Auth_service/catering_authservice.dart';
+// import 'catering_cart_screen.dart';
+//
+// // ignore: camel_case_types
+// class catering_Cart_count extends StatefulWidget {
+//   final double? savedAmount;
+//
+//   const catering_Cart_count({super.key, this.savedAmount});
+//
+//   @override
+//   State<catering_Cart_count> createState() => _OrderCartFooterState();
+// }
+//
+// class _OrderCartFooterState extends State<catering_Cart_count>
+//     with RouteAware, SingleTickerProviderStateMixin {
+//   late AnimationController _bounceCtrl;
+//   late Animation<double> _scaleAnim;
+//   int _previousCount = 0;
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _bounceCtrl = AnimationController(
+//       vsync: this,
+//       duration: const Duration(milliseconds: 300),
+//     );
+//     _scaleAnim = TweenSequence<double>([
+//       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.06), weight: 50),
+//       TweenSequenceItem(tween: Tween(begin: 1.06, end: 1.0), weight: 50),
+//     ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOut));
+//
+//     WidgetsBinding.instance.addPostFrameCallback((_) async {
+//       await Future.delayed(const Duration(milliseconds: 500));
+//       _loadCartData();
+//     });
+//
+//     // Animate whenever count changes
+//     CartNotifier.count.addListener(_onCountChange);
+//   }
+//
+//   void _onCountChange() {
+//     final newCount = CartNotifier.count.value;
+//
+//     debugPrint("🔵 Cart count changed → $newCount");
+//     if (newCount != _previousCount && newCount > 0) {
+//       _bounceCtrl.forward(from: 0);
+//       HapticFeedback.lightImpact();
+//     }
+//     _previousCount = newCount;
+//   }
+//
+//   @override
+//   void didChangeDependencies() {
+//     super.didChangeDependencies();
+//     routeObserver.subscribe(this, ModalRoute.of(context)!);
+//   }
+//
+//   Future<void> _loadCartData() async {
+//     try {
+//       final count = await catering_authservice.fetchCartCount();
+//       final safeCount = count < 0 ? 0 : count;
+//
+//       debugPrint("🟣 API Cart Count → $count");
+//
+//       // ✅ Only update if server count is HIGHER than current optimistic count
+//       // This prevents server lag from wiping out the optimistic UI update
+//       if (safeCount > CartNotifier.count.value) {
+//         CartNotifier.count.value = safeCount;
+//       }
+//     } catch (e) {
+//       debugPrint('❌ Cart load error: $e');
+//     }
+//   }
+//
+//   @override
+//   void dispose() {
+//     routeObserver.unsubscribe(this);
+//     CartNotifier.count.removeListener(_onCountChange);
+//     _bounceCtrl.dispose();
+//     super.dispose();
+//   }
+//
+//   @override
+//   void didPopNext() => _loadCartData();
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return SafeArea(
+//       child: ValueListenableBuilder<int>(
+//         valueListenable: CartNotifier.count,
+//         builder: (context, count, _) {
+//           debugPrint("🟢 Cart widget rebuild → count: $count");
+//
+//           final safeCount = count < 0 ? 0 : count;
+//           if (safeCount == 0) return const SizedBox.shrink();
+//
+//           return ScaleTransition(
+//             scale: _scaleAnim,
+//             child: _CartBar(
+//               count: safeCount,
+//               savedAmount: widget.savedAmount ?? 0.0,
+//               onTap: () async {
+//                 debugPrint("🟡 Cart tapped → count: $safeCount");
+//                 HapticFeedback.mediumImpact();
+//                 await Navigator.push(context, _slideRoute(catering_cart()));
+//                 await _loadCartData();
+//               },
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
+//
+// // ── The actual cart bar widget ────────────────────────────────────────────────
+
+
+
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../table/tablecart.dart';
+import '../../Services/Auth_service/catering_authservice.dart';
+import '../../widgets/widgets/food/currentcart_notifier.dart';
+import 'catering_cart_screen.dart';
 
-// ignore: camel_case_types
-class table_food_Cart_count extends StatefulWidget {
-  final int? savedAmount;
-  final int seatingId;
+class catering_Cart_count extends StatefulWidget {
+  final double? savedAmount;
 
-  const table_food_Cart_count({
-    super.key,
-    this.savedAmount,
-    required this.seatingId,
-  });
+  const catering_Cart_count({super.key, this.savedAmount});
 
   @override
-  State<table_food_Cart_count> createState() => _OrderCartFooterState();
+  State<catering_Cart_count> createState() => _OrderCartFooterState();
 }
 
-class _OrderCartFooterState extends State<table_food_Cart_count>
+class _OrderCartFooterState extends State<catering_Cart_count>
     with RouteAware, SingleTickerProviderStateMixin {
+
   late AnimationController _bounceCtrl;
   late Animation<double> _scaleAnim;
+
   int _previousCount = 0;
 
   @override
   void initState() {
     super.initState();
+
     _bounceCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
     _scaleAnim = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.06), weight: 50),
       TweenSequenceItem(tween: Tween(begin: 1.06, end: 1.0), weight: 50),
     ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOut));
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 500));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadCartData();
     });
 
-    // Animate whenever count changes
     CartNotifier.count.addListener(_onCountChange);
   }
 
   void _onCountChange() {
     final newCount = CartNotifier.count.value;
 
-    debugPrint("🔵 Cart count changed → $newCount");
     if (newCount != _previousCount && newCount > 0) {
       _bounceCtrl.forward(from: 0);
       HapticFeedback.lightImpact();
     }
-    _previousCount = newCount;
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context)!);
+    _previousCount = newCount;
   }
 
   Future<void> _loadCartData() async {
     try {
-      final count = await food_Authservice.fetchCartCount();
-      final safeCount = count < 0 ? 0 : count;
+      final count = await catering_authservice.fetchCartCount();
 
-      debugPrint("🟣 API Cart Count → $count");
+      debugPrint("🟣 RAW CART COUNT FROM API → $count");
 
-      // ✅ Only update if server count is HIGHER than current optimistic count
-      // This prevents server lag from wiping out the optimistic UI update
-      if (safeCount > CartNotifier.count.value) {
-        CartNotifier.count.value = safeCount;
-      }
+      final safeCount = (count is int)
+          ? count
+          : int.tryParse(count.toString()) ?? 0;
+
+      debugPrint("🟢 PARSED SAFE COUNT → $safeCount");
+
+      CartNotifier.count.value = safeCount;
     } catch (e) {
-      debugPrint('❌ Cart load error: $e');
+      debugPrint("❌ Cart load error: $e");
     }
   }
 
   @override
+  void didPopNext() => _loadCartData();
+
+  @override
   void dispose() {
-    routeObserver.unsubscribe(this);
     CartNotifier.count.removeListener(_onCountChange);
     _bounceCtrl.dispose();
     super.dispose();
   }
-
-  @override
-  void didPopNext() => _loadCartData();
 
   @override
   Widget build(BuildContext context) {
@@ -101,23 +216,22 @@ class _OrderCartFooterState extends State<table_food_Cart_count>
       child: ValueListenableBuilder<int>(
         valueListenable: CartNotifier.count,
         builder: (context, count, _) {
-          debugPrint("🟢 Cart widget rebuild → count: $count");
-
           final safeCount = count < 0 ? 0 : count;
+
           if (safeCount == 0) return const SizedBox.shrink();
 
           return ScaleTransition(
             scale: _scaleAnim,
             child: _CartBar(
               count: safeCount,
+              savedAmount: widget.savedAmount ?? 0.0,
               onTap: () async {
-                debugPrint("🟡 Cart tapped → count: $safeCount");
                 HapticFeedback.mediumImpact();
                 await Navigator.push(
                   context,
-                  _slideRoute(tablecart(seatingId: widget.seatingId)),
+                  _slideRoute(catering_cart()),
                 );
-                await _loadCartData();
+                _loadCartData();
               },
             ),
           );
@@ -127,12 +241,16 @@ class _OrderCartFooterState extends State<table_food_Cart_count>
   }
 }
 
-// ── The actual cart bar widget ────────────────────────────────────────────────
 class _CartBar extends StatelessWidget {
   final int count;
+  final double savedAmount;
   final VoidCallback onTap;
 
-  const _CartBar({required this.count, required this.onTap});
+  const _CartBar({
+    required this.count,
+    required this.savedAmount,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +330,17 @@ class _CartBar extends StatelessWidget {
                             letterSpacing: 0.1,
                           ),
                         ),
+                        if (savedAmount > 0) ...[
+                          SizedBox(height: 1.h),
+                          Text(
+                            'You saved ₹${savedAmount.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
