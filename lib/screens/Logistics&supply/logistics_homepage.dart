@@ -189,8 +189,7 @@ class _HomePageState extends State<logistic_HomePage>
       final filtered = result
           .where(
             (c) =>
-                c.status == Status.ACTIVE &&
-                c.approvalStatus == ApprovalStatus.APPROVED &&
+                c.medium == Medium.APP &&
                 c.addDisplayPosition == AddDisplayPosition.HOMEPAGE_BANNER &&
                 c.medium == Medium.APP,
           )

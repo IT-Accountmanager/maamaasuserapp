@@ -7740,8 +7740,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         homepageAds = ads
             .where(
               (c) =>
-                  c.status == Status.ACTIVE &&
-                  c.approvalStatus == ApprovalStatus.APPROVED &&
+                  c.medium == Medium.APP &&
                   c.addDisplayPosition == AddDisplayPosition.CHECKOUT_PAGE,
             )
             .toList();
@@ -9022,7 +9021,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     final discount = cartData?.discountAmount ?? 0;
     final gst = cartData?.gstTotal ?? 0;
     final grandTotal = cartData?.grandTotal ?? 0;
-    final servicecharges =cartData?.serviceCharges?? 0;
+    final servicecharges = cartData?.serviceCharges ?? 0;
     final type = orderType.toUpperCase();
 
     return _card(

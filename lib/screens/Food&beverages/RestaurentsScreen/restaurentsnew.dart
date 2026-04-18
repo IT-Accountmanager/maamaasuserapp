@@ -291,8 +291,6 @@ class _RestaurentsState extends State<Restaurents> {
       final filtered = result
           .where(
             (c) =>
-                c.status == Status.ACTIVE &&
-                c.approvalStatus == ApprovalStatus.APPROVED &&
                 c.addDisplayPosition == AddDisplayPosition.HOMEPAGE_BANNER &&
                 c.medium == Medium.APP,
           )
@@ -465,6 +463,7 @@ class _RestaurentsState extends State<Restaurents> {
       AppAlert.error(context, message);
     }
   }
+
   void _focusOrderTypeSelection() {
     final context = _orderTypeKey.currentContext;
 

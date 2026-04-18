@@ -25,7 +25,7 @@ class ApiClient {
 
   static const String catering =
       // "http://testing.maamaas.com:8080/catering";
-      "https://backend.maamaas.com/catering";
+      "https://delivery.maamaas.com/catering";
 
   static const String delivery =
       // "http://testing.maamaas.com:8080/delivery";

@@ -11,7 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
 
 class CustomisedMenu extends StatefulWidget {
-  const CustomisedMenu({super.key});
+  final int? vendorId;
+  const CustomisedMenu({super.key,this.vendorId,});
 
   @override
   State<CustomisedMenu> createState() => _CustomisedMenuState();
@@ -49,6 +50,7 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
   void initState() {
     super.initState();
     loadCategories();
+    debugPrint("📦 CustomisedMenu VendorId → ${widget.vendorId}");
   }
 
   Future<void> loadCategories() async {
@@ -360,9 +362,10 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
                           : () async {
                               setState(() => _isSubmitting = true);
                               AppAlert.info(context, "Submitting enquiry...");
-
+                              debugPrint("📦 Sending VendorId → ${widget.vendorId}");
                               final success = await catering_authservice
                                   .createEnquiry(
+                                vendorId:widget.vendorId!,
                                     fullName: _nameController.text,
                                     email: _emailController.text,
                                     phoneNumber: _contactController.text,

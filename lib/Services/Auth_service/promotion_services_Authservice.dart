@@ -107,7 +107,6 @@ class promotion_Authservice {
             ? decodedData
             : [decodedData];
 
-
         final campaigns = campaignList
             .map((e) => Campaign.fromJson(e))
             .toList();
@@ -204,7 +203,7 @@ class promotion_Authservice {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
       } else {}
-    // ignore: empty_catches
+      // ignore: empty_catches
     } catch (e) {}
   }
 
@@ -220,7 +219,58 @@ class promotion_Authservice {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
       } else {}
-    // ignore: empty_catches
+      // ignore: empty_catches
     } catch (e) {}
+  }
+
+  // 🔥 Submit Enquiry API
+  static Future<bool> submitEnquiry({
+    required int campaignId,
+    required String customerId,
+    required String name,
+    required String email,
+    required String phone,
+    required String callToAction, // ✅ FIXED
+  }) async {
+    const String endpoint = "api/user/promotional-leads"; // ✅ FIXED
+
+    final body = {
+      "campaignId": campaignId,
+      "customerId": customerId,
+      "enquiryName": name,
+      "enquiryEmail": email,
+      "enquiryPhoneNumber": phone,
+      "callToAction": callToAction,
+    };
+
+    // 🔥 DEBUG START
+    debugPrint("🚀 ===== SUBMIT ENQUIRY API =====");
+    debugPrint("📍 Endpoint: $endpoint");
+    debugPrint("📦 Request Body: $body");
+
+    try {
+      final response = await ApiClient.post(
+        endpoint,
+        body,
+        service: "promotions",
+      );
+
+      debugPrint("📡 Response Status: ${response.statusCode}");
+      debugPrint("📨 Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("✅ Enquiry API SUCCESS");
+        return true;
+      } else {
+        debugPrint("❌ Enquiry API FAILED");
+        return false;
+      }
+    } catch (e, stack) {
+      debugPrint("❌ Exception Occurred: $e");
+      debugPrint("📚 Stack Trace: $stack");
+      return false;
+    } finally {
+      debugPrint("🏁 ===== END ENQUIRY API =====");
+    }
   }
 }

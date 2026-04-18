@@ -60,7 +60,18 @@ class cateringpdf {
 
   String _formatDate(dynamic raw) {
     try {
-      final dt = DateTime.parse(raw.toString());
+      final parsed = DateTime.parse(raw.toString());
+
+      final dt = DateTime.utc(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        parsed.hour,
+        parsed.minute,
+        parsed.second,
+        parsed.millisecond,
+      ).toLocal();
+
       return "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}";
     } catch (e) {
       return "N/A";
@@ -69,10 +80,23 @@ class cateringpdf {
 
   String _formatTime(dynamic raw) {
     try {
-      final dt = DateTime.parse(raw.toString());
-      final hour = dt.hour.toString().padLeft(2, '0');
+      final parsed = DateTime.parse(raw.toString());
+
+      final dt = DateTime.utc(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        parsed.hour,
+        parsed.minute,
+        parsed.second,
+        parsed.millisecond,
+      ).toLocal();
+
+      final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
       final min = dt.minute.toString().padLeft(2, '0');
-      return "$hour:$min";
+      final period = dt.hour >= 12 ? 'PM' : 'AM';
+
+      return "${hour.toString().padLeft(2, '0')}:$min $period";
     } catch (e) {
       return "N/A";
     }

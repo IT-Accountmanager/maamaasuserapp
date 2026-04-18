@@ -418,8 +418,21 @@ class _OrderCardState extends State<OrderCard> {
   }
 
   Widget _buildHeader(Order order, Color statusColor) {
-    final dateTime = order.parsedDateTime;
-    final formattedDate = dateTime.year == 1970
+    final parsed = order.parsedDateTime;
+
+    final dateTime = parsed != null
+        ? DateTime.utc(
+            parsed.year,
+            parsed.month,
+            parsed.day,
+            parsed.hour,
+            parsed.minute,
+            parsed.second,
+            parsed.millisecond,
+          ).toLocal()
+        : null;
+
+    final formattedDate = (dateTime == null || dateTime.year == 1970)
         ? "Invalid date"
         : DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
     final orderTypeLabel = getOrderTypeLabel(order.orderType);

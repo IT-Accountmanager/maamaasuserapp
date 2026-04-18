@@ -131,20 +131,35 @@ class FoodPdf {
                       keyValue('Order ID', "#${safeText(data['orderId'])}"),
                       if (data['orderDateAndTime'] != null)
                         () {
-                          final dt = DateTime.tryParse(
-                            safeText(data['orderDateAndTime']),
-                          );
-                          if (dt != null) {
+                          final raw = safeText(data['orderDateAndTime']);
+                          final parsed = DateTime.tryParse(raw);
+
+                          if (parsed != null) {
+                            // 🔥 Force UTC → convert to local (IST)
+                            final dt = DateTime.utc(
+                              parsed.year,
+                              parsed.month,
+                              parsed.day,
+                              parsed.hour,
+                              parsed.minute,
+                              parsed.second,
+                              parsed.millisecond,
+                            ).toLocal();
+
+                            final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+                            final minute = dt.minute.toString().padLeft(2, '0');
+                            final period = dt.hour >= 12 ? 'PM' : 'AM';
+
                             return pw.Column(
                               crossAxisAlignment: pw.CrossAxisAlignment.start,
                               children: [
                                 keyValue(
                                   'Date',
-                                  "${dt.day}-${dt.month}-${dt.year}",
+                                  "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}",
                                 ),
                                 keyValue(
                                   'Time',
-                                  "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}",
+                                  "${hour.toString().padLeft(2, '0')}:$minute $period",
                                 ),
                               ],
                             );

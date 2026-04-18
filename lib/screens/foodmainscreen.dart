@@ -70,8 +70,7 @@ class _MainScreenState extends State<MainScreenfood> {
       if (!mounted) return;
 
       final filteredAds = result.where((campaign) {
-        return campaign.status == Status.ACTIVE &&
-            campaign.approvalStatus == ApprovalStatus.APPROVED &&
+        return campaign.medium == Medium.APP &&
             campaign.addDisplayPosition == AddDisplayPosition.IN_APP_POPUP;
       }).toList();
 

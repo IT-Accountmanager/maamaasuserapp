@@ -114,7 +114,6 @@ class catering_authservice {
     }
   }
 
-
   static Future<int> fetchCartCount() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -137,15 +136,10 @@ class catering_authservice {
 
         if (decoded is int) {
           count = decoded;
-        }
-        else if (decoded is Map) {
+        } else if (decoded is Map) {
           count =
-              decoded['count'] ??
-                  decoded['cartCount'] ??
-                  decoded['data'] ??
-                  0;
-        }
-        else {
+              decoded['count'] ?? decoded['cartCount'] ?? decoded['data'] ?? 0;
+        } else {
           count = int.tryParse(decoded.toString()) ?? 0;
         }
 
@@ -161,7 +155,6 @@ class catering_authservice {
     }
   }
 
-
   static Future<bool> deleteCart() async {
     debugPrint("🧹 [deleteCart] Started ---------------------");
 
@@ -174,10 +167,7 @@ class catering_authservice {
       final endpoint = "api/user/clear/cart?userId=$userId";
       debugPrint("🌐 Endpoint: $endpoint");
 
-      final response = await ApiClient.delete(
-        endpoint,
-        service: "catering",
-      );
+      final response = await ApiClient.delete(endpoint, service: "catering");
 
       debugPrint("📥 Status Code: ${response.statusCode}");
       debugPrint("📦 Body: ${response.body}");
@@ -200,6 +190,7 @@ class catering_authservice {
   }
 
   static Future<bool> createEnquiry({
+    required int vendorId,
     required String fullName,
     required String email,
     required String phoneNumber,
@@ -235,6 +226,7 @@ class catering_authservice {
     double? parsedBudget = double.tryParse(budget);
 
     final body = {
+      "vendorId": vendorId,
       "fullName": fullName,
       "email": email,
       "phoneNumber": phoneNumber,
@@ -873,8 +865,6 @@ class catering_authservice {
       return false;
     }
   }
-
-
 
   static Future<List<VendorQuotation>> loadQuotations({
     required String leadId,
