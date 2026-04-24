@@ -1,18 +1,12 @@
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../Models/caterings/catering_cart_model.dart';
-import '../../Models/food/cart_model.dart';
 import '../../Models/subscrptions/wallet_model.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/Auth_service/catering_authservice.dart';
-import '../../Services/Auth_service/food_authservice.dart';
 import '../../Services/paymentservice/razorpayservice.dart';
 
 // ignore: camel_case_types

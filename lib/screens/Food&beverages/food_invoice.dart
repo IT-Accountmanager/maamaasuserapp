@@ -62,14 +62,14 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
     _fadeController.forward();
     _slideController.forward();
 
-    // Future.delayed(const Duration(seconds: 15), () {
-    //   if (mounted) {
-    //     Navigator.pushReplacement(
-    //       context,
-    //       MaterialPageRoute(builder: (context) => MainScreenfood()),
-    //     );
-    //   }
-    // });
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MainScreenfood()),
+        );
+      }
+    });
   }
 
   @override

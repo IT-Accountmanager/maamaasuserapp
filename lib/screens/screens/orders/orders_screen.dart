@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../Models/delivery/fooddelivery.dart';
 import '../../../Models/food/orders_model.dart';
 import '../../Food&beverages/table/table_bookings.dart';
@@ -71,29 +70,6 @@ class _OrdersScreenState extends State<OrdersScreen>
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      centerTitle: true,
-      title: Text(
-        'Orders',
-        style: TextStyle(
-          fontSize: 17.sp,
-          fontWeight: FontWeight.w700,
-          color: Colors.black,
-        ),
-      ),
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_ios_new_rounded,
-        ), // iOS-style back arrow
-        color: Color(0xFF1A1D2E),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      iconTheme: const IconThemeData(color: Colors.black),
-    );
-  }
 
   Widget _buildVerticalChips() {
     return SingleChildScrollView(

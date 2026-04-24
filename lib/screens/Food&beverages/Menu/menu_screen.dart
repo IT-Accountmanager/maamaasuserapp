@@ -1,9 +1,9 @@
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/aboutus_model.dart';
 import '../../../Models/food/team_model.dart';
+import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../widgets/widgets/food/favorite_button.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../Models/food/dish.dart';
 import '../../foodmainscreen.dart';
-import 'dart:convert';
 import 'dart:async';
 import '../table/Table.dart';
 import 'Top_banner.dart';
@@ -61,7 +60,8 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   int selectedTabIndex = 0;
   int? selectedCategoryId;
   List<Dish> categories = [];
-  String orderType = "";
+  // String orderType = "";
+  String orderType = "DINE_IN";
   String searchQuery = "";
   Restaurent_Banner? _bannerItem;
   AboutUsModel? _aboutus;
@@ -1628,8 +1628,6 @@ class ProductCard extends StatelessWidget {
                   ),
                 ),
 
-
-
                 // Out-of-stock overlay
                 if (isOutOfStock)
                   Positioned.fill(
@@ -1841,53 +1839,4 @@ void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
       );
     },
   );
-}
-
-// ── Restaurant banner header (public, used externally) ────────────────────────
-class RestaurantBannerHeader extends StatelessWidget {
-  final String? bannerImage;
-  final String title;
-  final String subtitle;
-
-  const RestaurantBannerHeader({
-    super.key,
-    required this.bannerImage,
-    required this.title,
-    required this.subtitle,
-  });
-
-  ImageProvider _getImage(String img) {
-    if (img.startsWith('http')) return NetworkImage(img);
-    return MemoryImage(base64Decode(img));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        bannerImage != null && bannerImage!.isNotEmpty
-            ? Image(image: _getImage(bannerImage!), fit: BoxFit.cover)
-            : Container(
-                color: Menucolours.surfaceAlt,
-                child: Center(
-                  child: Icon(
-                    Icons.storefront_rounded,
-                    size: 48.sp,
-                    color: Menucolours.textM,
-                  ),
-                ),
-              ),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-              colors: [Colors.black.withOpacity(0.7), Colors.transparent],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

@@ -82,14 +82,11 @@ class _LocationProviderState extends State<LocationProvider> {
 
       final isValid =
           loc != null &&
-          loc.address != null &&
-          loc.address!.trim().isNotEmpty &&
-          loc.latitude != null &&
-          loc.longitude != null;
+          loc.address.trim().isNotEmpty;
 
       if (isValid) {
         setState(() {
-          currentLocation = loc!.address!;
+          currentLocation = loc.address;
           locationCategory = loc.category;
           _hasShownLocationDialog = false;
         });

@@ -200,7 +200,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 // ─── Design Tokens (matches logistics_homepage.dart) ─────────────────────────
 const _kPrimary = Color(0xFF6C3CE1);
 const _kPrimaryLight = Color(0xFFF0EAFB);
-const _kAccent = Color(0xFF00C896);
 const _kBg = Color(0xFFF7F8FC);
 const _kSurface = Colors.white;
 const _kText = Color(0xFF1A1A2E);
@@ -227,7 +226,6 @@ class _MapLocationSelectorState extends State<MapLocationSelector> {
   List<String> _searchResults = [];
   final TextEditingController _searchCtrl = TextEditingController();
   String _selectedAddress = '';
-  bool _isPinDragging = false;
 
   @override
   void dispose() {

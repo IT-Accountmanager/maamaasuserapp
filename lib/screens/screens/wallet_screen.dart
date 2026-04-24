@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import 'package:maamaas/widgets/datetimehelper.dart';
 import '../../Models/subscrptions/transaction_model.dart';
 import '../../Models/subscrptions/wallet_model.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/paymentservice/razorpayservice.dart';
+import '../skeleton/walletSkelton.dart';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-class _W {
+class Walletcolour {
   static const bg = Color(0xFFF5F6FA);
   static const surface = Color(0xFFFFFFFF);
   static const border = Color(0xFFE8ECF4);
@@ -141,13 +143,13 @@ class _WalletScreenState extends State<WalletScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _W.bg,
+      backgroundColor: Walletcolour.bg,
       appBar: _buildAppBar(),
       body: RefreshIndicator(
         key: _refreshKey,
         onRefresh: _refreshData,
-        color: _W.violet,
-        backgroundColor: _W.surface,
+        color: Walletcolour.violet,
+        backgroundColor: Walletcolour.surface,
         child: CustomScrollView(
           slivers: [
             // ── Hero balance card ───────────────────────────────────────
@@ -160,7 +162,17 @@ class _WalletScreenState extends State<WalletScreen> {
             SliverToBoxAdapter(child: _buildHistoryHeader()),
 
             // ── Transaction list ────────────────────────────────────────
-            _filteredTransactions.isEmpty
+            _isLoading
+                ? SliverPadding(
+                    padding: EdgeInsets.all(16.w),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (_, __) => txnShimmer(),
+                        childCount: 6,
+                      ),
+                    ),
+                  )
+                : _filteredTransactions.isEmpty
                 ? SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
@@ -170,14 +182,14 @@ class _WalletScreenState extends State<WalletScreen> {
                           Icon(
                             Icons.receipt_long_outlined,
                             size: 48.sp,
-                            color: _W.textMuted,
+                            color: Walletcolour.textMuted,
                           ),
                           SizedBox(height: 12.h),
                           Text(
                             'No transactions found',
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: _W.textSecondary,
+                              color: Walletcolour.textSecondary,
                             ),
                           ),
                         ],
@@ -204,7 +216,7 @@ class _WalletScreenState extends State<WalletScreen> {
   // ── AppBar ──────────────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: _W.surface,
+      backgroundColor: Walletcolour.surface,
       elevation: 0,
       centerTitle: true,
       title: Text(
@@ -212,7 +224,7 @@ class _WalletScreenState extends State<WalletScreen> {
         style: TextStyle(
           fontSize: 17.sp,
           fontWeight: FontWeight.w700,
-          color: _W.textPrimary,
+          color: Walletcolour.textPrimary,
         ),
       ),
       leading: IconButton(
@@ -224,7 +236,7 @@ class _WalletScreenState extends State<WalletScreen> {
       ),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: _W.border),
+        child: Container(height: 1, color: Walletcolour.border),
       ),
     );
   }
@@ -243,14 +255,26 @@ class _WalletScreenState extends State<WalletScreen> {
         borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
-            color: _W.violet.withOpacity(0.30),
+            color: Walletcolour.violet.withOpacity(0.30),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
         ],
       ),
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShimmerBox(height: 12.h, width: 120.w),
+                SizedBox(height: 16.h),
+                ShimmerBox(height: 32.h, width: 180.w),
+                SizedBox(height: 20.h),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ShimmerBox(height: 36.h, width: 120.w),
+                ),
+              ],
+            )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -341,12 +365,52 @@ class _WalletScreenState extends State<WalletScreen> {
 
   // ── Breakdown grid ──────────────────────────────────────────────────────
   Widget _buildBreakdownGrid() {
+    if (_isLoading) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
+        child: GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10.w,
+          mainAxisSpacing: 10.h,
+          childAspectRatio: 2.2,
+          children: List.generate(
+            4,
+            (_) => Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Walletcolour.surface,
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              child: Row(
+                children: [
+                  ShimmerBox(height: 34.r, width: 34.r, radius: 10),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ShimmerBox(height: 10.h, width: 80.w),
+                        SizedBox(height: 6.h),
+                        ShimmerBox(height: 12.h, width: 60.w),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final items = <_BreakdownItem>[
       _BreakdownItem(
         'Self',
         _selfCreditedAmount,
         Icons.account_balance_wallet_rounded,
-        _W.violet,
+        Walletcolour.violet,
       ),
       _BreakdownItem(
         'Company',
@@ -358,20 +422,20 @@ class _WalletScreenState extends State<WalletScreen> {
         'Cashback',
         _cashbackAmount,
         Icons.wallet_giftcard_rounded,
-        _W.cashback,
+        Walletcolour.cashback,
       ),
       if (_postPaid) ...[
         _BreakdownItem(
           'Postpaid Usage',
           _postPaidUsage,
           Icons.data_usage_rounded,
-          _W.debit,
+          Walletcolour.debit,
         ),
         _BreakdownItem(
           'Credit Limit',
           _creditLimit,
           Icons.credit_card_rounded,
-          _W.credit,
+          Walletcolour.credit,
         ),
       ],
     ];
@@ -394,9 +458,9 @@ class _WalletScreenState extends State<WalletScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: _W.surface,
+        color: Walletcolour.surface,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _W.border),
+        border: Border.all(color: Walletcolour.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -424,7 +488,7 @@ class _WalletScreenState extends State<WalletScreen> {
               children: [
                 Text(
                   item.label,
-                  style: TextStyle(fontSize: 10.sp, color: _W.textSecondary),
+                  style: TextStyle(fontSize: 10.sp, color: Walletcolour.textSecondary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -434,7 +498,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w700,
-                    color: _W.textPrimary,
+                    color: Walletcolour.textPrimary,
                   ),
                 ),
               ],
@@ -456,7 +520,7 @@ class _WalletScreenState extends State<WalletScreen> {
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w700,
-              color: _W.textPrimary,
+              color: Walletcolour.textPrimary,
             ),
           ),
           const Spacer(),
@@ -472,20 +536,20 @@ class _WalletScreenState extends State<WalletScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                 decoration: BoxDecoration(
-                  color: _W.debit.withOpacity(0.08),
+                  color: Walletcolour.debit.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: _W.debit.withOpacity(0.25)),
+                  border: Border.all(color: Walletcolour.debit.withOpacity(0.25)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.close_rounded, size: 12.sp, color: _W.debit),
+                    Icon(Icons.close_rounded, size: 12.sp, color: Walletcolour.debit),
                     SizedBox(width: 4.w),
                     Text(
                       'Clear',
                       style: TextStyle(
                         fontSize: 11.sp,
-                        color: _W.debit,
+                        color: Walletcolour.debit,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -499,20 +563,20 @@ class _WalletScreenState extends State<WalletScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
               decoration: BoxDecoration(
-                color: _W.violetDim,
+                color: Walletcolour.violetDim,
                 borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(color: _W.violet.withOpacity(0.25)),
+                border: Border.all(color: Walletcolour.violet.withOpacity(0.25)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.tune_rounded, size: 13.sp, color: _W.violet),
+                  Icon(Icons.tune_rounded, size: 13.sp, color: Walletcolour.violet),
                   SizedBox(width: 5.w),
                   Text(
                     'Filter',
                     style: TextStyle(
                       fontSize: 12.sp,
-                      color: _W.violet,
+                      color: Walletcolour.violet,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -529,7 +593,7 @@ class _WalletScreenState extends State<WalletScreen> {
   Widget _buildTxnCard(Transactions t) {
     final isDebit = t.transactionType == 'DEBIT';
     final isCashback = t.transactionType == 'CASHBACK';
-    final color = isCashback ? _W.cashback : (isDebit ? _W.debit : _W.credit);
+    final color = isCashback ? Walletcolour.cashback : (isDebit ? Walletcolour.debit : Walletcolour.credit);
     final icon = isCashback
         ? Icons.wallet_giftcard_rounded
         : (isDebit ? Icons.shopping_bag_rounded : Icons.add_circle_rounded);
@@ -541,9 +605,9 @@ class _WalletScreenState extends State<WalletScreen> {
       margin: EdgeInsets.only(bottom: 10.h),
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: _W.surface,
+        color: Walletcolour.surface,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _W.border),
+        border: Border.all(color: Walletcolour.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -576,22 +640,20 @@ class _WalletScreenState extends State<WalletScreen> {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w700,
-                    color: _W.textPrimary,
+                    color: Walletcolour.textPrimary,
                   ),
                 ),
                 SizedBox(height: 3.h),
                 Text(
                   t.description,
-                  style: TextStyle(fontSize: 11.sp, color: _W.textSecondary),
+                  style: TextStyle(fontSize: 11.sp, color: Walletcolour.textSecondary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  DateFormat(
-                    'MMM dd, yyyy  •  HH:mm',
-                  ).format(t.transactionDate),
-                  style: TextStyle(fontSize: 10.sp, color: _W.textMuted),
+                  DateTimeHelper.formatDateTimeFull(t.transactionDate),
+                  style: TextStyle(fontSize: 10.sp, color: Walletcolour.textMuted),
                 ),
               ],
             ),
@@ -618,7 +680,7 @@ class _WalletScreenState extends State<WalletScreen> {
     showModalBottomSheet(
       context: context,
       useSafeArea: true,
-      backgroundColor: _W.surface,
+      backgroundColor: Walletcolour.surface,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
@@ -640,7 +702,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   width: 40.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: _W.border,
+                    color: Walletcolour.border,
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                 ),
@@ -652,7 +714,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 style: TextStyle(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w800,
-                  color: _W.textPrimary,
+                  color: Walletcolour.textPrimary,
                 ),
               ),
               SizedBox(height: 20.h),
@@ -660,15 +722,15 @@ class _WalletScreenState extends State<WalletScreen> {
               // Amount input
               Container(
                 decoration: BoxDecoration(
-                  color: _W.bg,
+                  color: Walletcolour.bg,
                   borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(color: _W.border),
+                  border: Border.all(color: Walletcolour.border),
                 ),
                 child: TextField(
                   controller: ctrl,
                   keyboardType: TextInputType.number,
-                  style: TextStyle(fontSize: 16.sp, color: _W.textPrimary),
-                  cursorColor: _W.violet,
+                  style: TextStyle(fontSize: 16.sp, color: Walletcolour.textPrimary),
+                  cursorColor: Walletcolour.violet,
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     prefixIcon: Padding(
@@ -677,14 +739,14 @@ class _WalletScreenState extends State<WalletScreen> {
                         '₹',
                         style: TextStyle(
                           fontSize: 18.sp,
-                          color: _W.textSecondary,
+                          color: Walletcolour.textSecondary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                     prefixIconConstraints: const BoxConstraints(minWidth: 0),
                     hintText: '0.00',
-                    hintStyle: TextStyle(color: _W.textMuted, fontSize: 16.sp),
+                    hintStyle: TextStyle(color: Walletcolour.textMuted, fontSize: 16.sp),
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
                       vertical: 16.h,
@@ -706,10 +768,10 @@ class _WalletScreenState extends State<WalletScreen> {
                             margin: EdgeInsets.only(right: v == 1000 ? 0 : 8.w),
                             padding: EdgeInsets.symmetric(vertical: 10.h),
                             decoration: BoxDecoration(
-                              color: _W.violetDim,
+                              color: Walletcolour.violetDim,
                               borderRadius: BorderRadius.circular(10.r),
                               border: Border.all(
-                                color: _W.violet.withOpacity(0.2),
+                                color: Walletcolour.violet.withOpacity(0.2),
                               ),
                             ),
                             child: Center(
@@ -717,7 +779,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 '₹$v',
                                 style: TextStyle(
                                   fontSize: 12.sp,
-                                  color: _W.violet,
+                                  color: Walletcolour.violet,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -779,7 +841,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _W.violet,
+                    backgroundColor: Walletcolour.violet,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r),
@@ -815,7 +877,7 @@ class _WalletScreenState extends State<WalletScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _W.surface,
+      backgroundColor: Walletcolour.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
@@ -906,7 +968,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             width: 40.w,
             height: 4.h,
             decoration: BoxDecoration(
-              color: _W.border,
+              color: Walletcolour.border,
               borderRadius: BorderRadius.circular(4.r),
             ),
           ),
@@ -917,13 +979,13 @@ class _FilterSheetState extends State<_FilterSheet> {
           style: TextStyle(
             fontSize: 17.sp,
             fontWeight: FontWeight.w800,
-            color: _W.textPrimary,
+            color: Walletcolour.textPrimary,
           ),
         ),
         SizedBox(height: 4.h),
         Text(
           'Narrow down by year, month or date',
-          style: TextStyle(fontSize: 12.sp, color: _W.textSecondary),
+          style: TextStyle(fontSize: 12.sp, color: Walletcolour.textSecondary),
         ),
         SizedBox(height: 20.h),
 
@@ -964,7 +1026,7 @@ class _FilterSheetState extends State<_FilterSheet> {
           child: ElevatedButton(
             onPressed: () => widget.onApply(_year, _month, _week, _date),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _W.violet,
+              backgroundColor: Walletcolour.violet,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14.r),
@@ -991,17 +1053,17 @@ class _FilterSheetState extends State<_FilterSheet> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w),
       decoration: BoxDecoration(
-        color: _W.bg,
+        color: Walletcolour.bg,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: _W.border),
+        border: Border.all(color: Walletcolour.border),
       ),
       child: DropdownButtonFormField<String>(
         value: value,
-        dropdownColor: _W.surface,
-        style: TextStyle(fontSize: 13.sp, color: _W.textPrimary),
+        dropdownColor: Walletcolour.surface,
+        style: TextStyle(fontSize: 13.sp, color: Walletcolour.textPrimary),
         icon: Icon(
           Icons.keyboard_arrow_down_rounded,
-          color: _W.textMuted,
+          color: Walletcolour.textMuted,
           size: 18.sp,
         ),
         decoration: InputDecoration(
@@ -1010,7 +1072,7 @@ class _FilterSheetState extends State<_FilterSheet> {
         ),
         hint: Text(
           hint,
-          style: TextStyle(fontSize: 13.sp, color: _W.textMuted),
+          style: TextStyle(fontSize: 13.sp, color: Walletcolour.textMuted),
         ),
         items: opts
             .map((o) => DropdownMenuItem(value: o, child: Text(o)))

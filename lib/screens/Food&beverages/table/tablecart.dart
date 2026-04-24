@@ -2048,6 +2048,7 @@
 // }
 
 import 'package:maamaas/screens/Food&beverages/table/tablecartpayment.dart';
+import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -2060,9 +2061,8 @@ import '../../../Models/food/tablecartmodel.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import '../Menu/table_menu.dart';
+import 'table_menu.dart';
 import '../food_invoice.dart';
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
 
 enum PaymentOverlayState {
   none,
@@ -2264,6 +2264,7 @@ class _tablecartState extends State<tablecart> {
           if (mounted) {
             food_Authservice
                 .capturePayment(paymentId: pid, amount: amount)
+                // ignore: body_might_complete_normally_catch_error
                 .catchError((_) {});
           } else {
             AppAlert.error(context, "❌ Order failed. Refund in 3–5 days.");
@@ -2786,6 +2787,7 @@ class _tablecartState extends State<tablecart> {
                                             send = true;
                                           });
                                           scrollToBottom();
+                                          if (!mounted) return;
                                           AppAlert.success(
                                             context,
                                             "✅ Order placed for ${item.dishName}",

@@ -1,5 +1,4 @@
 import 'package:flutter/services.dart';
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/screens/Food&beverages/RestaurentsScreen/RestaurentsHelper.dart';
@@ -11,6 +10,7 @@ import 'package:in_app_update/in_app_update.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../Services/Auth_service/promotion_services_Authservice.dart';
@@ -24,7 +24,7 @@ import '../../skeleton/Restaurents_screen.dart';
 import '../Menu/menu_screen.dart';
 import '../distancehelpermethod.dart';
 
-class _T {
+class restaurentsnewcolour {
   static const primary = Color(0xFFE23744);
   static const primaryLight = Color(0xFFFFECED);
   static const green = Color(0xFF1BA672);
@@ -159,19 +159,14 @@ class _RestaurentsState extends State<Restaurents> {
 
       print("📍 RAW LOC: $loc");
       print("📍 ADDRESS CHECK: ${loc?.address}");
-      print("📍 VALID: ${loc?.address?.trim().isNotEmpty}");
+      print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
 
       // ✅ VALID LOCATION CHECK
-      final isValidLocation =
-          loc != null &&
-          loc.address != null &&
-          loc.address!.trim().isNotEmpty &&
-          loc.latitude != null &&
-          loc.longitude != null;
+      final isValidLocation = loc != null && loc.address.trim().isNotEmpty;
 
       if (isValidLocation) {
         setState(() {
-          _currentLocation = loc!.address!;
+          _currentLocation = loc.address;
           _locationCategory = loc.category;
         });
 
@@ -233,7 +228,7 @@ class _RestaurentsState extends State<Restaurents> {
               _changeLocation();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: _T.primary,
+              backgroundColor: restaurentsnewcolour.primary,
               foregroundColor: Colors.white,
             ),
             child: const Text('Update Location'),
@@ -364,61 +359,6 @@ class _RestaurentsState extends State<Restaurents> {
     return mapped;
   }
 
-  // Future<void> _handleOrderTypeSelection(String type) async {
-  //   final cleanType = type.toLowerCase().trim();
-  //
-  //   setState(() => selectedOrderType = cleanType);
-  //   selectedOrderTypeNotifier.value = cleanType;
-  //
-  //   final api = _getApiOrderType();
-  //
-  //   if (api != null) {
-  //     await food_Authservice.createCart(api);
-  //   } else {
-  //     debugPrint("❌ Mapping failed for: $cleanType");
-  //   }
-  // }
-  // Future<void> _handleOrderTypeSelection(String type) async {
-  //   final cleanType = type.toLowerCase().trim();
-  //
-  //   final api = RestaurentsHelper.typeMapping[cleanType];
-  //
-  //   if (api == null) {
-  //     debugPrint("❌ Mapping failed for: $cleanType");
-  //     return;
-  //   }
-  //
-  //   print("🚀 Trying to create cart for: $cleanType");
-  //
-  //   final result = await food_Authservice.createCart(api);
-  //
-  //   /// ✅ SUCCESS → UPDATE UI + FILTER
-  //   if (result["success"] == true) {
-  //     print("✅ Cart created: ${result["cartId"]}");
-  //
-  //     if (!mounted) return;
-  //
-  //     setState(() {
-  //       selectedOrderType = cleanType;
-  //     });
-  //
-  //     selectedOrderTypeNotifier.value = cleanType;
-  //   }
-  //   /// ❌ FAILURE → DO NOT CHANGE UI
-  //   else {
-  //     final message = result["message"] ?? "Something went wrong";
-  //
-  //     print("❌ ERROR: $message");
-  //
-  //     if (!mounted) return;
-  //
-  //     /// 🔴 SHOW ERROR
-  //     AppAlert.error(context, message);
-  //
-  //     /// 🔥 IMPORTANT: DO NOTHING ELSE
-  //     /// (UI stays on previous selection)
-  //   }
-  // }
   Future<void> _handleOrderTypeSelection(String type) async {
     final cleanType = type.toLowerCase().trim();
 
@@ -504,13 +444,13 @@ class _RestaurentsState extends State<Restaurents> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: _T.bg,
+      // backgroundColor: restaurentsnewcolour.bg,
       backgroundColor: Colors.white,
       extendBodyBehindAppBar: false,
       body: RefreshIndicator(
         strokeWidth: 2,
-        color: _T.primary,
-        backgroundColor: _T.surface,
+        color: restaurentsnewcolour.primary,
+        backgroundColor: restaurentsnewcolour.surface,
         onRefresh: _refreshAll,
         child: Stack(
           children: [
@@ -526,7 +466,7 @@ class _RestaurentsState extends State<Restaurents> {
                   scrolledUnderElevation: 0,
 
                   backgroundColor: _isBannerCollapsed
-                      ? _T.surface
+                      ? restaurentsnewcolour.surface
                       : Colors.transparent,
 
                   systemOverlayStyle: _isBannerCollapsed
@@ -554,7 +494,7 @@ class _RestaurentsState extends State<Restaurents> {
                   delegate: _StickyDelegate(
                     height: 76.h, // ✅ FIXED
                     child: Container(
-                      color: _T.surface,
+                      color: restaurentsnewcolour.surface,
                       child: Column(
                         children: [
                           Padding(
@@ -567,7 +507,7 @@ class _RestaurentsState extends State<Restaurents> {
                               child: _SearchBar(onChanged: _onSearchChanged),
                             ),
                           ),
-                          // Divider(height: 1, color: _T.border),
+                          // Divider(height: 1, color: restaurentsnewcolour.border),
                         ],
                       ),
                     ),
@@ -589,7 +529,7 @@ class _RestaurentsState extends State<Restaurents> {
                   delegate: _StickyDelegate(
                     height: 120.h,
                     child: Container(
-                      color: _T.surface,
+                      color: restaurentsnewcolour.surface,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -600,7 +540,7 @@ class _RestaurentsState extends State<Restaurents> {
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w700,
-                                color: _T.text,
+                                color: restaurentsnewcolour.text,
                               ),
                             ),
                           ),
@@ -620,7 +560,7 @@ class _RestaurentsState extends State<Restaurents> {
                   delegate: _StickyDelegate(
                     height: _showOrderTypeHint ? 88.h : 62.h,
                     child: Container(
-                      color: _T.surface,
+                      color: restaurentsnewcolour.surface,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -647,7 +587,7 @@ class _RestaurentsState extends State<Restaurents> {
                                 ),
                               ),
                             ),
-                          // Divider(height: 1, color: _T.border),
+                          // Divider(height: 1, color: restaurentsnewcolour.border),
                         ],
                       ),
                     ),
@@ -660,7 +600,7 @@ class _RestaurentsState extends State<Restaurents> {
                 //   delegate: _StickyDelegate(
                 //     height: 50.h,
                 //     child: Container(
-                //       color: _T.surface,
+                //       color: restaurentsnewcolour.surface,
                 //       child: _buildFilterChips(),
                 //     ),
                 //   ),
@@ -684,7 +624,7 @@ class _RestaurentsState extends State<Restaurents> {
                             style: TextStyle(
                               fontSize: 18.sp,
                               fontWeight: FontWeight.w700,
-                              color: _T.text,
+                              color: restaurentsnewcolour.text,
                             ),
                           ),
                         ],
@@ -829,12 +769,14 @@ class _RestaurentsState extends State<Restaurents> {
             width: 36.w,
             height: 36.w,
             decoration: BoxDecoration(
-              color: _T.primary.withOpacity(0.1), // better visibility
+              color: restaurentsnewcolour.primary.withOpacity(
+                0.1,
+              ), // better visibility
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.notifications_none_rounded,
-              color: _T.primary,
+              color: restaurentsnewcolour.primary,
               size: 20,
             ),
           ),
@@ -868,7 +810,7 @@ class _RestaurentsState extends State<Restaurents> {
   }
 
   Widget _buildAppBarContent({required bool isDark, required bool isExpanded}) {
-    final color = isDark ? _T.text : Colors.white;
+    final color = isDark ? restaurentsnewcolour.text : Colors.white;
 
     return GestureDetector(
       onTap: _changeLocation,
@@ -917,8 +859,8 @@ class _RestaurentsState extends State<Restaurents> {
   }
 
   Widget _buildGuestAppBar({required bool isDark, required bool isExpanded}) {
-    final color = isDark ? _T.text : Colors.white;
-    final subColor = isDark ? _T.textMuted : Colors.white70;
+    final color = isDark ? restaurentsnewcolour.text : Colors.white;
+    final subColor = isDark ? restaurentsnewcolour.textMuted : Colors.white70;
 
     return GestureDetector(
       onTap: () {
@@ -1003,7 +945,10 @@ class _RestaurentsState extends State<Restaurents> {
       return Center(
         child: Text(
           'No categories available',
-          style: TextStyle(fontSize: 12.sp, color: _T.textMuted),
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: restaurentsnewcolour.textMuted,
+          ),
         ),
       );
     }
@@ -1031,7 +976,7 @@ class _RestaurentsState extends State<Restaurents> {
             child: const Icon(
               Icons.grid_view_rounded,
               size: 22,
-              color: _T.textMuted,
+              color: restaurentsnewcolour.textMuted,
             ),
           );
         }
@@ -1045,7 +990,9 @@ class _RestaurentsState extends State<Restaurents> {
               ? Icon(
                   Icons.grid_view_rounded,
                   size: 22,
-                  color: isSelected ? AppColors.primary : _T.textMuted,
+                  color: isSelected
+                      ? AppColors.primary
+                      : restaurentsnewcolour.textMuted,
                 )
               : (item!.image != null
                     ? Image.network(
@@ -1067,7 +1014,7 @@ class _RestaurentsState extends State<Restaurents> {
 
   void _showAllCategoriesBottomSheet() {
     showModalBottomSheet(
-      backgroundColor: _T.surface,
+      backgroundColor: restaurentsnewcolour.surface,
       context: context,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
@@ -1100,10 +1047,14 @@ class _RestaurentsState extends State<Restaurents> {
                         padding: EdgeInsets.all(6.w),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          // color: _T.bg,
+                          // color: restaurentsnewcolour.bg,
                           color: Colors.white,
                         ),
-                        child: Icon(Icons.close, size: 20.sp, color: _T.text),
+                        child: Icon(
+                          Icons.close,
+                          size: 20.sp,
+                          color: restaurentsnewcolour.text,
+                        ),
                       ),
                     ),
                   ],
@@ -1137,7 +1088,7 @@ class _RestaurentsState extends State<Restaurents> {
                               height: 56.h,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: _T.bg,
+                                color: restaurentsnewcolour.bg,
                               ),
                               child: ClipOval(
                                 child: item.image != null
@@ -1185,12 +1136,7 @@ class _RestaurentsState extends State<Restaurents> {
       builder: (_, selected, __) {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          // decoration: _highlightOrderTabs
-          //     ? BoxDecoration(
-          //   border: Border.all(color: Colors.red, width: 1.5),
-          //   borderRadius: BorderRadius.circular(12.r),
-          // )
-          //     : null,
+
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -1209,7 +1155,7 @@ class _RestaurentsState extends State<Restaurents> {
                       vertical: 10.h,
                     ),
                     decoration: BoxDecoration(
-                      // color: isSelected ? AppColors.primary : _T.surface,
+                      // color: isSelected ? AppColors.primary : restaurentsnewcolour.surface,
                       color: isSelected ? Colors.green : AppColors.primary,
 
                       borderRadius: BorderRadius.circular(10.r),
@@ -1220,7 +1166,9 @@ class _RestaurentsState extends State<Restaurents> {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: _T.green.withOpacity(0.28),
+                                color: restaurentsnewcolour.green.withOpacity(
+                                  0.28,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -1278,10 +1226,14 @@ class _RestaurentsState extends State<Restaurents> {
             duration: const Duration(milliseconds: 180),
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: isSelected ? _T.text : _T.surface,
+              color: isSelected
+                  ? restaurentsnewcolour.text
+                  : restaurentsnewcolour.surface,
               borderRadius: BorderRadius.circular(8.r),
               border: Border.all(
-                color: isSelected ? _T.text : _T.border,
+                color: isSelected
+                    ? restaurentsnewcolour.text
+                    : restaurentsnewcolour.border,
                 width: 1.5,
               ),
             ),
@@ -1291,7 +1243,9 @@ class _RestaurentsState extends State<Restaurents> {
                 Icon(
                   f['icon'] as IconData,
                   size: 14.sp,
-                  color: isSelected ? Colors.white : _T.textMuted,
+                  color: isSelected
+                      ? Colors.white
+                      : restaurentsnewcolour.textMuted,
                 ),
                 SizedBox(width: 5.w),
                 Text(
@@ -1299,7 +1253,9 @@ class _RestaurentsState extends State<Restaurents> {
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : _T.textMuted,
+                    color: isSelected
+                        ? Colors.white
+                        : restaurentsnewcolour.textMuted,
                   ),
                 ),
               ],
@@ -1382,7 +1338,7 @@ class _RestaurentsState extends State<Restaurents> {
   Widget _buildUpdateBanner() {
     return Container(
       decoration: BoxDecoration(
-        color: _T.surface,
+        color: restaurentsnewcolour.surface,
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
@@ -1391,7 +1347,7 @@ class _RestaurentsState extends State<Restaurents> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: _T.border),
+        border: Border.all(color: restaurentsnewcolour.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1426,7 +1382,7 @@ class _RestaurentsState extends State<Restaurents> {
               ],
             ),
           ),
-          Divider(height: 1, color: _T.border),
+          Divider(height: 1, color: restaurentsnewcolour.border),
           TextButton(
             onPressed: _startFlexibleUpdate,
             style: TextButton.styleFrom(
@@ -1469,7 +1425,7 @@ class _RestaurentsState extends State<Restaurents> {
         heightFactor: 0.92,
         child: Container(
           decoration: BoxDecoration(
-            color: _T.surface,
+            color: restaurentsnewcolour.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
           child: const FilterBottomSheet(),
@@ -1511,7 +1467,9 @@ class _CategoryItem extends StatelessWidget {
             height: dia,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isSelected ? _T.primaryLight : _T.bg,
+              color: isSelected
+                  ? restaurentsnewcolour.primaryLight
+                  : restaurentsnewcolour.bg,
               border: isSelected
                   ? Border.all(color: AppColors.primary, width: 2)
                   : null,
@@ -1529,7 +1487,9 @@ class _CategoryItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10.sp,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppColors.primary : _T.textMuted,
+                color: isSelected
+                    ? AppColors.primary
+                    : restaurentsnewcolour.textMuted,
               ),
             ),
           ),
@@ -1557,45 +1517,57 @@ class _SearchBar extends StatelessWidget {
         textInputAction: TextInputAction.search,
         style: TextStyle(
           fontSize: 14.sp,
-          color: _T.text,
+          color: restaurentsnewcolour.text,
           fontWeight: FontWeight.w500,
         ),
-        cursorColor: _T.primary,
+        cursorColor: restaurentsnewcolour.primary,
 
         decoration: InputDecoration(
           hintText: 'Search restaurants, cuisines...',
 
           // ✅ Makes it look like a container
           filled: true,
-          fillColor: _T.bg,
+          fillColor: restaurentsnewcolour.bg,
 
           // ✅ Rounded border like container
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: _T.border, width: 1.5),
+            borderSide: BorderSide(
+              color: restaurentsnewcolour.border,
+              width: 1.5,
+            ),
           ),
 
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: _T.border, width: 1.5),
+            borderSide: BorderSide(
+              color: restaurentsnewcolour.border,
+              width: 1.5,
+            ),
           ),
 
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: _T.primary, width: 1.5),
+            borderSide: BorderSide(
+              color: restaurentsnewcolour.primary,
+              width: 1.5,
+            ),
           ),
 
           // ✅ Icon inside field
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: _T.textLight,
+            color: restaurentsnewcolour.textLight,
             size: 20.sp,
           ),
 
           // spacing fix
           contentPadding: EdgeInsets.symmetric(vertical: 0),
 
-          hintStyle: TextStyle(color: _T.textLight, fontSize: 13.sp),
+          hintStyle: TextStyle(
+            color: restaurentsnewcolour.textLight,
+            fontSize: 13.sp,
+          ),
         ),
       ),
     );
@@ -1694,11 +1666,14 @@ class _NearbyRestaurentBannersWidgetState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 38.sp, color: _T.textLight),
+            Icon(icon, size: 38.sp, color: restaurentsnewcolour.textLight),
             SizedBox(height: 10.h),
             Text(
               msg,
-              style: TextStyle(fontSize: 13.sp, color: _T.textMuted),
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: restaurentsnewcolour.textMuted,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1750,8 +1725,10 @@ class _RestaurantCard extends StatelessWidget {
       child: Container(
         height: cardH,
         decoration: BoxDecoration(
-          color: _T.surface,
-          borderRadius: BorderRadius.circular(_T.cardRadius.r),
+          color: restaurentsnewcolour.surface,
+          borderRadius: BorderRadius.circular(
+            restaurentsnewcolour.cardRadius.r,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.07),
@@ -1772,7 +1749,7 @@ class _RestaurantCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(_T.cardRadius.r),
+                      top: Radius.circular(restaurentsnewcolour.cardRadius.r),
                     ),
                     child: banner.companyBanner.isNotEmpty
                         ? Image.network(
@@ -1790,7 +1767,7 @@ class _RestaurantCard extends StatelessWidget {
                     height: imgH * 0.5,
                     child: ClipRRect(
                       borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(_T.cardRadius.r),
+                        top: Radius.circular(restaurentsnewcolour.cardRadius.r),
                       ),
                       child: const DecoratedBox(
                         decoration: BoxDecoration(
@@ -1822,7 +1799,7 @@ class _RestaurantCard extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.star_rounded,
-                              color: _T.primary,
+                              color: restaurentsnewcolour.primary,
                               size: 11.sp,
                             ),
                             SizedBox(width: 3.w),
@@ -1831,7 +1808,7 @@ class _RestaurantCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10.sp,
                                 fontWeight: FontWeight.w700,
-                                color: _T.primary,
+                                color: restaurentsnewcolour.primary,
                               ),
                             ),
                           ],
@@ -1862,7 +1839,7 @@ class _RestaurantCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w700,
-                              color: _T.text,
+                              color: restaurentsnewcolour.text,
                             ),
                           ),
                         ),
@@ -1874,7 +1851,7 @@ class _RestaurantCard extends StatelessWidget {
                               vertical: 3.h,
                             ),
                             decoration: BoxDecoration(
-                              color: _T.green,
+                              color: restaurentsnewcolour.green,
                               borderRadius: BorderRadius.circular(6.r),
                             ),
                             child: Row(
@@ -1909,22 +1886,14 @@ class _RestaurantCard extends StatelessWidget {
                             banner.type,
                             style: TextStyle(
                               fontSize: 12.sp,
-                              color: _T.textMuted,
+                              color: restaurentsnewcolour.textMuted,
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        _dot(),
-                        Text(
-                          Distancehelpermethod.formatDistance(banner.distance),
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: _T.textMuted,
-                          ),
-                        ),
+
                         if (banner.position.isNotEmpty) ...[
                           _dot(),
                           Flexible(
@@ -1945,11 +1914,28 @@ class _RestaurantCard extends StatelessWidget {
                     ),
 
                     // Address
-                    Text(
-                      '${banner.addressLine}, ${banner.city}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11.sp, color: _T.textLight),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${banner.addressLine}, ${banner.city}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: restaurentsnewcolour.textLight,
+                          ),
+                        ),
+                        // _dot(),
+                        Text(
+                          Distancehelpermethod.formatDistance(banner.distance),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            color: restaurentsnewcolour.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1967,16 +1953,20 @@ class _RestaurantCard extends StatelessWidget {
       width: 3,
       height: 3,
       decoration: const BoxDecoration(
-        color: _T.textLight,
+        color: restaurentsnewcolour.textLight,
         shape: BoxShape.circle,
       ),
     ),
   );
 
   Widget _placeholder() => Container(
-    color: _T.bg,
+    color: restaurentsnewcolour.bg,
     child: Center(
-      child: Icon(Icons.restaurant_rounded, size: 32.sp, color: _T.textLight),
+      child: Icon(
+        Icons.restaurant_rounded,
+        size: 32.sp,
+        color: restaurentsnewcolour.textLight,
+      ),
     ),
   );
 }
@@ -2051,7 +2041,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             'Clear all',
             style: TextStyle(
               fontSize: 13.sp,
-              color: _T.green,
+              color: restaurentsnewcolour.green,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2062,7 +2052,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   Widget _leftMenu() => Container(
     width: 90.w,
-    color: _T.bg,
+    color: restaurentsnewcolour.bg,
     child: ListView.builder(
       itemCount: RestaurentsHelper.menu.length,
       itemBuilder: (_, i) {
@@ -2072,10 +2062,12 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           child: Container(
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: sel ? _T.surface : Colors.transparent,
+              color: sel ? restaurentsnewcolour.surface : Colors.transparent,
               border: Border(
                 left: BorderSide(
-                  color: sel ? _T.primary : Colors.transparent,
+                  color: sel
+                      ? restaurentsnewcolour.primary
+                      : Colors.transparent,
                   width: 3,
                 ),
               ),
@@ -2085,7 +2077,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
-                color: sel ? _T.text : _T.textMuted,
+                color: sel
+                    ? restaurentsnewcolour.text
+                    : restaurentsnewcolour.textMuted,
               ),
             ),
           ),
@@ -2145,14 +2139,14 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   Widget _chip(IconData icon, String label) => Container(
     padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
     decoration: BoxDecoration(
-      border: Border.all(color: _T.border, width: 1.5),
+      border: Border.all(color: restaurentsnewcolour.border, width: 1.5),
       borderRadius: BorderRadius.circular(10.r),
-      color: _T.surface,
+      color: restaurentsnewcolour.surface,
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14.sp, color: _T.green),
+        Icon(icon, size: 14.sp, color: restaurentsnewcolour.green),
         SizedBox(width: 6.w),
         Text(
           label,
@@ -2170,7 +2164,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           child: OutlinedButton(
             onPressed: () => Navigator.pop(context),
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: _T.border),
+              side: BorderSide(color: restaurentsnewcolour.border),
               padding: EdgeInsets.symmetric(vertical: 12.h),
             ),
             child: const Text('Close'),
@@ -2181,7 +2175,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           child: ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _T.primary,
+              backgroundColor: restaurentsnewcolour.primary,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: 12.h),
             ),
@@ -2215,7 +2209,7 @@ class SearchBarHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext ctx, double shrink, bool overlaps) {
     return Container(
-      color: _T.surface,
+      color: restaurentsnewcolour.surface,
       padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 10.h),
       child: _SearchBar(onChanged: onSearchChanged),
     );

@@ -281,7 +281,7 @@ class _TravelHomeScreenState extends State<TravelHomeScreen> {
 
   // 📍 Get Current Location
   Future<void> _getCurrentLocation() async {
-    LocationPermission permission = await Geolocator.requestPermission();
+    await Geolocator.requestPermission();
 
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,

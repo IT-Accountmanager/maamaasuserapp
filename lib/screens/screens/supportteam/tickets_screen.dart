@@ -11,7 +11,7 @@ import 'dart:convert';
 import 'dart:io';
 
 // ── Design tokens — White theme ───────────────────────────────────────────────
-class _T {
+class tktcolour {
   // Backgrounds
   static const bg = Color(0xFFF5F6FA); // soft off-white page
   static const surface = Color(0xFFFFFFFF); // white surfaces
@@ -64,7 +64,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _T.bg,
+      backgroundColor: tktcolour.bg,
       appBar: _buildAppBar(),
       body: SafeArea(
         child: Column(
@@ -86,8 +86,8 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
                   return RefreshIndicator(
                     onRefresh: _refreshTickets,
-                    backgroundColor: _T.surface,
-                    color: _T.amber,
+                    backgroundColor: tktcolour.surface,
+                    color: tktcolour.amber,
                     child: ListView.separated(
                       padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 24.h),
                       itemCount: tickets.length,
@@ -107,7 +107,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: _T.bg,
+      backgroundColor: tktcolour.bg,
       elevation: 0,
       centerTitle: true,
       title: Text(
@@ -115,13 +115,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
         style: TextStyle(
           fontSize: 18.sp,
           fontWeight: FontWeight.w700,
-          color: _T.textPrimary,
+          color: tktcolour.textPrimary,
           letterSpacing: 0.3,
         ),
       ),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: _T.cardBorder),
+        child: Container(height: 1, color: tktcolour.cardBorder),
       ),
     );
   }
@@ -165,23 +165,23 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 tickets.length,
                 'Total',
                 Icons.confirmation_number_rounded,
-                _T.amber,
+                tktcolour.amber,
               ),
               _divider(),
-              _statItem(open, 'Open', Icons.lock_open_rounded, _T.open),
+              _statItem(open, 'Open', Icons.lock_open_rounded, tktcolour.open),
               _divider(),
               _statItem(
                 inProg,
                 'Progress',
                 Icons.autorenew_rounded,
-                _T.progress,
+                tktcolour.progress,
               ),
               _divider(),
               _statItem(
                 resolved,
                 'Closed',
                 Icons.check_circle_rounded,
-                _T.resolved,
+                tktcolour.resolved,
               ),
             ],
           ),
@@ -237,15 +237,15 @@ class _TicketListScreenState extends State<TicketListScreen> {
             width: 40.r,
             height: 40.r,
             child: CircularProgressIndicator(
-              color: _T.amber,
+              color: tktcolour.amber,
               strokeWidth: 2.5,
-              backgroundColor: _T.cardBorder,
+              backgroundColor: tktcolour.cardBorder,
             ),
           ),
           SizedBox(height: 16.h),
           Text(
             'Loading tickets...',
-            style: TextStyle(fontSize: 13.sp, color: _T.textSecondary),
+            style: TextStyle(fontSize: 13.sp, color: tktcolour.textSecondary),
           ),
         ],
       ),
@@ -259,20 +259,20 @@ class _TicketListScreenState extends State<TicketListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 56.sp, color: _T.textMuted),
+            Icon(Icons.wifi_off_rounded, size: 56.sp, color: tktcolour.textMuted),
             SizedBox(height: 16.h),
             Text(
               'Failed to load tickets',
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
-                color: _T.textPrimary,
+                color: tktcolour.textPrimary,
               ),
             ),
             SizedBox(height: 8.h),
             Text(
               'Check your connection and try again',
-              style: TextStyle(fontSize: 13.sp, color: _T.textSecondary),
+              style: TextStyle(fontSize: 13.sp, color: tktcolour.textSecondary),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24.h),
@@ -294,14 +294,14 @@ class _TicketListScreenState extends State<TicketListScreen> {
               width: 96.r,
               height: 96.r,
               decoration: BoxDecoration(
-                color: _T.surface,
+                color: tktcolour.surface,
                 shape: BoxShape.circle,
-                border: Border.all(color: _T.cardBorder, width: 2),
+                border: Border.all(color: tktcolour.cardBorder, width: 2),
               ),
               child: Icon(
                 Icons.confirmation_number_outlined,
                 size: 40.sp,
-                color: _T.textMuted,
+                color: tktcolour.textMuted,
               ),
             ),
             SizedBox(height: 24.h),
@@ -310,13 +310,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w800,
-                color: _T.textPrimary,
+                color: tktcolour.textPrimary,
               ),
             ),
             SizedBox(height: 8.h),
             Text(
               'Create a ticket to get support\nfrom our team.',
-              style: TextStyle(fontSize: 13.sp, color: _T.textSecondary),
+              style: TextStyle(fontSize: 13.sp, color: tktcolour.textSecondary),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 28.h),
@@ -348,9 +348,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: _T.card,
+          color: tktcolour.card,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: _T.cardBorder),
+          border: Border.all(color: tktcolour.cardBorder),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.25),
@@ -385,7 +385,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                           style: TextStyle(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w700,
-                            color: _T.textPrimary,
+                            color: tktcolour.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -427,7 +427,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         'View details',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: _T.amber,
+                          color: tktcolour.amber,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -435,7 +435,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       Icon(
                         Icons.arrow_forward_rounded,
                         size: 14.sp,
-                        color: _T.amber,
+                        color: tktcolour.amber,
                       ),
                     ],
                   ),
@@ -479,11 +479,11 @@ class _TicketListScreenState extends State<TicketListScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 11.sp, color: _T.textMuted),
+        Icon(icon, size: 11.sp, color: tktcolour.textMuted),
         SizedBox(width: 3.w),
         Text(
           label,
-          style: TextStyle(fontSize: 11.sp, color: _T.textSecondary),
+          style: TextStyle(fontSize: 11.sp, color: tktcolour.textSecondary),
         ),
       ],
     );
@@ -496,11 +496,11 @@ class _TicketListScreenState extends State<TicketListScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: _T.amber,
+          color: tktcolour.amber,
           borderRadius: BorderRadius.circular(14.r),
           boxShadow: [
             BoxShadow(
-              color: _T.amber.withOpacity(0.3),
+              color: tktcolour.amber.withOpacity(0.3),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -511,7 +511,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
           style: TextStyle(
             fontSize: 14.sp,
             fontWeight: FontWeight.w700,
-            color: _T.bg,
+            color: tktcolour.bg,
           ),
         ),
       ),
@@ -528,15 +528,15 @@ class _TicketListScreenState extends State<TicketListScreen> {
   Color _statusColor(String s) {
     switch (s.toUpperCase()) {
       case 'OPEN':
-        return _T.open;
+        return tktcolour.open;
       case 'IN_PROGRESS':
-        return _T.progress;
+        return tktcolour.progress;
       case 'RESOLVED':
-        return _T.resolved;
+        return tktcolour.resolved;
       case 'REJECTED':
-        return _T.rejected;
+        return tktcolour.rejected;
       default:
-        return _T.textMuted;
+        return tktcolour.textMuted;
     }
   }
 
@@ -570,16 +570,16 @@ class TicketDetailScreen extends StatelessWidget {
     final statusIcon = _statusIcon(ticket.status);
 
     return Scaffold(
-      backgroundColor: _T.bg,
+      backgroundColor: tktcolour.bg,
       appBar: AppBar(
-        backgroundColor: _T.bg,
+        backgroundColor: tktcolour.bg,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 18.sp,
-            color: _T.textSecondary,
+            color: tktcolour.textSecondary,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -588,12 +588,12 @@ class TicketDetailScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 17.sp,
             fontWeight: FontWeight.w700,
-            color: _T.textPrimary,
+            color: tktcolour.textPrimary,
           ),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: _T.cardBorder),
+          child: Container(height: 1, color: tktcolour.cardBorder),
         ),
       ),
       body: SafeArea(
@@ -605,9 +605,9 @@ class TicketDetailScreen extends StatelessWidget {
                 margin: EdgeInsets.all(16.w),
                 padding: EdgeInsets.all(20.w),
                 decoration: BoxDecoration(
-                  color: _T.surface,
+                  color: tktcolour.surface,
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: _T.cardBorder),
+                  border: Border.all(color: tktcolour.cardBorder),
                   // Coloured top accent
                   boxShadow: [
                     BoxShadow(
@@ -655,7 +655,7 @@ class TicketDetailScreen extends StatelessWidget {
                           '#${ticket.id}',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: _T.textMuted,
+                            color: tktcolour.textMuted,
                           ),
                         ),
                       ],
@@ -666,7 +666,7 @@ class TicketDetailScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 22.sp,
                         fontWeight: FontWeight.w800,
-                        color: _T.textPrimary,
+                        color: tktcolour.textPrimary,
                         height: 1.2,
                       ),
                     ),
@@ -693,13 +693,13 @@ class TicketDetailScreen extends StatelessWidget {
                 margin: EdgeInsets.symmetric(horizontal: 16.w),
                 title: 'Description',
                 icon: Icons.notes_rounded,
-                iconColor: _T.amber,
+                iconColor: tktcolour.amber,
                 child: Text(
                   ticket.description,
                   style: TextStyle(
                     fontSize: 14.sp,
                     height: 1.7,
-                    color: _T.textSecondary,
+                    color: tktcolour.textSecondary,
                   ),
                 ),
               ),
@@ -714,7 +714,7 @@ class TicketDetailScreen extends StatelessWidget {
                   margin: EdgeInsets.symmetric(horizontal: 16.w),
                   title: 'Attachment',
                   icon: Icons.attach_file_rounded,
-                  iconColor: _T.resolved,
+                  iconColor: tktcolour.resolved,
                   child: _buildAttachmentWidget(ticket.attachmentUrl!),
                 ),
               ),
@@ -728,14 +728,14 @@ class TicketDetailScreen extends StatelessWidget {
                   margin: EdgeInsets.symmetric(horizontal: 16.w),
                   title: 'Admin Response',
                   icon: Icons.support_agent_rounded,
-                  iconColor: _T.resolved,
-                  accentColor: _T.resolvedDim,
+                  iconColor: tktcolour.resolved,
+                  accentColor: tktcolour.resolvedDim,
                   child: Text(
                     (ticket.adminResponse ?? '').replaceAll('_', ' '),
                     style: TextStyle(
                       fontSize: 14.sp,
                       height: 1.7,
-                      color: _T.resolved,
+                      color: tktcolour.resolved,
                     ),
                   ),
                 ),
@@ -755,21 +755,21 @@ class TicketDetailScreen extends StatelessWidget {
         icon: Icons.calendar_month_rounded,
         label: 'Created',
         value: fmt.format(ticket.createdAt.toLocal()),
-        color: _T.amber,
+        color: tktcolour.amber,
       ),
       if (ticket.orderId != 0)
         _DetailItem(
           icon: Icons.receipt_long_rounded,
           label: 'Order ID',
           value: ticket.orderId.toString(),
-          color: _T.open,
+          color: tktcolour.open,
         ),
       if (ticket.status == 'RESOLVED' || ticket.status == 'REJECTED')
         _DetailItem(
           icon: Icons.check_circle_rounded,
           label: 'Resolved',
           value: fmt.format(ticket.resolvedAt!.toLocal()),
-          color: _T.resolved,
+          color: tktcolour.resolved,
         ),
     ];
 
@@ -789,9 +789,9 @@ class TicketDetailScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: _T.surface,
+        color: tktcolour.surface,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: _T.cardBorder),
+        border: Border.all(color: tktcolour.cardBorder),
       ),
       child: Row(
         children: [
@@ -811,7 +811,7 @@ class TicketDetailScreen extends StatelessWidget {
               children: [
                 Text(
                   item.label,
-                  style: TextStyle(fontSize: 11.sp, color: _T.textMuted),
+                  style: TextStyle(fontSize: 11.sp, color: tktcolour.textMuted),
                 ),
                 SizedBox(height: 2.h),
                 Text(
@@ -819,7 +819,7 @@ class TicketDetailScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
-                    color: _T.textPrimary,
+                    color: tktcolour.textPrimary,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -843,9 +843,9 @@ class TicketDetailScreen extends StatelessWidget {
     return Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: accentColor ?? _T.surface,
+        color: accentColor ?? tktcolour.surface,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _T.cardBorder),
+        border: Border.all(color: tktcolour.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -861,7 +861,7 @@ class TicketDetailScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w700,
-                    color: _T.textPrimary,
+                    color: tktcolour.textPrimary,
                     letterSpacing: 0.2,
                   ),
                 ),
@@ -893,7 +893,7 @@ class TicketDetailScreen extends StatelessWidget {
             ? child
             : Center(
                 child: CircularProgressIndicator(
-                  color: _T.amber,
+                  color: tktcolour.amber,
                   strokeWidth: 2,
                 ),
               ),
@@ -906,7 +906,7 @@ class TicketDetailScreen extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: _T.cardBorder, width: 1.5),
+        border: Border.all(color: tktcolour.cardBorder, width: 1.5),
       ),
       child: ClipRRect(borderRadius: BorderRadius.circular(11.r), child: image),
     );
@@ -914,15 +914,15 @@ class TicketDetailScreen extends StatelessWidget {
 
   Widget _errorPlaceholder() {
     return Container(
-      color: _T.card,
+      color: tktcolour.card,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.photo_rounded, color: _T.textMuted, size: 28.sp),
+          Icon(Icons.photo_rounded, color: tktcolour.textMuted, size: 28.sp),
           SizedBox(height: 6.h),
           Text(
             'Unable to load',
-            style: TextStyle(color: _T.textMuted, fontSize: 10.sp),
+            style: TextStyle(color: tktcolour.textMuted, fontSize: 10.sp),
           ),
         ],
       ),
@@ -939,15 +939,15 @@ class TicketDetailScreen extends StatelessWidget {
   Color _statusColor(String s) {
     switch (s.toUpperCase()) {
       case 'OPEN':
-        return _T.open;
+        return tktcolour.open;
       case 'IN_PROGRESS':
-        return _T.progress;
+        return tktcolour.progress;
       case 'RESOLVED':
-        return _T.resolved;
+        return tktcolour.resolved;
       case 'REJECTED':
-        return _T.rejected;
+        return tktcolour.rejected;
       default:
-        return _T.textMuted;
+        return tktcolour.textMuted;
     }
   }
 
@@ -1049,16 +1049,16 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
     final userId = ref.watch(userIdProvider);
 
     return Scaffold(
-      backgroundColor: _T.bg,
+      backgroundColor: tktcolour.bg,
       appBar: AppBar(
-        backgroundColor: _T.bg,
+        backgroundColor: tktcolour.bg,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 18.sp,
-            color: _T.textSecondary,
+            color: tktcolour.textSecondary,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -1067,12 +1067,12 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
           style: TextStyle(
             fontSize: 17.sp,
             fontWeight: FontWeight.w700,
-            color: _T.textPrimary,
+            color: tktcolour.textPrimary,
           ),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: _T.cardBorder),
+          child: Container(height: 1, color: tktcolour.cardBorder),
         ),
       ),
       body: SafeArea(
@@ -1126,14 +1126,14 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   Widget _fieldLabel(String label, IconData icon) {
     return Row(
       children: [
-        Icon(icon, size: 14.sp, color: _T.amber),
+        Icon(icon, size: 14.sp, color: tktcolour.amber),
         SizedBox(width: 6.w),
         Text(
           label,
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w600,
-            color: _T.textSecondary,
+            color: tktcolour.textSecondary,
             letterSpacing: 0.2,
           ),
         ),
@@ -1144,15 +1144,15 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   Widget _dropdownField() {
     return Container(
       decoration: BoxDecoration(
-        color: _T.surface,
+        color: tktcolour.surface,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: _T.cardBorder),
+        border: Border.all(color: tktcolour.cardBorder),
       ),
       child: DropdownButtonFormField<String>(
         value: _selectedCategory,
-        dropdownColor: _T.surface,
-        style: TextStyle(fontSize: 14.sp, color: _T.textPrimary),
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: _T.textMuted),
+        dropdownColor: tktcolour.surface,
+        style: TextStyle(fontSize: 14.sp, color: tktcolour.textPrimary),
+        icon: Icon(Icons.keyboard_arrow_down_rounded, color: tktcolour.textMuted),
         decoration: InputDecoration(
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(
@@ -1162,7 +1162,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
         ),
         hint: Text(
           'Select a category',
-          style: TextStyle(color: _T.textMuted, fontSize: 14.sp),
+          style: TextStyle(color: tktcolour.textMuted, fontSize: 14.sp),
         ),
         items: _categoryMap.keys
             .map((v) => DropdownMenuItem(value: v, child: Text(v)))
@@ -1176,20 +1176,20 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   Widget _textareaField() {
     return Container(
       decoration: BoxDecoration(
-        color: _T.surface,
+        color: tktcolour.surface,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: _T.cardBorder),
+        border: Border.all(color: tktcolour.cardBorder),
       ),
       child: TextFormField(
         controller: _messageController,
         maxLines: 5,
-        style: TextStyle(fontSize: 14.sp, color: _T.textPrimary, height: 1.6),
-        cursorColor: _T.amber,
+        style: TextStyle(fontSize: 14.sp, color: tktcolour.textPrimary, height: 1.6),
+        cursorColor: tktcolour.amber,
         decoration: InputDecoration(
           border: InputBorder.none,
           contentPadding: EdgeInsets.all(16.w),
           hintText: 'Describe your issue in detail...',
-          hintStyle: TextStyle(color: _T.textMuted, fontSize: 14.sp),
+          hintStyle: TextStyle(color: tktcolour.textMuted, fontSize: 14.sp),
         ),
         validator: (v) =>
             (v == null || v.isEmpty) ? 'Please enter a description' : null,
@@ -1207,9 +1207,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: _T.surface,
+              color: tktcolour.surface,
               borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: _T.amber.withOpacity(0.5)),
+              border: Border.all(color: tktcolour.amber.withOpacity(0.5)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1217,14 +1217,14 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 Icon(
                   Icons.add_photo_alternate_rounded,
                   size: 18.sp,
-                  color: _T.amber,
+                  color: tktcolour.amber,
                 ),
                 SizedBox(width: 8.w),
                 Text(
                   'Add Photo',
                   style: TextStyle(
                     fontSize: 13.sp,
-                    color: _T.amber,
+                    color: tktcolour.amber,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1244,7 +1244,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 height: 64.r,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: _T.cardBorder, width: 1.5),
+                  border: Border.all(color: tktcolour.cardBorder, width: 1.5),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(11.r),
@@ -1252,7 +1252,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     File(_pickedImage!.path),
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) =>
-                        Icon(Icons.error, color: _T.rejected, size: 24.sp),
+                        Icon(Icons.error, color: tktcolour.rejected, size: 24.sp),
                   ),
                 ),
               ),
@@ -1265,9 +1265,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     width: 20.r,
                     height: 20.r,
                     decoration: BoxDecoration(
-                      color: _T.rejected,
+                      color: tktcolour.rejected,
                       shape: BoxShape.circle,
-                      border: Border.all(color: _T.bg, width: 1.5),
+                      border: Border.all(color: tktcolour.bg, width: 1.5),
                     ),
                     child: Icon(Icons.close, size: 11.sp, color: Colors.white),
                   ),
@@ -1284,8 +1284,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 20.h),
       decoration: BoxDecoration(
-        color: _T.bg,
-        border: Border(top: BorderSide(color: _T.cardBorder)),
+        color: tktcolour.bg,
+        border: Border(top: BorderSide(color: tktcolour.cardBorder)),
       ),
       child: SizedBox(
         width: double.infinity,
@@ -1301,13 +1301,13 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: _loading ? _T.amber.withOpacity(0.5) : _T.amber,
+              color: _loading ? tktcolour.amber.withOpacity(0.5) : tktcolour.amber,
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: _loading
                   ? []
                   : [
                       BoxShadow(
-                        color: _T.amber.withOpacity(0.35),
+                        color: tktcolour.amber.withOpacity(0.35),
                         blurRadius: 20,
                         offset: const Offset(0, 6),
                       ),
@@ -1320,20 +1320,20 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       height: 20.r,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: _T.bg,
+                        color: tktcolour.bg,
                       ),
                     )
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.send_rounded, size: 16.sp, color: _T.bg),
+                        Icon(Icons.send_rounded, size: 16.sp, color: tktcolour.bg),
                         SizedBox(width: 8.w),
                         Text(
                           'Submit Ticket',
                           style: TextStyle(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w700,
-                            color: _T.bg,
+                            color: tktcolour.bg,
                           ),
                         ),
                       ],

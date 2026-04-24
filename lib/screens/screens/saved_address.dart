@@ -17,9 +17,10 @@ import '../../Models/subscrptions/address_model.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../providers/addressmodel_provider.dart';
 import '../../Services/googleservices/Location_servces.dart';
+import '../skeleton/savedAddress.dart';
 
 // ── Design tokens (shared with Ticket & Wallet screens) ───────────────────────
-class _A {
+class savedddcolour {
   static const bg = Color(0xFFF5F6FA);
   static const surface = Color(0xFFFFFFFF);
   static const border = Color(0xFFE8ECF4);
@@ -120,7 +121,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _A.surface,
+        backgroundColor: savedddcolour.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),
@@ -129,23 +130,29 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.w700,
-            color: _A.textPrimary,
+            color: savedddcolour.textPrimary,
           ),
         ),
         content: Text(
           'Are you sure you want to delete this address?',
-          style: TextStyle(fontSize: 13.sp, color: _A.textSecondary),
+          style: TextStyle(fontSize: 13.sp, color: savedddcolour.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: _A.textSecondary)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: savedddcolour.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               'Delete',
-              style: TextStyle(color: _A.red, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: savedddcolour.red,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -276,11 +283,11 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   Color _categoryColor(String cat) {
     switch (cat) {
       case 'Home':
-        return _A.green;
+        return savedddcolour.green;
       case 'Office':
-        return _A.blue;
+        return savedddcolour.blue;
       default:
-        return _A.purple;
+        return savedddcolour.purple;
     }
   }
 
@@ -288,19 +295,19 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _A.bg,
+      backgroundColor: savedddcolour.bg,
       appBar: _buildAppBar(),
       body: SafeArea(
         child: RefreshIndicator(
-          color: _A.violet,
-          backgroundColor: _A.surface,
+          color: savedddcolour.violet,
+          backgroundColor: savedddcolour.surface,
           onRefresh: () async => _refreshTable(),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
             children: [
               if (!widget.hideExtraWidgets) ...[
-                _buildSearchBar(),
+                buildSearchBar(),
                 _buildCurrentLocation(),
               ],
               _buildAddAddressButton(),
@@ -315,7 +322,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: _A.surface,
+      backgroundColor: savedddcolour.surface,
       elevation: 0,
       centerTitle: true,
       title: Text(
@@ -323,7 +330,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
         style: TextStyle(
           fontSize: 17.sp,
           fontWeight: FontWeight.w700,
-          color: _A.textPrimary,
+          color: savedddcolour.textPrimary,
         ),
       ),
       leading: IconButton(
@@ -333,42 +340,44 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
         color: Color(0xFF1A1D2E),
         onPressed: () => Navigator.of(context).pop(),
       ),
-      iconTheme: const IconThemeData(color: _A.textPrimary),
+      iconTheme: const IconThemeData(color: savedddcolour.textPrimary),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: _A.border),
+        child: Container(height: 1, color: savedddcolour.border),
       ),
     );
   }
 
   // ── Search bar ───────────────────────────────────────────────────────────
-  Widget _buildSearchBar() {
+  Widget buildSearchBar() {
     return GestureDetector(
       onTap: _handleSearch,
       child: Container(
-        margin: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
-        height: 50.h,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: _A.surface,
-          borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: _A.border),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+          border: Border.all(color: Colors.grey.shade200),
         ),
         child: Row(
           children: [
-            SizedBox(width: 14.w),
-            Icon(Icons.search_rounded, color: _A.violet, size: 20.sp),
-            SizedBox(width: 10.w),
-            Text(
-              'Search location...',
-              style: TextStyle(fontSize: 14.sp, color: _A.textMuted),
+            const Icon(Icons.search, color: Color(0xFFFF7043), size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                "Search for area, street name...",
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              ),
             ),
+            const Icon(Icons.my_location, size: 20, color: Colors.grey),
           ],
         ),
       ),
@@ -387,7 +396,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
               width: 36.w,
               height: 36.w,
               decoration: BoxDecoration(
-                color: _A.violet.withOpacity(0.1),
+                color: savedddcolour.violet.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -396,7 +405,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                   height: 18.r,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: _A.violet,
+                    color: savedddcolour.violet,
                   ),
                 ),
               ),
@@ -420,7 +429,10 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                   SizedBox(height: 2.h),
                   Text(
                     'Please wait while we fetch your location',
-                    style: TextStyle(fontSize: 11.sp, color: _A.textMuted),
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: savedddcolour.textMuted,
+                    ),
                   ),
                 ],
               ),
@@ -429,14 +441,35 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
         ),
       );
     }
+    // if (_isLoading) {
+    //   return Padding(
+    //     padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
+    //     child: Row(
+    //       children: [
+    //         ShimmerBox(height: 36.w, width: 36.w, radius: 20),
+    //         SizedBox(width: 12.w),
+    //         Expanded(
+    //           child: Column(
+    //             crossAxisAlignment: CrossAxisAlignment.start,
+    //             children: [
+    //               ShimmerBox(height: 12.h, width: 140.w),
+    //               SizedBox(height: 6.h),
+    //               ShimmerBox(height: 10.h, width: 200.w),
+    //             ],
+    //           ),
+    //         ),
+    //       ],
+    //     ),
+    //   );
+    // }
     if (_currentPosition == null || _currentAddress == null) {
       return const SizedBox.shrink();
     }
     return _listTile(
       margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
-      iconBg: _A.violet.withOpacity(0.10),
+      iconBg: savedddcolour.violet.withOpacity(0.10),
       icon: Icons.my_location_rounded,
-      iconColor: _A.violet,
+      iconColor: savedddcolour.violet,
       title: 'Use Current Location',
       subtitle: _currentAddress!,
       onTap: () {
@@ -452,9 +485,9 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   Widget _buildAddAddressButton() {
     return _listTile(
       margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-      iconBg: _A.green.withOpacity(0.10),
+      iconBg: savedddcolour.green.withOpacity(0.10),
       icon: Icons.add_location_alt_rounded,
-      iconColor: _A.green,
+      iconColor: savedddcolour.green,
       title: 'Add New Address',
       subtitle: 'Save a home, office or custom address',
       onTap: () async {
@@ -486,9 +519,9 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
         margin: margin,
         padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
-          color: _A.surface,
+          color: savedddcolour.surface,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: _A.border),
+          border: Border.all(color: savedddcolour.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -515,20 +548,27 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w700,
-                      color: _A.textPrimary,
+                      color: savedddcolour.textPrimary,
                     ),
                   ),
                   SizedBox(height: 2.h),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 11.sp, color: _A.textSecondary),
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: savedddcolour.textSecondary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 20.sp, color: _A.textMuted),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20.sp,
+              color: savedddcolour.textMuted,
+            ),
           ],
         ),
       ),
@@ -543,12 +583,16 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
         FutureBuilder<List<Address>>(
           future: _futureAddresses,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting)
+            // {
+            //   return addressListShimmer();
+            // }
+            {
               return Center(
                 child: Padding(
                   padding: EdgeInsets.all(24.h),
                   child: CircularProgressIndicator(
-                    color: _A.violet,
+                    color: savedddcolour.violet,
                     strokeWidth: 2,
                   ),
                 ),
@@ -563,14 +607,14 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                       Icon(
                         Icons.location_off_outlined,
                         size: 40.sp,
-                        color: _A.textMuted,
+                        color: savedddcolour.textMuted,
                       ),
                       SizedBox(height: 10.h),
                       Text(
                         'No saved addresses',
                         style: TextStyle(
                           fontSize: 13.sp,
-                          color: _A.textSecondary,
+                          color: savedddcolour.textSecondary,
                         ),
                       ),
                     ],
@@ -640,9 +684,9 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
       child: Container(
         margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
         decoration: BoxDecoration(
-          color: _A.surface,
+          color: savedddcolour.surface,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: _A.border),
+          border: Border.all(color: savedddcolour.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -714,7 +758,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                                 style: TextStyle(
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.w700,
-                                  color: _A.textPrimary,
+                                  color: savedddcolour.textPrimary,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -729,7 +773,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                         //   '${address.doorNumber}, ${address.addressLine}',
                         //   style: TextStyle(
                         //     fontSize: 12.sp,
-                        //     color: _A.textSecondary,
+                        //     color: savedddcolour.textSecondary,
                         //   ),
                         //   maxLines: 1,
                         //   overflow: TextOverflow.ellipsis,
@@ -738,14 +782,14 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                         //   '${address.city}, ${address.pincode}',
                         //   style: TextStyle(
                         //     fontSize: 12.sp,
-                        //     color: _A.textSecondary,
+                        //     color: savedddcolour.textSecondary,
                         //   ),
                         // ),
                         Text(
                           address.address,
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: _A.textSecondary,
+                            color: savedddcolour.textSecondary,
                           ),
                         ),
                         SizedBox(height: 4.h),
@@ -754,14 +798,14 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                             Icon(
                               Icons.phone_rounded,
                               size: 11.sp,
-                              color: _A.textMuted,
+                              color: savedddcolour.textMuted,
                             ),
                             SizedBox(width: 3.w),
                             Text(
                               '+91 ${address.phoneNumber}',
                               style: TextStyle(
                                 fontSize: 11.sp,
-                                color: _A.textMuted,
+                                color: savedddcolour.textMuted,
                               ),
                             ),
                           ],
@@ -777,7 +821,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                     children: [
                       _actionBtn(
                         icon: Icons.edit_rounded,
-                        color: _A.violet,
+                        color: savedddcolour.violet,
                         onTap: () async {
                           final ok = await Navigator.push<bool>(
                             context,
@@ -794,7 +838,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                       SizedBox(height: 6.h),
                       _actionBtn(
                         icon: Icons.delete_rounded,
-                        color: _A.red,
+                        color: savedddcolour.red,
                         onTap: () => _deleteAddress(address.id),
                       ),
                     ],
@@ -1005,23 +1049,23 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   Widget build(BuildContext context) {
     final isEdit = widget.addressId != null;
     return Scaffold(
-      backgroundColor: _A.bg,
+      backgroundColor: savedddcolour.bg,
       appBar: AppBar(
-        backgroundColor: _A.surface,
+        backgroundColor: savedddcolour.surface,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: _A.textPrimary),
+        iconTheme: const IconThemeData(color: savedddcolour.textPrimary),
         title: Text(
           isEdit ? 'Edit Address' : 'Add New Address',
           style: TextStyle(
             fontSize: 17.sp,
             fontWeight: FontWeight.w700,
-            color: _A.textPrimary,
+            color: savedddcolour.textPrimary,
           ),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: _A.border),
+          child: Container(height: 1, color: savedddcolour.border),
         ),
       ),
       body: SafeArea(
@@ -1046,14 +1090,14 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(color: _A.border),
+                            border: Border.all(color: savedddcolour.border),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Icon(
                                 Icons.location_on_rounded,
-                                color: _A.violet,
+                                color: savedddcolour.violet,
                                 size: 18.sp,
                               ),
                               SizedBox(width: 8.w),
@@ -1062,7 +1106,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                                   _fullAddress,
                                   style: TextStyle(
                                     fontSize: 13.sp,
-                                    color: _A.textPrimary,
+                                    color: savedddcolour.textPrimary,
                                     height: 1.4,
                                   ),
                                 ),
@@ -1157,7 +1201,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                             style: TextStyle(
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w600,
-                              color: _A.violet,
+                              color: savedddcolour.violet,
                             ),
                           ),
                         ),
@@ -1237,9 +1281,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: _A.surface,
+        color: savedddcolour.surface,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _A.border),
+        border: Border.all(color: savedddcolour.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -1262,7 +1306,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w700,
-                    color: _A.textPrimary,
+                    color: savedddcolour.textPrimary,
                   ),
                 ),
                 if (trailing != null) trailing, // 👈 ADD THIS
@@ -1277,9 +1321,21 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
   Widget _buildAddressTypeSelector() {
     final types = [
-      {'type': 'Home', 'icon': Icons.home_rounded, 'color': _A.green},
-      {'type': 'Office', 'icon': Icons.work_rounded, 'color': _A.blue},
-      {'type': 'Other', 'icon': Icons.location_on_rounded, 'color': _A.purple},
+      {
+        'type': 'Home',
+        'icon': Icons.home_rounded,
+        'color': savedddcolour.green,
+      },
+      {
+        'type': 'Office',
+        'icon': Icons.work_rounded,
+        'color': savedddcolour.blue,
+      },
+      {
+        'type': 'Other',
+        'icon': Icons.location_on_rounded,
+        'color': savedddcolour.purple,
+      },
     ];
 
     return Column(
@@ -1308,21 +1364,25 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: sel ? color.withOpacity(0.12) : _A.bg,
+                  color: sel ? color.withOpacity(0.12) : savedddcolour.bg,
                   borderRadius: BorderRadius.circular(30.r), // pill shape
-                  border: Border.all(color: sel ? color : _A.border),
+                  border: Border.all(color: sel ? color : savedddcolour.border),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, size: 16.sp, color: sel ? color : _A.textMuted),
+                    Icon(
+                      icon,
+                      size: 16.sp,
+                      color: sel ? color : savedddcolour.textMuted,
+                    ),
                     SizedBox(width: 6.w),
                     Text(
                       type,
                       style: TextStyle(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
-                        color: sel ? color : _A.textSecondary,
+                        color: sel ? color : savedddcolour.textSecondary,
                       ),
                     ),
                   ],
@@ -1371,27 +1431,30 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           style: TextStyle(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,
-            color: _A.textSecondary,
+            color: savedddcolour.textSecondary,
           ),
         ),
         SizedBox(height: 6.h),
         Container(
           decoration: BoxDecoration(
-            color: _A.bg,
+            color: savedddcolour.bg,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: _A.border),
+            border: Border.all(color: savedddcolour.border),
           ),
           child: TextFormField(
             controller: ctrl,
             readOnly: readOnly,
             keyboardType: keyboard,
-            style: TextStyle(fontSize: 14.sp, color: _A.textPrimary),
-            cursorColor: _A.violet,
+            style: TextStyle(fontSize: 14.sp, color: savedddcolour.textPrimary),
+            cursorColor: savedddcolour.violet,
             decoration: InputDecoration(
               border: InputBorder.none,
-              prefixIcon: Icon(icon, size: 18.sp, color: _A.violet),
+              prefixIcon: Icon(icon, size: 18.sp, color: savedddcolour.violet),
               hintText: hint,
-              hintStyle: TextStyle(color: _A.textMuted, fontSize: 13.sp),
+              hintStyle: TextStyle(
+                color: savedddcolour.textMuted,
+                fontSize: 13.sp,
+              ),
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 12.w,
                 vertical: 14.h,
@@ -1413,38 +1476,41 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           style: TextStyle(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,
-            color: _A.textSecondary,
+            color: savedddcolour.textSecondary,
           ),
         ),
         SizedBox(height: 6.h),
         Container(
           decoration: BoxDecoration(
-            color: _A.bg,
+            color: savedddcolour.bg,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: _A.border),
+            border: Border.all(color: savedddcolour.border),
           ),
           child: TextFormField(
             controller: phoneNumberController,
             keyboardType: TextInputType.phone,
             maxLength: 10,
-            style: TextStyle(fontSize: 14.sp, color: _A.textPrimary),
+            style: TextStyle(fontSize: 14.sp, color: savedddcolour.textPrimary),
             enabled: _isEditable,
-            cursorColor: _A.violet,
+            cursorColor: savedddcolour.violet,
             decoration: InputDecoration(
               border: InputBorder.none,
               prefixIcon: Icon(
                 Icons.phone_android_rounded,
                 size: 18.sp,
-                color: _A.violet,
+                color: savedddcolour.violet,
               ),
               prefixText: '+91  ',
               prefixStyle: TextStyle(
                 fontSize: 14.sp,
-                color: _A.textSecondary,
+                color: savedddcolour.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
               hintText: '10-digit number',
-              hintStyle: TextStyle(color: _A.textMuted, fontSize: 13.sp),
+              hintStyle: TextStyle(
+                color: savedddcolour.textMuted,
+                fontSize: 13.sp,
+              ),
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 12.w,
                 vertical: 14.h,
@@ -1468,8 +1534,8 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 20.h),
       decoration: BoxDecoration(
-        color: _A.surface,
-        border: Border(top: BorderSide(color: _A.border)),
+        color: savedddcolour.surface,
+        border: Border(top: BorderSide(color: savedddcolour.border)),
       ),
       child: SizedBox(
         width: double.infinity,
@@ -1477,13 +1543,13 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         child: ElevatedButton(
           onPressed: _saveAddress,
           style: ElevatedButton.styleFrom(
-            backgroundColor: _A.violet,
+            backgroundColor: savedddcolour.violet,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16.r),
             ),
-            shadowColor: _A.violet.withOpacity(0.3),
+            shadowColor: savedddcolour.violet.withOpacity(0.3),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1581,7 +1647,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
           p.administrativeArea, // state
           p.postalCode, // pincode
           p.country, // country
-        ].where((e) => e != null && e!.isNotEmpty).join(', ');
+        ].where((e) => e != null && e.isNotEmpty).join(', ');
         widget.onAddressSelected?.call(
           fullAddress,
           p.locality ?? '',
@@ -1620,11 +1686,14 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading && mapController == null) {
+      return ShimmerBox(height: 280.h, width: double.infinity, radius: 16);
+    }
     return Container(
       height: 280.h,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _A.border),
+        border: Border.all(color: savedddcolour.border),
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -1673,11 +1742,18 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.search_rounded, color: _A.violet, size: 18.sp),
+                    Icon(
+                      Icons.search_rounded,
+                      color: savedddcolour.violet,
+                      size: 18.sp,
+                    ),
                     SizedBox(width: 10.w),
                     Text(
-                      'Search location...',
-                      style: TextStyle(color: _A.textMuted, fontSize: 13.sp),
+                      "Search for area, street name...",
+                      style: TextStyle(
+                        color: savedddcolour.textMuted,
+                        fontSize: 13.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -1695,11 +1771,11 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                 width: 38.r,
                 height: 38.r,
                 decoration: BoxDecoration(
-                  color: _A.violet,
+                  color: savedddcolour.violet,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: _A.violet.withOpacity(0.3),
+                      color: savedddcolour.violet.withOpacity(0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -1739,7 +1815,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                       height: 12.r,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: _A.violet,
+                        color: savedddcolour.violet,
                       ),
                     ),
                     SizedBox(width: 8.w),
@@ -1747,7 +1823,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                       'Getting address...',
                       style: TextStyle(
                         fontSize: 11.sp,
-                        color: _A.textSecondary,
+                        color: savedddcolour.textSecondary,
                       ),
                     ),
                   ],
@@ -1771,7 +1847,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                       Icon(
                         Icons.location_off_rounded,
                         size: 48.sp,
-                        color: _A.textMuted,
+                        color: savedddcolour.textMuted,
                       ),
                       SizedBox(height: 12.h),
                       Text(
@@ -1779,7 +1855,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w700,
-                          color: _A.textPrimary,
+                          color: savedddcolour.textPrimary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -1788,7 +1864,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                         'Enable location to pin your address accurately.',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: _A.textSecondary,
+                          color: savedddcolour.textSecondary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -1799,7 +1875,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                             child: OutlinedButton(
                               onPressed: () => Navigator.pop(context),
                               style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: _A.border),
+                                side: BorderSide(color: savedddcolour.border),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10.r),
                                 ),
@@ -1807,7 +1883,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                               child: Text(
                                 'Skip',
                                 style: TextStyle(
-                                  color: _A.textSecondary,
+                                  color: savedddcolour.textSecondary,
                                   fontSize: 13.sp,
                                 ),
                               ),
@@ -1819,7 +1895,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                               onPressed: () async =>
                                   Geolocator.openAppSettings(),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: _A.violet,
+                                backgroundColor: savedddcolour.violet,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10.r),

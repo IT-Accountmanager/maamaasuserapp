@@ -1,4 +1,5 @@
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import '../../Services/App_color_service/app_colours.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/Auth_service/catering_authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,11 +9,9 @@ import '../../Models/caterings/dish.dart';
 import '../screens/saved_address.dart';
 import 'package:flutter/material.dart';
 
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
-
 class CustomisedMenu extends StatefulWidget {
   final int? vendorId;
-  const CustomisedMenu({super.key,this.vendorId,});
+  const CustomisedMenu({super.key, this.vendorId});
 
   @override
   State<CustomisedMenu> createState() => _CustomisedMenuState();
@@ -362,10 +361,12 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
                           : () async {
                               setState(() => _isSubmitting = true);
                               AppAlert.info(context, "Submitting enquiry...");
-                              debugPrint("📦 Sending VendorId → ${widget.vendorId}");
+                              debugPrint(
+                                "📦 Sending VendorId → ${widget.vendorId}",
+                              );
                               final success = await catering_authservice
                                   .createEnquiry(
-                                vendorId:widget.vendorId!,
+                                    vendorId: widget.vendorId,
                                     fullName: _nameController.text,
                                     email: _emailController.text,
                                     phoneNumber: _contactController.text,
@@ -590,7 +591,7 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  _buildCategoryItems(),
+                 _buildCategoryItems(),
                   const SizedBox(height: 20),
                   _buildAddOnsSection(),
                 ],
@@ -1290,21 +1291,6 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
   }
 
   Widget _buildCategoryItems() {
-    if (customizedCategories.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(40),
-        child: const Center(
-          child: Column(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text("Loading menu...", style: TextStyle(color: Colors.grey)),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Column(
       children: customizedCategories.map((category) {
         List<Dish> allItems = (categoryItems[category] ?? []).cast<Dish>();

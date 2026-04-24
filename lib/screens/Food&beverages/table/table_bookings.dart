@@ -732,14 +732,15 @@
 // }
 
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import 'package:maamaas/widgets/datetimehelper.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../Models/food/table_confirmedlist_model.dart';
 import '../../../Models/food/table_waitinglist_model.dart';
 import 'package:flutter/material.dart';
-import '../Menu/table_menu.dart';
+import 'table_menu.dart';
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-class _T {
+class tablebcolours {
   static const bg = Color(0xFFF7F8FC);
   static const surface = Colors.white;
   static const border = Color(0xFFEEEFF5);
@@ -822,7 +823,7 @@ class _TableBookingsState extends State<TableBookings>
     final hPad = screenW < 380 ? 12.0 : 16.0;
 
     return Scaffold(
-      backgroundColor: _T.bg,
+      backgroundColor: tablebcolours.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -849,14 +850,14 @@ class _TableBookingsState extends State<TableBookings>
       child: Container(
         height: 46,
         decoration: BoxDecoration(
-          color: _T.border,
-          borderRadius: BorderRadius.circular(_T.radius),
+          color: tablebcolours.border,
+          borderRadius: BorderRadius.circular(tablebcolours.radius),
         ),
         child: TabBar(
           controller: _tabController,
           indicator: BoxDecoration(
-            color: _T.surface,
-            borderRadius: BorderRadius.circular(_T.radiusSm + 2),
+            color: tablebcolours.surface,
+            borderRadius: BorderRadius.circular(tablebcolours.radiusSm + 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.08),
@@ -869,8 +870,10 @@ class _TableBookingsState extends State<TableBookings>
           dividerColor: Colors.transparent,
           padding: const EdgeInsets.all(4),
           labelPadding: EdgeInsets.zero,
-          labelStyle: _T.label.copyWith(color: _T.ink),
-          unselectedLabelStyle: _T.label.copyWith(color: _T.inkMuted),
+          labelStyle: tablebcolours.label.copyWith(color: tablebcolours.ink),
+          unselectedLabelStyle: tablebcolours.label.copyWith(
+            color: tablebcolours.inkMuted,
+          ),
           tabs: [
             _Tab(icon: Icons.access_time_rounded, label: 'Waiting'),
             _Tab(icon: Icons.check_circle_outline_rounded, label: 'Confirmed'),
@@ -1014,9 +1017,9 @@ class _WaitingCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: _T.surface,
-        borderRadius: BorderRadius.circular(_T.radius),
-        border: Border.all(color: _T.border),
+        color: tablebcolours.surface,
+        borderRadius: BorderRadius.circular(tablebcolours.radius),
+        border: Border.all(color: tablebcolours.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -1026,13 +1029,13 @@ class _WaitingCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(_T.radius),
+        borderRadius: BorderRadius.circular(tablebcolours.radius),
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Left accent bar
-              Container(width: 4, color: _T.waiting),
+              Container(width: 4, color: tablebcolours.waiting),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(14),
@@ -1040,30 +1043,29 @@ class _WaitingCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.types,
-                              style: _T.titleLg,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _StatusBadge(
-                            label: 'Waiting',
-                            color: _T.waiting,
-                            bg: _T.waitingLight,
-                            icon: Icons.access_time_rounded,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.end,
+                      //   children: [
+                      //     _StatusBadge(
+                      //       label: 'Waiting',
+                      //       color: tablebcolours.waiting,
+                      //       bg: tablebcolours.waitingLight,
+                      //       icon: Icons.access_time_rounded,
+                      //     ),
+                      //   ],
+                      // ),
+                      // const SizedBox(height: 10),
                       // Info rows
                       _InfoRow(Icons.person_outline_rounded, item.guestName),
                       _InfoRow(Icons.phone_outlined, item.phoneNumber),
-                      _InfoRow(Icons.calendar_today_outlined, item.bookingDate),
-                      _InfoRow(Icons.schedule_outlined, item.requestTime),
+                      _InfoRow(
+                        Icons.calendar_today_outlined,
+                        DateTimeHelper.formatDateString(item.bookingDate),
+                      ),
+                      _InfoRow(
+                        Icons.schedule_outlined,
+                        DateTimeHelper.to12Hour(item.requestTime),
+                      ),
                       const SizedBox(height: 8),
                       // Chips
                       Wrap(
@@ -1133,9 +1135,9 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
         child: Container(
           margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
-            color: _T.surface,
-            borderRadius: BorderRadius.circular(_T.radius),
-            border: Border.all(color: _T.border),
+            color: tablebcolours.surface,
+            borderRadius: BorderRadius.circular(tablebcolours.radius),
+            border: Border.all(color: tablebcolours.border),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.04),
@@ -1145,7 +1147,7 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(_T.radius),
+            borderRadius: BorderRadius.circular(tablebcolours.radius),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1154,8 +1156,10 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
                   Container(
                     width: 4,
                     color: _isCompleted
-                        ? _T.completed
-                        : (_arrived ? _T.confirmed : _T.accent),
+                        ? tablebcolours.completed
+                        : (_arrived
+                              ? tablebcolours.confirmed
+                              : tablebcolours.accent),
                   ),
                   Expanded(
                     child: Padding(
@@ -1170,13 +1174,13 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: _T.accentLight,
+                                  color: tablebcolours.accentLight,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.table_restaurant_rounded,
                                   size: 18,
-                                  color: _T.accent,
+                                  color: tablebcolours.accent,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -1184,18 +1188,18 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      item.types.toUpperCase().replaceAll(
-                                        '_',
-                                        ' ',
-                                      ),
-                                      style: _T.titleLg,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                    // Text(
+                                    //   item.types.toUpperCase().replaceAll(
+                                    //     '_',
+                                    //     ' ',
+                                    //   ),
+                                    //   style: tablebcolours.titleLg,
+                                    //   overflow: TextOverflow.ellipsis,
+                                    // ),
                                     Text(
                                       'Table ${item.code}',
-                                      style: _T.bodySm.copyWith(
-                                        color: _T.accent,
+                                      style: tablebcolours.bodySm.copyWith(
+                                        color: tablebcolours.accent,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -1205,15 +1209,15 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
                               if (_isCompleted)
                                 _StatusBadge(
                                   label: 'Done',
-                                  color: _T.completed,
-                                  bg: _T.completedLight,
+                                  color: tablebcolours.completed,
+                                  bg: tablebcolours.completedLight,
                                   icon: Icons.check_circle_outline_rounded,
                                 ),
                             ],
                           ),
 
                           const SizedBox(height: 10),
-                          const Divider(height: 1, color: _T.border),
+                          const Divider(height: 1, color: tablebcolours.border),
                           const SizedBox(height: 10),
 
                           // Info
@@ -1224,8 +1228,9 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
                           _InfoRow(Icons.phone_outlined, item.phoneNumber),
                           _InfoRow(
                             Icons.calendar_today_outlined,
-                            item.bookingDate,
+                            DateTimeHelper.formatDateString(item.bookingDate),
                           ),
+
                           const SizedBox(height: 8),
 
                           // Chips
@@ -1294,8 +1299,10 @@ class _ActionButtons extends StatelessWidget {
           child: _PillButton(
             label: arrived ? 'Not Arrived' : 'Arrived',
             icon: arrived ? Icons.close_rounded : Icons.check_rounded,
-            color: arrived ? _T.danger : _T.confirmed,
-            bg: arrived ? _T.dangerLight : _T.confirmedLight,
+            color: arrived ? tablebcolours.danger : tablebcolours.confirmed,
+            bg: arrived
+                ? tablebcolours.dangerLight
+                : tablebcolours.confirmedLight,
             onTap: onToggle,
           ),
         ),
@@ -1309,8 +1316,8 @@ class _ActionButtons extends StatelessWidget {
                     _PillButton(
                       label: 'Add Items',
                       icon: Icons.restaurant_menu_rounded,
-                      color: _T.accent,
-                      bg: _T.accentLight,
+                      color: tablebcolours.accent,
+                      bg: tablebcolours.accentLight,
                       onTap: onAddItems,
                     ),
                   ],
@@ -1346,7 +1353,7 @@ class _PillButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(_T.radiusSm),
+          borderRadius: BorderRadius.circular(tablebcolours.radiusSm),
           border: Border.all(color: color.withOpacity(0.25)),
         ),
         child: Row(
@@ -1358,7 +1365,7 @@ class _PillButton extends StatelessWidget {
             Flexible(
               child: Text(
                 label,
-                style: _T.label.copyWith(color: color),
+                style: tablebcolours.label.copyWith(color: color),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -1381,12 +1388,12 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: _T.inkMuted),
+          Icon(icon, size: 14, color: tablebcolours.inkMuted),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               value,
-              style: _T.bodyMd,
+              style: tablebcolours.bodyMd,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -1406,16 +1413,16 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _T.bg,
+        color: tablebcolours.bg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _T.border),
+        border: Border.all(color: tablebcolours.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: _T.inkMuted),
+          Icon(icon, size: 11, color: tablebcolours.inkMuted),
           const SizedBox(width: 4),
-          Text(text, style: _T.bodySm),
+          Text(text, style: tablebcolours.bodySm),
         ],
       ),
     );
@@ -1447,7 +1454,7 @@ class _StatusBadge extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: color),
           const SizedBox(width: 4),
-          Text(label, style: _T.label.copyWith(color: color)),
+          Text(label, style: tablebcolours.label.copyWith(color: color)),
         ],
       ),
     );
@@ -1464,9 +1471,12 @@ class _LoadingView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(strokeWidth: 2.5, color: _T.accent),
+          const CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: tablebcolours.accent,
+          ),
           const SizedBox(height: 14),
-          Text('Loading...', style: _T.bodyMd),
+          Text('Loading...', style: tablebcolours.bodyMd),
         ],
       ),
     );
@@ -1486,11 +1496,19 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 48, color: _T.inkMuted),
+            Icon(
+              Icons.wifi_off_rounded,
+              size: 48,
+              color: tablebcolours.inkMuted,
+            ),
             const SizedBox(height: 12),
-            Text('Something went wrong', style: _T.titleSm),
+            Text('Something went wrong', style: tablebcolours.titleSm),
             const SizedBox(height: 6),
-            Text(error, style: _T.bodyMd, textAlign: TextAlign.center),
+            Text(
+              error,
+              style: tablebcolours.bodyMd,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             GestureDetector(
               onTap: onRetry,
@@ -1500,17 +1518,23 @@ class _ErrorView extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: _T.accentLight,
-                  borderRadius: BorderRadius.circular(_T.radiusSm),
+                  color: tablebcolours.accentLight,
+                  borderRadius: BorderRadius.circular(tablebcolours.radiusSm),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.refresh_rounded, size: 16, color: _T.accent),
+                    Icon(
+                      Icons.refresh_rounded,
+                      size: 16,
+                      color: tablebcolours.accent,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Try Again',
-                      style: _T.label.copyWith(color: _T.accent),
+                      style: tablebcolours.label.copyWith(
+                        color: tablebcolours.accent,
+                      ),
                     ),
                   ],
                 ),
@@ -1533,9 +1557,13 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.table_restaurant_outlined, size: 48, color: _T.inkMuted),
+          Icon(
+            Icons.table_restaurant_outlined,
+            size: 48,
+            color: tablebcolours.inkMuted,
+          ),
           const SizedBox(height: 12),
-          Text(message, style: _T.bodyMd),
+          Text(message, style: tablebcolours.bodyMd),
         ],
       ),
     );

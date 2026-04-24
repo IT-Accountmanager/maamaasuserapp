@@ -1,5 +1,3 @@
-
-
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../Services/Auth_service/catering_authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

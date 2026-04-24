@@ -118,7 +118,7 @@ class catering_authservice {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('userId');
-      final customerId = prefs.getString('customerId');
+      prefs.getString('customerId');
 
       if (userId == null) return 0;
 
@@ -190,7 +190,7 @@ class catering_authservice {
   }
 
   static Future<bool> createEnquiry({
-    required int vendorId,
+    int? vendorId,
     required String fullName,
     required String email,
     required String phoneNumber,

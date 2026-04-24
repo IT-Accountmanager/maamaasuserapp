@@ -1,26 +1,25 @@
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/screens/Food&beverages/Menu/tablecartfooterbutton.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/aboutus_model.dart';
 import '../../../Models/food/team_model.dart';
+import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../widgets/widgets/food/favorite_button.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
 import '../../../widgets/widgets/food/table_cartbutton.dart';
-import 'Menuhelper.dart';
-import 'Top_banner.dart';
-import 'cart_button.dart';
+import '../Menu/Menuhelper.dart';
+import '../Menu/Top_banner.dart';
+import '../Menu/cart_button.dart';
 import '../../skeleton/menu_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../Models/food/dish.dart';
 import '../../foodmainscreen.dart';
-import 'dart:convert';
 import 'dart:async';
-import 'colours.dart';
-import 'fullscreen.dart';
+import '../Menu/colours.dart';
+import '../Menu/fullscreen.dart';
 
 class MenuResponse {
   final List<Dish> categories;
@@ -75,10 +74,11 @@ class _MenuScreenState extends State<tablemneuScreen>
   BannerContentType selectedContent = BannerContentType.none;
 
   // Responsive expanded height based on screen size
-  double get _expandedHeight {
-    final screenHeight = MediaQuery.of(context).size.height;
-    return (screenHeight * 0.42).clamp(280.0, 420.0);
-  }
+  // double get _expandedHeight {
+  //   final screenHeight = MediaQuery.of(context).size.height;
+  //   return (screenHeight * 0.42).clamp(280.0, 420.0);
+  // }
+  static const double _expandedHeight = 400.0;
 
   @override
   void initState() {
@@ -357,11 +357,9 @@ class _MenuScreenState extends State<tablemneuScreen>
     );
   }
 
-  // FIX: Responsive header height using MediaQuery instead of raw .h
   double get _headerHeight {
-    final screenWidth = MediaQuery.of(context).size.width;
-    // Tablets get a bit more height, phones get compact
-    return screenWidth > 600 ? 96.0 : 80.0;
+    double base = 88.h;
+    return base; // adds extra height for table tab row
   }
 
   Widget _buildBannerContent() {
@@ -1544,7 +1542,33 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 // Favourite button
+                if (discount > 0)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 7.w,
+                        vertical: 3.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Menucolours.accent,
+                        borderRadius: Menucolours.r8,
+                      ),
+                      child: Text(
+                        '${discount.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          fontSize: 9.sp,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ),
+
                 Positioned(
                   top: 8,
                   right: 8,
@@ -1654,31 +1678,51 @@ class ProductCard extends StatelessWidget {
 
                   // Price row — FIX: use Flexible instead of Spacer inside Row
                   // to prevent overflow when price text is long
+                  // Row(
+                  //   crossAxisAlignment: CrossAxisAlignment.center,
+                  //   children: [
+                  //     if (discount > 0) ...[
+                  //       Flexible(
+                  //         child: Text(
+                  //           price,
+                  //           overflow: TextOverflow.ellipsis,
+                  //           style: TextStyle(
+                  //             decoration: TextDecoration.lineThrough,
+                  //             decorationColor: Menucolours.textM,
+                  //             fontSize: 10.sp,
+                  //             color: Menucolours.textM,
+                  //           ),
+                  //         ),
+                  //       ),
+                  //       SizedBox(width: 4.w),
+                  //     ],
+                  //     Flexible(
+                  //       child: Text(
+                  //         effectivePrice,
+                  //         overflow: TextOverflow.ellipsis,
+                  //         style: Menucolours.price(),
+                  //       ),
+                  //     ),
+                  //     const Spacer(),
+                  //     vegNonVegIndicator(tag),
+                  //   ],
+                  // ),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       if (discount > 0) ...[
-                        Flexible(
-                          child: Text(
-                            price,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              decoration: TextDecoration.lineThrough,
-                              decorationColor: Menucolours.textM,
-                              fontSize: 10.sp,
-                              color: Menucolours.textM,
-                            ),
+                        Text(
+                          price,
+                          style: TextStyle(
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: Menucolours.textM,
+                            fontSize: 10.sp,
+                            color: Menucolours.textM,
                           ),
                         ),
                         SizedBox(width: 4.w),
                       ],
-                      Flexible(
-                        child: Text(
-                          effectivePrice,
-                          overflow: TextOverflow.ellipsis,
-                          style: Menucolours.price(),
-                        ),
-                      ),
+                      Text(effectivePrice, style: Menucolours.price()),
                       const Spacer(),
                       vegNonVegIndicator(tag),
                     ],
@@ -1779,53 +1823,4 @@ void showDishBottomSheet(BuildContext context, Dish dish) {
       );
     },
   );
-}
-
-// ── Restaurant banner header ──────────────────────────────────────────────────
-class RestaurantBannerHeader extends StatelessWidget {
-  final String? bannerImage;
-  final String title;
-  final String subtitle;
-
-  const RestaurantBannerHeader({
-    super.key,
-    required this.bannerImage,
-    required this.title,
-    required this.subtitle,
-  });
-
-  ImageProvider _getImage(String img) {
-    if (img.startsWith('http')) return NetworkImage(img);
-    return MemoryImage(base64Decode(img));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        bannerImage != null && bannerImage!.isNotEmpty
-            ? Image(image: _getImage(bannerImage!), fit: BoxFit.cover)
-            : Container(
-                color: Menucolours.surfaceAlt,
-                child: Center(
-                  child: Icon(
-                    Icons.storefront_rounded,
-                    size: 48.sp,
-                    color: Menucolours.textM,
-                  ),
-                ),
-              ),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-              colors: [Colors.black.withOpacity(0.7), Colors.transparent],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

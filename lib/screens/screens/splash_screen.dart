@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:maamaas/screens/homescreens/home_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Services/App_color_service/app_colours.dart';
@@ -12,9 +11,11 @@ import '../../Services/fcmservice/fcm_services.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import '../foodmainscreen.dart';
 import 'login_page.dart';
+import 'loginscreensas.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final int? pendingCampaignId;   // ✅ ADD THIS
+  const SplashScreen({super.key, this.pendingCampaignId});
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -28,7 +29,6 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _dotsCtrl;
   late final Animation<Offset> _textSlide;
   late final Animation<double> _textOpacity;
-  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -166,7 +166,8 @@ class _SplashScreenState extends State<SplashScreen>
         PageRouteBuilder(
           pageBuilder: (_, __, ___) =>
               // isLoggedIn ? const MainScreenfood() : const LoginPage(),
-              isLoggedIn ? MainScreenfood() : const LoginPage(),
+              // isLoggedIn ? MainScreenfood() : const LoginPage(),
+              isLoggedIn ? MainScreenfood() : const LoginScreen(),
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),
           transitionDuration: const Duration(milliseconds: 500),

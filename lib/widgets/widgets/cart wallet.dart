@@ -1,8 +1,3 @@
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -15,18 +10,19 @@ import '../../Services/paymentservice/razorpayservice.dart';
 
 // ignore: camel_case_types
 class cartwallet extends StatefulWidget {
-  final Wallet? wallet; // add this
-  final void Function(String paymentMethod, Set<String> subWallets)
-  onSelectionChanged;
+  final Wallet? wallet;
+  final CartModel? cartData;
+  final void Function(String, Set<String>) onSelectionChanged;
 
   const cartwallet({
     super.key,
     required this.onSelectionChanged,
-    this.wallet, // add this
+    this.wallet,
+    this.cartData,
   });
 
   @override
-  State<cartwallet> createState() => _cartwalletState();
+  State<cartwallet> createState() => _cartwalletState(); // ✅ ADD THIS
 }
 
 // ignore: camel_case_types
@@ -42,14 +38,16 @@ class _cartwalletState extends State<cartwallet> {
 
   bool _isPaymentProcessing = false;
   String _loadingText = "Processing...";
+  Wallet? _wallet;
 
   @override
   void initState() {
     super.initState();
-
     _scrollController = ScrollController();
-    _amountController = TextEditingController(); // ✅ FIX
-    _loadCart();
+    _amountController = TextEditingController();
+    _wallet = widget.wallet;     // ✅ fix 1
+    cartData = widget.cartData;  // ✅ fix 2
+    isLoading = false;           // ✅ no fetch needed
   }
 
   @override
@@ -59,24 +57,24 @@ class _cartwalletState extends State<cartwallet> {
   }
 
   double getSelectedWalletBalance() {
-    if (widget.wallet == null) return 0;
+    if (_wallet == null) return 0;
 
     double total = 0;
 
     if (selectedSubWallets.contains("Company Loaded")) {
-      total += widget.wallet!.companyLoadedAmount;
+      total += _wallet!.companyLoadedAmount;
     }
 
     if (selectedSubWallets.contains("Self Loaded")) {
-      total += widget.wallet!.selfLoadedAmount;
+      total += _wallet!.selfLoadedAmount;
     }
 
     if (selectedSubWallets.contains("Cashbacks")) {
-      total += widget.wallet!.cashbackAmount;
+      total += _wallet!.cashbackAmount;
     }
 
     if (selectedSubWallets.contains("Postpaid used amount")) {
-      total += widget.wallet!.postPaidUsage;
+      total += _wallet!.postPaidUsage;
     }
 
     return total;
@@ -201,11 +199,18 @@ class _cartwalletState extends State<cartwallet> {
                             amount: amount,
                           );
 
+                          final updatedWallet = await subscription_AuthService
+                              .fetchWallet();
+
+                          if (!mounted) return;
+
                           setState(() {
+                            _wallet =
+                                updatedWallet; // ✅ THIS is what updates UI
                             _isPaymentProcessing = false;
                           });
 
-                          if (!mounted) return;
+                          _notifyParent();
 
                           AppAlert.success(
                             parentContext,
@@ -335,7 +340,7 @@ class _cartwalletState extends State<cartwallet> {
               colorScheme,
             ),
             if (selectedPaymentMethod == "Maamaas_Wallet" &&
-                widget.wallet != null) ...[
+                _wallet != null) ...[
               SizedBox(height: 8.h),
               Padding(
                 padding: EdgeInsets.only(left: 32.w),
@@ -343,13 +348,13 @@ class _cartwalletState extends State<cartwallet> {
                   children: [
                     _buildSubWalletOption(
                       "Company Loaded",
-                      widget.wallet!.companyLoadedAmount,
+                      _wallet!.companyLoadedAmount,
                       theme,
                       colorScheme,
                     ),
                     _buildSubWalletselfloadedOption(
                       "Self Loaded",
-                      widget.wallet!.selfLoadedAmount,
+                      _wallet!.selfLoadedAmount,
                       theme,
                       colorScheme,
                       onAdd: () {
@@ -360,14 +365,14 @@ class _cartwalletState extends State<cartwallet> {
                     ),
                     _buildSubWalletOption(
                       "Cashbacks",
-                      widget.wallet!.cashbackAmount,
+                      _wallet!.cashbackAmount,
                       theme,
                       colorScheme,
                     ),
                     if ((cartData?.userCompany ?? '').isNotEmpty)
                       _buildSubWalletOption(
                         "Postpaid used amount",
-                        widget.wallet!.postPaidUsage,
+                        _wallet!.postPaidUsage,
                         theme,
                         colorScheme,
                       ),
@@ -461,9 +466,9 @@ class _cartwalletState extends State<cartwallet> {
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: widget.wallet != null
+                          child: _wallet != null
                               ? Text(
-                                  "₹${widget.wallet!.totalBalance.toStringAsFixed(2)}",
+                                  "₹${_wallet!.totalBalance.toStringAsFixed(2)}",
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: isSelected

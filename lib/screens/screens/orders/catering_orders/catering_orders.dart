@@ -1450,15 +1450,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:maamaas/widgets/widgets/phonecall.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../../Models/caterings/orders_model.dart';
+import '../../../../widgets/datetimehelper.dart';
 import '../../../Invoices/cateringPdf.dart';
 import '../catering_enquiry/catering_enquires.dart';
 import 'package:flutter/material.dart';
-import 'catering_ordershelper.dart';
 import 'package:intl/intl.dart';
 
 // ─── Shared Design Tokens ──────────────────────────────────────────────────
 
-class _T {
+class catorders {
   static const primary = Color(0xFF1B7A50);
   static const primaryLight = Color(0xFFE8F5EE);
   static const surface = Colors.white;
@@ -1531,7 +1531,7 @@ class _CateringOrdersScreenState extends State<CateringOrdersScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _T.bg,
+      backgroundColor: catorders.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -1547,19 +1547,19 @@ class _CateringOrdersScreenState extends State<CateringOrdersScreen>
 
   Widget _buildHeader() {
     return Container(
-      color: _T.surface,
+      color: catorders.surface,
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TabBar(
             controller: _tabController,
-            labelColor: _T.surface,
-            unselectedLabelColor: _T.textSecondary,
+            labelColor: catorders.surface,
+            unselectedLabelColor: catorders.textSecondary,
             labelStyle: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
             unselectedLabelStyle: TextStyle(fontSize: 13.sp),
             indicator: BoxDecoration(
-              color: _T.primary,
+              color: catorders.primary,
               borderRadius: BorderRadius.circular(10.r),
             ),
             indicatorSize: TabBarIndicatorSize.tab,
@@ -1605,7 +1605,7 @@ class _CateringOrdersScreenState extends State<CateringOrdersScreen>
     final items = _combinedList.where((i) => i.type == type).toList();
     if (items.isEmpty) return _buildEmpty(type);
     return RefreshIndicator(
-      color: _T.primary,
+      color: catorders.primary,
       onRefresh: _loadData,
       child: ListView.separated(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
@@ -1622,7 +1622,10 @@ class _CateringOrdersScreenState extends State<CateringOrdersScreen>
 
   Widget _buildLoader() {
     return Center(
-      child: CircularProgressIndicator(color: _T.primary, strokeWidth: 2.5),
+      child: CircularProgressIndicator(
+        color: catorders.primary,
+        strokeWidth: 2.5,
+      ),
     );
   }
 
@@ -1636,7 +1639,7 @@ class _CateringOrdersScreenState extends State<CateringOrdersScreen>
                 ? Icons.receipt_long_outlined
                 : Icons.help_outline_rounded,
             size: 56.sp,
-            color: _T.textMuted,
+            color: catorders.textMuted,
           ),
           SizedBox(height: 16.h),
           Text(
@@ -1644,13 +1647,13 @@ class _CateringOrdersScreenState extends State<CateringOrdersScreen>
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
-              color: _T.textSecondary,
+              color: catorders.textSecondary,
             ),
           ),
           SizedBox(height: 6.h),
           Text(
             'Pull down to refresh',
-            style: TextStyle(fontSize: 13.sp, color: _T.textMuted),
+            style: TextStyle(fontSize: 13.sp, color: catorders.textMuted),
           ),
         ],
       ),
@@ -1681,9 +1684,9 @@ class CateringOrderCard extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: _T.surface,
+          color: catorders.surface,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: _T.border),
+          border: Border.all(color: catorders.border),
         ),
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -1700,16 +1703,37 @@ class CateringOrderCard extends StatelessWidget {
             SizedBox(height: 12.h),
 
             // Row 2: Date + Time
+            // Row 2: Date + Time
             Row(
               children: [
                 _MetaTag(
                   icon: Icons.calendar_today_outlined,
-                  label: DateFormat('dd MMM yyyy').format(order.orderDateTime),
+                  label: DateTimeHelper.formatDate(
+                    DateTime.utc(
+                      order.orderDateTime.year,
+                      order.orderDateTime.month,
+                      order.orderDateTime.day,
+                      order.orderDateTime.hour,
+                      order.orderDateTime.minute,
+                      order.orderDateTime.second,
+                      order.orderDateTime.millisecond,
+                    ),
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 _MetaTag(
                   icon: Icons.access_time_outlined,
-                  label: DateFormat('hh:mm a').format(order.orderDateTime),
+                  label: DateTimeHelper.formatTime(
+                    DateTime.utc(
+                      order.orderDateTime.year,
+                      order.orderDateTime.month,
+                      order.orderDateTime.day,
+                      order.orderDateTime.hour,
+                      order.orderDateTime.minute,
+                      order.orderDateTime.second,
+                      order.orderDateTime.millisecond,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1730,7 +1754,7 @@ class CateringOrderCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w500,
-                              color: _T.textPrimary,
+                              color: catorders.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1740,7 +1764,7 @@ class CateringOrderCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13.sp,
                             fontWeight: FontWeight.w600,
-                            color: _T.primary,
+                            color: catorders.primary,
                           ),
                         ),
                       ],
@@ -1750,7 +1774,7 @@ class CateringOrderCard extends StatelessWidget {
             if (order.items.length > 2)
               Text(
                 '+ ${order.items.length - 2} more items',
-                style: TextStyle(fontSize: 11.sp, color: _T.textMuted),
+                style: TextStyle(fontSize: 11.sp, color: catorders.textMuted),
               ),
 
             // Rating bar for delivered orders
@@ -1776,20 +1800,24 @@ class _OrderBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
       decoration: BoxDecoration(
-        color: _T.primaryLight,
+        color: catorders.primaryLight,
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.shopping_bag_outlined, size: 13.sp, color: _T.primary),
+          Icon(
+            Icons.shopping_bag_outlined,
+            size: 13.sp,
+            color: catorders.primary,
+          ),
           SizedBox(width: 5.w),
           Text(
             'ORDER #$id',
             style: TextStyle(
               fontSize: 11.sp,
               fontWeight: FontWeight.w700,
-              color: _T.primary,
+              color: catorders.primary,
             ),
           ),
         ],
@@ -1805,11 +1833,11 @@ class _StatusChip extends StatelessWidget {
   Color get _bg {
     switch (status) {
       case OrderStatus.delivered:
-        return _T.delivered;
+        return catorders.delivered;
       case OrderStatus.confirmed:
-        return _T.primary;
+        return catorders.primary;
       default:
-        return _T.warning;
+        return catorders.warning;
     }
   }
 
@@ -1842,11 +1870,11 @@ class _MetaTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 13.sp, color: _T.textMuted),
+        Icon(icon, size: 13.sp, color: catorders.textMuted),
         SizedBox(width: 4.w),
         Text(
           label,
-          style: TextStyle(fontSize: 11.sp, color: _T.textSecondary),
+          style: TextStyle(fontSize: 11.sp, color: catorders.textSecondary),
         ),
       ],
     );
@@ -1863,13 +1891,13 @@ class _RatingBar extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
       decoration: BoxDecoration(
-        color: _T.warningLight,
+        color: catorders.warningLight,
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Row(
         children: [
-          Icon(Icons.star_rounded, size: 15.sp, color: _T.warning),
+          Icon(Icons.star_rounded, size: 15.sp, color: catorders.warning),
           SizedBox(width: 7.w),
           Expanded(
             child: Text(
@@ -1887,7 +1915,7 @@ class _RatingBar extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
               decoration: BoxDecoration(
-                color: _T.warning,
+                color: catorders.warning,
                 borderRadius: BorderRadius.circular(7.r),
               ),
               child: Text(
@@ -1934,12 +1962,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         feedback: 'No feedback',
         rating: rating,
       );
-      if (mounted)
+      if (mounted) {
         AppAlert.success(context, 'Thank you for your $rating★ rating!');
+      }
       widget.onRefresh?.call();
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         AppAlert.error(context, 'Failed to submit feedback. Please try again.');
+      }
     } finally {
       if (mounted) setState(() => _submittingRating = false);
     }
@@ -2015,8 +2045,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         razorpayOrderId: razorpayOrderId,
         razorpaySignature: razorpaySignature,
       );
-      if (ok && mounted)
+      if (ok && mounted) {
         AppAlert.success(context, 'Payment recorded successfully');
+      }
     } catch (e) {
       if (mounted) AppAlert.error(context, e.toString());
     } finally {
@@ -2035,7 +2066,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         child: Container(
           padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
           decoration: BoxDecoration(
-            color: _T.surface,
+            color: catorders.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
           child: Column(
@@ -2102,27 +2133,37 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
-    final fDate = DateFormat('dd MMM yyyy').format(order.orderDateTime);
-    final fTime = DateFormat('hh:mm a').format(order.orderDateTime);
+    final utc = DateTime.utc(
+      order.orderDateTime.year,
+      order.orderDateTime.month,
+      order.orderDateTime.day,
+      order.orderDateTime.hour,
+      order.orderDateTime.minute,
+      order.orderDateTime.second,
+      order.orderDateTime.millisecond,
+    );
+
+    final fDate = DateTimeHelper.formatDate(utc);
+    final fTime = DateTimeHelper.formatTime(utc);
 
     return Scaffold(
-      backgroundColor: _T.bg,
+      backgroundColor: catorders.bg,
       appBar: AppBar(
-        backgroundColor: _T.surface,
+        backgroundColor: catorders.surface,
         elevation: 0,
         centerTitle: true,
-        foregroundColor: _T.textPrimary,
+        foregroundColor: catorders.textPrimary,
         title: Text(
           'Order #${order.id}',
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.w700,
-            color: _T.textPrimary,
+            color: catorders.textPrimary,
           ),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: _T.border),
+          child: Divider(height: 1, color: catorders.border),
         ),
         actions: [
           GestureDetector(
@@ -2134,19 +2175,23 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               margin: EdgeInsets.only(right: 16.w),
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
               decoration: BoxDecoration(
-                color: _T.infoLight,
+                color: catorders.infoLight,
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.receipt_outlined, size: 14.sp, color: _T.info),
+                  Icon(
+                    Icons.receipt_outlined,
+                    size: 14.sp,
+                    color: catorders.info,
+                  ),
                   SizedBox(width: 5.w),
                   Text(
                     'Invoice',
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w700,
-                      color: _T.info,
+                      color: catorders.info,
                     ),
                   ),
                 ],
@@ -2158,7 +2203,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       body: _isLoading
           ? Center(
               child: CircularProgressIndicator(
-                color: _T.primary,
+                color: catorders.primary,
                 strokeWidth: 2.5,
               ),
             )
@@ -2173,43 +2218,44 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          // Column(
+                          //   crossAxisAlignment: CrossAxisAlignment.start,
+                          //   children: [
+                          //     Text(
+                          //       'Order #${order.id}',
+                          //       style: TextStyle(
+                          //         fontSize: 18.sp,
+                          //         fontWeight: FontWeight.w700,
+                          //       ),
+                          //     ),
+                          //     SizedBox(height: 3.h),
+                          //     Text(
+                          //       'Placed on $fDate',
+                          //       style: TextStyle(
+                          //         fontSize: 12.sp,
+                          //         color: catorders.textSecondary,
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
+                          Row(
                             children: [
-                              Text(
-                                'Order #${order.id}',
-                                style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                              _DateChip(
+                                icon: Icons.calendar_today_outlined,
+                                label: fDate,
                               ),
-                              SizedBox(height: 3.h),
-                              Text(
-                                'Placed on $fDate',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: _T.textSecondary,
-                                ),
+                              SizedBox(width: 10.w),
+                              _DateChip(
+                                icon: Icons.access_time_outlined,
+                                label: fTime,
                               ),
                             ],
                           ),
                           _StatusChip(status: order.orderStatus),
                         ],
                       ),
-                      SizedBox(height: 14.h),
-                      Row(
-                        children: [
-                          _DateChip(
-                            icon: Icons.calendar_today_outlined,
-                            label: fDate,
-                          ),
-                          SizedBox(width: 10.w),
-                          _DateChip(
-                            icon: Icons.access_time_outlined,
-                            label: fTime,
-                          ),
-                        ],
-                      ),
+
+                      // SizedBox(height: 14.h),
                     ],
                   ),
                 ),
@@ -2224,13 +2270,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         _InfoRow(
                           icon: Icons.event_outlined,
                           label: 'Event Date',
-                          value: order.cateringDate,
+                          value: DateTimeHelper.formatDateString(
+                            order.cateringDate,
+                          ),
                         ),
                       if (order.cateringTime.isNotEmpty)
                         _InfoRow(
                           icon: Icons.schedule_outlined,
                           label: 'Event Time',
-                          value: order.cateringTime,
+                          value: DateTimeHelper.to12Hour(order.cateringTime),
                         ),
                       if (order.deliveryUserName.isNotEmpty)
                         _InfoRow(
@@ -2288,7 +2336,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.h),
-                        child: Divider(color: _T.border, height: 1),
+                        child: Divider(color: catorders.border, height: 1),
                       ),
                       _SummaryRow(
                         label: 'Total',
@@ -2403,9 +2451,9 @@ class _Section extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 10.h),
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: color ?? _T.surface,
+        color: color ?? catorders.surface,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: borderColor ?? _T.border),
+        border: Border.all(color: borderColor ?? catorders.border),
       ),
       child: child,
     );
@@ -2425,7 +2473,7 @@ class _SectionLabel extends StatelessWidget {
         style: TextStyle(
           fontSize: 11.sp,
           fontWeight: FontWeight.w700,
-          color: _T.textMuted,
+          color: catorders.textMuted,
           letterSpacing: 0.6,
         ),
       ),
@@ -2443,16 +2491,16 @@ class _DateChip extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: _T.bg,
+        color: catorders.bg,
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 12.sp, color: _T.textSecondary),
+          Icon(icon, size: 12.sp, color: catorders.textSecondary),
           SizedBox(width: 5.w),
           Text(
             label,
-            style: TextStyle(fontSize: 11.sp, color: _T.textSecondary),
+            style: TextStyle(fontSize: 11.sp, color: catorders.textSecondary),
           ),
         ],
       ),
@@ -2477,7 +2525,7 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 15.sp, color: _T.primary),
+          Icon(icon, size: 15.sp, color: catorders.primary),
           SizedBox(width: 8.w),
           SizedBox(
             width: 70.w,
@@ -2486,14 +2534,14 @@ class _InfoRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w600,
-                color: _T.textSecondary,
+                color: catorders.textSecondary,
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontSize: 12.sp, color: _T.textPrimary),
+              style: TextStyle(fontSize: 12.sp, color: catorders.textPrimary),
             ),
           ),
         ],
@@ -2531,7 +2579,7 @@ class _ItemRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
-                    color: _T.primary,
+                    color: catorders.primary,
                   ),
                 ),
             ],
@@ -2541,7 +2589,10 @@ class _ItemRow extends StatelessWidget {
               padding: EdgeInsets.only(top: 2.h),
               child: Text(
                 '• ${item.itemsName}',
-                style: TextStyle(fontSize: 11.sp, color: _T.textSecondary),
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: catorders.textSecondary,
+                ),
               ),
             ),
           ...item.packageItems.map(
@@ -2549,12 +2600,15 @@ class _ItemRow extends StatelessWidget {
               padding: EdgeInsets.only(top: 2.h),
               child: Text(
                 '• ${p.itemName}',
-                style: TextStyle(fontSize: 11.sp, color: _T.textSecondary),
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: catorders.textSecondary,
+                ),
               ),
             ),
           ),
           if (item != (context.findAncestorWidgetOfExactType<_Section>()))
-            Divider(height: 10.h, color: _T.border),
+            Divider(height: 10.h, color: catorders.border),
         ],
       ),
     );
@@ -2580,7 +2634,7 @@ class _AddonRow extends StatelessWidget {
           ),
           Text(
             'Qty: ${addOn.quantity}',
-            style: TextStyle(fontSize: 12.sp, color: _T.textSecondary),
+            style: TextStyle(fontSize: 12.sp, color: catorders.textSecondary),
           ),
           SizedBox(width: 12.w),
           Text(
@@ -2588,7 +2642,7 @@ class _AddonRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 13.sp,
               fontWeight: FontWeight.w600,
-              color: _T.primary,
+              color: catorders.primary,
             ),
           ),
         ],
@@ -2619,7 +2673,7 @@ class _SummaryRow extends StatelessWidget {
             style: TextStyle(
               fontSize: bold ? 15.sp : 13.sp,
               fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-              color: bold ? _T.textPrimary : _T.textSecondary,
+              color: bold ? catorders.textPrimary : catorders.textSecondary,
             ),
           ),
           Text(
@@ -2627,7 +2681,7 @@ class _SummaryRow extends StatelessWidget {
             style: TextStyle(
               fontSize: bold ? 15.sp : 13.sp,
               fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-              color: bold ? _T.textPrimary : _T.textPrimary,
+              color: bold ? catorders.textPrimary : catorders.textPrimary,
             ),
           ),
         ],
@@ -2647,13 +2701,17 @@ class _PendingPaymentCard extends StatelessWidget {
       padding: EdgeInsets.all(14.w),
       margin: EdgeInsets.only(bottom: 10.h),
       decoration: BoxDecoration(
-        color: _T.dangerLight,
+        color: catorders.dangerLight,
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: const Color(0xFFFECACA)),
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: _T.danger, size: 22.sp),
+          Icon(
+            Icons.warning_amber_rounded,
+            color: catorders.danger,
+            size: 22.sp,
+          ),
           SizedBox(width: 10.w),
           Expanded(
             child: Column(
@@ -2664,7 +2722,7 @@ class _PendingPaymentCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w700,
-                    color: _T.danger,
+                    color: catorders.danger,
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -2683,7 +2741,7 @@ class _PendingPaymentCard extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: _T.danger,
+                color: catorders.danger,
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Text(
@@ -2723,9 +2781,9 @@ class _RatingSection extends StatelessWidget {
       padding: EdgeInsets.all(16.w),
       margin: EdgeInsets.only(bottom: 10.h),
       decoration: BoxDecoration(
-        color: _T.surface,
+        color: catorders.surface,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: _T.border),
+        border: Border.all(color: catorders.border),
       ),
       child: hasRating
           ? Column(
@@ -2735,7 +2793,7 @@ class _RatingSection extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: _T.primary,
+                    color: catorders.primary,
                   ),
                 ),
                 SizedBox(height: 10.h),
@@ -2746,7 +2804,7 @@ class _RatingSection extends StatelessWidget {
                       i < order.rating
                           ? Icons.star_rounded
                           : Icons.star_border_rounded,
-                      color: _T.warning,
+                      color: catorders.warning,
                       size: 30.sp,
                     );
                   }),
@@ -2754,7 +2812,10 @@ class _RatingSection extends StatelessWidget {
                 SizedBox(height: 6.h),
                 Text(
                   '${order.rating}/5 Stars',
-                  style: TextStyle(fontSize: 13.sp, color: _T.textSecondary),
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: catorders.textSecondary,
+                  ),
                 ),
               ],
             )
@@ -2772,7 +2833,7 @@ class _RatingSection extends StatelessWidget {
                 if (isSubmitting)
                   Center(
                     child: CircularProgressIndicator(
-                      color: _T.warning,
+                      color: catorders.warning,
                       strokeWidth: 2.5,
                     ),
                   )
@@ -2788,7 +2849,7 @@ class _RatingSection extends StatelessWidget {
                             i < selectedRating
                                 ? Icons.star_rounded
                                 : Icons.star_border_rounded,
-                            color: _T.warning,
+                            color: catorders.warning,
                             size: 38.sp,
                           ),
                         ),
@@ -2824,9 +2885,9 @@ class _HelpTile extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 10.h),
         padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
-          color: _T.surface,
+          color: catorders.surface,
           borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: _T.border),
+          border: Border.all(color: catorders.border),
         ),
         child: Row(
           children: [
@@ -2854,12 +2915,19 @@ class _HelpTile extends StatelessWidget {
                   SizedBox(height: 2.h),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12.sp, color: _T.textSecondary),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: catorders.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 14.sp, color: _T.textMuted),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14.sp,
+              color: catorders.textMuted,
+            ),
           ],
         ),
       ),

@@ -188,8 +188,10 @@ class _OrderCartFooterState extends State<catering_Cart_count>
 
       debugPrint("🟣 RAW CART COUNT FROM API → $count");
 
+      // ignore: unnecessary_type_check
       final safeCount = (count is int)
           ? count
+          // ignore: dead_code
           : int.tryParse(count.toString()) ?? 0;
 
       debugPrint("🟢 PARSED SAFE COUNT → $safeCount");

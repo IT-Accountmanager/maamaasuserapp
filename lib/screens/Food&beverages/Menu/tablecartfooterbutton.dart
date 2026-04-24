@@ -1,7 +1,6 @@
 import '../../../main.dart';
 import '../../../widgets/widgets/food/currentcart_notifier.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
-import '../food_cartscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

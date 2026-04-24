@@ -439,7 +439,7 @@ import '../../Models/subscrptions/coupon_model.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
-class _C {
+class couponscolours {
   static const bg = Color(0xFFF6F7FB);
   static const surface = Color(0xFFFFFFFF);
   static const brand = Color(0xFF4F46E5);
@@ -463,9 +463,9 @@ class CouponsAndRewards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.bg,
+      backgroundColor: couponscolours.bg,
       appBar: AppBar(
-        backgroundColor: _C.surface,
+        backgroundColor: couponscolours.surface,
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: Colors.black.withOpacity(0.06),
@@ -475,7 +475,7 @@ class CouponsAndRewards extends StatelessWidget {
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
-            color: _C.ink,
+            color: couponscolours.ink,
             letterSpacing: -0.3,
           ),
         ),
@@ -484,13 +484,13 @@ class CouponsAndRewards extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.all(10),
             decoration: const BoxDecoration(
-              color: _C.bg,
+              color: couponscolours.bg,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: _C.ink,
+              color: couponscolours.ink,
             ),
           ),
         ),
@@ -556,8 +556,8 @@ class _CouponsTabState extends State<CouponsTab> {
     final expired = _coupons.where((c) => c.isExpired).toList();
 
     return RefreshIndicator(
-      color: _C.brand,
-      backgroundColor: _C.surface,
+      color: couponscolours.brand,
+      backgroundColor: couponscolours.surface,
       onRefresh: _load,
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -619,26 +619,26 @@ class _SummaryBar extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: _C.brandSoft,
+        color: couponscolours.brandSoft,
         borderRadius: BorderRadius.circular(14.r),
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_offer_rounded, color: _C.brand, size: 18),
+          const Icon(Icons.local_offer_rounded, color: couponscolours.brand, size: 18),
           SizedBox(width: 10.w),
           Text(
             '$active active coupon${active == 1 ? '' : 's'}',
             style: TextStyle(
               fontSize: 13.sp,
               fontWeight: FontWeight.w600,
-              color: _C.brand,
+              color: couponscolours.brand,
             ),
           ),
           const Spacer(),
           if (expired > 0)
             Text(
               '$expired expired',
-              style: TextStyle(fontSize: 12.sp, color: _C.sub),
+              style: TextStyle(fontSize: 12.sp, color: couponscolours.sub),
             ),
         ],
       ),
@@ -659,7 +659,7 @@ class _SectionHeader extends SliverToBoxAdapter {
                 style: TextStyle(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w700,
-                  color: _C.sub,
+                  color: couponscolours.sub,
                   letterSpacing: 0.6,
                 ),
               ),
@@ -667,7 +667,7 @@ class _SectionHeader extends SliverToBoxAdapter {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: _C.border,
+                  color: couponscolours.border,
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Text(
@@ -675,7 +675,7 @@ class _SectionHeader extends SliverToBoxAdapter {
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w700,
-                    color: _C.sub,
+                    color: couponscolours.sub,
                   ),
                 ),
               ),
@@ -720,11 +720,11 @@ class _CouponCard extends StatelessWidget {
   ({Color bg, Color fg, Color badge}) get _palette {
     switch (coupon.couponType.toUpperCase()) {
       case 'FOOD':
-        return (bg: _C.greenSoft, fg: _C.green, badge: _C.green);
+        return (bg: couponscolours.greenSoft, fg: couponscolours.green, badge: couponscolours.green);
       case 'DELIVERY':
-        return (bg: _C.amberSoft, fg: _C.amber, badge: _C.amber);
+        return (bg: couponscolours.amberSoft, fg: couponscolours.amber, badge: couponscolours.amber);
       default:
-        return (bg: _C.brandSoft, fg: _C.brand, badge: _C.brand);
+        return (bg: couponscolours.brandSoft, fg: couponscolours.brand, badge: couponscolours.brand);
     }
   }
 
@@ -740,9 +740,9 @@ class _CouponCard extends StatelessWidget {
       opacity: expired ? 0.55 : 1.0,
       child: Container(
         decoration: BoxDecoration(
-          color: _C.surface,
+          color: couponscolours.surface,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: _C.border),
+          border: Border.all(color: couponscolours.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -789,7 +789,7 @@ class _CouponCard extends StatelessWidget {
             ),
 
             // ── Dashed separator ────────────────────────────────────────
-            _DashedDivider(color: _C.border),
+            _DashedDivider(color: couponscolours.border),
 
             // ── Right: details + action ─────────────────────────────────
             Expanded(
@@ -806,7 +806,7 @@ class _CouponCard extends StatelessWidget {
                         _Badge(label: coupon.couponType, bg: p.bg, fg: p.fg),
                         const Spacer(),
                         if (expired)
-                          _Badge(label: 'Expired', bg: _C.redSoft, fg: _C.red),
+                          _Badge(label: 'Expired', bg: couponscolours.redSoft, fg: couponscolours.red),
                       ],
                     ),
                     SizedBox(height: 10.h),
@@ -815,18 +815,18 @@ class _CouponCard extends StatelessWidget {
                     if (coupon.minimumOrderValue > 0)
                       Text(
                         'Min order ₹${coupon.minimumOrderValue.toInt()}',
-                        style: TextStyle(fontSize: 11.sp, color: _C.sub),
+                        style: TextStyle(fontSize: 11.sp, color: couponscolours.sub),
                       ),
                     if (coupon.minimumOrderValue <= 0)
                       Text(
                         'Applicable on any order',
-                        style: TextStyle(fontSize: 11.sp, color: _C.sub),
+                        style: TextStyle(fontSize: 11.sp, color: couponscolours.sub),
                       ),
 
                     SizedBox(height: 4.h),
                     Text(
                       'Valid till ${_fmtDate(coupon.endDate.toIso8601String())}',
-                      style: TextStyle(fontSize: 10.sp, color: _C.muted),
+                      style: TextStyle(fontSize: 10.sp, color: couponscolours.muted),
                     ),
                   ],
                 ),
@@ -907,10 +907,10 @@ class _CodePillState extends State<_CodePill> {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
         decoration: BoxDecoration(
-          color: _copied ? _C.greenSoft : _C.bg,
+          color: _copied ? couponscolours.greenSoft : couponscolours.bg,
           borderRadius: BorderRadius.circular(8.r),
           border: Border.all(
-            color: _copied ? _C.green : _C.border,
+            color: _copied ? couponscolours.green : couponscolours.border,
             style: BorderStyle.solid,
           ),
         ),
@@ -922,7 +922,7 @@ class _CodePillState extends State<_CodePill> {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w700,
-                color: _copied ? _C.green : _C.ink,
+                color: _copied ? couponscolours.green : couponscolours.ink,
                 letterSpacing: 0.8,
               ),
             ),
@@ -930,7 +930,7 @@ class _CodePillState extends State<_CodePill> {
             // Icon(
             //   _copied ? Icons.check_rounded : Icons.copy_rounded,
             //   size: 12.sp,
-            //   color: _copied ? _C.green : _C.muted,
+            //   color: _copied ? couponscolours.green : couponscolours.muted,
             // ),
           ],
         ),
@@ -983,14 +983,14 @@ class _LoadingState extends StatelessWidget {
             height: 36.r,
             child: const CircularProgressIndicator(
               strokeWidth: 2.5,
-              color: _C.brand,
+              color: couponscolours.brand,
               strokeCap: StrokeCap.round,
             ),
           ),
           SizedBox(height: 14.h),
           Text(
             'Fetching offers...',
-            style: TextStyle(fontSize: 13.sp, color: _C.sub),
+            style: TextStyle(fontSize: 13.sp, color: couponscolours.sub),
           ),
         ],
       ),
@@ -1012,13 +1012,13 @@ class _EmptyState extends StatelessWidget {
             width: 80.r,
             height: 80.r,
             decoration: BoxDecoration(
-              color: _C.brandSoft,
+              color: couponscolours.brandSoft,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.confirmation_num_outlined,
               size: 36.sp,
-              color: _C.brand,
+              color: couponscolours.brand,
             ),
           ),
           SizedBox(height: 16.h),
@@ -1027,13 +1027,13 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(
               fontSize: 17.sp,
               fontWeight: FontWeight.w700,
-              color: _C.ink,
+              color: couponscolours.ink,
             ),
           ),
           SizedBox(height: 6.h),
           Text(
             'Check back later for exciting offers!',
-            style: TextStyle(fontSize: 13.sp, color: _C.sub),
+            style: TextStyle(fontSize: 13.sp, color: couponscolours.sub),
             textAlign: TextAlign.center,
           ),
         ],

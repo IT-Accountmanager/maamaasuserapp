@@ -31,7 +31,6 @@ class _HomePageState extends State<HomePage> {
   String selectedTab = "";
   int _currentIndex = 0;
   String _currentLocation = "Fetching location...";
-  bool _updateAvailable = false;
   AppUpdateInfo? _updateInfo;
   bool _hasShownLocationDialog = false;
   bool _isBannerCollapsed = false;
@@ -99,19 +98,16 @@ class _HomePageState extends State<HomePage> {
 
       print("📍 RAW LOC: $loc");
       print("📍 ADDRESS CHECK: ${loc?.address}");
-      print("📍 VALID: ${loc?.address?.trim().isNotEmpty}");
+      print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
 
       // ✅ VALID LOCATION CHECK
       final isValidLocation =
           loc != null &&
-          loc.address != null &&
-          loc.address!.trim().isNotEmpty &&
-          loc.latitude != null &&
-          loc.longitude != null;
+          loc.address.trim().isNotEmpty;
 
       if (isValidLocation) {
         setState(() {
-          _currentLocation = loc!.address!;
+          _currentLocation = loc.address;
           _locationCategory = loc.category;
         });
 
@@ -212,7 +208,6 @@ class _HomePageState extends State<HomePage> {
       if (_updateInfo?.updateAvailability ==
           UpdateAvailability.updateAvailable) {
         setState(() {
-          _updateAvailable = true;
         });
       }
     } catch (e) {
@@ -287,20 +282,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildVideoSection() {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 15,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(child: VideoPreviewContainer()),
-    );
-  }
 
   Widget _buildSliverAppBar() {
     return SliverAppBar(

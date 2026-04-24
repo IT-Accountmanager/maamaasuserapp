@@ -8,7 +8,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../Models/food/cart_model.dart';
 import '../../../Models/food/tablecartmodel.dart';
 import '../../../Models/subscrptions/wallet_model.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
@@ -323,7 +322,7 @@ class _cartwalletState extends State<tablecartwallet> {
   }
 
   Widget _buildPaymentSection(ThemeData theme, ColorScheme colorScheme) {
-    if (tableCartData == null || isLoading) {
+    if (isLoading) {
       return _paymentSkeleton();
     }
     return Column(

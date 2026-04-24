@@ -52,7 +52,6 @@ class _HomePageState extends State<logistic_HomePage>
   String selectedTab = "";
   int _currentIndex = 0;
   String _currentLocation = "Fetching location...";
-  bool _updateAvailable = false;
   AppUpdateInfo? _updateInfo;
   bool _hasShownLocationDialog = false;
   bool _isBannerCollapsed = false;
@@ -135,19 +134,16 @@ class _HomePageState extends State<logistic_HomePage>
 
       print("📍 RAW LOC: $loc");
       print("📍 ADDRESS CHECK: ${loc?.address}");
-      print("📍 VALID: ${loc?.address?.trim().isNotEmpty}");
+      print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
 
       // ✅ VALID LOCATION CHECK
       final isValidLocation =
           loc != null &&
-          loc.address != null &&
-          loc.address!.trim().isNotEmpty &&
-          loc.latitude != null &&
-          loc.longitude != null;
+          loc.address.trim().isNotEmpty;
 
       if (isValidLocation) {
         setState(() {
-          _currentLocation = loc!.address!;
+          _currentLocation = loc.address;
           _locationCategory = loc.category;
         });
 
@@ -249,7 +245,6 @@ class _HomePageState extends State<logistic_HomePage>
       if (_updateInfo?.updateAvailability ==
           UpdateAvailability.updateAvailable) {
         setState(() {
-          _updateAvailable = true;
         });
       }
     } catch (e) {
@@ -751,9 +746,6 @@ class _LogisticsScreenState extends State<LogisticsScreen>
     with SingleTickerProviderStateMixin {
   // String selectedService = "Travel";
   late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  final TextEditingController _searchController = TextEditingController();
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Map<String, Set<String>> tempFilters = {};
   String? selectedVertical;
   String? selectedSubCategory;
@@ -766,9 +758,6 @@ class _LogisticsScreenState extends State<LogisticsScreen>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.94, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
     _animationController.forward();
   }

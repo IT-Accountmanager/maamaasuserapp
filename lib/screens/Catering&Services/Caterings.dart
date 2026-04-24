@@ -1,5 +1,6 @@
 import 'package:maamaas/screens/Food&beverages/distancehelpermethod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../Services/App_color_service/app_colours.dart';
 import '../../Services/Auth_service/guest_Authservice.dart';
 import '../../Models/food/restaurent_banner_model.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ class CateringsPage extends StatefulWidget {
 
 class _CateringsPageState extends State<CateringsPage> {
   late Future<List<Restaurent_Banner>> _bannersFuture;
-
+  int selectedIndex = 0;
   @override
   void initState() {
     super.initState();
@@ -23,26 +24,57 @@ class _CateringsPageState extends State<CateringsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TabBar(
-            indicatorColor: const Color(0xFFFF7043),
-            tabs: const [
-              Tab(text: "Packages"),
-              Tab(text: "Custom Menu"),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(child: _buildButton("Packages", 0)),
+              const SizedBox(width: 10),
+              Expanded(child: _buildButton("Custom Menu", 1)),
             ],
           ),
+        ),
 
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.55,
-            child: TabBarView(
-              children: [buildpackagedcards(), CustomisedMenu()],
-            ),
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.55,
+          child: selectedIndex == 0
+              ? buildpackagedcards()
+              : CustomisedMenu(),
+        ),
+      ],
+    );
+  }Widget _buildButton(String text, int index) {
+    final isSelected = selectedIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.green
+              : AppColors.primary,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: isSelected ? Colors.green : AppColors.primary,
           ),
-        ],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          text,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
       ),
     );
   }
@@ -50,7 +82,6 @@ class _CateringsPageState extends State<CateringsPage> {
   Widget buildpackagedcards() {
     return Container(
       color: Colors.white,
-      // padding: const EdgeInsets.all(10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,7 +102,6 @@ class _CateringsPageState extends State<CateringsPage> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-
           Expanded(
             child: FutureBuilder<List<Restaurent_Banner>>(
               future: _bannersFuture,
@@ -102,9 +132,8 @@ class _CateringsPageState extends State<CateringsPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => CateringVendorScreen(
-                              vendorId: banner.vendorId,
-                            ),
+                            builder: (_) =>
+                                CateringVendorScreen(vendorId: banner.vendorId),
                           ),
                         );
                       },
@@ -122,7 +151,7 @@ class _CateringsPageState extends State<CateringsPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              /// Image
+                              // Banner image
                               ClipRRect(
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(12),
@@ -151,34 +180,33 @@ class _CateringsPageState extends State<CateringsPage> {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
+                                    const SizedBox(height: 6),
 
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    // ── Chips row (address + city + distance) ──
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 4,
                                       children: [
-                                        Text(
-                                          "${banner.addressLine}, ${banner.city}",
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: Colors.black87,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                        _infoChip(
+                                          icon: Icons.location_on_outlined,
+                                          label: banner.addressLine,
                                         ),
-
-                                        Text(
-                                          Distancehelpermethod.formatDistance(
-                                            banner.distance,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                        _infoChip(
+                                          icon: Icons.location_city_outlined,
+                                          label: banner.city,
+                                        ),
+                                        _infoChip(
+                                          icon: Icons.near_me_outlined,
+                                          label:
+                                              Distancehelpermethod.formatDistance(
+                                                banner.distance,
+                                              ),
+                                          highlighted: true,
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 10),
+
+                                    const SizedBox(height: 6),
                                   ],
                                 ),
                               ),
@@ -190,6 +218,45 @@ class _CateringsPageState extends State<CateringsPage> {
                   },
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Small read-only info chip used in the caterer card.
+  Widget _infoChip({
+    required IconData icon,
+    required String label,
+    bool highlighted = false,
+  }) {
+    const accent = Color(0xFFFF7043);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: highlighted ? accent.withOpacity(0.10) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: highlighted ? accent.withOpacity(0.40) : Colors.grey.shade300,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 11.sp,
+            color: highlighted ? accent : Colors.grey.shade600,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.sp,
+              fontWeight: highlighted ? FontWeight.w600 : FontWeight.w400,
+              color: highlighted ? accent : Colors.black87,
             ),
           ),
         ],

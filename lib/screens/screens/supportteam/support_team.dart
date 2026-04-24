@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
-class _T {
+class sptteamcolour {
   static const bg = Color(0xFFF6F7F9);
   static const surface = Colors.white;
   static const ink = Color(0xFF111827);
@@ -85,16 +85,16 @@ class _SupportteamState extends State<Supportteam> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _T.bg,
+      backgroundColor: sptteamcolour.bg,
       appBar: AppBar(
-        backgroundColor: _T.surface,
+        backgroundColor: sptteamcolour.surface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 18,
-            color: _T.ink,
+            color: sptteamcolour.ink,
           ),
           onPressed: () => Navigator.maybePop(context),
         ),
@@ -103,12 +103,12 @@ class _SupportteamState extends State<Supportteam> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: _T.ink,
+            color: sptteamcolour.ink,
           ),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: _T.border),
+          child: Divider(height: 1, color: sptteamcolour.border),
         ),
       ),
       body: SingleChildScrollView(
@@ -131,7 +131,7 @@ class _SupportteamState extends State<Supportteam> {
                         child: _actionCard(
                           icon: Icons.confirmation_number_outlined,
                           label: "Raise Ticket",
-                          color: _T.accent,
+                          color: sptteamcolour.accent,
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -145,7 +145,7 @@ class _SupportteamState extends State<Supportteam> {
                         child: _actionCard(
                           icon: Icons.list_alt_outlined,
                           label: "My Tickets",
-                          color: _T.green,
+                          color: sptteamcolour.green,
                           onTap: () async {
                             final prefs = await SharedPreferences.getInstance();
                             final userId = prefs.getInt('userId') ?? 0;
@@ -166,7 +166,7 @@ class _SupportteamState extends State<Supportteam> {
                       //   child: _actionCard(
                       //     icon: Icons.phone_outlined,
                       //     label: "Call Us",
-                      //     color: _T.amber,
+                      //     color: sptteamcolour.amber,
                       //     onTap: _makeSupportCall,
                       //   ),
                       // ),
@@ -199,12 +199,12 @@ class _SupportteamState extends State<Supportteam> {
           width: 6,
           height: 6,
           decoration: const BoxDecoration(
-            color: _T.ink,
+            color: sptteamcolour.ink,
             shape: BoxShape.circle,
           ),
         ),
         SizedBox(width: 8.w),
-        Text(text.toUpperCase(), style: _T.label.copyWith(color: _T.ink)),
+        Text(text.toUpperCase(), style: sptteamcolour.label.copyWith(color: sptteamcolour.ink)),
       ],
     );
   }
@@ -221,9 +221,9 @@ class _SupportteamState extends State<Supportteam> {
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 16.h),
         decoration: BoxDecoration(
-          color: _T.surface,
+          color: sptteamcolour.surface,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: _T.border),
+          border: Border.all(color: sptteamcolour.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.03),
@@ -249,7 +249,7 @@ class _SupportteamState extends State<Supportteam> {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w600,
-                color: _T.ink,
+                color: sptteamcolour.ink,
               ),
               textAlign: TextAlign.center,
             ),
@@ -268,10 +268,10 @@ class _SupportteamState extends State<Supportteam> {
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),
       decoration: BoxDecoration(
-        color: _T.surface,
+        color: sptteamcolour.surface,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isOpen ? _T.accent.withOpacity(0.3) : _T.border,
+          color: isOpen ? sptteamcolour.accent.withOpacity(0.3) : sptteamcolour.border,
           width: isOpen ? 1.5 : 1,
         ),
         boxShadow: [
@@ -297,30 +297,30 @@ class _SupportteamState extends State<Supportteam> {
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: isOpen ? _T.accentLight : const Color(0xFFF3F4F6),
+                      color: isOpen ? sptteamcolour.accentLight : const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Icon(
                       icon,
                       size: 16,
-                      color: isOpen ? _T.accent : _T.muted,
+                      color: isOpen ? sptteamcolour.accent : sptteamcolour.muted,
                     ),
                   ),
                   SizedBox(width: 12.w),
-                  Expanded(child: Text(title, style: _T.h2)),
+                  Expanded(child: Text(title, style: sptteamcolour.h2)),
                   Icon(
                     isOpen
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: _T.muted,
+                    color: sptteamcolour.muted,
                   ),
                 ],
               ),
             ),
           ),
           if (isOpen) ...[
-            Divider(height: 1, color: _T.border),
+            Divider(height: 1, color: sptteamcolour.border),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
               child: Column(
@@ -336,14 +336,14 @@ class _SupportteamState extends State<Supportteam> {
                               height: 5,
                               margin: EdgeInsets.only(top: 5.h, right: 10.w),
                               decoration: const BoxDecoration(
-                                color: _T.accent,
+                                color: sptteamcolour.accent,
                                 shape: BoxShape.circle,
                               ),
                             ),
                             Expanded(
                               child: Text(
                                 q,
-                                style: _T.body.copyWith(fontSize: 13),
+                                style: sptteamcolour.body.copyWith(fontSize: 13),
                               ),
                             ),
                           ],

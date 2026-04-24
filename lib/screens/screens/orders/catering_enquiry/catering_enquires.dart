@@ -1184,10 +1184,11 @@ import '../../../../Models/caterings/catering_enquiry_model.dart';
 import '../../../../Models/caterings/vendor_quotation_model.dart';
 import '../../../../Services/Auth_service/catering_authservice.dart';
 import '../../../../Services/paymentservice/razorpayservice.dart';
+import '../../../../widgets/datetimehelper.dart';
 import 'Enquiry_helper.dart';
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-class _AppColors {
+class catenquiycolour {
   static const primary = Color(0xFF1A56DB);
   static const primaryLight = Color(0xFFEEF2FF);
   static const accent = Color(0xFFF97316);
@@ -1205,39 +1206,33 @@ class _AppColors {
 }
 
 class _AppText {
-  static const TextStyle h1 = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.w700,
-    color: _AppColors.textPrimary,
-    letterSpacing: -0.3,
-  );
   static const TextStyle h2 = TextStyle(
     fontSize: 17,
     fontWeight: FontWeight.w700,
-    color: _AppColors.textPrimary,
+    color: catenquiycolour.textPrimary,
     letterSpacing: -0.2,
   );
   static const TextStyle h3 = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,
-    color: _AppColors.textPrimary,
+    color: catenquiycolour.textPrimary,
   );
   static const TextStyle body = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: _AppColors.textSecondary,
+    color: catenquiycolour.textSecondary,
     height: 1.5,
   );
   static const TextStyle label = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w500,
-    color: _AppColors.textSecondary,
+    color: catenquiycolour.textSecondary,
     letterSpacing: 0.1,
   );
   static const TextStyle caption = TextStyle(
     fontSize: 11,
     fontWeight: FontWeight.w500,
-    color: _AppColors.textSecondary,
+    color: catenquiycolour.textSecondary,
     letterSpacing: 0.2,
   );
 }
@@ -1266,9 +1261,9 @@ class _EnquiryCardState extends State<EnquiryCard> {
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
         decoration: BoxDecoration(
-          color: _AppColors.card,
+          color: catenquiycolour.card,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: _AppColors.border, width: 1),
+          border: Border.all(color: catenquiycolour.border, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -1286,7 +1281,7 @@ class _EnquiryCardState extends State<EnquiryCard> {
                 width: 4.w,
                 height: 48.h,
                 decoration: BoxDecoration(
-                  color: _AppColors.primary,
+                  color: catenquiycolour.primary,
                   borderRadius: BorderRadius.circular(4.r),
                 ),
               ),
@@ -1307,12 +1302,14 @@ class _EnquiryCardState extends State<EnquiryCard> {
                       children: [
                         _IconLabel(
                           icon: Icons.calendar_today_rounded,
-                          text: enquiry.eventDate,
+                          text: DateTimeHelper.formatDateString(
+                            enquiry.eventDate,
+                          ),
                         ),
                         SizedBox(width: 16.w),
                         _IconLabel(
                           icon: Icons.schedule_rounded,
-                          text: enquiry.eventTime,
+                          text: DateTimeHelper.to12Hour(enquiry.eventTime),
                         ),
                       ],
                     ),
@@ -1321,7 +1318,7 @@ class _EnquiryCardState extends State<EnquiryCard> {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: _AppColors.textSecondary,
+                color: catenquiycolour.textSecondary,
                 size: 20.sp,
               ),
             ],
@@ -1356,7 +1353,7 @@ class _EnquiryDetailsScreenState extends State<EnquiryDetailsScreen> {
     final enquiry = widget.enquiry;
 
     return Scaffold(
-      backgroundColor: _AppColors.surface,
+      backgroundColor: catenquiycolour.surface,
       appBar: _ModernAppBar(title: 'Enquiry #${enquiry.id}'),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
@@ -1366,7 +1363,7 @@ class _EnquiryDetailsScreenState extends State<EnquiryDetailsScreen> {
             _SectionCard(
               title: 'Event Details',
               icon: Icons.event_rounded,
-              iconColor: _AppColors.primary,
+              iconColor: catenquiycolour.primary,
               child: Column(
                 children: [
                   _InfoRow(
@@ -1383,7 +1380,7 @@ class _EnquiryDetailsScreenState extends State<EnquiryDetailsScreen> {
                   ),
                   _InfoRow(
                     label: 'Event Time',
-                    value: Enquiry_helpers.formatTime(enquiry.eventTime),
+                    value: DateTimeHelper.to12Hour(enquiry.eventTime),
                   ),
                   _Divider(),
                   _InfoRow(label: 'Address', value: enquiry.fullAddress),
@@ -1409,19 +1406,19 @@ class _EnquiryDetailsScreenState extends State<EnquiryDetailsScreen> {
                         _PlateBadge(
                           type: 'Veg',
                           count: enquiry.vegPlates,
-                          color: _AppColors.success,
+                          color: catenquiycolour.success,
                         ),
                       if (enquiry.nonVegPlates > 0)
                         _PlateBadge(
                           type: 'Non-Veg',
                           count: enquiry.nonVegPlates,
-                          color: _AppColors.error,
+                          color: catenquiycolour.error,
                         ),
                       if (enquiry.mixedPlates > 0)
                         _PlateBadge(
                           type: 'Mixed',
                           count: enquiry.mixedPlates,
-                          color: _AppColors.accent,
+                          color: catenquiycolour.accent,
                         ),
                     ],
                   ),
@@ -1482,7 +1479,7 @@ class _ItemsCard extends StatelessWidget {
     return _SectionCard(
       title: 'Requested Items',
       icon: Icons.restaurant_menu_rounded,
-      iconColor: _AppColors.accent,
+      iconColor: catenquiycolour.accent,
       child: items.isEmpty
           ? _EmptyHint(text: 'No items selected.')
           : Column(
@@ -1504,7 +1501,7 @@ class _ItemsCard extends StatelessWidget {
                             Text(
                               category,
                               style: _AppText.h3.copyWith(
-                                color: _AppColors.primary,
+                                color: catenquiycolour.primary,
                               ),
                             ),
                             AnimatedRotation(
@@ -1512,7 +1509,7 @@ class _ItemsCard extends StatelessWidget {
                               duration: const Duration(milliseconds: 250),
                               child: Icon(
                                 Icons.keyboard_arrow_down_rounded,
-                                color: _AppColors.primary,
+                                color: catenquiycolour.primary,
                                 size: 20.sp,
                               ),
                             ),
@@ -1532,7 +1529,7 @@ class _ItemsCard extends StatelessWidget {
                                 Icon(
                                   Icons.check_circle_rounded,
                                   size: 16.sp,
-                                  color: _AppColors.success,
+                                  color: catenquiycolour.success,
                                 ),
                                 SizedBox(width: 8.w),
                                 Expanded(
@@ -1567,7 +1564,7 @@ class _AddOnsCard extends StatelessWidget {
     return _SectionCard(
       title: 'Add-ons',
       icon: Icons.add_circle_rounded,
-      iconColor: _AppColors.success,
+      iconColor: catenquiycolour.success,
       child: addOns.isEmpty
           ? _EmptyHint(text: 'No add-ons selected.')
           : Column(
@@ -1580,9 +1577,9 @@ class _AddOnsCard extends StatelessWidget {
                       vertical: 10.h,
                     ),
                     decoration: BoxDecoration(
-                      color: _AppColors.surface,
+                      color: catenquiycolour.surface,
                       borderRadius: BorderRadius.circular(10.r),
-                      border: Border.all(color: _AppColors.border),
+                      border: Border.all(color: catenquiycolour.border),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1591,7 +1588,7 @@ class _AddOnsCard extends StatelessWidget {
                           child: Text(
                             addOn.addOnType.replaceAll('_', ' '),
                             style: _AppText.body.copyWith(
-                              color: _AppColors.textPrimary,
+                              color: catenquiycolour.textPrimary,
                             ),
                           ),
                         ),
@@ -1601,13 +1598,13 @@ class _AddOnsCard extends StatelessWidget {
                             vertical: 3.h,
                           ),
                           decoration: BoxDecoration(
-                            color: _AppColors.primaryLight,
+                            color: catenquiycolour.primaryLight,
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
                             'Qty: ${addOn.quantity}',
                             style: _AppText.caption.copyWith(
-                              color: _AppColors.primary,
+                              color: catenquiycolour.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1685,9 +1682,9 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
-        color: _AppColors.card,
+        color: catenquiycolour.card,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _AppColors.border),
+        border: Border.all(color: catenquiycolour.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -1716,9 +1713,9 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: _AppColors.surface,
+                color: catenquiycolour.surface,
                 borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: _AppColors.border),
+                border: Border.all(color: catenquiycolour.border),
               ),
               child: Column(
                 children: [
@@ -1764,9 +1761,11 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
               decoration: BoxDecoration(
-                color: _AppColors.accentLight,
+                color: catenquiycolour.accentLight,
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: _AppColors.accent.withOpacity(0.3)),
+                border: Border.all(
+                  color: catenquiycolour.accent.withOpacity(0.3),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1774,7 +1773,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                   Text('Quoted Amount', style: _AppText.h3),
                   Text(
                     '₹${quotation.quotedAmount.toStringAsFixed(2)}',
-                    style: _AppText.h2.copyWith(color: _AppColors.accent),
+                    style: _AppText.h2.copyWith(color: catenquiycolour.accent),
                   ),
                 ],
               ),
@@ -1792,7 +1791,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                       label: 'Advance',
                       amount: quotation.partialAmount,
                       isSelected: _selectedPaymentType == 'partial',
-                      color: _AppColors.accent,
+                      color: catenquiycolour.accent,
                       onTap: () => setState(() {
                         _selectedPaymentType = 'partial';
                         _paymentAmount = quotation.partialAmount;
@@ -1805,7 +1804,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                       label: 'Full Pay',
                       amount: quotation.grandTotal,
                       isSelected: _selectedPaymentType == 'full',
-                      color: _AppColors.success,
+                      color: catenquiycolour.success,
                       onTap: () => setState(() {
                         _selectedPaymentType = 'full';
                         _paymentAmount = quotation.grandTotal;
@@ -1832,7 +1831,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                   Expanded(
                     child: _PrimaryButton(
                       label: 'Pay Now',
-                      color: _AppColors.primary,
+                      color: catenquiycolour.primary,
                       onTap: () {
                         if (_selectedPaymentType == null) {
                           AppAlert.error(
@@ -1850,7 +1849,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                   Expanded(
                     child: _PrimaryButton(
                       label: 'Accept Quotation',
-                      color: _AppColors.success,
+                      color: catenquiycolour.success,
                       onTap: () async {
                         try {
                           final success = await catering_authservice
@@ -1901,7 +1900,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
         return Container(
           padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 32.h),
           decoration: BoxDecoration(
-            color: _AppColors.card,
+            color: catenquiycolour.card,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
           child: SafeArea(
@@ -1915,7 +1914,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                   width: 40.w,
                   margin: EdgeInsets.only(bottom: 20.h),
                   decoration: BoxDecoration(
-                    color: _AppColors.divider,
+                    color: catenquiycolour.divider,
                     borderRadius: BorderRadius.circular(100),
                   ),
                 ),
@@ -1924,9 +1923,9 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                 Container(
                   padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
-                    color: _AppColors.surface,
+                    color: catenquiycolour.surface,
                     borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: _AppColors.border),
+                    border: Border.all(color: catenquiycolour.border),
                   ),
                   child: Column(
                     children: [
@@ -1952,7 +1951,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 10.h),
-                        child: const Divider(color: _AppColors.divider),
+                        child: const Divider(color: catenquiycolour.divider),
                       ),
                       _BreakdownRow(
                         label: 'Grand Total',
@@ -1969,7 +1968,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
                       Expanded(
                         child: _PrimaryButton(
                           label: 'Pay Now',
-                          color: _AppColors.primary,
+                          color: catenquiycolour.primary,
                           onTap: () {
                             Navigator.pop(context);
                             _confirmOrder(quotation, _paymentAmount);
@@ -2127,20 +2126,20 @@ class _ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: _AppColors.card,
+      backgroundColor: catenquiycolour.card,
       elevation: 0,
       centerTitle: true,
       title: Text(title, style: _AppText.h2),
       leading: IconButton(
         icon: const Icon(
           Icons.arrow_back_rounded,
-          color: _AppColors.textPrimary,
+          color: catenquiycolour.textPrimary,
         ),
         onPressed: () => Navigator.pop(context),
       ),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: _AppColors.border),
+        child: Container(height: 1, color: catenquiycolour.border),
       ),
     );
   }
@@ -2163,9 +2162,9 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: _AppColors.card,
+        color: catenquiycolour.card,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _AppColors.border),
+        border: Border.all(color: catenquiycolour.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -2221,7 +2220,7 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               value ?? '–',
-              style: _AppText.body.copyWith(color: _AppColors.textPrimary),
+              style: _AppText.body.copyWith(color: catenquiycolour.textPrimary),
             ),
           ),
         ],
@@ -2261,7 +2260,7 @@ class _BreakdownRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = isBold
         ? _AppText.h3
-        : _AppText.body.copyWith(color: _AppColors.textPrimary);
+        : _AppText.body.copyWith(color: catenquiycolour.textPrimary);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4.h),
       child: Row(
@@ -2284,7 +2283,7 @@ class _IconLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 13.sp, color: _AppColors.textSecondary),
+        Icon(icon, size: 13.sp, color: catenquiycolour.textSecondary),
         SizedBox(width: 4.w),
         Text(text, style: _AppText.caption),
       ],
@@ -2301,13 +2300,13 @@ class _EventTypeBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: _AppColors.primaryLight,
+        color: catenquiycolour.primaryLight,
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Text(
         label,
         style: _AppText.caption.copyWith(
-          color: _AppColors.primary,
+          color: catenquiycolour.primary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -2414,10 +2413,10 @@ class _PaymentOption extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.08) : _AppColors.surface,
+          color: isSelected ? color.withOpacity(0.08) : catenquiycolour.surface,
           borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
-            color: isSelected ? color : _AppColors.border,
+            color: isSelected ? color : catenquiycolour.border,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -2433,7 +2432,7 @@ class _PaymentOption extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected ? color : _AppColors.textSecondary,
+                      color: isSelected ? color : catenquiycolour.textSecondary,
                       width: isSelected ? 4 : 1.5,
                     ),
                     color: Colors.white,
@@ -2510,7 +2509,7 @@ class _OutlineButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(color: _AppColors.border, width: 1.5),
+          border: Border.all(color: catenquiycolour.border, width: 1.5),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -2518,7 +2517,7 @@ class _OutlineButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 14.sp,
             fontWeight: FontWeight.w600,
-            color: _AppColors.textPrimary,
+            color: catenquiycolour.textPrimary,
           ),
         ),
       ),
@@ -2531,7 +2530,7 @@ class _Divider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: const Divider(color: _AppColors.divider, height: 1),
+      child: const Divider(color: catenquiycolour.divider, height: 1),
     );
   }
 }
@@ -2573,9 +2572,9 @@ class _EmptyQuotationsState extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 40.h),
       decoration: BoxDecoration(
-        color: _AppColors.card,
+        color: catenquiycolour.card,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _AppColors.border),
+        border: Border.all(color: catenquiycolour.border),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -2583,7 +2582,7 @@ class _EmptyQuotationsState extends StatelessWidget {
           Icon(
             Icons.receipt_long_rounded,
             size: 48.sp,
-            color: _AppColors.divider,
+            color: catenquiycolour.divider,
           ),
           SizedBox(height: 12.h),
           Text('No Quotations Yet', style: _AppText.h3),

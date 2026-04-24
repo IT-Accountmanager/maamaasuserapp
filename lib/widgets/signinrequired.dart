@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
-
 import '../Services/Auth_service/Subscription_authservice.dart';
 import '../screens/screens/login_page.dart';
+import '../screens/screens/loginscreensas.dart';
 import '../screens/screens/signup_screen.dart';
 
 class AuthRequiredWidget extends StatelessWidget {
@@ -54,7 +54,7 @@ class AuthRequiredWidget extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
+                        builder: (context) => const LoginScreen(),
                       ),
                     );
                   },

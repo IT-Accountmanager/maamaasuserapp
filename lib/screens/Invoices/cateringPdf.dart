@@ -136,7 +136,6 @@ class cateringpdf {
       if (text.isEmpty || text.toLowerCase() == "null") {
         return pw.SizedBox();
       }
-      final List items = List.from(data['items'] ?? []);
 
       return pw.Padding(
         padding: const pw.EdgeInsets.symmetric(vertical: 2),

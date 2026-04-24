@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import 'login_page.dart';
+import 'loginscreensas.dart';
 
 class ForgetPasswordScreen extends StatefulWidget {
   const ForgetPasswordScreen({super.key});
@@ -33,7 +34,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => LoginPage()),
+            MaterialPageRoute(builder: (_) => LoginScreen()),
           );
         }
       } else {
@@ -239,7 +240,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                           : () {
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (_) => LoginPage()),
+                                MaterialPageRoute(builder: (_) => LoginScreen()),
                               );
                             },
                       style: TextButton.styleFrom(

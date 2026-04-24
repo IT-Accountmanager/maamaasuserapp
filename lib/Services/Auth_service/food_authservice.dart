@@ -360,43 +360,6 @@ class food_Authservice {
     }
   }
 
-  // static Future<bool> updateCartItem({
-  //   required int itemId,
-  //   required int quantity,
-  // }) async {
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final int userId = prefs.getInt('userId') ?? 0;
-  //
-  //     final uri =
-  //         Uri.parse(
-  //           "http://testing.maamaas.com/food/api/cart/update/item",
-  //         ).replace(
-  //           queryParameters: {
-  //             "userId": userId.toString(),
-  //             "quantity": quantity.toString(),
-  //             "itemId": itemId.toString(),
-  //           },
-  //         );
-  //
-  //     // print("🟡 [UpdateCartItem] PUT → $endpoint");
-  //
-  //     final response = await ApiClient.put(
-  //       uri.toString(),
-  //       {},
-  //       service: "food",
-  //     ); // body optional
-  //     // print(
-  //     //   "📩 UpdateCart Response: ${response.statusCode} → ${response.body}",
-  //     // );
-  //
-  //     return response.statusCode == 200;
-  //   } catch (e) {
-  //     // print("❌ [UpdateCartItem] Exception: $e");
-  //     return false;
-  //   }
-  // }
-
   static Future<int?> getItemIdByDishId(int dishId) async {
     try {
       final cart = await fetchCart();
@@ -459,6 +422,7 @@ class food_Authservice {
           // ✅ Actually print something
           final map = item as Map<String, dynamic>;
           debugPrint('dish: ${map['dishName']}, shedule: ${map['shedule']}');
+          debugPrint("prinitingcartdata : ${response.body}");
         }
 
         return CartModel.fromJson(cartJson);
@@ -748,6 +712,24 @@ class food_Authservice {
       }
     } catch (e) {
       return [];
+    }
+  }
+
+  static Future<bool> cancelOrder(int orderId) async {
+    final endpoint = "api/orders/cancal/total/order/$orderId";
+
+    final response = await ApiClient.put(
+      endpoint,
+      null, // no body needed
+      service: "food",
+    );
+
+    if (response.statusCode == 200) {
+      debugPrint("response body:${response.body}");
+      return true;
+    } else {
+      print("Cancel failed: ${response.body}");
+      return false;
     }
   }
 

@@ -1,9 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
 
 class TableTabContent extends StatefulWidget {
   final int vendorId;

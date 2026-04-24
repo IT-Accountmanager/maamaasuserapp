@@ -1,6 +1,7 @@
 // ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:maamaas/screens/screens/login_page.dart';
+import 'package:maamaas/screens/screens/loginscreensas.dart';
 import 'package:maamaas/widgets/app_navigator.dart';
 import 'Services/Auth_service/Apiclient.dart';
 import 'session_controller.dart';
@@ -42,7 +43,7 @@ class SessionExpiredScreen extends StatelessWidget {
                   await ApiClient.clearSession();
 
                   navigatorKey.currentState!.pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
                     (route) => false,
                   );
                 },

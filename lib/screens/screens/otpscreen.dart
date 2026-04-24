@@ -4,6 +4,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/scaffoldmessenger/messenger.dart';
 import 'login_page.dart';
+import 'loginscreensas.dart';
+
+class otpscrncolour {
+  static const Color _brand = Color(0xFF6C63FF);
+  static const Color _brandLight = Color(0xFFEEEDFF);
+  static const Color _surface = Color(0xFFF8F9FA);
+  static const Color _textPrimary = Color(0xFF1A1A2E);
+  static const Color _textSecondary = Color(0xFF7B7B8F);
+}
 
 class OTPVerificationPage extends StatefulWidget {
   final String mobileNumber;
@@ -33,11 +42,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
   late Animation<Offset> _slideAnim;
 
   // ── Design tokens
-  static const Color _brand = Color(0xFF6C63FF);
-  static const Color _brandLight = Color(0xFFEEEDFF);
-  static const Color _surface = Color(0xFFF8F9FA);
-  static const Color _textPrimary = Color(0xFF1A1A2E);
-  static const Color _textSecondary = Color(0xFF7B7B8F);
+
 
   @override
   void initState() {
@@ -114,7 +119,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
       Navigator.pushAndRemoveUntil(
         // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
     } else {
@@ -131,7 +136,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _surface,
+      backgroundColor: otpscrncolour._surface,
       body: Stack(
         children: [
           // ── Top gradient strip
@@ -215,13 +220,13 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: _brand.withOpacity(0.2),
+                color: otpscrncolour._brand.withOpacity(0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: Icon(Icons.lock_open_rounded, color: _brand, size: 38.sp),
+          child: Icon(Icons.lock_open_rounded, color: otpscrncolour._brand, size: 38.sp),
         ),
 
         SizedBox(height: 20.h),
@@ -321,7 +326,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
           // SizedBox(height: 6.h),
           Text(
             'The code expires in a 5 minutes',
-            style: TextStyle(fontSize: 12.sp, color: _textSecondary),
+            style: TextStyle(fontSize: 12.sp, color: otpscrncolour._textSecondary),
           ),
 
           SizedBox(height: 28.h),
@@ -340,7 +345,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
             height: 52.h,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: _brand,
+                backgroundColor: otpscrncolour._brand,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -385,20 +390,20 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
         style: TextStyle(
           fontSize: 22.sp,
           fontWeight: FontWeight.w700,
-          color: _textPrimary,
+          color: otpscrncolour._textPrimary,
         ),
         decoration: InputDecoration(
           counterText: '',
           contentPadding: EdgeInsets.zero,
           filled: true,
-          fillColor: _brandLight,
+          fillColor: otpscrncolour._brandLight,
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _brand, width: 2),
+            borderSide: const BorderSide(color: otpscrncolour._brand, width: 2),
           ),
         ),
         onChanged: (val) {

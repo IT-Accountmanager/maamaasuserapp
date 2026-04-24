@@ -3,13 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/tablecartmodel.dart';
+import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
-import '../../../screens/Food&beverages/table/tablecart.dart';
-import '../../../utils/utils.dart';
 import 'cartmode.dart';
-
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
-
 import 'currentcart_notifier.dart';
 
 class TableCartButton extends StatefulWidget {
@@ -86,36 +82,6 @@ class _TableCartButtonState extends State<TableCartButton> {
       setState(() => itemCount = 0);
     }
   }
-
-  // ✔ Add to Table Cart (same logic as normal cart)
-  // Future<void> _handleAddToCart(int qty) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   int? seatingId = prefs.getInt('id');
-  //
-  //   if (seatingId == null) {
-  //     // ignore: use_build_context_synchronously
-  //     AppAlert.error(context, "Please mark your arrival first");
-  //     return;
-  //   }
-  //
-  //   final added = await food_Authservice.addToTableCart(
-  //     dishId: widget.dishId,
-  //     quantity: qty,
-  //     seatingId: seatingId,
-  //   );
-  //
-  //   if (added) {
-  //     final itemId = await food_Authservice.getTableItemIdByDishId(
-  //       widget.dishId,
-  //       seatingId,
-  //     );
-  //
-  //     if (itemId != null) {
-  //       prefs.setInt("table_dish_${widget.dishId}_itemId", itemId);
-  //       prefs.setInt("table_dish_${widget.dishId}_quantity", qty);
-  //     }
-  //   }
-  // }
 
   Future<void> _handleAddToCart(int qty) async {
     final prefs = await SharedPreferences.getInstance();
@@ -241,7 +207,7 @@ class _TableCartButtonState extends State<TableCartButton> {
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                        color: Colors.white,
                       ),
                     ),
             )
@@ -279,9 +245,11 @@ class _TableCartButtonState extends State<TableCartButton> {
                                     quantity: newQty,
                                   );
                                 }
-                                final cartList = await food_Authservice.fetchTableCart();
+                                final cartList = await food_Authservice
+                                    .fetchTableCart();
                                 if (cartList.isNotEmpty) {
-                                  CartNotifier.count.value = cartList.first.cartItems.length;
+                                  CartNotifier.count.value =
+                                      cartList.first.cartItems.length;
                                 }
 
                                 setState(() => itemCount = newQty);
@@ -331,9 +299,11 @@ class _TableCartButtonState extends State<TableCartButton> {
                                   quantity: newQty,
                                 );
                               }
-                              final cartList = await food_Authservice.fetchTableCart();
+                              final cartList = await food_Authservice
+                                  .fetchTableCart();
                               if (cartList.isNotEmpty) {
-                                CartNotifier.count.value = cartList.first.cartItems.length;
+                                CartNotifier.count.value =
+                                    cartList.first.cartItems.length;
                               }
 
                               setState(() => itemCount = newQty);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
+
+import '../App_color_service/app_colours.dart';
 
 class AppAlert {
   static void error(BuildContext context, String message) {

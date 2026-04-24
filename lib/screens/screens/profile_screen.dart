@@ -1,4 +1,3 @@
-import 'package:maamaas/screens/homescreens/travel&logistics.dart';
 import 'package:maamaas/screens/screens/supportteam/support_team.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -11,6 +10,8 @@ import '../../Models/subscrptions/user_account.dart';
 import '../../widgets/widgets/profileavataor.dart';
 import 'Refer_Earn.dart';
 import 'Reviewsandratings.dart';
+import 'login_page.dart';
+import 'loginscreensas.dart';
 import 'profile screen/Profile_Account.dart';
 import '../../widgets/signinrequired.dart';
 import 'package:flutter/material.dart';
@@ -18,12 +19,11 @@ import 'package:flutter/services.dart';
 import 'coupons_rewards_screen.dart';
 import 'orders/orders_screen.dart';
 import '../foodmainscreen.dart';
-import 'login_page.dart';
 import 'Favorites.dart';
 import 'dart:io';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-class _T {
+class profile {
   // Neutrals
   static const bg = Color(0xFFF6F7FB);
   static const surface = Color(0xFFFFFFFF);
@@ -113,7 +113,7 @@ class _ProfileState extends State<Profile> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: _T.bg,
+        backgroundColor: profile.bg,
         body: AuthGuard(child: _buildBody()),
       ),
     );
@@ -126,7 +126,7 @@ class _ProfileState extends State<Profile> {
         // ── App bar ──────────────────────────────────────────────────
         SliverAppBar(
           pinned: true,
-          backgroundColor: _T.surface,
+          backgroundColor: profile.surface,
           elevation: 0,
           scrolledUnderElevation: 1,
           shadowColor: Colors.black.withOpacity(0.06),
@@ -136,7 +136,7 @@ class _ProfileState extends State<Profile> {
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
-              color: _T.ink,
+              color: profile.ink,
               letterSpacing: -0.3,
             ),
           ),
@@ -173,11 +173,11 @@ class _BackButton extends StatelessWidget {
       ),
       child: Container(
         margin: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: _T.bg, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: profile.bg, shape: BoxShape.circle),
         child: const Icon(
           Icons.arrow_back_ios_new_rounded,
           size: 16,
-          color: _T.ink,
+          color: profile.ink,
         ),
       ),
     );
@@ -212,9 +212,9 @@ class _ProfileHeader extends StatelessWidget {
           margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: _T.surface,
+            color: profile.surface,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: _T.card,
+            boxShadow: profile.card,
           ),
           child: Column(
             children: [
@@ -239,7 +239,7 @@ class _ProfileHeader extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: _T.ink,
+                            color: profile.ink,
                             letterSpacing: -0.4,
                           ),
                           maxLines: 1,
@@ -291,7 +291,7 @@ class _AvatarWithRing extends StatelessWidget {
 
   Color get _ringColor {
     if (completion >= 100) return const Color(0xFF10B981);
-    if (completion >= 70) return _T.brand;
+    if (completion >= 70) return profile.brand;
     return const Color(0xFFF59E0B);
   }
 
@@ -311,7 +311,7 @@ class _AvatarWithRing extends StatelessWidget {
             builder: (_, v, __) => CircularProgressIndicator(
               value: v,
               strokeWidth: 3.5,
-              backgroundColor: _T.border,
+              backgroundColor: profile.border,
               valueColor: AlwaysStoppedAnimation(_ringColor),
               strokeCap: StrokeCap.round,
             ),
@@ -324,8 +324,8 @@ class _AvatarWithRing extends StatelessWidget {
           height: 76,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: _T.surface, width: 3),
-            boxShadow: _T.card,
+            border: Border.all(color: profile.surface, width: 3),
+            boxShadow: profile.card,
           ),
           child: ClipOval(
             child: UploadableProfileAvatar(
@@ -385,12 +385,16 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 13, color: _T.muted),
+        Icon(icon, size: 13, color: profile.muted),
         const SizedBox(width: 5),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 12, color: _T.sub, height: 1.3),
+            style: const TextStyle(
+              fontSize: 12,
+              color: profile.sub,
+              height: 1.3,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -419,12 +423,12 @@ class _CompletionBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: _T.brandSoft,
+          color: profile.brandSoft,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            const Icon(Icons.edit_outlined, size: 14, color: _T.brand),
+            const Icon(Icons.edit_outlined, size: 14, color: profile.brand),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -432,14 +436,14 @@ class _CompletionBar extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: _T.brand,
+                  color: profile.brand,
                 ),
               ),
             ),
             const Icon(
               Icons.arrow_forward_ios_rounded,
               size: 11,
-              color: _T.brand,
+              color: profile.brand,
             ),
           ],
         ),
@@ -455,9 +459,9 @@ class _HeaderSkeleton extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _T.surface,
+        color: profile.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: _T.card,
+        boxShadow: profile.card,
       ),
       child: Row(
         children: [
@@ -465,7 +469,7 @@ class _HeaderSkeleton extends StatelessWidget {
             width: 88,
             height: 88,
             decoration: const BoxDecoration(
-              color: _T.bg,
+              color: profile.bg,
               shape: BoxShape.circle,
             ),
           ),
@@ -500,7 +504,7 @@ class _Shimmer extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: _T.bg,
+        color: profile.bg,
         borderRadius: BorderRadius.circular(6),
       ),
     );
@@ -621,7 +625,8 @@ class _MenuListState extends State<_MenuList> {
       await secureStorage.deleteAll();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        // MaterialPageRoute(builder: (_) => const LoginPage()),
         (r) => false,
       );
     } catch (e) {
@@ -652,9 +657,9 @@ class _MenuListState extends State<_MenuList> {
           //   _SectionLabel(section['title'] as String),
           Container(
             decoration: BoxDecoration(
-              color: _T.surface,
+              color: profile.surface,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: _T.card,
+              boxShadow: profile.card,
             ),
             child: Column(
               children: [
@@ -685,9 +690,9 @@ class _MenuListState extends State<_MenuList> {
           _SectionLabel(''),
           Container(
             decoration: BoxDecoration(
-              color: _T.redSoft,
+              color: profile.redSoft,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _T.red.withOpacity(0.12)),
+              border: Border.all(color: profile.red.withOpacity(0.12)),
             ),
             child: ListTile(
               onTap: _showLogoutSheet,
@@ -699,12 +704,12 @@ class _MenuListState extends State<_MenuList> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: _T.red.withOpacity(0.1),
+                  color: profile.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.logout_rounded,
-                  color: _T.red,
+                  color: profile.red,
                   size: 18,
                 ),
               ),
@@ -713,7 +718,7 @@ class _MenuListState extends State<_MenuList> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: _T.red,
+                  color: profile.red,
                 ),
               ),
               trailing: _isLoggingOut
@@ -722,13 +727,13 @@ class _MenuListState extends State<_MenuList> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: _T.red,
+                        color: profile.red,
                       ),
                     )
                   : const Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 13,
-                      color: _T.red,
+                      color: profile.red,
                     ),
             ),
           ),
@@ -751,7 +756,7 @@ class _SectionLabel extends StatelessWidget {
         style: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: _T.muted,
+          color: profile.muted,
           letterSpacing: 0.8,
         ),
       ),
@@ -801,21 +806,21 @@ class _MenuItem extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: _T.ink,
+                      color: profile.ink,
                     ),
                   ),
                 ),
                 const Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 13,
-                  color: _T.muted,
+                  color: profile.muted,
                 ),
               ],
             ),
           ),
         ),
         if (!isLast)
-          Divider(height: 1, thickness: 1, color: _T.border, indent: 68),
+          Divider(height: 1, thickness: 1, color: profile.border, indent: 68),
       ],
     );
   }
@@ -831,7 +836,7 @@ class _LogoutSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: _T.surface,
+        color: profile.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
@@ -843,7 +848,7 @@ class _LogoutSheet extends StatelessWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: _T.border,
+              color: profile.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -854,10 +859,14 @@ class _LogoutSheet extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: _T.redSoft,
+              color: profile.redSoft,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.logout_rounded, color: _T.red, size: 28),
+            child: const Icon(
+              Icons.logout_rounded,
+              color: profile.red,
+              size: 28,
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -866,14 +875,14 @@ class _LogoutSheet extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: _T.ink,
+              color: profile.ink,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             "You'll need to sign in again to access your account.",
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: _T.sub, height: 1.5),
+            style: TextStyle(fontSize: 13, color: profile.sub, height: 1.5),
           ),
           const SizedBox(height: 28),
 
@@ -887,12 +896,12 @@ class _LogoutSheet extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    side: const BorderSide(color: _T.border),
+                    side: const BorderSide(color: profile.border),
                   ),
                   child: const Text(
                     'Cancel',
                     style: TextStyle(
-                      color: _T.ink,
+                      color: profile.ink,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -906,7 +915,7 @@ class _LogoutSheet extends StatelessWidget {
                     onConfirm();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _T.red,
+                    backgroundColor: profile.red,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     elevation: 0,

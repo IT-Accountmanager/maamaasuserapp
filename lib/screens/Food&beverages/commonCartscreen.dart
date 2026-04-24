@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Services/Auth_service/Apiclient.dart';
 
+// ignore: must_be_immutable
 class CommonCartScreen extends StatefulWidget {
   Function()? reloadCart;
 

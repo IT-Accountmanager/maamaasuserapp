@@ -1,6 +1,8 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_screenutil/flutter_screenutil.dart';
-//
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 // class AppColors {
 //   // Primary brand colors
 //   static const Color primary   = Color(0xFFB15DC6);
@@ -33,85 +35,78 @@
 //     stops: [0.0, 0.55, 1.0],
 //   );
 // }
-//
-// class AppStyles {
-//   static EdgeInsets get cardPadding    => EdgeInsets.all(16.w);
-//   static EdgeInsets get sectionPadding => EdgeInsets.symmetric(vertical: 8.h);
-//
-//   static TextStyle get titleStyle => TextStyle(
-//     fontSize: 18.sp,
-//     fontWeight: FontWeight.bold,
-//     color: Colors.black,
-//   );
-//
-//   static TextStyle get subtitleStyle =>
-//       TextStyle(fontSize: 14.sp, color: Colors.grey[600]);
-// }
-//
-// // ── AppText — typography scale used across the app ───────────────────────────
-// class AppText {
-//   AppText._();
-//
-//   /// Large display — app name / hero headings
-//   static TextStyle get display1 => TextStyle(
-//     fontSize: 32.sp,
-//     fontWeight: FontWeight.w800,
-//     letterSpacing: 0.5,
-//     height: 1.15,
-//     color: Colors.black,
-//   );
-//
-//   /// Section headings
-//   static TextStyle get heading => TextStyle(
-//     fontSize: 20.sp,
-//     fontWeight: FontWeight.w700,
-//     letterSpacing: 0.1,
-//     height: 1.25,
-//     color: Colors.black,
-//   );
-//
-//   /// Sub-headings / card titles
-//   static TextStyle get subheading => TextStyle(
-//     fontSize: 16.sp,
-//     fontWeight: FontWeight.w600,
-//     height: 1.35,
-//     color: Colors.black87,
-//   );
-//
-//   /// Body copy
-//   static TextStyle get body => TextStyle(
-//     fontSize: 14.sp,
-//     fontWeight: FontWeight.w400,
-//     height: 1.5,
-//     color: Colors.black87,
-//   );
-//
-//   /// Small labels / captions
-//   static TextStyle get caption => TextStyle(
-//     fontSize: 11.sp,
-//     fontWeight: FontWeight.w500,
-//     letterSpacing: 0.2,
-//     height: 1.4,
-//     color: Colors.black54,
-//   );
-//
-//   /// Bold label (buttons, tags)
-//   static TextStyle get label => TextStyle(
-//     fontSize: 12.sp,
-//     fontWeight: FontWeight.w700,
-//     letterSpacing: 0.3,
-//     color: Colors.black87,
-//   );
-// }
 
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+class AppStyles {
+  static EdgeInsets get cardPadding    => EdgeInsets.all(16.w);
+  static EdgeInsets get sectionPadding => EdgeInsets.symmetric(vertical: 8.h);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AppColorScheme — one object that holds the entire colour palette
-// ─────────────────────────────────────────────────────────────────────────────
+  static TextStyle get titleStyle => TextStyle(
+    fontSize: 18.sp,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+
+  static TextStyle get subtitleStyle =>
+      TextStyle(fontSize: 14.sp, color: Colors.grey[600]);
+}
+
+// ── AppText — typography scale used across the app ───────────────────────────
+class AppText {
+  AppText._();
+
+  /// Large display — app name / hero headings
+  static TextStyle get display1 => TextStyle(
+    fontSize: 32.sp,
+    fontWeight: FontWeight.w800,
+    letterSpacing: 0.5,
+    height: 1.15,
+    color: Colors.black,
+  );
+
+  /// Section headings
+  static TextStyle get heading => TextStyle(
+    fontSize: 20.sp,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.1,
+    height: 1.25,
+    color: Colors.black,
+  );
+
+  /// Sub-headings / card titles
+  static TextStyle get subheading => TextStyle(
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w600,
+    height: 1.35,
+    color: Colors.black87,
+  );
+
+  /// Body copy
+  static TextStyle get body => TextStyle(
+    fontSize: 14.sp,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+    color: Colors.black87,
+  );
+
+  /// Small labels / captions
+  static TextStyle get caption => TextStyle(
+    fontSize: 11.sp,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.2,
+    height: 1.4,
+    color: Colors.black54,
+  );
+
+  /// Bold label (buttons, tags)
+  static TextStyle get label => TextStyle(
+    fontSize: 12.sp,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.3,
+    color: Colors.black87,
+  );
+}
+
+
 
 class AppColorScheme {
   final Color primary;
@@ -334,65 +329,65 @@ class AppColors {
 // AppStyles & AppText — unchanged, kept for compatibility
 // ─────────────────────────────────────────────────────────────────────────────
 
-class AppStyles {
-  static EdgeInsets get cardPadding    => EdgeInsets.all(16.w);
-  static EdgeInsets get sectionPadding => EdgeInsets.symmetric(vertical: 8.h);
-
-  static TextStyle get titleStyle => TextStyle(
-    fontSize: 18.sp,
-    fontWeight: FontWeight.bold,
-    color: Colors.black,
-  );
-
-  static TextStyle get subtitleStyle =>
-      TextStyle(fontSize: 14.sp, color: Colors.grey[600]);
-}
-
-class AppText {
-  AppText._();
-
-  static TextStyle get display1 => TextStyle(
-    fontSize: 32.sp,
-    fontWeight: FontWeight.w800,
-    letterSpacing: 0.5,
-    height: 1.15,
-    color: Colors.black,
-  );
-
-  static TextStyle get heading => TextStyle(
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0.1,
-    height: 1.25,
-    color: Colors.black,
-  );
-
-  static TextStyle get subheading => TextStyle(
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w600,
-    height: 1.35,
-    color: Colors.black87,
-  );
-
-  static TextStyle get body => TextStyle(
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-    height: 1.5,
-    color: Colors.black87,
-  );
-
-  static TextStyle get caption => TextStyle(
-    fontSize: 11.sp,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0.2,
-    height: 1.4,
-    color: Colors.black54,
-  );
-
-  static TextStyle get label => TextStyle(
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0.3,
-    color: Colors.black87,
-  );
-}
+// class AppStyles {
+//   static EdgeInsets get cardPadding    => EdgeInsets.all(16.w);
+//   static EdgeInsets get sectionPadding => EdgeInsets.symmetric(vertical: 8.h);
+//
+//   static TextStyle get titleStyle => TextStyle(
+//     fontSize: 18.sp,
+//     fontWeight: FontWeight.bold,
+//     color: Colors.black,
+//   );
+//
+//   static TextStyle get subtitleStyle =>
+//       TextStyle(fontSize: 14.sp, color: Colors.grey[600]);
+// }
+//
+// class AppText {
+//   AppText._();
+//
+//   static TextStyle get display1 => TextStyle(
+//     fontSize: 32.sp,
+//     fontWeight: FontWeight.w800,
+//     letterSpacing: 0.5,
+//     height: 1.15,
+//     color: Colors.black,
+//   );
+//
+//   static TextStyle get heading => TextStyle(
+//     fontSize: 20.sp,
+//     fontWeight: FontWeight.w700,
+//     letterSpacing: 0.1,
+//     height: 1.25,
+//     color: Colors.black,
+//   );
+//
+//   static TextStyle get subheading => TextStyle(
+//     fontSize: 16.sp,
+//     fontWeight: FontWeight.w600,
+//     height: 1.35,
+//     color: Colors.black87,
+//   );
+//
+//   static TextStyle get body => TextStyle(
+//     fontSize: 14.sp,
+//     fontWeight: FontWeight.w400,
+//     height: 1.5,
+//     color: Colors.black87,
+//   );
+//
+//   static TextStyle get caption => TextStyle(
+//     fontSize: 11.sp,
+//     fontWeight: FontWeight.w500,
+//     letterSpacing: 0.2,
+//     height: 1.4,
+//     color: Colors.black54,
+//   );
+//
+//   static TextStyle get label => TextStyle(
+//     fontSize: 12.sp,
+//     fontWeight: FontWeight.w700,
+//     letterSpacing: 0.3,
+//     color: Colors.black87,
+//   );
+// }

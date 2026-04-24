@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
 import '../login_page.dart';
+import '../loginscreensas.dart';
 
 // ignore: camel_case_types
 class deleteAccountScreen extends StatefulWidget {
@@ -68,7 +69,7 @@ class _AccountDeletionScreenState extends State<deleteAccountScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => const LoginPage(),
+          builder: (context) => const LoginScreen(),
         ), // <-- direct class
         (route) => false,
       );

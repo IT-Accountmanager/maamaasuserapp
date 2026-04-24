@@ -127,9 +127,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final int rating = (order.ratings).toInt().clamp(0, 5);
     final hasRating = (order.ratings) > 0;
     final hasCategory =
-        order.ratingCategory != null &&
-        order.ratingCategory!.toLowerCase() != 'null' &&
-        order.ratingCategory!.trim().isNotEmpty;
+        order.ratingCategory.toLowerCase() != 'null' &&
+        order.ratingCategory.trim().isNotEmpty;
     final hasFeedback = order.feedback.trim().isNotEmpty;
 
     return Container(

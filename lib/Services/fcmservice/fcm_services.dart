@@ -62,8 +62,27 @@ class FCMService {
         >()
         ?.createNotificationChannel(channel);
 
+    Future<String?> _getTokenWithRetry() async {
+      int retryCount = 0;
+      const maxRetries = 5;
+
+      while (retryCount < maxRetries) {
+        try {
+          String? token = await _messaging.getToken();
+          if (token != null) return token;
+        } catch (e) {
+          debugPrint("⚠️ FCM Token Error: $e");
+        }
+
+        retryCount++;
+        await Future.delayed(const Duration(seconds: 2));
+      }
+
+      return null;
+    }
+
     // 5️⃣ Get FCM token
-    String? token = await _messaging.getToken();
+    String? token = await _getTokenWithRetry();
     debugPrint("📱 FCM Token: $token");
 
     // 6️⃣ Foreground message listener
@@ -98,6 +117,11 @@ class FCMService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint("🔥 FOREGROUND MESSAGE RECEIVED");
       debugPrint("DATA: ${message.data}");
+    });
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      debugPrint("🔄 Refreshed Token: $newToken");
+
+      // TODO: send to backend
     });
 
     // ✅ Return FCM token
