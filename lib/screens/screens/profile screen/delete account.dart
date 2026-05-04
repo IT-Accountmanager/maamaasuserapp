@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
 import '../login_page.dart';
-import '../loginscreensas.dart';
 
 // ignore: camel_case_types
 class deleteAccountScreen extends StatefulWidget {

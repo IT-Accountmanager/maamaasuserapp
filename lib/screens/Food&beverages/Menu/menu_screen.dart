@@ -211,13 +211,16 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white,
+        backgroundColor: Colors.grey.shade50,
         body: Stack(
           children: [
             FutureBuilder<void>(
               future: _screenFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting ||
+                    categories.isEmpty ||
+                    _bannerItem == null) {
                   return const MenuSkeletonScreen();
                 }
                 if (snapshot.hasError) {
@@ -293,6 +296,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             backgroundColor: Menucolours.surface,
             elevation: 0,
             scrolledUnderElevation: 1,
+            // ignore: deprecated_member_use
             shadowColor: Colors.black.withOpacity(0.08),
             automaticallyImplyLeading: true,
             leading: IconButton(
@@ -481,6 +485,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                               borderRadius: BorderRadius.circular(14.r),
                               boxShadow: [
                                 BoxShadow(
+                                  // ignore: deprecated_member_use
                                   color: Colors.black.withOpacity(0.08),
                                   blurRadius: 6,
                                   offset: Offset(0, 3),
@@ -995,7 +1000,7 @@ class SearchField extends StatelessWidget {
   final Function(String) onSearch;
   final Color fillColor;
 
-  const SearchField({required this.onSearch, required this.fillColor});
+  const SearchField({super.key, required this.onSearch, required this.fillColor});
 
   @override
   Widget build(BuildContext context) {
@@ -1042,7 +1047,7 @@ class VegToggle extends StatelessWidget {
   final Function(bool) onToggle;
   final bool compact;
 
-  const VegToggle({
+  const VegToggle({super.key,
     required this.isVeg,
     required this.onToggle,
     this.compact = false,
@@ -1176,6 +1181,7 @@ class DishGridTab extends StatefulWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _DishGridTabState createState() => _DishGridTabState();
 }
 
@@ -1214,9 +1220,15 @@ class _DishGridTabState extends State<DishGridTab> {
       return;
     }
 
+
     final dishes = (widget.parentId != null && widget.parentId! > 0)
         ? menu.dishes.where((d) => d.parentId == widget.parentId).toList()
         : menu.dishes;
+    for (var dish in dishes) {
+      if (dish.dishImage != null && dish.dishImage!.isNotEmpty) {
+        precacheImage(NetworkImage(dish.dishImage!), context);
+      }
+    }
 
     setState(() {
       _allDishes = dishes;
@@ -1226,7 +1238,9 @@ class _DishGridTabState extends State<DishGridTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const MenuSkeletonScreen();
+    if (_isLoading || _allDishes.isEmpty) {
+      return const MenuSkeletonScreen();
+    }
     if (_errorMessage != null) return _buildError();
 
     final filtered = _allDishes.where((dish) {
@@ -1486,8 +1500,7 @@ class _AnimatedProductCardState extends State<_AnimatedProductCard>
     final curved = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
     _scale = Tween<double>(begin: 0.94, end: 1.0).animate(curved);
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(curved);
-
-    Future.delayed(Duration(milliseconds: 40 * (widget.index % 8)), () {
+    Future.delayed(Duration(milliseconds: 80 * (widget.index % 6)), () {
       if (mounted) _ctrl.forward();
     });
   }

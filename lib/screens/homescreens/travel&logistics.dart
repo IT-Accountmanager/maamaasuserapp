@@ -284,6 +284,7 @@ class _TravelHomeScreenState extends State<TravelHomeScreen> {
     await Geolocator.requestPermission();
 
     Position position = await Geolocator.getCurrentPosition(
+      // ignore: deprecated_member_use
       desiredAccuracy: LocationAccuracy.high,
     );
 

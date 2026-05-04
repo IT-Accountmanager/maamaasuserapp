@@ -4,7 +4,7 @@ import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 
 class VideoPreviewContainer extends StatefulWidget {
-  const VideoPreviewContainer({Key? key}) : super(key: key);
+  const VideoPreviewContainer({super.key});
 
   @override
   State<VideoPreviewContainer> createState() => _VideoPreviewContainerState();

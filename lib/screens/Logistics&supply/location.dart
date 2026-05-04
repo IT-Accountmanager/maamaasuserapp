@@ -215,6 +215,7 @@ class MapLocationSelector extends StatefulWidget {
   const MapLocationSelector({super.key, required this.onLocationSelected});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MapLocationSelectorState createState() => _MapLocationSelectorState();
 }
 

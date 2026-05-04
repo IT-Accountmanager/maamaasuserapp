@@ -37,27 +37,34 @@ class Address {
 
   // Factory constructor to parse JSON
   factory Address.fromJson(Map<String, dynamic> json) => Address(
-    id: json['id'],
-    userId: json['userId'],
-    doorNumber: json['doorNumber'] ?? '',
+    id: json['id'] ?? 0,
+    userId: json['userId'] ?? 0,
+
+    doorNumber: json['doorNumber']?.toString() ?? '',
     addressLine: json['addressLine'] ?? '',
     landMark: json['landMark'] ?? '',
     city: json['city'] ?? '',
     state: json['state'] ?? '',
-    pincode: json['pincode'] ?? 0,
+
+    pincode: int.tryParse(json['pincode'].toString()) ?? 0,
+
     name: json['name'] ?? '',
-    phoneNumber: json['phoneNumber'] ?? '',
+    phoneNumber: json['phoneNumber']?.toString() ?? '',
+
     latitude: (json['latitude'] ?? 0).toDouble(),
     longitude: (json['longitude'] ?? 0).toDouble(),
+
     category: json['category'] ?? 'Other',
-    createdAt: DateTime.parse(json['createdAt']),
-    updatedAt: DateTime.parse(json['updatedAt']),
-    address: json['address']?? '',
+
+    createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+    updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
+
+    address: json['address']?.toString().trim() ?? '',
   );
 
   // Convert model back to JSON if needed
-  Map<String, dynamic> toJson() => {
-    'id': id,
+  Map<String, dynamic> toJson({bool isUpdate = false}) => {
+    if (!isUpdate) 'id': id,
     'userId': userId,
     'doorNumber': doorNumber,
     'addressLine': addressLine,
@@ -70,8 +77,9 @@ class Address {
     'latitude': latitude,
     'longitude': longitude,
     'category': category,
-    'createdAt': createdAt.toIso8601String(),
-    'updatedAt': updatedAt.toIso8601String(),
-    "address":address,
+    'address': address,
+
+    // Only send updatedAt if required
+    if (isUpdate) 'updatedAt': DateTime.now().toIso8601String(),
   };
 }

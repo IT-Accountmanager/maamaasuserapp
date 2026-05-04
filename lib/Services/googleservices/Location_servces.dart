@@ -56,6 +56,7 @@ class LocationService {
     if (!hasPermission) return null;
 
     final position = await Geolocator.getCurrentPosition(
+      // ignore: deprecated_member_use
       desiredAccuracy: LocationAccuracy.high,
     );
 

@@ -137,6 +137,7 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
       child: Container(
         padding: EdgeInsets.all(10.r),
         decoration: BoxDecoration(
+          // ignore: deprecated_member_use
           color: Colors.black.withOpacity(0.4),
           shape: BoxShape.circle,
         ),
@@ -163,6 +164,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   void initState() {
     super.initState();
 
+    // ignore: deprecated_member_use
     _controller = VideoPlayerController.network(widget.url)
       ..initialize().then((_) {
         setState(() {});

@@ -79,8 +79,10 @@ class _BannerSectionState extends State<BannerSection> {
         width: 34.r,
         height: 34.r,
         decoration: BoxDecoration(
+          // ignore: deprecated_member_use
           color: Colors.white.withOpacity(0.15),
           shape: BoxShape.circle,
+          // ignore: deprecated_member_use
           border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
         ),
         child: Center(

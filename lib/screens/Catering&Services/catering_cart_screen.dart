@@ -557,6 +557,7 @@ class _catering_cartState extends ConsumerState<catering_cart>
               width: 38.w,
               height: 38.w,
               decoration: BoxDecoration(
+                // ignore: deprecated_member_use
                 color: Colors.red.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(10.r),
               ),
@@ -647,6 +648,7 @@ class _catering_cartState extends ConsumerState<catering_cart>
             borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.05),
                 blurRadius: 12,
                 offset: const Offset(0, 4),

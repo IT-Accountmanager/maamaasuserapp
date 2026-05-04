@@ -85,7 +85,7 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
         .toList();
   }
 
-  void _showSummarySheet(BuildContext context) {
+  void _showSummarySheet(BuildContext parentContext) {
     final selectedAddOns = _buildSelectedAddOns();
     showModalBottomSheet(
       backgroundColor: Colors.white,
@@ -94,7 +94,7 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -354,17 +354,14 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
-                        shadowColor: Colors.transparent,
                       ),
                       onPressed: _isSubmitting
                           ? null
                           : () async {
                               setState(() => _isSubmitting = true);
-                              AppAlert.info(context, "Submitting enquiry...");
-                              debugPrint(
-                                "📦 Sending VendorId → ${widget.vendorId}",
-                              );
-                              final success = await catering_authservice
+                              Navigator.pop(sheetContext);
+
+                              final result = await catering_authservice
                                   .createEnquiry(
                                     vendorId: widget.vendorId,
                                     fullName: _nameController.text,
@@ -385,63 +382,45 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
                                     mixedPlates: _mixedController.text,
                                     additionalRequests:
                                         _specialrequestsController.text,
-                                    // gstRequirement: _gstController.text,
                                     selectedItems: selectedItems,
                                     addressId: selectedAddressId,
-                                    // pincode: pincode,
                                     addOns: _buildSelectedAddOns(),
                                   );
 
                               setState(() => _isSubmitting = false);
 
-                              if (success) {
-                                Navigator.pop(context);
-                                // Clear all fields
-                                [
-                                  _nameController,
-                                  _emailController,
-                                  _contactController,
-                                  _dateController,
-                                  _timeController,
-                                  _peopleController,
-                                  _budgetController,
-                                  // _gstController,
-                                  _fulladdressController,
-                                  _countryController,
-                                  _stateController,
-                                  _cityController,
-                                  // _pincodeController,
-                                  _vegController,
-                                  _nonvegController,
-                                  _mixedController,
-                                  _specialrequestsController,
-                                  // ignore: avoid_function_literals_in_foreach_calls
-                                ].forEach((controller) => controller.clear());
+                              final bool isSuccess = result["success"] == true;
+                              final String message = result["message"] ?? "";
 
-                                // Clear add-ons
-                                _addOns.forEach((key, value) {
-                                  _addOns[key] = {
-                                    ...value,
-                                    'selected': false,
-                                    'quantity': 0,
-                                  };
-                                });
+                              if (isSuccess) {
+                                // Navigator.pop(
+                                //   sheetContext,
+                                // ); // close bottom sheet
 
-                                setState(() {
-                                  // _selectedEventCategory = null;
-                                  _selectedEventType = null;
-                                  selectedItems.clear();
-                                  selectedAddressId = null;
-                                  selectedAddress = null;
-                                });
-                                AppAlert.success(
-                                  context,
-                                  "Enquiry Submitted Successfully!",
+                                Future.delayed(
+                                  const Duration(milliseconds: 200),
+                                  () {
+                                    AppAlert.success(
+                                      parentContext,
+                                      message.isNotEmpty
+                                          ? message
+                                          : "Enquiry Submitted Successfully!",
+                                    );
+                                  },
                                 );
+
+                                // 👉 clear form after success (your existing code)
                               } else {
-                                AppAlert.error(
-                                  context,
-                                  "Failed to submit enquiry!",
+                                Future.delayed(
+                                  const Duration(milliseconds: 100),
+                                  () {
+                                    AppAlert.error(
+                                      parentContext,
+                                      message.isNotEmpty
+                                          ? message
+                                          : "Failed to submit enquiry!",
+                                    );
+                                  },
                                 );
                               }
                             },
@@ -591,7 +570,7 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                 _buildCategoryItems(),
+                  _buildCategoryItems(),
                   const SizedBox(height: 20),
                   _buildAddOnsSection(),
                 ],
@@ -691,70 +670,48 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
 
   Widget _buildForm() {
     DateTime today = DateTime.now();
-    DateTime firstAllowedDate = today.add(const Duration(days: 2));
-    DateTime lastAllowedDate = today.add(const Duration(days: 365));
+    today.add(const Duration(days: 2));
+    today.add(const Duration(days: 365));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8, left: 4),
-              child: Text(
-                "Event Type",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
-                ),
-              ),
+        DropdownButtonFormField<String>(
+          initialValue: _selectedEventType,
+          decoration: InputDecoration(
+            labelText: "Event Type", // ✅ acts like TextField label
+            hintText: "Select event type", // ✅ hint text
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _selectedEventType,
-                  isExpanded: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  dropdownColor: Colors.white,
-                  icon: const Icon(
-                    Icons.arrow_drop_down,
-                    color: Colors.deepPurple,
-                  ),
-                  hint: const Padding(
-                    padding: EdgeInsets.only(left: 4),
-                    child: Text("Select event type"),
-                  ),
-                  items:
-                      [
-                        "WEDDING",
-                        "BIRTHDAY",
-                        "ENGAGEMENT",
-                        "ANNIVERSARY",
-                        "OTHER",
-                      ].map((type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(
-                            type,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedEventType = value;
-                    });
-                  },
-                ),
-              ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-          ],
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.deepPurple),
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.deepPurple),
+          dropdownColor: Colors.white,
+          items: ["WEDDING", "BIRTHDAY", "ENGAGEMENT", "ANNIVERSARY", "OTHER"]
+              .map((type) {
+                return DropdownMenuItem<String>(value: type, child: Text(type));
+              })
+              .toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedEventType = value;
+            });
+          },
         ),
         const SizedBox(height: 16),
 
@@ -762,154 +719,128 @@ class _CustomisedMenuState extends State<CustomisedMenu> {
         Row(
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8, left: 4),
-                    child: Text(
-                      "Date",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey,
-                      ),
-                    ),
+              child: TextFormField(
+                controller: _dateController,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: "Date", // ✅ floating label
+                  hintText: "Select date",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  TextField(
-                    controller: _dateController,
-                    decoration: InputDecoration(
-                      hintText: "Select date",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.deepPurple),
-                      ),
-                      suffixIcon: const Icon(
-                        Icons.calendar_today,
-                        color: Colors.deepPurple,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                    ),
-                    readOnly: true,
-                    onTap: () async {
-                      DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: firstAllowedDate,
-                        firstDate: firstAllowedDate,
-                        lastDate: lastAllowedDate,
-                        builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: const ColorScheme.light(
-                                primary: Colors.deepPurple,
-                                onPrimary: Colors.white,
-                                onSurface: Colors.black,
-                              ),
-                              // ignore: deprecated_member_use
-                              dialogBackgroundColor: Colors.white,
-                            ),
-                            child: child!,
-                          );
-                        },
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.deepPurple),
+                  ),
+                  suffixIcon: const Icon(
+                    Icons.calendar_today,
+                    color: Colors.deepPurple,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                ),
+                onTap: () async {
+                  DateTime today = DateTime.now();
+                  DateTime firstAllowedDate = today.add(
+                    const Duration(days: 2),
+                  );
+                  DateTime lastAllowedDate = today.add(
+                    const Duration(days: 365),
+                  );
+
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: firstAllowedDate,
+                    firstDate: firstAllowedDate,
+                    lastDate: lastAllowedDate,
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.light(
+                            primary: Colors.deepPurple,
+                            onPrimary: Colors.white,
+                            onSurface: Colors.black,
+                          ),
+                        ),
+                        child: child!,
                       );
-                      if (pickedDate != null) {
-                        _dateController.text =
-                            "${pickedDate.day.toString().padLeft(2, '0')}-"
-                            "${pickedDate.month.toString().padLeft(2, '0')}-"
-                            "${pickedDate.year}";
-                      }
                     },
-                  ),
-                ],
+                  );
+
+                  if (pickedDate != null) {
+                    _dateController.text =
+                        "${pickedDate.day.toString().padLeft(2, '0')}-"
+                        "${pickedDate.month.toString().padLeft(2, '0')}-"
+                        "${pickedDate.year}";
+                  }
+                },
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8, left: 4),
-                    child: Text(
-                      "Time",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  TextField(
-                    controller: _timeController,
-                    decoration: InputDecoration(
-                      hintText: "Select time",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.deepPurple),
-                      ),
-                      suffixIcon: const Icon(
-                        Icons.access_time,
-                        color: Colors.deepPurple,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                    ),
-                    readOnly: true,
-                    onTap: () async {
-                      TimeOfDay? pickedTime = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.now(),
-                        builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: const ColorScheme.light(
-                                primary: Colors.deepPurple,
-                                onPrimary: Colors.white,
-                                onSurface: Colors.black,
-                              ),
-                            ),
-                            child: MediaQuery(
-                              data: MediaQuery.of(
-                                context,
-                              ).copyWith(alwaysUse24HourFormat: false),
-                              child: child!,
-                            ),
-                          );
-                        },
-                      );
-                      if (pickedTime != null) {
-                        final hours = pickedTime.hour.toString().padLeft(
-                          2,
-                          '0',
-                        );
-                        final minutes = pickedTime.minute.toString().padLeft(
-                          2,
-                          '0',
-                        );
 
-                        _timeController.text =
-                            "$hours:$minutes"; // ✅ backend-friendly
-                      }
-                    },
+            const SizedBox(width: 16),
+
+            Expanded(
+              child: TextFormField(
+                controller: _timeController,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: "Time", // ✅ floating label
+                  hintText: "Select time",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.deepPurple),
+                  ),
+                  suffixIcon: const Icon(
+                    Icons.access_time,
+                    color: Colors.deepPurple,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                ),
+                onTap: () async {
+                  TimeOfDay? pickedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.light(
+                            primary: Colors.deepPurple,
+                            onPrimary: Colors.white,
+                            onSurface: Colors.black,
+                          ),
+                        ),
+                        child: MediaQuery(
+                          data: MediaQuery.of(
+                            context,
+                          ).copyWith(alwaysUse24HourFormat: false),
+                          child: child!,
+                        ),
+                      );
+                    },
+                  );
+
+                  if (pickedTime != null) {
+                    final hours = pickedTime.hour.toString().padLeft(2, '0');
+                    final minutes = pickedTime.minute.toString().padLeft(
+                      2,
+                      '0',
+                    );
+
+                    _timeController.text = "$hours:$minutes";
+                  }
+                },
               ),
             ),
           ],

@@ -280,6 +280,7 @@ enum Interest {
 }
 
 enum AddDisplayPosition {
+  // ignore: constant_identifier_names
   ADD_SCREEN,
   HOMEPAGE_BANNER,
   PRODUCT_PAGE,

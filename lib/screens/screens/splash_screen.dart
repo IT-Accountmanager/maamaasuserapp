@@ -11,7 +11,6 @@ import '../../Services/fcmservice/fcm_services.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import '../foodmainscreen.dart';
 import 'login_page.dart';
-import 'loginscreensas.dart';
 
 class SplashScreen extends StatefulWidget {
   final int? pendingCampaignId;   // ✅ ADD THIS
@@ -255,6 +254,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         "Taste the moment, every time",
                         style: AppText.body.copyWith(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.75),
                           fontStyle: FontStyle.italic,
                         ),

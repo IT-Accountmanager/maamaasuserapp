@@ -34,6 +34,7 @@ const textMuted = Color(0xFF7C7C7C);
 // Shared elevation / shadow
 List<BoxShadow> _cardShadow({double blur = 12, double opacity = 0.07}) => [
   BoxShadow(
+    // ignore: deprecated_member_use
     color: _kPrimary.withOpacity(opacity),
     blurRadius: blur,
     offset: const Offset(0, 4),
@@ -44,6 +45,7 @@ class logistic_HomePage extends StatefulWidget {
   final ScrollController scrollController;
   const logistic_HomePage({super.key, required this.scrollController});
   @override
+  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
@@ -134,7 +136,6 @@ class _HomePageState extends State<logistic_HomePage>
 
       print("📍 RAW LOC: $loc");
       print("📍 ADDRESS CHECK: ${loc?.address}");
-      print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
 
       // ✅ VALID LOCATION CHECK
       final isValidLocation =
@@ -264,8 +265,6 @@ class _HomePageState extends State<logistic_HomePage>
               // _locationCategory = address.category;
               _currentLocation = address.fullAddress;
 
-              print("Category: ${address.category}");
-              print("Full Address: ${address.fullAddress}");
             });
             _hasShownLocationDialog = false;
             // await _refreshAll();
@@ -292,6 +291,7 @@ class _HomePageState extends State<logistic_HomePage>
 
   @override
   Widget build(BuildContext context) {
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         if (_currentIndex != 0) {
@@ -739,6 +739,7 @@ class LogisticsScreen extends StatefulWidget {
   }); // ← add const + required
 
   @override
+  // ignore: library_private_types_in_public_api
   _LogisticsScreenState createState() => _LogisticsScreenState();
 }
 
@@ -898,13 +899,13 @@ class LocationField extends StatefulWidget {
   final List<String> Function()? recentLocationsProvider;
 
   const LocationField({
-    Key? key,
+    super.key,
     required this.label,
     required this.controller,
     required this.icon,
     this.onLocationSelected,
     this.recentLocationsProvider,
-  }) : super(key: key);
+  });
 
   @override
   State<LocationField> createState() => _LocationFieldState();
@@ -1029,6 +1030,7 @@ class _DateTimePickerFieldState extends State<DateTimePickerField> {
     );
     if (date == null) return;
     final time = await showTimePicker(
+      // ignore: use_build_context_synchronously
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (context, child) => Theme(
@@ -1265,8 +1267,9 @@ Widget _vehicleRowCard({
 
 // ─── Passenger Form ───────────────────────────────────────────────────────────
 class PassengerForm extends StatefulWidget {
-  PassengerForm({Key? key}) : super(key: key);
+  const PassengerForm({super.key});
   @override
+  // ignore: library_private_types_in_public_api
   _PassengerFormState createState() => _PassengerFormState();
 }
 
@@ -1359,8 +1362,9 @@ class _PassengerFormState extends State<PassengerForm> {
 
 // ─── Parcel Form ──────────────────────────────────────────────────────────────
 class ParcelForm extends StatefulWidget {
-  ParcelForm({Key? key}) : super(key: key);
+  const ParcelForm({super.key});
   @override
+  // ignore: library_private_types_in_public_api
   _ParcelFormState createState() => _ParcelFormState();
 }
 
@@ -1492,7 +1496,7 @@ class _ParcelFormState extends State<ParcelForm> {
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
-            showValueIndicator: ShowValueIndicator.always,
+            showValueIndicator: ShowValueIndicator.onDrag,
           ),
           child: Slider(
             value: _weightValue,
@@ -1540,8 +1544,9 @@ class _ParcelFormState extends State<ParcelForm> {
 
 // ─── Driver Hire Form ─────────────────────────────────────────────────────────
 class DriverHireForm extends StatefulWidget {
-  DriverHireForm({Key? key}) : super(key: key);
+  const DriverHireForm({super.key});
   @override
+  // ignore: library_private_types_in_public_api
   _DriverHireFormState createState() => _DriverHireFormState();
 }
 
@@ -1618,8 +1623,9 @@ class _DriverHireFormState extends State<DriverHireForm> {
 
 // ─── Porter / Goods Form ──────────────────────────────────────────────────────
 class PorterForm extends StatefulWidget {
-  PorterForm({Key? key}) : super(key: key);
+  const PorterForm({super.key});
   @override
+  // ignore: library_private_types_in_public_api
   _PorterFormState createState() => _PorterFormState();
 }
 
@@ -1790,13 +1796,14 @@ class LocationEntryScreen extends StatefulWidget {
   final List<String> recentLocations;
   final Function(String) onLocationSelected;
 
-  const LocationEntryScreen({
+  const LocationEntryScreen({super.key,
     required this.type,
     required this.recentLocations,
     required this.onLocationSelected,
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _LocationEntryScreenState createState() => _LocationEntryScreenState();
 }
 
@@ -1945,6 +1952,7 @@ class _LocationEntryScreenState extends State<LocationEntryScreen> {
               );
               if (loc != null) {
                 widget.onLocationSelected(loc);
+                // ignore: use_build_context_synchronously
                 Navigator.pop(context);
               }
             },

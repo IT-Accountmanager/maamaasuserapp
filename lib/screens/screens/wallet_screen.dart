@@ -255,6 +255,7 @@ class _WalletScreenState extends State<WalletScreen> {
         borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: Walletcolour.violet.withOpacity(0.30),
             blurRadius: 24,
             offset: const Offset(0, 10),
@@ -1058,7 +1059,7 @@ class _FilterSheetState extends State<_FilterSheet> {
         border: Border.all(color: Walletcolour.border),
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         dropdownColor: Walletcolour.surface,
         style: TextStyle(fontSize: 13.sp, color: Walletcolour.textPrimary),
         icon: Icon(

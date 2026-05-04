@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
+// ignore: camel_case_types
 class sptteamcolour {
   static const bg = Color(0xFFF6F7F9);
   static const surface = Colors.white;
@@ -226,6 +227,7 @@ class _SupportteamState extends State<Supportteam> {
           border: Border.all(color: sptteamcolour.border),
           boxShadow: [
             BoxShadow(
+              // ignore: deprecated_member_use
               color: Colors.black.withOpacity(0.03),
               blurRadius: 6,
               offset: const Offset(0, 2),
@@ -238,6 +240,7 @@ class _SupportteamState extends State<Supportteam> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
+                // ignore: deprecated_member_use
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),

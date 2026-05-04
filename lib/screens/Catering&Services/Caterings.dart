@@ -10,6 +10,7 @@ import 'customised_menu.dart';
 class CateringsPage extends StatefulWidget {
   const CateringsPage({super.key});
   @override
+  // ignore: library_private_types_in_public_api
   _CateringsPageState createState() => _CateringsPageState();
 }
 
@@ -39,14 +40,14 @@ class _CateringsPageState extends State<CateringsPage> {
         ),
 
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.55,
-          child: selectedIndex == 0
-              ? buildpackagedcards()
-              : CustomisedMenu(),
+          height: MediaQuery.of(context).size.height * 0.50,
+          child: selectedIndex == 0 ? buildpackagedcards() : CustomisedMenu(),
         ),
       ],
     );
-  }Widget _buildButton(String text, int index) {
+  }
+
+  Widget _buildButton(String text, int index) {
     final isSelected = selectedIndex == index;
 
     return GestureDetector(
@@ -58,12 +59,10 @@ class _CateringsPageState extends State<CateringsPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.green
-              : AppColors.primary,
+          color: isSelected ? Colors.green : AppColors.primary,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: isSelected ? Colors.green : AppColors.primary,
+            color: isSelected ? Colors.green : AppColors.primary,
           ),
         ),
         alignment: Alignment.center,
@@ -95,13 +94,6 @@ class _CateringsPageState extends State<CateringsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 2),
-            child: Text(
-              "Top Caterers",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
           Expanded(
             child: FutureBuilder<List<Restaurent_Banner>>(
               future: _bannersFuture,
@@ -122,100 +114,122 @@ class _CateringsPageState extends State<CateringsPage> {
                   return const Center(child: Text("No catering vendors found"));
                 }
 
-                return ListView.builder(
-                  itemCount: banners.length,
-                  itemBuilder: (context, index) {
-                    final banner = banners[index];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.0,
+                        vertical: 6,
+                      ),
+                      child: Text(
+                        "Top Caterers",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
 
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                CateringVendorScreen(vendorId: banner.vendorId),
+                    ListView.builder(
+                      itemCount: banners.length,
+                      itemBuilder: (context, index) {
+                        final banner = banners[index];
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CateringVendorScreen(
+                                  vendorId: banner.vendorId,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            child: Card(
+                              color: Colors.white,
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Banner image
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(12),
+                                    ),
+                                    child: Image.network(
+                                      banner.companyBanner,
+                                      height: 120.h,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.broken_image),
+                                    ),
+                                  ),
+
+                                  Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          banner.companyName.toUpperCase(),
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 6),
+
+                                        // ── Chips row (address + city + distance) ──
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          children: [
+                                            _infoChip(
+                                              icon: Icons.location_on_outlined,
+                                              label: banner.addressLine,
+                                            ),
+                                            _infoChip(
+                                              icon:
+                                                  Icons.location_city_outlined,
+                                              label: banner.city,
+                                            ),
+                                            _infoChip(
+                                              icon: Icons.near_me_outlined,
+                                              label:
+                                                  Distancehelpermethod.formatDistance(
+                                                    banner.distance,
+                                                  ),
+                                              highlighted: true,
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 6),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         );
                       },
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        child: Card(
-                          color: Colors.white,
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Banner image
-                              ClipRRect(
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(12),
-                                ),
-                                child: Image.network(
-                                  banner.companyBanner,
-                                  height: 120.h,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      const Icon(Icons.broken_image),
-                                ),
-                              ),
-
-                              Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      banner.companyName.toUpperCase(),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 6),
-
-                                    // ── Chips row (address + city + distance) ──
-                                    Wrap(
-                                      spacing: 6,
-                                      runSpacing: 4,
-                                      children: [
-                                        _infoChip(
-                                          icon: Icons.location_on_outlined,
-                                          label: banner.addressLine,
-                                        ),
-                                        _infoChip(
-                                          icon: Icons.location_city_outlined,
-                                          label: banner.city,
-                                        ),
-                                        _infoChip(
-                                          icon: Icons.near_me_outlined,
-                                          label:
-                                              Distancehelpermethod.formatDistance(
-                                                banner.distance,
-                                              ),
-                                          highlighted: true,
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 6),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                    ),
+                  ],
                 );
               },
             ),
@@ -235,9 +249,11 @@ class _CateringsPageState extends State<CateringsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
+        // ignore: deprecated_member_use
         color: highlighted ? accent.withOpacity(0.10) : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
+          // ignore: deprecated_member_use
           color: highlighted ? accent.withOpacity(0.40) : Colors.grey.shade300,
           width: 1,
         ),

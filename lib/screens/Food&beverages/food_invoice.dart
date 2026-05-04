@@ -327,8 +327,10 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
+        // ignore: deprecated_member_use
         color: Colors.white.withOpacity(0.25),
         borderRadius: BorderRadius.circular(20),
+        // ignore: deprecated_member_use
         border: Border.all(color: Colors.white.withOpacity(0.5)),
       ),
       child: Text(

@@ -158,6 +158,7 @@ class _CartBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
+              // ignore: deprecated_member_use
               color: const Color(0xFF2D6A4F).withOpacity(0.35),
               blurRadius: 20,
               offset: const Offset(0, 6),
@@ -169,6 +170,7 @@ class _CartBar extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(16),
+            // ignore: deprecated_member_use
             splashColor: Colors.white.withOpacity(0.12),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: isSmall ? 14.w : 18.w),

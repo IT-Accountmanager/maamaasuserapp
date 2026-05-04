@@ -42,6 +42,7 @@ class Restaurents extends StatefulWidget {
   const Restaurents({super.key, required this.scrollController});
 
   @override
+  // ignore: library_private_types_in_public_api
   _RestaurentsState createState() => _RestaurentsState();
 }
 
@@ -251,7 +252,6 @@ class _RestaurentsState extends State<Restaurents> {
               _currentLocation = address.fullAddress;
 
               print("Category: ${address.category}");
-              print("Full Address: ${address.fullAddress}");
             });
             _hasShownLocationDialog = false;
             await _refreshAll();
@@ -265,7 +265,7 @@ class _RestaurentsState extends State<Restaurents> {
   Future<void> _fetchCategories() async {
     setState(() => isCategoriesLoading = true);
     try {
-      final res = await Authservice().fetchFoodCategories();
+      final res = await Authservice.fetchFoodCategories();
       if (!mounted) return;
       setState(() {
         categories = res;
@@ -489,30 +489,31 @@ class _RestaurentsState extends State<Restaurents> {
                 ),
 
                 // ── 2. Sticky search bar ────────────────────────────────
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _StickyDelegate(
-                    height: 76.h, // ✅ FIXED
-                    child: Container(
-                      color: restaurentsnewcolour.surface,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16.w,
-                              vertical: 10.h,
+                if (selectedOrderType != 'catering')
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _StickyDelegate(
+                      height: 76.h, // ✅ FIXED
+                      child: Container(
+                        color: restaurentsnewcolour.surface,
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 10.h,
+                              ),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: _SearchBar(onChanged: _onSearchChanged),
+                              ),
                             ),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: _SearchBar(onChanged: _onSearchChanged),
-                            ),
-                          ),
-                          // Divider(height: 1, color: restaurentsnewcolour.border),
-                        ],
+                            // Divider(height: 1, color: restaurentsnewcolour.border),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
                 // SliverToBoxAdapter(child: SizedBox(height: 8.h)),
 
                 // ── 3. Coupon offers ────────────────────────────────────
@@ -524,32 +525,33 @@ class _RestaurentsState extends State<Restaurents> {
                 // SliverToBoxAdapter(child: _Divider()),
 
                 // ── 5. Food categories ──────────────────────────────────
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _StickyDelegate(
-                    height: 120.h,
-                    child: Container(
-                      color: restaurentsnewcolour.surface,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(16.w, 10.h, 0, 6.h),
-                            child: Text(
-                              "What's on your mind?",
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w700,
-                                color: restaurentsnewcolour.text,
+                if (selectedOrderType != 'catering')
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _StickyDelegate(
+                      height: 120.h,
+                      child: Container(
+                        color: restaurentsnewcolour.surface,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(16.w, 10.h, 0, 6.h),
+                              child: Text(
+                                "What's on your mind?",
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: restaurentsnewcolour.text,
+                                ),
                               ),
                             ),
-                          ),
-                          Expanded(child: _buildFoodCategories()),
-                        ],
+                            Expanded(child: _buildFoodCategories()),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
 
                 // SliverToBoxAdapter(child: _Divider()),
 
@@ -718,6 +720,7 @@ class _RestaurentsState extends State<Restaurents> {
                           width: 36.w,
                           height: 36.w,
                           decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
                             color: Colors.white.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
@@ -769,6 +772,7 @@ class _RestaurentsState extends State<Restaurents> {
             width: 36.w,
             height: 36.w,
             decoration: BoxDecoration(
+              // ignore: deprecated_member_use
               color: restaurentsnewcolour.primary.withOpacity(
                 0.1,
               ), // better visibility
@@ -1893,25 +1897,24 @@ class _RestaurantCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-
-                        if (banner.position.isNotEmpty) ...[
-                          _dot(),
-                          Flexible(
-                            child: Text(
-                              '${banner.position[0].toUpperCase()}'
-                              '${banner.position.substring(1).toLowerCase()}',
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                color: const Color(0xFF6C63FF),
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
+                    if (banner.position.isNotEmpty) ...[
+
+                      Flexible(
+                        child: Text(
+                          '${banner.position[0].toUpperCase()}'
+                          '${banner.position.substring(1).toLowerCase()}',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: const Color(0xFF6C63FF),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
 
                     // Address
                     Row(

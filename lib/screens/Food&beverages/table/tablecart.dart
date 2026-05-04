@@ -2454,6 +2454,7 @@ class _tablecartState extends State<tablecart> {
               child: Material(
                 type: MaterialType.transparency,
                 child: Container(
+                  // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.7), // stronger block
                   child: Center(child: _overlayContent()),
                 ),
@@ -2764,8 +2765,9 @@ class _tablecartState extends State<tablecart> {
                                       final noteText = noteController.text
                                           .trim();
                                       // Prevent double-tap for THIS item only
-                                      if (_isSendingMap[item.itemId] == true)
+                                      if (_isSendingMap[item.itemId] == true) {
                                         return;
+                                      }
                                       setState(() {
                                         _isSendingMap[item.itemId] = true;
                                       });
@@ -3733,6 +3735,7 @@ class _QuantityControlState extends State<QuantityControl> {
       setState(() {
         _isUpdating = false;
       });
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, "❌ Failed to update quantity");
     }
   }

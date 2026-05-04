@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class FindingDriverScreen extends StatefulWidget {
-  const FindingDriverScreen({Key? key}) : super(key: key);
+  const FindingDriverScreen({super.key});
 
   @override
   State<FindingDriverScreen> createState() => _FindingDriverScreenState();
@@ -12,7 +12,9 @@ class _FindingDriverScreenState extends State<FindingDriverScreen> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 5), () {
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Driver assigned successfully! 🚗")),
       );

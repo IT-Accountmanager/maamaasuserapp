@@ -432,6 +432,7 @@ class _AccountScreenState extends State<AccountScreen> {
         color: _T.surface,
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(
+          // ignore: deprecated_member_use
           color: isOpen ? _T.accent.withOpacity(0.35) : _T.border,
           width: isOpen ? 1.5 : 1,
         ),

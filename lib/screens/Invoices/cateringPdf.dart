@@ -12,7 +12,7 @@ class cateringpdf {
     if (data == null) return;
 
     final pdfBytes = await generateCateringInvoice(data);
-    await downloadPdf(pdfBytes, "Invoice_${id}.pdf");
+    await downloadPdf(pdfBytes, "Invoice_$id.pdf");
   }
 
   Future<void> downloadPdf(Uint8List pdfBytes, String fileName) async {

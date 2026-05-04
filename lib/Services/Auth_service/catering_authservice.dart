@@ -15,8 +15,6 @@ import 'Apiclient.dart';
 
 // ignore: camel_case_types
 class catering_authservice {
-  static const String baseUrl =
-      "http://10.10.20.9:7007/caterings-0.0.1-SNAPSHOT";
 
   static Future<List<catering_BannerModel>> fetchBanners() async {
     try {
@@ -189,7 +187,93 @@ class catering_authservice {
     }
   }
 
-  static Future<bool> createEnquiry({
+  // static Future<bool> createEnquiry({
+  //   int? vendorId,
+  //   required String fullName,
+  //   required String email,
+  //   required String phoneNumber,
+  //   required String event,
+  //   required String eventType,
+  //   required String eventDate,
+  //   required String eventTime,
+  //   required String people,
+  //   required String budget,
+  //   required String fullAddress,
+  //   required String country,
+  //   required String state,
+  //   required String city,
+  //   required String vegPlates,
+  //   required String nonVegPlates,
+  //   required String mixedPlates,
+  //   required String additionalRequests,
+  //   required List<int> selectedItems,
+  //   int? addressId,
+  //   int? pincode,
+  //   String? gstRequirement,
+  //   List<Map<String, dynamic>>? addOns, // Add this parameter
+  // }) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final userId = prefs.getInt('userId');
+  //   final url = "api/user/enquiry/create/?userId=$userId";
+  //
+  //   // Convert string values to appropriate types
+  //   int? parsedVegPlates = int.tryParse(vegPlates);
+  //   int? parsedNonVegPlates = int.tryParse(nonVegPlates);
+  //   int? parsedMixedPlates = int.tryParse(mixedPlates);
+  //   int? parsedPeople = int.tryParse(people);
+  //   double? parsedBudget = double.tryParse(budget);
+  //
+  //   final body = {
+  //     "vendorId": vendorId,
+  //     "fullName": fullName,
+  //     "email": email,
+  //     "phoneNumber": phoneNumber,
+  //     "event": event,
+  //     "eventType": eventType,
+  //     "eventDate": eventDate,
+  //     "eventTime": eventTime,
+  //     "people": parsedPeople,
+  //     "budget": parsedBudget,
+  //     "fullAddress": fullAddress,
+  //     "country": country,
+  //     "state": state,
+  //     "city": city,
+  //     "vegPlates": parsedVegPlates,
+  //     "nonVegPlates": parsedNonVegPlates,
+  //     "mixedPlates": parsedMixedPlates,
+  //     "additionalRequests": additionalRequests,
+  //     "dishId": selectedItems,
+  //     if (addressId != null) "addressId": addressId,
+  //     if (pincode != null) "pincode": pincode,
+  //     if (gstRequirement != null && gstRequirement.isNotEmpty)
+  //       "gstRequirement": gstRequirement,
+  //     if (addOns != null && addOns.isNotEmpty)
+  //       "addOns": addOns, // Add this line
+  //   };
+  //
+  //   try {
+  //     debugPrint("📤 Enquiry POST → $url");
+  //     debugPrint("📦 Payload → ${jsonEncode(body)}");
+  //
+  //     final response = await ApiClient.post(url, body, service: "catering");
+  //
+  //     debugPrint("📬 Response Code: ${response.statusCode}");
+  //     debugPrint("📬 Response Body: ${response.body}");
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       return true;
+  //     } else {
+  //       debugPrint("❌ Failed Enquiry Creation → ${response.body}");
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     debugPrint("❌ Exception in createEnquiry(): $e");
+  //     return false;
+  //   }
+  // }
+
+
+  static Future<Map<String, dynamic>> createEnquiry({
     int? vendorId,
     required String fullName,
     required String email,
@@ -212,65 +296,79 @@ class catering_authservice {
     int? addressId,
     int? pincode,
     String? gstRequirement,
-    List<Map<String, dynamic>>? addOns, // Add this parameter
+    List<Map<String, dynamic>>? addOns,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userId');
-    final url = "api/user/enquiry/create/?userId=$userId";
-
-    // Convert string values to appropriate types
-    int? parsedVegPlates = int.tryParse(vegPlates);
-    int? parsedNonVegPlates = int.tryParse(nonVegPlates);
-    int? parsedMixedPlates = int.tryParse(mixedPlates);
-    int? parsedPeople = int.tryParse(people);
-    double? parsedBudget = double.tryParse(budget);
-
-    final body = {
-      "vendorId": vendorId,
-      "fullName": fullName,
-      "email": email,
-      "phoneNumber": phoneNumber,
-      "event": event,
-      "eventType": eventType,
-      "eventDate": eventDate,
-      "eventTime": eventTime,
-      "people": parsedPeople,
-      "budget": parsedBudget,
-      "fullAddress": fullAddress,
-      "country": country,
-      "state": state,
-      "city": city,
-      "vegPlates": parsedVegPlates,
-      "nonVegPlates": parsedNonVegPlates,
-      "mixedPlates": parsedMixedPlates,
-      "additionalRequests": additionalRequests,
-      "dishId": selectedItems,
-      if (addressId != null) "addressId": addressId,
-      if (pincode != null) "pincode": pincode,
-      if (gstRequirement != null && gstRequirement.isNotEmpty)
-        "gstRequirement": gstRequirement,
-      if (addOns != null && addOns.isNotEmpty)
-        "addOns": addOns, // Add this line
-    };
-
     try {
-      debugPrint("📤 Enquiry POST → $url");
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('userId');
+      final url = "api/user/enquiry/create/?userId=$userId";
+
+      int? parsedVegPlates = int.tryParse(vegPlates);
+      int? parsedNonVegPlates = int.tryParse(nonVegPlates);
+      int? parsedMixedPlates = int.tryParse(mixedPlates);
+      int? parsedPeople = int.tryParse(people);
+      double? parsedBudget = double.tryParse(budget);
+
+      final body = {
+        "vendorId": vendorId,
+        "fullName": fullName,
+        "email": email,
+        "phoneNumber": phoneNumber,
+        "event": event,
+        "eventType": eventType,
+        "eventDate": eventDate,
+        "eventTime": eventTime,
+        "people": parsedPeople,
+        "budget": parsedBudget,
+        "fullAddress": fullAddress,
+        "country": country,
+        "state": state,
+        "city": city,
+        "vegPlates": parsedVegPlates,
+        "nonVegPlates": parsedNonVegPlates,
+        "mixedPlates": parsedMixedPlates,
+        "additionalRequests": additionalRequests,
+        "dishId": selectedItems,
+        if (addressId != null) "addressId": addressId,
+        if (pincode != null) "pincode": pincode,
+        if (gstRequirement != null && gstRequirement.isNotEmpty)
+          "gstRequirement": gstRequirement,
+        if (addOns != null && addOns.isNotEmpty)
+          "addOns": addOns,
+      };
+
+      debugPrint("📤 URL → $url");
       debugPrint("📦 Payload → ${jsonEncode(body)}");
 
-      final response = await ApiClient.post(url, body, service: "catering");
+      final response =
+      await ApiClient.post(url, body, service: "catering");
 
-      debugPrint("📬 Response Code: ${response.statusCode}");
-      debugPrint("📬 Response Body: ${response.body}");
+      debugPrint("📬 Status → ${response.statusCode}");
+      debugPrint("📬 Body → ${response.body}");
+
+      final responseData =
+      response.body.isNotEmpty ? jsonDecode(response.body) : {};
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
+        return {
+          "success": true,
+          "message":
+          responseData["message"] ?? "Enquiry created successfully"
+        };
       } else {
-        debugPrint("❌ Failed Enquiry Creation → ${response.body}");
-        return false;
+        return {
+          "success": false,
+          "message":
+          responseData["message"] ?? "Something went wrong",
+          "error": responseData
+        };
       }
     } catch (e) {
-      debugPrint("❌ Exception in createEnquiry(): $e");
-      return false;
+      return {
+        "success": false,
+        "message": "Something went wrong",
+        "error": e.toString()
+      };
     }
   }
 

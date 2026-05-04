@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'dart:io';
 
 // ── Design tokens — White theme ───────────────────────────────────────────────
+// ignore: camel_case_types
 class tktcolour {
   // Backgrounds
   static const bg = Color(0xFFF5F6FA); // soft off-white page
@@ -152,6 +153,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
             borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
+                // ignore: deprecated_member_use
                 color: const Color(0xFF6C63FF).withOpacity(0.28),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
@@ -259,7 +261,11 @@ class _TicketListScreenState extends State<TicketListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 56.sp, color: tktcolour.textMuted),
+            Icon(
+              Icons.wifi_off_rounded,
+              size: 56.sp,
+              color: tktcolour.textMuted,
+            ),
             SizedBox(height: 16.h),
             Text(
               'Failed to load tickets',
@@ -1149,10 +1155,13 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
         border: Border.all(color: tktcolour.cardBorder),
       ),
       child: DropdownButtonFormField<String>(
-        value: _selectedCategory,
+        initialValue: _selectedCategory,
         dropdownColor: tktcolour.surface,
         style: TextStyle(fontSize: 14.sp, color: tktcolour.textPrimary),
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: tktcolour.textMuted),
+        icon: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: tktcolour.textMuted,
+        ),
         decoration: InputDecoration(
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(
@@ -1183,7 +1192,11 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
       child: TextFormField(
         controller: _messageController,
         maxLines: 5,
-        style: TextStyle(fontSize: 14.sp, color: tktcolour.textPrimary, height: 1.6),
+        style: TextStyle(
+          fontSize: 14.sp,
+          color: tktcolour.textPrimary,
+          height: 1.6,
+        ),
         cursorColor: tktcolour.amber,
         decoration: InputDecoration(
           border: InputBorder.none,
@@ -1251,8 +1264,11 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                   child: Image.file(
                     File(_pickedImage!.path),
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        Icon(Icons.error, color: tktcolour.rejected, size: 24.sp),
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.error,
+                      color: tktcolour.rejected,
+                      size: 24.sp,
+                    ),
                   ),
                 ),
               ),
@@ -1301,7 +1317,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: _loading ? tktcolour.amber.withOpacity(0.5) : tktcolour.amber,
+              color: _loading
+                  ? tktcolour.amber.withOpacity(0.5)
+                  : tktcolour.amber,
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: _loading
                   ? []
@@ -1326,7 +1344,11 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.send_rounded, size: 16.sp, color: tktcolour.bg),
+                        Icon(
+                          Icons.send_rounded,
+                          size: 16.sp,
+                          color: tktcolour.bg,
+                        ),
                         SizedBox(width: 8.w),
                         Text(
                           'Submit Ticket',

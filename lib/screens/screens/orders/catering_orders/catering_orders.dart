@@ -1454,7 +1454,6 @@ import '../../../../widgets/datetimehelper.dart';
 import '../../../Invoices/cateringPdf.dart';
 import '../catering_enquiry/catering_enquires.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 // ─── Shared Design Tokens ──────────────────────────────────────────────────
 
@@ -1492,6 +1491,7 @@ class CateringOrdersScreen extends StatefulWidget {
   const CateringOrdersScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _CateringOrdersScreenState createState() => _CateringOrdersScreenState();
 }
 
@@ -2000,8 +2000,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           );
           if (mounted) AppAlert.success(context, 'Payment successful');
         } catch (_) {
-          if (mounted)
+          if (mounted) {
             AppAlert.error(context, 'Payment captured but recording failed');
+          }
         } finally {
           if (mounted) setState(() => _isLoading = false);
         }
@@ -2388,6 +2389,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           width: 38.w,
                           height: 38.w,
                           decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
                             color: Colors.white.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(10.r),
                           ),
@@ -2607,6 +2609,7 @@ class _ItemRow extends StatelessWidget {
               ),
             ),
           ),
+          // ignore: unrelated_type_equality_checks
           if (item != (context.findAncestorWidgetOfExactType<_Section>()))
             Divider(height: 10.h, color: catorders.border),
         ],

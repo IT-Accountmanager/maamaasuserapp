@@ -9,6 +9,7 @@ class Favorites extends StatefulWidget {
   const Favorites({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _FavoritesState createState() => _FavoritesState();
 }
 
@@ -196,6 +197,7 @@ class ModernDishCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.r),
+          // ignore: deprecated_member_use
           border: Border.all(color: Colors.black.withOpacity(0.08)),
         ),
         child: Stack(
@@ -267,6 +269,7 @@ class ModernDishCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
+                      // ignore: deprecated_member_use
                       color: Colors.black.withOpacity(0.12),
                       blurRadius: 6,
                     ),

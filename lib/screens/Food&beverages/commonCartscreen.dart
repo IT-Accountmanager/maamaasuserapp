@@ -1,11 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/screens/Food&beverages/food_cartscreen.dart';
 import 'package:maamaas/screens/Food&beverages/table/tablecart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../Models/promotions_model/promotions_model.dart';
 import '../../Services/Auth_service/Apiclient.dart';
+import '../foodmainscreen.dart';
+import '../screens/advertisements/banneradvertisement.dart';
 
 // ignore: must_be_immutable
 class CommonCartScreen extends StatefulWidget {
@@ -21,6 +25,7 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
   bool isLoading = true;
   String? activeCartType;
   int? seatingId;
+  List<Campaign> homepageAds = [];
 
   @override
   void initState() {
@@ -50,9 +55,6 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
     debugPrint("🔍 Detecting cart for userId: $userId");
 
     try {
-      /// =========================
-      /// 🟢 1️⃣ TABLE CART CHECK
-      /// =========================
       debugPrint("📡 Calling TABLE cart API...");
 
       final tableResponse = await ApiClient.get(endpoint, service: "food");
@@ -81,9 +83,6 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
         }
       }
 
-      /// =========================
-      /// 🟢 2️⃣ NORMAL CART CHECK
-      /// =========================
       debugPrint("📡 Calling NORMAL cart API...");
 
       final normalResponse = await ApiClient.get(endpoint1, service: "food");
@@ -106,9 +105,6 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
         }
       }
 
-      /// =========================
-      /// ❌ NO CART
-      /// =========================
       debugPrint("❌ NO CART FOUND");
 
       setState(() {
@@ -117,6 +113,7 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
       });
     } catch (e) {
       debugPrint("🚨 ERROR in detectCart: $e");
+      if (!mounted) return;
 
       setState(() {
         activeCartType = null;
@@ -127,14 +124,96 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    /// ⏳ Loading State
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     /// ❌ No Cart Found
     if (activeCartType == null) {
-      return const Scaffold(body: Center(child: Text("Cart is empty")));
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // 👈 important
+            children: [
+              Container(
+                width: 90.r,
+                height: 90.r,
+                decoration: BoxDecoration(
+                  color: cartuser.violetDim,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.shopping_bag_outlined,
+                  size: 40.sp,
+                  color: cartuser.violet,
+                ),
+              ),
+
+              SizedBox(height: 20.h),
+
+              Text(
+                'Your cart is empty',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w800,
+                  color: cartuser.textPrimary,
+                ),
+              ),
+
+              SizedBox(height: 6.h),
+
+              Text(
+                'Add some delicious items to get started',
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: cartuser.textSecondary,
+                ),
+              ),
+
+              SizedBox(height: 24.h),
+
+              GestureDetector(
+                onTap: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => MainScreenfood()),
+                ),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 28.w,
+                    vertical: 14.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cartuser.violet,
+                    borderRadius: BorderRadius.circular(14.r),
+                    boxShadow: [
+                      BoxShadow(
+                        // ignore: deprecated_member_use
+                        color: cartuser.violet.withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    'Browse Menu',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+
+              if (homepageAds.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16.r),
+                  child: BannerAdvertisement(ads: homepageAds, height: 200),
+                ),
+            ],
+          ),
+        ),
+      );
     }
 
     /// 🟢 TABLE CART

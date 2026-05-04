@@ -24,6 +24,7 @@ class HomePage extends StatefulWidget {
   final ScrollController scrollController;
   const HomePage({super.key, required this.scrollController});
   @override
+  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
@@ -253,6 +254,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         if (_currentIndex != 0) {
@@ -370,6 +372,7 @@ class _HomePageState extends State<HomePage> {
                           width: 36.w,
                           height: 36.w,
                           decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
                             color: Colors.white.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),

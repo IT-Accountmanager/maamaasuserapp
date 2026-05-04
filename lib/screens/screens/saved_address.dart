@@ -360,6 +360,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
+              // ignore: deprecated_member_use
               color: Colors.black.withOpacity(0.06),
               blurRadius: 10,
               offset: const Offset(0, 4),
@@ -396,6 +397,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
               width: 36.w,
               height: 36.w,
               decoration: BoxDecoration(
+                // ignore: deprecated_member_use
                 color: savedddcolour.violet.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
@@ -957,25 +959,25 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
   Future<void> _saveAddress() async {
     if (!_formKey.currentState!.validate()) return;
+
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
+
     if (userId == null) {
-      // ignore: use_build_context_synchronously
       AppAlert.error(context, 'User not logged in');
       return;
     }
+
     final addressParts = [
       doorNumberController.text.trim(),
       addressLineController.text.trim(),
       landMarkController.text.trim(),
-      // cityController.text.trim(),
-      // stateController.text.trim(),
-      // pincodeController.text.trim(),
     ];
 
     final address = addressParts
         .where((e) => e.isNotEmpty && e != 'null')
         .join(', ');
+
     final categoryValue = categoryController.text == 'Other'
         ? otherCategoryController.text
         : categoryController.text;
@@ -999,26 +1001,20 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     };
 
     try {
-      final ok = widget.addressId == null
+      final result = widget.addressId == null
           ? await subscription_AuthService.addAddress(body)
           : await subscription_AuthService.updateAddress(
               widget.addressId!,
               body,
             );
-      if (ok) {
-        AppAlert.success(
-          // ignore: use_build_context_synchronously
-          context,
-          widget.addressId == null ? 'Address added!' : 'Address updated!',
-        );
-        // ignore: use_build_context_synchronously
+
+      if (result["success"] == true) {
+        AppAlert.success(context, result["message"]);
         Navigator.pop(context, true);
       } else {
-        // ignore: use_build_context_synchronously
-        AppAlert.error(context, 'Failed to save address');
+        AppAlert.error(context, result["message"]);
       }
     } catch (e) {
-      // ignore: use_build_context_synchronously
       AppAlert.error(context, 'Error: $e');
     }
   }
@@ -1615,14 +1611,25 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
 
   Future<void> _getCurrentLocation() async {
     final result = await LocationService.getCurrentLocationWithAddress();
+
+    if (!mounted) return; // ✅ VERY IMPORTANT
+
     if (result == null) {
       setState(() => _hasPermission = false);
       return;
     }
+
     setState(() => _hasPermission = true);
+
     final latLng = LatLng(result.latitude, result.longitude);
+
     _updateLocation(latLng);
-    mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
+
+    if (mapController != null) {
+      mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(latLng, 16),
+      );
+    }
   }
 
   Future<void> _updateLocation(LatLng latLng) async {

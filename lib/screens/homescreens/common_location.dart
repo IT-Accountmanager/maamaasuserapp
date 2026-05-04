@@ -12,6 +12,7 @@ class LocationProvider extends StatefulWidget {
   State<LocationProvider> createState() => _LocationProviderState();
 
   /// Access from any descendant: LocationProvider.of(context)
+  // ignore: library_private_types_in_public_api
   static _LocationProviderState of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<_LocationScope>();
     assert(scope != null, 'No LocationProvider found in widget tree');

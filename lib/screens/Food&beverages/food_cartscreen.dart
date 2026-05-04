@@ -2138,6 +2138,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
   PaymentOverlayState _overlayState = PaymentOverlayState.none;
 
   bool _isLoadingCart = false;
+  // ignore: prefer_final_fields
   int _socketVersion = 0; // incremented by every _applySocketUpdate call
   String? _lastSocketEventKey;
 
@@ -2734,6 +2735,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
               child: Material(
                 type: MaterialType.transparency,
                 child: Container(
+                  // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.7),
                   child: Center(child: _overlayContent()),
                 ),
@@ -2786,59 +2788,6 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
-  // ── AppBar ──────────────────────────────────────────────────────────────
-  // PreferredSizeWidget _buildAppBar() {
-  //   return AppBar(
-  //     backgroundColor: cartuser.surface,
-  //     elevation: 0,
-  //     centerTitle: true,
-  //     title: Text(
-  //       'Review Your Cart',
-  //       style: TextStyle(
-  //         fontSize: 17.sp,
-  //         fontWeight: FontWeight.w700,
-  //         color: cartuser.textPrimary,
-  //       ),
-  //     ),
-  //     iconTheme: const IconThemeData(color: cartuser.textPrimary),
-  //     actions: [
-  //       GestureDetector(
-  //         onTap: () async {
-  //           final ok = await food_Authservice.deleteCart();
-  //           if (!mounted) return;
-  //           if (ok) {
-  //             Navigator.pushReplacement(
-  //               context,
-  //               MaterialPageRoute(builder: (_) => MainScreenfood()),
-  //             );
-  //             AppAlert.success(context, 'Cart cleared');
-  //           } else {
-  //             AppAlert.error(context, 'Failed to clear cart');
-  //           }
-  //         },
-  //         child: Container(
-  //           margin: EdgeInsets.only(right: 12.w),
-  //           padding: EdgeInsets.all(8.w),
-  //           decoration: BoxDecoration(
-  //             color: cartuser.red.withOpacity(0.08),
-  //             shape: BoxShape.circle,
-  //             border: Border.all(color: cartuser.red.withOpacity(0.2)),
-  //           ),
-  //           child: Icon(
-  //             Icons.delete_outline_rounded,
-  //             size: 18.sp,
-  //             color: cartuser.red,
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //     bottom: PreferredSize(
-  //       preferredSize: const Size.fromHeight(1),
-  //       child: Container(height: 1, color: cartuser.border),
-  //     ),
-  //   );
-  // }
-
   Future<void> _clearCartLocally() async {
     // 1. Reset global badge — this triggers _onGlobalCountReset in every
     //    CartButton that is still alive in the widget tree (e.g. if MenuScreen
@@ -2859,63 +2808,109 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     debugPrint("🧹 Local cart cleared — CartNotifier=0, prefs wiped");
   }
 
-
-
   PreferredSizeWidget _buildAppBar() {
+    final bool isCartEmpty = (cartData?.cartItems.isEmpty ?? true);
+
     return AppBar(
       backgroundColor: cartuser.surface,
       elevation: 0,
       centerTitle: true,
+      automaticallyImplyLeading: true,
+
       title: Text(
-        'Review Your Cart',
+        isCartEmpty ? 'Empty Cart' : 'Review Your Cart',
         style: TextStyle(
           fontSize: 17.sp,
           fontWeight: FontWeight.w700,
           color: cartuser.textPrimary,
         ),
       ),
+
       iconTheme: const IconThemeData(color: cartuser.textPrimary),
+
       actions: [
-        GestureDetector(
-          onTap: () async {
-            final ok = await food_Authservice.deleteCart();
-            if (!mounted) return;
-            if (ok) {
-              // ✅ Wipe CartNotifier.count + all dish_ SharedPreferences keys
-              // BEFORE navigating so MenuScreen's CartButtons read 0 from prefs.
-              await _clearCartLocally();
-              if (!mounted) return;
-              Navigator.pushReplacement(
+        if (isCartEmpty)
+          Padding(
+            padding: EdgeInsets.only(right: 12.w),
+            child: GestureDetector(
+              onTap: () => Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => MainScreenfood()),
-              );
-              AppAlert.success(context, 'Cart cleared');
-            } else {
-              AppAlert.error(context, 'Failed to clear cart');
-            }
-          },
-          child: Container(
-            margin: EdgeInsets.only(right: 12.w),
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: cartuser.red.withOpacity(0.08),
-              shape: BoxShape.circle,
-              border: Border.all(color: cartuser.red.withOpacity(0.2)),
-            ),
-            child: Icon(
-              Icons.delete_outline_rounded,
-              size: 18.sp,
-              color: cartuser.red,
+              ),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: cartuser.violet,
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.restaurant_menu,
+                      size: 14.sp,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Browse',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
+
+        if (!isCartEmpty)
+          GestureDetector(
+            onTap: () async {
+              final ok = await food_Authservice.deleteCart();
+              if (!mounted) return;
+
+              if (ok) {
+                await _clearCartLocally();
+                if (!mounted) return;
+
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => MainScreenfood()),
+                );
+
+                AppAlert.success(context, 'Cart cleared');
+              } else {
+                AppAlert.error(context, 'Failed to clear cart');
+              }
+            },
+            child: Container(
+              margin: EdgeInsets.only(right: 12.w),
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                // ignore: deprecated_member_use
+                color: cartuser.red.withOpacity(0.08),
+                shape: BoxShape.circle,
+                border: Border.all(color: cartuser.red.withOpacity(0.2)),
+              ),
+              child: Icon(
+                Icons.delete_outline_rounded,
+                size: 18.sp,
+                color: cartuser.red,
+              ),
+            ),
+          ),
       ],
+
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(height: 1, color: cartuser.border),
       ),
     );
   }
+
   // ── Section label ───────────────────────────────────────────────────────
   Widget _sectionLabel(String text) {
     return Text(
@@ -3187,6 +3182,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     });
 
     showModalBottomSheet(
+      // ignore: use_build_context_synchronously
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -3418,6 +3414,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       applyCoupon: "APPLIED",
     );
     if (!result.success) {
+      // ignore: use_build_context_synchronously
       AppAlert.error(context, result.error ?? "Failed to apply coupon");
       return;
     }
@@ -3427,7 +3424,9 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       appliedCouponCode = coupon.code;
       appliedCouponId = coupon.id;
     });
+    // ignore: use_build_context_synchronously
     AppAlert.success(context, "Coupon ${coupon.code} applied!");
+    // ignore: use_build_context_synchronously
     Navigator.pop(context);
   }
 
@@ -3628,8 +3627,16 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   _summaryRow('Discount', -discount, color: cartuser.green),
 
                 if ((gst / 2) > 0) ...[
-                  _summaryRow('SGST', gst / 2),
-                  _summaryRow('CGST', gst / 2),
+                  _summaryRow(
+                    'SGST',
+                    gst / 2,
+                    onInfoTap: () => _showGstDialog('SGST'),
+                  ),
+                  _summaryRow(
+                    'CGST',
+                    gst / 2,
+                    onInfoTap: () => _showGstDialog('CGST'),
+                  ),
                 ],
 
                 SizedBox(height: 4.h),
@@ -3672,16 +3679,41 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
-  Widget _summaryRow(String label, num value, {Color? color}) {
+  Widget _summaryRow(
+    String label,
+    num value, {
+    Color? color,
+    VoidCallback? onInfoTap,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 3.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 12.sp, color: cartuser.textSecondary),
+          Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: cartuser.textSecondary,
+                ),
+              ),
+
+              if (onInfoTap != null) ...[
+                SizedBox(width: 4.w),
+                GestureDetector(
+                  onTap: onInfoTap,
+                  child: Icon(
+                    Icons.info_outline,
+                    size: 14.sp,
+                    color: cartuser.textSecondary,
+                  ),
+                ),
+              ],
+            ],
           ),
+
           Text(
             value < 0 ? '-₹${_fmt(-value)}' : '₹${_fmt(value)}',
             style: TextStyle(
@@ -3691,6 +3723,87 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showGstDialog(String type) {
+    // final data = cartData;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+
+          titlePadding: EdgeInsets.fromLTRB(16.w, 12.h, 8.w, 0),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$type Details',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: EdgeInsets.all(4.r),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cartuser.border.withOpacity(0.3),
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    size: 16.sp,
+                    color: cartuser.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if ((cartData?.platformChargeGst ?? 0) > 0)
+                _dialogRow(
+                  'Platform $type',
+                  ((cartData?.platformChargeGst ?? 0) / 2),
+                ),
+              if ((cartData?.packingChargeGst ?? 0) > 0)
+                _dialogRow(
+                  'Packing $type',
+                  ((cartData?.packingChargeGst ?? 0) / 2),
+                ),
+              if ((cartData?.serviceChargeGst ?? 0) > 0)
+                _dialogRow(
+                  'Service $type',
+                  ((cartData?.serviceChargeGst ?? 0) / 2),
+                ),
+
+              SizedBox(height: 8),
+              Divider(),
+
+              _dialogRow('Total $type', ((cartData?.gstTotal ?? 0) / 2)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _dialogRow(String label, num value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [Text(label), Text('₹${_fmt(value)}')],
       ),
     );
   }
@@ -3708,22 +3821,20 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "If you want Schedule your order!",
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w700,
-              color: cartuser.textPrimary,
+          /// 🔹 Title
+          if (!isUserScheduled)
+            Text(
+              "Schedule your order",
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w700,
+                color: cartuser.textPrimary,
+              ),
             ),
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            "Pick a convenient date & time",
-            style: TextStyle(fontSize: 12.sp, color: cartuser.textSecondary),
-          ),
 
-          SizedBox(height: 14.h),
+          isUserScheduled ? SizedBox(height: 14.h) : SizedBox.shrink(),
 
+          /// 🔸 Warning
           if (hasScheduledItems) ...[
             Container(
               margin: EdgeInsets.only(bottom: 12.h),
@@ -3731,16 +3842,14 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
               decoration: BoxDecoration(
                 color: Colors.orange.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.info_outline, color: Colors.orange, size: 18.sp),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
-                      "Some items in your cart are not available right now. Please schedule your order to continue.",
+                      "Some items require scheduling to continue.",
                       style: TextStyle(
                         fontSize: 12.sp,
                         color: cartuser.textPrimary,
@@ -3753,8 +3862,10 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             ),
           ],
 
+          /// 🟣 BEFORE SELECT (Row style)
           if (!isUserScheduled)
-            GestureDetector(
+            InkWell(
+              borderRadius: BorderRadius.circular(12.r),
               onTap: () async {
                 setState(() {
                   _orderType = 'schedule';
@@ -3762,36 +3873,56 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                 await _pickScheduleDateTime();
               },
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: 14.h),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                 decoration: BoxDecoration(
-                  color: cartuser.violet.withOpacity(0.08),
+                  color: cartuser.surface,
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: cartuser.violet.withOpacity(0.3)),
+                  border: Border.all(color: cartuser.border),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.access_time,
-                      color: cartuser.violet,
-                      size: 18.sp,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      hasScheduledItems && !isUserScheduled
-                          ? "Schedule to Continue"
-                          : "Choose Date & Time",
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
+                    /// 📅 Calendar Icon
+                    Container(
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(
+                        color: cartuser.violet.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.calendar_today_rounded,
+                        size: 16.sp,
                         color: cartuser.violet,
                       ),
+                    ),
+
+                    SizedBox(width: 12.w),
+
+                    /// Text
+                    Expanded(
+                      child: Text(
+                        hasScheduledItems
+                            ? "Schedule to continue"
+                            : "Choose date & time",
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: cartuser.textPrimary,
+                        ),
+                      ),
+                    ),
+
+                    /// Arrow
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14.sp,
+                      color: cartuser.textSecondary,
                     ),
                   ],
                 ),
               ),
             ),
 
+          /// 🟢 AFTER SELECT (Your existing card, slightly polished)
           if (isUserScheduled) ...[
             SizedBox(height: 12.h),
             Container(
@@ -3799,22 +3930,33 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
               decoration: BoxDecoration(
                 color: cartuser.green.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: cartuser.green.withOpacity(0.3)),
+                border: Border.all(color: cartuser.green.withOpacity(0.25)),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: cartuser.green,
-                    size: 20.sp,
+                  /// ✅ Icon
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: cartuser.green.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      color: cartuser.green,
+                      size: 16.sp,
+                    ),
                   ),
+
                   SizedBox(width: 10.w),
+
+                  /// Date + Time
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Order Scheduled 🎉",
+                          "Scheduled",
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w700,
@@ -3832,27 +3974,16 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                       ],
                     ),
                   ),
+
+                  /// Edit
                   GestureDetector(
                     onTap: _pickScheduleDateTime,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cartuser.violet.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(
-                          color: cartuser.violet.withOpacity(0.2),
-                        ),
-                      ),
-                      child: Text(
-                        "Edit",
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
-                          color: cartuser.violet,
-                        ),
+                    child: Text(
+                      "Edit",
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: cartuser.violet,
                       ),
                     ),
                   ),
@@ -3892,6 +4023,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
 
     while (true) {
       final time = await showTimePicker(
+        // ignore: use_build_context_synchronously
         context: context,
         initialTime: TimeOfDay.now(),
         builder: (ctx, child) => Theme(
@@ -4079,62 +4211,62 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(height: 40.h),
-          Container(
-            width: 90.r,
-            height: 90.r,
-            decoration: BoxDecoration(
-              color: cartuser.violetDim,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.shopping_bag_outlined,
-              size: 40.sp,
-              color: cartuser.violet,
-            ),
-          ),
-          SizedBox(height: 20.h),
-          Text(
-            'Your cart is empty',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w800,
-              color: cartuser.textPrimary,
-            ),
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            'Add some delicious items to get started',
-            style: TextStyle(fontSize: 13.sp, color: cartuser.textSecondary),
-          ),
-          SizedBox(height: 24.h),
-          GestureDetector(
-            onTap: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => MainScreenfood()),
-            ),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
-              decoration: BoxDecoration(
-                color: cartuser.violet,
-                borderRadius: BorderRadius.circular(14.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: cartuser.violet.withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Text(
-                'Browse Menu',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
+          // Container(
+          //   width: 90.r,
+          //   height: 90.r,
+          //   decoration: BoxDecoration(
+          //     color: cartuser.violetDim,
+          //     shape: BoxShape.circle,
+          //   ),
+          //   child: Icon(
+          //     Icons.shopping_bag_outlined,
+          //     size: 40.sp,
+          //     color: cartuser.violet,
+          //   ),
+          // ),
+          // SizedBox(height: 20.h),
+          // Text(
+          //   'Your cart is empty',
+          //   style: TextStyle(
+          //     fontSize: 18.sp,
+          //     fontWeight: FontWeight.w800,
+          //     color: cartuser.textPrimary,
+          //   ),
+          // ),
+          // SizedBox(height: 6.h),
+          // Text(
+          //   'Add some delicious items to get started',
+          //   style: TextStyle(fontSize: 13.sp, color: cartuser.textSecondary),
+          // ),
+          // SizedBox(height: 24.h),
+          // GestureDetector(
+          //   onTap: () => Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (_) => MainScreenfood()),
+          //   ),
+          //   child: Container(
+          //     padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
+          //     decoration: BoxDecoration(
+          //       color: cartuser.violet,
+          //       borderRadius: BorderRadius.circular(14.r),
+          //       boxShadow: [
+          //         BoxShadow(
+          //           color: cartuser.violet.withOpacity(0.3),
+          //           blurRadius: 16,
+          //           offset: const Offset(0, 6),
+          //         ),
+          //       ],
+          //     ),
+          //     child: Text(
+          //       'Browse Menu',
+          //       style: TextStyle(
+          //         fontSize: 14.sp,
+          //         fontWeight: FontWeight.w700,
+          //         color: Colors.white,
+          //       ),
+          //     ),
+          //   ),
+          // ),
           SizedBox(height: 24.h),
           if (homepageAds.isNotEmpty)
             ClipRRect(

@@ -5,7 +5,6 @@ import 'package:shimmer/shimmer.dart';
 import '../../Models/food/cart_model.dart';
 import '../../Models/subscrptions/wallet_model.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
-import '../../Services/Auth_service/food_authservice.dart';
 import '../../Services/paymentservice/razorpayservice.dart';
 
 // ignore: camel_case_types
@@ -80,23 +79,6 @@ class _cartwalletState extends State<cartwallet> {
     return total;
   }
 
-  Future<void> _loadCart() async {
-    setState(() => isLoading = true);
-
-    try {
-      final fetchedCart = await food_Authservice.fetchCart();
-
-      if (mounted) {
-        setState(() {
-          cartData = fetchedCart;
-
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) setState(() => isLoading = false);
-    }
-  }
 
   void _notifyParent() {
     widget.onSelectionChanged(selectedPaymentMethod, selectedSubWallets);

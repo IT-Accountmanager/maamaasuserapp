@@ -59,7 +59,7 @@ class promotion_Authservice {
       "description": description.trim(),
       "issueType": issueType,
       "serviceType": serviceType,
-      "createdBy": "CUSTOMER",
+      "createdBy": "USER",
       "priority": "HIGH",
       "createdAt": DateTime.now().toIso8601String(),
     };

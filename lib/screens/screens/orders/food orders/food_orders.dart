@@ -1778,7 +1778,6 @@ import '../../../../widgets/datetimehelper.dart';
 import '../../supportteam/tickets_screen.dart';
 import '../../../Invoices/food_pdf.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../live_tracking.dart';
 import 'dart:async';
 
@@ -2161,6 +2160,7 @@ class _OrderCardState extends State<OrderCard> {
         border: Border.all(
           color: isCancelled
               ? foodordecolour.border
+              // ignore: deprecated_member_use
               : statusColor.withOpacity(0.25),
           width: 1,
         ),
@@ -2571,29 +2571,6 @@ class _OrderCardState extends State<OrderCard> {
     }
   }
 
-  String _statusLabel(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.hold:
-        return "On hold";
-      case OrderStatus.pending:
-        return "Not accepted";
-      case OrderStatus.confirmed:
-        return "Order confirmed";
-      case OrderStatus.beingPrepared:
-        return "Preparing your food";
-      case OrderStatus.orderIsReady:
-        return "Order ready";
-      case OrderStatus.waitingForPickup:
-        return "Waiting for pickup";
-      case OrderStatus.ontheway:
-        return "On the way";
-      case OrderStatus.completed:
-        return "Delivered";
-      default:
-        return "Processing";
-    }
-  }
-
   Widget _buildCancelledTag() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
@@ -2688,7 +2665,7 @@ class _OrderCardState extends State<OrderCard> {
               if (!isSubmitted) ...[
                 SizedBox(height: 14.h),
                 DropdownButtonFormField<RatingCategory>(
-                  value: selectedCategory,
+                  initialValue: selectedCategory,
                   style: foodordecolour.body.copyWith(fontSize: 14),
                   decoration: InputDecoration(
                     filled: true,
@@ -3470,27 +3447,28 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
   }
 
   Widget _buildOrderSummary() {
-    final o = widget.order;
+    final order = widget.order;
 
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: _cardDecor(),
       child: Column(
         children: [
-          _summaryRow("Subtotal", o.subTotal),
-          _summaryRow("SGST", o.sgst),
-          _summaryRow("CGST", o.cgst),
-          if (o.discountAmount > 0)
+          if (order.subTotal > 0) _summaryRow("Subtotal", order.subTotal),
+          if (order.sgst > 0) _summaryRow("SGST", order.sgst),
+          if (order.cgst > 0) _summaryRow("CGST", order.cgst),
+          if (order.discountAmount > 0)
             _summaryRow(
               "Discount",
-              -o.discountAmount,
+              -order.discountAmount,
               color: foodordecolour.green,
             ),
-          _summaryRow("Platform Charges", o.platformCharges),
-          if (o.orderType != OrderType.DINE_IN)
-            _summaryRow("Packing Charges", o.packingCharges),
-          if (o.orderType == OrderType.DELIVERY)
-            _summaryRow("Delivery Charges", o.deliveryCharges),
+          if (order.platformCharges > 0)
+            _summaryRow("Platform Charges", order.platformCharges),
+          if (order.orderType != OrderType.DINE_IN && order.packingCharges > 0)
+            _summaryRow("Packing Charges", order.packingCharges),
+          if (order.orderType == OrderType.DELIVERY && order.deliveryCharges > 0)
+            _summaryRow("Delivery Charges", order.deliveryCharges),
           Divider(height: 20.h, color: foodordecolour.border),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3504,7 +3482,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                 ),
               ),
               Text(
-                "₹${o.grandTotal.toStringAsFixed(2)}",
+                "₹${order.grandTotal.toStringAsFixed(2)}",
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,

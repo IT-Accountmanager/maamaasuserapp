@@ -1,3 +1,4 @@
+// ignore: camel_case_types
 class vendorteam {
   final int teamId;
   final String name;

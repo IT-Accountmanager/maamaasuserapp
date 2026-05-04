@@ -53,6 +53,7 @@ class _CateringVendorScreenState extends State<CateringVendorScreen>
 
   Restaurent_Banner? _bannerItem;
   AboutUsModel? _aboutus;
+  // ignore: prefer_final_fields
   List<vendorteam> _team = [];
   BannerContentType selectedContent = BannerContentType.none;
 
@@ -223,6 +224,7 @@ class _CateringVendorScreenState extends State<CateringVendorScreen>
             backgroundColor: catvndscreen.surface,
             elevation: 0,
             scrolledUnderElevation: 1,
+            // ignore: deprecated_member_use
             shadowColor: Colors.black.withOpacity(0.08),
             automaticallyImplyLeading: false,
             leading: IconButton(
@@ -392,6 +394,7 @@ class _CateringVendorScreenState extends State<CateringVendorScreen>
                               borderRadius: BorderRadius.circular(14.r),
                               boxShadow: [
                                 BoxShadow(
+                                  // ignore: deprecated_member_use
                                   color: Colors.black.withOpacity(0.08),
                                   blurRadius: 6,
                                   offset: Offset(0, 3),

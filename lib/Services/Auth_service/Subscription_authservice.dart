@@ -9,16 +9,18 @@ import '../../Models/subscrptions/address_model.dart';
 
 import '../../Models/subscrptions/location_model.dart';
 import '../../Models/subscrptions/transaction_model.dart';
+import '../../Models/subscrptions/userModel.dart';
 import '../../Models/subscrptions/user_account.dart';
 import '../../Models/subscrptions/wallet_model.dart';
 import 'Apiclient.dart';
 
+// ignore: camel_case_types
 class subscription_AuthService {
   static const _secureStorage = FlutterSecureStorage();
 
   static final String baseUrlgateway =
-      "https://backend.maamaas.com/subscription";
-      // "http://testing.maamaas.com:8080/subscription";
+      // "https://backend.maamaas.com/subscription";
+      "http://testing.maamaas.com/subscription";
 
   Future<String> registerUser({
     required String userName,
@@ -327,27 +329,101 @@ class subscription_AuthService {
   }
 
   // ✅ Add new address
-  static Future<bool> addAddress(Map<String, dynamic> body) async {
-    final endpoint = Uri.parse("$baseUrlgateway/api/user/location/add");
+  // static Future<bool> addAddress(Map<String, dynamic> body) async {
+  //   final endpoint = "api/user/location/add";
+  //
+  //   try {
+  //     print("📤 ADD ADDRESS REQUEST");
+  //     print("➡️ Endpoint: $endpoint");
+  //     print("➡️ Body: $body");
+  //
+  //     final response = await ApiClient.post(
+  //       endpoint,
+  //       body,
+  //       service: "subscription",
+  //     );
+  //
+  //     print("📥 RESPONSE:");
+  //     print("➡️ Status Code: ${response.statusCode}");
+  //     print("➡️ Data: ${response.body}");
+  //
+  //     if (response.statusCode != null &&
+  //         response.statusCode! >= 200 &&
+  //         response.statusCode! < 300) {
+  //       return true;
+  //     } else {
+  //       print("❌ API ERROR: ${response.body}");
+  //       return false;
+  //     }
+  //   } catch (e, stackTrace) {
+  //     print("🚨 EXCEPTION in addAddress:");
+  //     print(e);
+  //     print(stackTrace);
+  //     return false;
+  //   }
+  // }
+  static Future<Map<String, dynamic>> addAddress(
+    Map<String, dynamic> body,
+  ) async {
+    final endpoint = "api/user/location/add";
 
     try {
-      final response = await http.post(
+      final response = await ApiClient.post(
         endpoint,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(body),
+        body,
+        service: "subscription",
       );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return true;
+      if (response.statusCode >= 200 &&
+          response.statusCode < 300) {
+        return {"success": true, "message": "Address added successfully"};
       } else {
-        return false;
+        return {
+          "success": false,
+          "message": response.body,
+        };
       }
     } catch (e) {
-      return false;
+      return {"success": false, "message": e.toString()};
     }
   }
 
-  static Future<bool> updateAddress(
+  // static Future<bool> updateAddress(
+  //     int addressId,
+  //     Map<String, dynamic> body,
+  //     ) async {
+  //   try {
+  //     final endpoint = "api/user/update/$addressId";
+  //
+  //     print("📤 UPDATE ADDRESS REQUEST");
+  //     print("➡️ Endpoint: $endpoint");
+  //     print("➡️ Body: $body");
+  //
+  //     final response = await ApiClient.put(
+  //       endpoint,
+  //       body,
+  //       service: "subscription",
+  //     );
+  //
+  //     print("📥 RESPONSE:");
+  //     print("➡️ Status Code: ${response.statusCode}");
+  //     print("➡️ Body: ${response.body}");
+  //
+  //     if (response.statusCode >= 200 && response.statusCode < 300) {
+  //       return true;
+  //     } else {
+  //       print("❌ API Error: ${response.body}");
+  //       return false;
+  //     }
+  //   } catch (e, stackTrace) {
+  //     print("🚨 EXCEPTION in updateAddress:");
+  //     print(e);
+  //     print(stackTrace);
+  //     return false;
+  //   }
+  // }
+
+  static Future<Map<String, dynamic>> updateAddress(
     int addressId,
     Map<String, dynamic> body,
   ) async {
@@ -360,9 +436,13 @@ class subscription_AuthService {
         service: "subscription",
       );
 
-      return response.statusCode >= 200 && response.statusCode < 300;
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return {"success": true, "message": "Address updated successfully"};
+      } else {
+        return {"success": false, "message": response.body};
+      }
     } catch (e) {
-      return false;
+      return {"success": false, "message": e.toString()};
     }
   }
 
@@ -464,7 +544,30 @@ class subscription_AuthService {
   }
 
   // 3️⃣ ADD CASH TO WALLET
-  static Future<bool> addCashToWallet({
+  // static Future<bool> addCashToWallet({
+  //   required String paymentId,
+  //   String? orderId,
+  //   required double amount,
+  // }) async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final userId = prefs.getInt('userId') ?? 0;
+  //
+  //     if (userId == 0) {
+  //       return false;
+  //     }
+  //
+  //     final endpoint =
+  //         "api/user/addCash/self-loaded?userId=$userId&amount=$amount&paymentId=$paymentId&orderId=${orderId ?? 'NA'}";
+  //
+  //     final res = await ApiClient.post(endpoint, {}, service: "subscription");
+  //
+  //     return res.statusCode == 200;
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // }
+  static Future<Map<String, dynamic>> addCashToWallet({
     required String paymentId,
     String? orderId,
     required double amount,
@@ -474,7 +577,7 @@ class subscription_AuthService {
       final userId = prefs.getInt('userId') ?? 0;
 
       if (userId == 0) {
-        return false;
+        return {"success": false, "message": "User not logged in"};
       }
 
       final endpoint =
@@ -482,9 +585,22 @@ class subscription_AuthService {
 
       final res = await ApiClient.post(endpoint, {}, service: "subscription");
 
-      return res.statusCode == 200;
+      String message = "Something went wrong";
+
+      try {
+        final decoded = jsonDecode(res.body);
+        message = decoded["message"] ?? message;
+      } catch (_) {
+        message = res.body;
+      }
+
+      if (res.statusCode == 200) {
+        return {"success": true, "message": message};
+      } else {
+        return {"success": false, "message": message};
+      }
     } catch (e) {
-      return false;
+      return {"success": false, "message": e.toString()};
     }
   }
 
@@ -591,12 +707,44 @@ class subscription_AuthService {
     }
   }
 
-  static Future<bool> saveAccount(UserAccount account) async {
-    final endpoint = "api/user/account/save"; // POST endpoint
+  static Future<UserModel?> getuserAccount() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('userId');
 
-    debugPrint("📤 [saveAccount] Request started");
-    debugPrint("➡️ Endpoint: $endpoint");
-    debugPrint("📦 Payload: ${account.toJson()}");
+      print("📌 User ID: $userId");
+
+      if (userId == null) {
+        print("❌ User ID is null");
+        return null;
+      }
+
+      final response = await ApiClient.get(
+        "api/user/getprofile/$userId",
+        service: "subscription",
+      );
+
+      print("📡 Status Code: ${response.statusCode}");
+      print("📦 Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        print("✅ Parsed JSON: $jsonData");
+
+        return UserModel.fromJson(jsonData);
+      } else {
+        print("❌ API Error: ${response.statusCode}");
+        return null;
+      }
+    } catch (e, stack) {
+      print("🚨 Exception: $e");
+      print(stack);
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> saveAccount(UserAccount account) async {
+    final endpoint = "api/user/account/save";
 
     try {
       final response = await ApiClient.post(
@@ -605,25 +753,21 @@ class subscription_AuthService {
         service: 'subscription',
       );
 
-      debugPrint("📥 [saveAccount] Response received");
-      debugPrint("🔢 Status Code: ${response.request}");
-      debugPrint("🔢 Status Code: ${response.statusCode}");
-      debugPrint("📄 Response Body: ${response.body}");
+      String message = "Something went wrong";
+
+      try {
+        final decoded = jsonDecode(response.body);
+        message = decoded["message"] ?? message;
+      } catch (_) {
+        message = response.body;
+      }
 
       final isSuccess =
           response.statusCode == 200 || response.statusCode == 201;
 
-      debugPrint(
-        isSuccess ? "✅ Account saved successfully" : "❌ Failed to save account",
-      );
-
-      return isSuccess;
-    } catch (e, stackTrace) {
-      debugPrint("🚨 [saveAccount] Exception occurred");
-      debugPrint("❗ Error: $e");
-      debugPrint("🧵 StackTrace: $stackTrace");
-
-      return false;
+      return {"success": isSuccess, "message": message};
+    } catch (e) {
+      return {"success": false, "message": e.toString()};
     }
   }
 

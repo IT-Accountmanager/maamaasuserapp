@@ -28,6 +28,9 @@ class CartModel {
   num deliveryCharges;
   num cgst;
   num sgst;
+  num platformChargeGst;
+  num packingChargeGst;
+  num serviceChargeGst;
 
   final int seatingId;
   final String tableCode;
@@ -59,6 +62,9 @@ class CartModel {
     required this.packingTotal,
     required this.serviceCharges,
     required this.deliveryCharges,
+    required this.packingChargeGst,
+    required this.platformChargeGst,
+    required this.serviceChargeGst,
     required this.cgst,
     required this.sgst,
     required this.seatingId,
@@ -102,6 +108,9 @@ class CartModel {
       packingTotal: (json['packingTotal'] ?? 0).toDouble(),
       serviceCharges: (json['serviceCharges'] ?? 0).toDouble(),
       deliveryCharges: (json['deliveryCharges'] ?? 0).toDouble(),
+      serviceChargeGst: (json['serviceChargeGst'] ?? 0).toDouble(),
+      packingChargeGst: (json['packingChargeGst'] ?? 0).toDouble(),
+      platformChargeGst: (json['platformChargeGst'] ?? 0).toDouble(),
       cgst: (json['cgst'] ?? 0).toDouble(),
       sgst: (json['sgst'] ?? 0).toDouble(),
       seatingId: json['seatingId'] ?? 0,
@@ -156,8 +165,9 @@ String? _safeStr(dynamic v) {
   if (v == null) return null;
   if (v is String) return v;
   if (v is num || v is bool) return v.toString();
-  if (v is Map)
+  if (v is Map) {
     return v['url']?.toString() ?? v['path']?.toString() ?? v.toString();
+  }
   return null;
 }
 

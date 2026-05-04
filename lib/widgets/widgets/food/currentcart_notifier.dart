@@ -11,6 +11,7 @@ class CartNotifier {
   }
 }
 
+// ignore: camel_case_types
 class websocketCartNotifier extends StateNotifier<CartModel?> {
   websocketCartNotifier() : super(null);
 

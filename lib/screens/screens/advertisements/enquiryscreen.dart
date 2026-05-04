@@ -39,10 +39,10 @@ class EnquiryScreen extends StatefulWidget {
   final CallToAction callToAction;
 
   const EnquiryScreen({
-    Key? key,
+    super.key,
     required this.campaignId,
     required this.callToAction,
-  }) : super(key: key);
+  });
 
   @override
   State<EnquiryScreen> createState() => _EnquiryScreenState();
@@ -74,8 +74,10 @@ class _EnquiryScreenState extends State<EnquiryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ Enquiry Submitted Successfully")),
       );
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
     } else {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("❌ Failed to submit enquiry")),
       );

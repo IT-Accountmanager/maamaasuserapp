@@ -42,7 +42,7 @@ Future<String> _buildUserContextQuery() async {
 }
 
 class Authservice {
-  Future<List<FoodCategory>> fetchFoodCategories() async {
+  static Future<List<FoodCategory>> fetchFoodCategories() async {
     final query = await _buildUserContextQuery();
     final url = "api/dish/dish/getall/categeory?$query";
 
@@ -126,7 +126,7 @@ class Authservice {
     // ✅ Decide endpoint
     if (userId != null && userId > 0) {
       endpoint =
-      "api/dish/getby/vendor/user/dishes?vendorId=$vendorId&userId=$userId";
+          "api/dish/getby/vendor/user/dishes?vendorId=$vendorId&userId=$userId";
     } else {
       endpoint = "api/dish/getby/vendor/user/dishes?vendorId=$vendorId";
     }
@@ -155,7 +155,7 @@ class Authservice {
         final List<Dish> dishes = [];
 
         for (final item in data) {
-          print("🔍 ITEM: $item");
+          // print("🔍 ITEM: $item");
 
           final isCategory =
               item['isCategory'] == true || item['parentId'] == 0;
@@ -170,10 +170,7 @@ class Authservice {
         print("📂 Categories count: ${categories.length}");
         print("🍛 Dishes count: ${dishes.length}");
 
-        return MenuResponse(
-          categories: categories,
-          dishes: dishes,
-        );
+        return MenuResponse(categories: categories, dishes: dishes);
       }
 
       // ❌ API returned error

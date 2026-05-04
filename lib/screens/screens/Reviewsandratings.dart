@@ -3,7 +3,10 @@ import '../../Models/food/orders_model.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 
 class ReviewScreen extends StatefulWidget {
+  const ReviewScreen({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _ReviewScreenState createState() => _ReviewScreenState();
 }
 
@@ -75,6 +78,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(0.5),
+          // ignore: deprecated_member_use
           child: Container(height: 0.5, color: Colors.black.withOpacity(0.06)),
         ),
       ),
@@ -136,6 +140,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
+        // ignore: deprecated_member_use
         border: Border.all(color: Colors.black.withOpacity(0.07), width: 0.5),
       ),
       padding: const EdgeInsets.all(16),

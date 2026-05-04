@@ -13,6 +13,7 @@ class catering_invoice extends StatefulWidget {
   const catering_invoice({super.key, required this.orderId});
 
   @override
+  // ignore: library_private_types_in_public_api
   _catering_invoiceState createState() => _catering_invoiceState();
 }
 
@@ -62,6 +63,7 @@ class _catering_invoiceState extends State<catering_invoice>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         Navigator.pushAndRemoveUntil(
@@ -154,6 +156,7 @@ class _catering_invoiceState extends State<catering_invoice>
         icon: Container(
           padding: EdgeInsets.all(6.r),
           decoration: BoxDecoration(
+            // ignore: deprecated_member_use
             color: Colors.white.withOpacity(0.15),
             borderRadius: BorderRadius.circular(10.r),
           ),

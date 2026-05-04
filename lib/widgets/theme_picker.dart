@@ -62,6 +62,7 @@ class ThemePicker extends ConsumerWidget {
                   boxShadow: isActive
                       ? [
                           BoxShadow(
+                            // ignore: deprecated_member_use
                             color: palette.scheme.primary.withOpacity(0.45),
                             blurRadius: 10,
                             spreadRadius: 1,

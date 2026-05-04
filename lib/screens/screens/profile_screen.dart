@@ -11,7 +11,6 @@ import '../../widgets/widgets/profileavataor.dart';
 import 'Refer_Earn.dart';
 import 'Reviewsandratings.dart';
 import 'login_page.dart';
-import 'loginscreensas.dart';
 import 'profile screen/Profile_Account.dart';
 import '../../widgets/signinrequired.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +44,7 @@ class profile {
   // Shadows
   static List<BoxShadow> card = [
     BoxShadow(
+      // ignore: deprecated_member_use
       color: const Color(0xFF000000).withOpacity(0.05),
       blurRadius: 12,
       offset: const Offset(0, 2),

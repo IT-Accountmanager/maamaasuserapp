@@ -27,6 +27,7 @@ class PromotionPopup {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.2),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
@@ -141,6 +142,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   void initState() {
     super.initState();
 
+    // ignore: deprecated_member_use
     _controller = VideoPlayerController.network(widget.url)
       ..initialize()
           .then((_) {

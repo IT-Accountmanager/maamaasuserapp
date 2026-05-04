@@ -1,6 +1,7 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
+// ignore: camel_case_types
 class testscreen extends StatelessWidget {
   const testscreen({super.key});
 

@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/scaffoldmessenger/messenger.dart';
 import 'login_page.dart';
-import 'loginscreensas.dart';
 
 class otpscrncolour {
   static const Color _brand = Color(0xFF6C63FF);
@@ -220,6 +219,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
+                // ignore: deprecated_member_use
                 color: otpscrncolour._brand.withOpacity(0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 6),

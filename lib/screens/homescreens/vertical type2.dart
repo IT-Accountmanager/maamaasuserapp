@@ -62,6 +62,8 @@ class Vertical extends StatelessWidget {
     // },
   ];
 
+  Vertical({super.key});
+
   @override
   // Widget build(BuildContext context) {
   //   return SizedBox(

@@ -503,6 +503,7 @@ import 'otpscreen.dart';
 // If you prefer, you can move kPendingReferralCodeKey to a separate constants file.
 import '../../main.dart' show kPendingReferralCodeKey;
 
+// ignore: camel_case_types
 class signupcolour {
   static const Color _ink = Color(0xFF0F0F0F);
   static const Color _accent = Color(0xFF2563EB);

@@ -1266,6 +1266,7 @@ class _EnquiryCardState extends State<EnquiryCard> {
           border: Border.all(color: catenquiycolour.border, width: 1),
           boxShadow: [
             BoxShadow(
+              // ignore: deprecated_member_use
               color: Colors.black.withOpacity(0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
@@ -1687,6 +1688,7 @@ class _VendorQuotationContentState extends State<VendorQuotationContent> {
         border: Border.all(color: catenquiycolour.border),
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),

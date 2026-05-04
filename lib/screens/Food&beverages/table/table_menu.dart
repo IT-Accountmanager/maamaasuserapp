@@ -35,6 +35,7 @@ class MenuResponse {
   });
 }
 
+// ignore: camel_case_types
 class tablemneuScreen extends StatefulWidget {
   final int vendorId;
   final int seatingId;
@@ -275,6 +276,7 @@ class _MenuScreenState extends State<tablemneuScreen>
             backgroundColor: Menucolours.surface,
             elevation: 0,
             scrolledUnderElevation: 1,
+            // ignore: deprecated_member_use
             shadowColor: Colors.black.withOpacity(0.08),
             automaticallyImplyLeading: true,
             leading: IconButton(
@@ -453,6 +455,7 @@ class _MenuScreenState extends State<tablemneuScreen>
                               borderRadius: BorderRadius.circular(14.r),
                               boxShadow: [
                                 BoxShadow(
+                                  // ignore: deprecated_member_use
                                   color: Colors.black.withOpacity(0.08),
                                   blurRadius: 6,
                                   offset: const Offset(0, 3),
@@ -970,7 +973,7 @@ class SearchField extends StatelessWidget {
   final Function(String) onSearch;
   final Color fillColor;
 
-  const SearchField({required this.onSearch, required this.fillColor});
+  const SearchField({super.key, required this.onSearch, required this.fillColor});
 
   @override
   Widget build(BuildContext context) {
@@ -1012,7 +1015,7 @@ class VegToggle extends StatelessWidget {
   final Function(bool) onToggle;
   final bool compact;
 
-  const VegToggle({
+  const VegToggle({super.key,
     required this.isVeg,
     required this.onToggle,
     this.compact = false,
@@ -1140,6 +1143,7 @@ class DishGridTab extends StatefulWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _DishGridTabState createState() => _DishGridTabState();
 }
 

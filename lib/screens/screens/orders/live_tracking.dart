@@ -2100,6 +2100,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       center,
       size / 2 - 4,
       Paint()
+        // ignore: deprecated_member_use
         ..color = Colors.black.withOpacity(0.18)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
@@ -3409,6 +3410,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
     if (mounted) {
       setState(
         () =>
+            // ignore: deprecated_member_use
             _bikeIcon = BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List()),
       );
     }

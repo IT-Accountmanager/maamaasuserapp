@@ -1,57 +1,102 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 
 class MenuSkeletonScreen extends StatelessWidget {
   const MenuSkeletonScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _skeletonBox(height: 180), // Banner
-          const SizedBox(height: 16),
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            // 🔹 Banner skeleton
+            Container(
+              height: 250,
+              width: double.infinity,
+              color: Colors.white,
+            ),
 
-          _skeletonBox(height: 20, width: 140),
-          const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-          Row(
-            children: List.generate(
-              4,
-              (_) => Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: _skeletonBox(height: 90),
+            // 🔹 Search + toggle
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 80,
+                    height: 40,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 🔹 Categories
+            SizedBox(
+              height: 80,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: 8,
+                itemBuilder: (_, __) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: 40,
+                        height: 8,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 6,
-            itemBuilder: (_, __) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _skeletonBox(height: 110),
+            // 🔹 Grid items
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 6,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisExtent: 220,
+              ),
+              itemBuilder: (_, __) => Padding(
+                padding: const EdgeInsets.all(8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _skeletonBox({double height = 100, double width = double.infinity}) {
-    return Container(
-      height: height,
-      width: width,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(12),
+          ],
+        ),
       ),
     );
   }

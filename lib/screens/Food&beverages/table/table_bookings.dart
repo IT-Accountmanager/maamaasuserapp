@@ -740,6 +740,7 @@ import 'package:flutter/material.dart';
 import 'table_menu.dart';
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
+// ignore: camel_case_types
 class tablebcolours {
   static const bg = Color(0xFFF7F8FC);
   static const surface = Colors.white;
@@ -860,6 +861,7 @@ class _TableBookingsState extends State<TableBookings>
             borderRadius: BorderRadius.circular(tablebcolours.radiusSm + 2),
             boxShadow: [
               BoxShadow(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.08),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
@@ -1022,6 +1024,7 @@ class _WaitingCard extends StatelessWidget {
         border: Border.all(color: tablebcolours.border),
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
@@ -1096,7 +1099,7 @@ class _WaitingCard extends StatelessWidget {
 // ─── Confirmed Card ───────────────────────────────────────────────────────────
 class ConfirmedListCard extends StatefulWidget {
   final ConfirmedList item;
-  const ConfirmedListCard({Key? key, required this.item}) : super(key: key);
+  const ConfirmedListCard({super.key, required this.item});
 
   @override
   State<ConfirmedListCard> createState() => _ConfirmedListCardState();

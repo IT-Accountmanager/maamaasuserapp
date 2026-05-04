@@ -260,7 +260,6 @@
 // }
 
 import 'dart:math';
-import 'package:android_play_install_referrer/android_play_install_referrer.dart';
 import 'package:maamaas/screens/screens/advertisements/popup_message.dart';
 import 'package:firebase_in_app_messaging/firebase_in_app_messaging.dart';
 import 'package:maamaas/screens/screens/advertisements/videoscreen.dart';

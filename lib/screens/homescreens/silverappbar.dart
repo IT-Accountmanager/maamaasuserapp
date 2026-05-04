@@ -405,7 +405,9 @@ class _NotificationButton extends StatelessWidget {
         height: 36.w,
         decoration: BoxDecoration(
           color: useDarkStyle
+              // ignore: deprecated_member_use
               ? primaryColor.withOpacity(0.1)
+              // ignore: deprecated_member_use
               : Colors.white.withOpacity(0.2),
           shape: BoxShape.circle,
         ),
