@@ -8,14 +8,15 @@ import '../../Services/scaffoldmessenger/messenger.dart';
 
 // ─── Tokens ────────────────────────────────────────────────────────────────
 class refercolour {
+  static const bg = Color(0xFFF6F7FB);
   static const _kPrimary = Color(0xFFE66D33);
   static const _kPrimaryLight = Color(0xFFFBEAE0); // warm orange tint
   static const _kPrimaryDark = Color(0xFFC1501F); // deep burnt orange
   static const _kSurface = Color(0xFFFFF8F5); // warm white surface
   static const _kTextDark = Color(0xFF1A0E08); // near-black warm
-  static const _kTextMid = Color(0xFF8A6A5A); // warm muted brown
-  static const _kDivider = Color(0xFFF5ECE7); // warm divider
-  static const _kSuccess = Color(0xFF22C55E);
+  static const _kTextMid = Color(0xFF8A6A5A);
+  static const ink = Color(0xFF111827);// warm muted brown
+
 }
 
 // ─── Screen ────────────────────────────────────────────────────────────────
@@ -31,19 +32,31 @@ class ReferEarn extends StatelessWidget {
         backgroundColor: refercolour._kSurface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
+        // leading: GestureDetector(
+        //   onTap: () => Navigator.pop(context),
+        //   child: Container(
+        //     margin: EdgeInsets.all(8.w),
+        //     decoration: BoxDecoration(
+        //       color: Colors.white,
+        //       borderRadius: BorderRadius.circular(10.r),
+        //       border: Border.all(color: refercolour._kDivider),
+        //     ),
+        //     child: Icon(
+        //       Icons.arrow_back_ios_new_rounded,
+        //       size: 16.sp,
+        //       color: refercolour._kTextDark,
+        //     ),
+        //   ),
+        // ),
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Container(
-            margin: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10.r),
-              border: Border.all(color: refercolour._kDivider),
-            ),
-            child: Icon(
+            margin: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: refercolour.bg, shape: BoxShape.circle),
+            child: const Icon(
               Icons.arrow_back_ios_new_rounded,
-              size: 16.sp,
-              color: refercolour._kTextDark,
+              size: 16,
+              color: refercolour.ink,
             ),
           ),
         ),
@@ -218,18 +231,18 @@ class _Content extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // _HeroBanner(),
-        // SizedBox(height: 20.h),
+        _HeroBanner(),
+        SizedBox(height: 20.h),
         _ReferralCodeCard(
           referralCode: referralCode,
           onCopy: () => _copy(context),
           onShare: _share,
         ),
-      //   SizedBox(height: 20.h),
-      //   _StatsRow(totalReferals: totalReferals, totalCashBack: totalCashBack),
-      //   SizedBox(height: 20.h),
-      //   _HowItWorksCard(),
-      //   SizedBox(height: 24.h),
+        SizedBox(height: 20.h),
+        _StatsRow(totalReferals: totalReferals, totalCashBack: totalCashBack),
+        SizedBox(height: 20.h),
+        _HowItWorksCard(),
+        SizedBox(height: 24.h),
       ],
     );
   }
@@ -445,15 +458,15 @@ class _StatsRow extends StatelessWidget {
             color: const Color(0xFFF59E0B),
           ),
         ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: _StatTile(
-            icon: Icons.check_circle_rounded,
-            value: totalReferals.toString(), // you can change logic if needed
-            label: 'Joined',
-            color: refercolour._kSuccess,
-          ),
-        ),
+        // SizedBox(width: 12.w),
+        // Expanded(
+        //   child: _StatTile(
+        //     icon: Icons.check_circle_rounded,
+        //     value: totalReferals.toString(), // you can change logic if needed
+        //     label: 'Joined',
+        //     color: refercolour._kSuccess,
+        //   ),
+        // ),
       ],
     );
   }
