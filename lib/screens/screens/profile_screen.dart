@@ -1,3 +1,4 @@
+import 'package:maamaas/screens/screens/referrznd%20earn.dart';
 import 'package:maamaas/screens/screens/supportteam/support_team.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -581,6 +582,12 @@ class _MenuListState extends State<_MenuList> {
     //   'color': Color(0xFF8B5CF6),
     //   'key': 'logitics',
     // },
+    {
+      'icon': Icons.manage_accounts_outlined,
+      'label': 'Logistics',
+      'color': Color(0xFF8B5CF6),
+      'key': 'logitics',
+    },
   ];
 
   Widget? _pageForKey(String key, BuildContext context) {
@@ -609,6 +616,8 @@ class _MenuListState extends State<_MenuList> {
         return AccountScreen();
       // case 'logitics':
       //   return TravelHomeScreen();
+    case 'logitics':
+      return ReferEarnScreen();
       default:
         return null;
     }

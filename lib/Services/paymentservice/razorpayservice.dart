@@ -46,8 +46,8 @@ class RazorpayService {
     }
 
     var options = {
-      // 'key': 'rzp_live_RU5whSMu9rPV7s',
-      'key': 'rzp_test_R6hte6Puir9RAR',
+      'key': 'rzp_live_RU5whSMu9rPV7s',
+      // 'key': 'rzp_test_R6hte6Puir9RAR',
       'amount': (amount * 100).toInt(),
       'order_id': orderId,
       'name': "maamaas",

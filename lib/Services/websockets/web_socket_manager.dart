@@ -693,8 +693,8 @@ class WebSocketManager {
     _foodConnecting = true;
     _foodClient = StompClient(
       config: StompConfig(
-        url: 'ws://testing.maamaas.com/food/ws',
-        // url: 'ws://backend.maamaas.com/food/ws',
+        // url: 'ws://testing.maamaas.com/food/ws',
+        url: 'ws://backend.maamaas.com/food/ws',
         onConnect: (frame) {
           _foodConnecting = false;
           for (var callback in _pendingFoodSubscriptions) {
@@ -801,8 +801,8 @@ class WebSocketManager {
 
     _deliveryClient = StompClient(
       config: StompConfig(
-        // url: 'ws://delivery.maamaas.com/delivery/ws/websocket',
-        url: 'ws://testing.maamaas.com/delivery/ws',
+        url: 'ws://delivery.maamaas.com/delivery/ws/websocket',
+        // url: 'ws://testing.maamaas.com/delivery/ws',
         onConnect: (frame) {
           debugPrint('✅ Delivery WebSocket Connected');
           onConnected?.call();
