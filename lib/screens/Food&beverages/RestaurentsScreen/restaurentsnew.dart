@@ -1706,7 +1706,8 @@ class _RestaurantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double screenH = MediaQuery.of(context).size.height;
-    final double cardH = (screenH * 0.28).clamp(200.0, 260.0);
+    // final double cardH = (screenH * 0.28).clamp(200.0, 260.0);
+    final double cardH = (screenH * 0.32).clamp(230.0, 300.0);
     final double imgH = cardH * 0.58;
 
     return GestureDetector(
@@ -1834,10 +1835,11 @@ class _RestaurantCard extends StatelessWidget {
                     // Name + rating
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
-                            banner.companyName.toUpperCase(),
+                            '${banner.companyName.toUpperCase()}(${banner.type}) ',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -1847,6 +1849,17 @@ class _RestaurantCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                        Text(
+                          banner.type,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: restaurentsnewcolour.textMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
                         if ((banner.ratings) > 0) ...[
                           SizedBox(width: 8.w),
                           Container(
@@ -1883,53 +1896,53 @@ class _RestaurantCard extends StatelessWidget {
                     ),
 
                     // Cuisine type + distance
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            banner.type,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: restaurentsnewcolour.textMuted,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    // Row(
+                    //   children: [
+                    //     Flexible(
+                    //       child: Text(
+                    //         banner.type,
+                    //         style: TextStyle(
+                    //           fontSize: 12.sp,
+                    //           color: restaurentsnewcolour.textMuted,
+                    //           fontWeight: FontWeight.w500,
+                    //         ),
+                    //         maxLines: 1,
+                    //         overflow: TextOverflow.ellipsis,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
+                    if (banner.position.isNotEmpty)
+                      Text(
+                        '${banner.position[0].toUpperCase()}'
+                        '${banner.position.substring(1).toLowerCase()}',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: const Color(0xFF6C63FF),
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
-                    ),
-                    if (banner.position.isNotEmpty) ...[
-
-                      Flexible(
-                        child: Text(
-                          '${banner.position[0].toUpperCase()}'
-                          '${banner.position.substring(1).toLowerCase()}',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: const Color(0xFF6C63FF),
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
 
                     // Address
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${banner.addressLine}, ${banner.city}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: restaurentsnewcolour.textLight,
+                        Expanded(
+                          child: Text(
+                            '${banner.addressLine}, ${banner.city}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: restaurentsnewcolour.textLight,
+                            ),
                           ),
                         ),
-                        // _dot(),
+
+                        SizedBox(width: 8),
+
                         Text(
                           Distancehelpermethod.formatDistance(banner.distance),
                           style: TextStyle(

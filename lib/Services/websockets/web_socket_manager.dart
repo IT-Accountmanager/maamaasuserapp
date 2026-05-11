@@ -801,7 +801,7 @@ class WebSocketManager {
 
     _deliveryClient = StompClient(
       config: StompConfig(
-        url: 'ws://delivery.maamaas.com/delivery/ws/websocket',
+        url: 'ws://backend.maamaas.com/delivery/ws/websocket',
         // url: 'ws://testing.maamaas.com/delivery/ws',
         onConnect: (frame) {
           debugPrint('✅ Delivery WebSocket Connected');

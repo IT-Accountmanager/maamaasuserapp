@@ -21,15 +21,15 @@ class ApiClient {
 
   static const String notification =
       // "http://testing.maamaas.com/notify";
-      "https://delivery.maamaas.com/notify";
+      "https://backend.maamaas.com/notify";
 
   static const String catering =
       // "http://testing.maamaas.com/catering";
-      "https://delivery.maamaas.com/catering";
+      "https://backend.maamaas.com/catering";
 
   static const String delivery =
       // "http://testing.maamaas.com/delivery";
-      "https://delivery.maamaas.com/delivery";
+      "https://backend.maamaas.com/delivery";
 
   static const String promotions =
       // "http://testing.maamaas.com/promotions";

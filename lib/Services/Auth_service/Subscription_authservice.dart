@@ -20,7 +20,7 @@ class subscription_AuthService {
 
   static final String baseUrlgateway =
       "https://backend.maamaas.com/subscription";
-      // "http://testing.maamaas.com/subscription";
+  // "http://testing.maamaas.com/subscription";
 
   Future<String> registerUser({
     required String userName,
@@ -374,14 +374,10 @@ class subscription_AuthService {
         service: "subscription",
       );
 
-      if (response.statusCode >= 200 &&
-          response.statusCode < 300) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
         return {"success": true, "message": "Address added successfully"};
       } else {
-        return {
-          "success": false,
-          "message": response.body,
-        };
+        return {"success": false, "message": response.body};
       }
     } catch (e) {
       return {"success": false, "message": e.toString()};

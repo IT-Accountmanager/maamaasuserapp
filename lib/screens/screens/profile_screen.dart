@@ -616,8 +616,8 @@ class _MenuListState extends State<_MenuList> {
         return AccountScreen();
       // case 'logitics':
       //   return TravelHomeScreen();
-    case 'logitics':
-      return ReferEarnScreen();
+      case 'logitics':
+        return ReferEarnScreen();
       default:
         return null;
     }
