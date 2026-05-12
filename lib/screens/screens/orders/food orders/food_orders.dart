@@ -3467,7 +3467,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
             _summaryRow("Platform Charges", order.platformCharges),
           if (order.orderType != OrderType.DINE_IN && order.packingCharges > 0)
             _summaryRow("Packing Charges", order.packingCharges),
-          if (order.orderType == OrderType.DELIVERY && order.deliveryCharges > 0)
+          if (order.orderType == OrderType.DELIVERY &&
+              order.deliveryCharges > 0)
             _summaryRow("Delivery Charges", order.deliveryCharges),
           Divider(height: 20.h, color: foodordecolour.border),
           Row(
