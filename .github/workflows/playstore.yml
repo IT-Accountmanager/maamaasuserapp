@@ -3,7 +3,7 @@ name: Flutter Play Store CI/CD
 on:
   push:
     branches:
-      - main
+      - Testing
 
 jobs:
   build:
