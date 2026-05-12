@@ -15,8 +15,7 @@ class refercolour {
   static const _kSurface = Color(0xFFFFF8F5); // warm white surface
   static const _kTextDark = Color(0xFF1A0E08); // near-black warm
   static const _kTextMid = Color(0xFF8A6A5A);
-  static const ink = Color(0xFF111827);// warm muted brown
-
+  static const ink = Color(0xFF111827); // warm muted brown
 }
 
 // ─── Screen ────────────────────────────────────────────────────────────────
@@ -52,7 +51,10 @@ class ReferEarn extends StatelessWidget {
           onTap: () => Navigator.pop(context),
           child: Container(
             margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: refercolour.bg, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: refercolour.bg,
+              shape: BoxShape.circle,
+            ),
             child: const Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,

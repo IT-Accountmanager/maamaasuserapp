@@ -19,8 +19,8 @@ class subscription_AuthService {
   static const _secureStorage = FlutterSecureStorage();
 
   static final String baseUrlgateway =
-      "https://backend.maamaas.com/subscription";
-  // "http://testing.maamaas.com/subscription";
+      // "https://backend.maamaas.com/subscription";
+  "http://testing.maamaas.com/subscription";
 
   Future<String> registerUser({
     required String userName,
