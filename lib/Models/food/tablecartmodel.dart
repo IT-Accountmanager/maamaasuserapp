@@ -79,6 +79,7 @@ class CartItem {
   double gst;
   double packingCharges;
   int quantity;
+  int previousQuantity;
   String chefType;
   double totalPrice;
   String? note;
@@ -94,6 +95,7 @@ class CartItem {
       gst = 0.0,
       packingCharges = 0.0,
       quantity = 0,
+        previousQuantity =0,
       chefType = '',
       totalPrice = 0.0,
       note = '',
@@ -109,6 +111,7 @@ class CartItem {
     required this.gst,
     required this.packingCharges,
     required this.quantity,
+    required this.previousQuantity,
     required this.chefType,
     required this.totalPrice,
     this.note,
@@ -126,6 +129,7 @@ class CartItem {
       gst: (json['gst'] ?? 0).toDouble(),
       packingCharges: (json['packingCharges'] ?? 0).toDouble(),
       quantity: json['quantity'] ?? 0,
+      previousQuantity:json['previousQuantity'] ?? 0,
       chefType: json['chefType'] ?? '', // ✅ FIX
       totalPrice: (json['totalPrice'] ?? 0).toDouble(),
       note: json['note'],

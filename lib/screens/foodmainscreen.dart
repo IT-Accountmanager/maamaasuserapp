@@ -656,7 +656,10 @@ class _MainScreenState extends State<MainScreenfood>
           //       ),
           //     ),
           //   ),
-          if (activeOrder != null)
+          // if (_currentIndex == 0 && activeOrder != null)
+          if (_currentIndex == 0 &&
+              activeOrder != null &&
+              activeOrder!.orderType == OrderType.DELIVERY)
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -696,16 +699,15 @@ class _MainScreenState extends State<MainScreenfood>
                     Row(
                       children: [
                         // Pulsing live dot in a rounded square
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEAFFF4),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(child: _PulsingDot()),
-                        ),
-
+                        // Container(
+                        //   width: 40,
+                        //   height: 40,
+                        //   decoration: BoxDecoration(
+                        //     color: const Color(0xFFEAFFF4),
+                        //     borderRadius: BorderRadius.circular(12),
+                        //   ),
+                        //   child: Center(child: _PulsingDot()),
+                        // ),
                         const SizedBox(width: 14),
 
                         Expanded(
@@ -722,34 +724,15 @@ class _MainScreenState extends State<MainScreenfood>
                                       color: Colors.white,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFEAFFF4),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Text(
-                                      "Live",
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF16A34A),
-                                      ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    getOrderStatusText(activeOrder!.status),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
                                     ),
                                   ),
                                 ],
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                getOrderStatusText(activeOrder!.status),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                ),
                               ),
                             ],
                           ),
@@ -761,11 +744,10 @@ class _MainScreenState extends State<MainScreenfood>
                           size: 20,
                         ),
 
-                        const SizedBox(height: 16),
-
                         // ── Progress steps ──
                       ],
                     ),
+                    const SizedBox(height: 16),
                     _OrderProgressStepper(status: activeOrder!.status),
                   ],
                 ),
@@ -924,10 +906,10 @@ class _OrderProgressStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const steps = [
-      {'label': 'Placed',    'icon': Icons.receipt_long_rounded},
+      {'label': 'Placed', 'icon': Icons.receipt_long_rounded},
       {'label': 'Confirmed', 'icon': Icons.check_circle_outline_rounded},
       {'label': 'Preparing', 'icon': Icons.restaurant_rounded},
-      {'label': 'On the way','icon': Icons.directions_bike_rounded},
+      {'label': 'On the way', 'icon': Icons.directions_bike_rounded},
       {'label': 'Delivered', 'icon': Icons.inventory_2_rounded},
     ];
 
@@ -945,7 +927,7 @@ class _OrderProgressStepper extends StatelessWidget {
         }
 
         final stepIndex = i ~/ 2;
-        final isDone   = stepIndex <= _currentStep;
+        final isDone = stepIndex <= _currentStep;
         final isActive = stepIndex == _currentStep;
 
         return Column(
@@ -958,7 +940,9 @@ class _OrderProgressStepper extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: isDone ? const Color(0xFF22C55E) : Colors.grey.shade100,
                 border: Border.all(
-                  color: isDone ? const Color(0xFF22C55E) : Colors.grey.shade300,
+                  color: isDone
+                      ? const Color(0xFF22C55E)
+                      : Colors.grey.shade300,
                   width: 0.5,
                 ),
               ),
@@ -978,7 +962,7 @@ class _OrderProgressStepper extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: isDone ? const Color(0xFF22C55E) : Colors.grey.shade400,
+                color: isDone ? Colors.white : Colors.white,
               ),
             ),
           ],

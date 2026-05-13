@@ -8,7 +8,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-const String baseurl = "http://testing.maamaas.com/subscription";
+const String baseurl = "http://staging.maamaas.com:8080//subscription";
 // const String baseurl = "http://backend.maamaas.com/subscription";
 
 class AddressState {

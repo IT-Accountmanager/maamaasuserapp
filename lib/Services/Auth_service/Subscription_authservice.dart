@@ -6,7 +6,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Models/subscrptions/address_model.dart';
-
 import '../../Models/subscrptions/location_model.dart';
 import '../../Models/subscrptions/transaction_model.dart';
 import '../../Models/subscrptions/userModel.dart';
@@ -20,7 +19,7 @@ class subscription_AuthService {
 
   static final String baseUrlgateway =
       // "https://backend.maamaas.com/subscription";
-  "http://testing.maamaas.com/subscription";
+      "http://staging.maamaas.com:8080/subscription";
 
   Future<String> registerUser({
     required String userName,

@@ -2683,14 +2683,14 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _getStatusSubtitle(),
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 13,
-                  ),
-                ),
+                // const SizedBox(height: 4),
+                // Text(
+                //   _getStatusSubtitle(),
+                //   style: TextStyle(
+                //     color: Colors.white.withOpacity(0.9),
+                //     fontSize: 13,
+                //   ),
+                // ),
                 if (isDelivered) ...[
                   const SizedBox(height: 6),
                   _buildDeliveryBadge(),
