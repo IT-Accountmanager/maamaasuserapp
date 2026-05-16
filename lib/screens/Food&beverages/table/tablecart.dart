@@ -23,6 +23,23 @@ enum PaymentOverlayState {
   success,
 }
 
+class cartuser {
+  static const bg = Color(0xFFF5F6FA);
+  static const surface = Color(0xFFFFFFFF);
+  static const border = Color(0xFFE8ECF4);
+
+  static const violet = Color(0xFF6C63FF);
+  static const violetDim = Color(0x1A6C63FF);
+
+  static const textPrimary = Color(0xFF1A1D2E);
+  static const textSecondary = Color(0xFF64748B);
+  static const textMuted = Color(0xFFB0B8CC);
+
+  static const green = Color(0xFF10B981);
+  static const red = Color(0xFFEF4444);
+  static const amber = Color(0xFFF59E0B);
+}
+
 // ignore: camel_case_types
 class tablecart extends StatefulWidget {
   final int seatingId;
@@ -516,6 +533,15 @@ class _tablecartState extends State<tablecart> {
         setState(() {
           // Always sync tableCartData so totals (grandTotal, GST, etc.) update
           tableCartData = freshCart;
+          final delivered =
+              freshCart.cartItems.isNotEmpty &&
+              freshCart.cartItems
+                  .where((i) => i.orderStatus != "CANCELLED")
+                  .every((i) => i.orderStatus == "DELIVERED");
+
+          if (!delivered) {
+            isExpanded = false;
+          }
           if (updatedItemId != null) {
             final updatedItem = fetchedItems.firstWhere(
               (item) => item.itemId == updatedItemId,
@@ -667,16 +693,17 @@ class _tablecartState extends State<tablecart> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Column(
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Text(
+                              /// LEFT SIDE
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
                                       item.dishName,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black87,
@@ -684,146 +711,186 @@ class _tablecartState extends State<tablecart> {
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFE8F5E9),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      "₹${item.price}",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2E7D32),
+
+                                    const SizedBox(height: 8),
+
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE8F5E9),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        "₹${item.price}",
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF2E7D32),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
 
-                              SizedBox(height: 8),
+                              const SizedBox(width: 12),
 
-                              Row(
-                                children: [
-                                  QuantityControl(
-                                    item: item,
-                                    onQuantityChanged: () {
-                                      // Reload full cart so grand total, GST, subtotal all refresh
-                                      _loadCartItems(
+                              /// QUANTITY
+                              QuantityControl(
+                                item: item,
+                                onQuantityChanged: () {
+                                  _loadCartItems(updatedItemId: item.itemId);
+                                },
+                              ),
+
+                              const SizedBox(width: 10),
+
+                              /// SEND BUTTON
+                              // SendButton(
+                              //   item: item,
+                              //   sent: shouldShowSent(item),
+                              //   onSend: () async {
+                              //     final noteController = _noteControllers
+                              //         .putIfAbsent(
+                              //           item.itemId,
+                              //           () => TextEditingController(
+                              //             text: item.note ?? '',
+                              //           ),
+                              //         );
+                              //
+                              //     final noteText = noteController.text.trim();
+                              //
+                              //     if (_isSendingMap[item.itemId] == true) {
+                              //       return;
+                              //     }
+                              //
+                              //     setState(() {
+                              //       _isSendingMap[item.itemId] = true;
+                              //     });
+                              //
+                              //     try {
+                              //       bool success = await food_Authservice
+                              //           .updateCartItemStatus(
+                              //             itemId: item.itemId,
+                              //             status: 'PENDING',
+                              //             note: noteText.isNotEmpty
+                              //                 ? noteText
+                              //                 : null,
+                              //           );
+                              //
+                              //       if (success) {
+                              //         await _loadCartItems();
+                              //
+                              //         setState(() {
+                              //           send = true;
+                              //         });
+                              //
+                              //         scrollToBottom();
+                              //
+                              //         if (!mounted) return;
+                              //
+                              //         AppAlert.success(
+                              //           context,
+                              //           "✅ Order placed for ${item.dishName}",
+                              //         );
+                              //       } else {
+                              //         AppAlert.error(
+                              //           context,
+                              //           "❌ Failed to place order for ${item.dishName}",
+                              //         );
+                              //       }
+                              //     } finally {
+                              //       if (mounted) {
+                              //         setState(() {
+                              //           _isSendingMap[item.itemId] = false;
+                              //         });
+                              //       }
+                              //     }
+                              //   },
+                              //   child: (_isSendingMap[item.itemId] == true)
+                              //       ? const SizedBox(
+                              //           width: 20,
+                              //           height: 20,
+                              //           child: CircularProgressIndicator(
+                              //             color: Colors.white,
+                              //             strokeWidth: 2,
+                              //           ),
+                              //         )
+                              //       : Text(
+                              //           shouldShowSent(item) ? "Sent" : "Send",
+                              //           style: const TextStyle(
+                              //             color: Colors.white,
+                              //             fontWeight: FontWeight.bold,
+                              //           ),
+                              //         ),
+                              // ),
+                              SendButton(
+                                item: item,
+                                isSending: _isSendingMap[item.itemId] == true,
+                                onSend: () async {
+                                  if (_isSendingMap[item.itemId] == true)
+                                    return;
+
+                                  final note = _getNoteController(
+                                    item,
+                                  ).text.trim();
+                                  setState(
+                                    () => _isSendingMap[item.itemId] = true,
+                                  );
+
+                                  try {
+                                    final success = await food_Authservice
+                                        .updateCartItemStatus(
+                                          itemId: item.itemId,
+                                          status: 'CONFIRMED',
+                                          note: note.isNotEmpty ? note : null,
+                                        );
+
+                                    if (success) {
+                                      // ✅ This is the key line — locks minus and disables Send
+                                      // immediately without waiting for the full reload
+                                      setState(
+                                        () => item.previousQuantity =
+                                            item.quantity,
+                                      );
+
+                                      await _loadCartItems(
                                         updatedItemId: item.itemId,
                                       );
-                                    },
-                                  ),
+                                      scrollToBottom();
 
-                                  Spacer(),
-
-                                  SendButton(
-                                    item: item,
-                                    // sent: _sentStatus[item.itemId] ?? false,
-                                    sent: shouldShowSent(item),
-                                    onSend: () async {
-                                      final noteController = _noteControllers
-                                          .putIfAbsent(
-                                            item.itemId,
-                                            () => TextEditingController(
-                                              text: item.note ?? '',
-                                            ),
-                                          );
-                                      final noteText = noteController.text
-                                          .trim();
-                                      // Prevent double-tap for THIS item only
-                                      if (_isSendingMap[item.itemId] == true) {
-                                        return;
-                                      }
-                                      setState(() {
-                                        _isSendingMap[item.itemId] = true;
-                                      });
-
-                                      try {
-                                        bool success = await food_Authservice
-                                            .updateCartItemStatus(
-                                              itemId: item.itemId,
-                                              status: 'PENDING',
-                                              note: noteText.isNotEmpty
-                                                  ? noteText
-                                                  : null,
-                                            );
-
-                                        if (success) {
-                                          await _loadCartItems();
-                                          setState(() {
-                                            // _sentStatus[item.itemId] = true;
-                                            send = true;
-                                          });
-                                          scrollToBottom();
-                                          if (!mounted) return;
-                                          AppAlert.success(
-                                            context,
-                                            "✅ Order placed for ${item.dishName}",
-                                          );
-                                        } else {
-                                          AppAlert.error(
-                                            context,
-                                            "❌ Failed to place order for ${item.dishName}",
-                                          );
-                                        }
-                                      } finally {
-                                        if (mounted) {
-                                          setState(() {
-                                            _isSendingMap[item.itemId] = false;
-                                          });
-                                        }
-                                      }
-                                    },
-
-                                    // child: (_isSendingMap[item.itemId] == true)
-                                    //     ? SizedBox(
-                                    //         width: 20,
-                                    //         height: 20,
-                                    //         child: CircularProgressIndicator(
-                                    //           color: Colors.white,
-                                    //           strokeWidth: 2,
-                                    //         ),
-                                    //       )
-                                    //     : Text(
-                                    //         _sentStatus[item.itemId] == true
-                                    //             ? "Sent"
-                                    //             : "Send",
-                                    //       ),
-                                    child: (_isSendingMap[item.itemId] == true)
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : Text(
-                                            shouldShowSent(item)
-                                                ? "Sent"
-                                                : "Send",
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                  ),
-                                ],
+                                      if (!mounted) return;
+                                      AppAlert.success(
+                                        context,
+                                        '✅ Order placed for ${item.dishName}',
+                                      );
+                                    } else {
+                                      if (!mounted) return;
+                                      AppAlert.error(
+                                        context,
+                                        '❌ Failed to place order for ${item.dishName}',
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(
+                                        () =>
+                                            _isSendingMap[item.itemId] = false,
+                                      );
+                                    }
+                                  }
+                                },
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 12),
 
+                    SizedBox(height: 12),
                     TextField(
                       controller: _getNoteController(item),
                       maxLines: 1,
@@ -867,36 +934,36 @@ class _tablecartState extends State<tablecart> {
             }),
 
             // Subtotal Section
-            Container(
-              margin: EdgeInsets.only(top: 16),
-              padding: EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(width: 1, color: Colors.grey[200]!),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Sub Total",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.grey[800],
-                    ),
-                  ),
-                  Text(
-                    "₹${subtotal.toStringAsFixed(2)}",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: AppColors.of(context).primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Container(
+            //   margin: EdgeInsets.only(top: 16),
+            //   padding: EdgeInsets.symmetric(vertical: 12),
+            //   decoration: BoxDecoration(
+            //     border: Border(
+            //       top: BorderSide(width: 1, color: Colors.grey[200]!),
+            //     ),
+            //   ),
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       Text(
+            //         "Sub Total",
+            //         style: TextStyle(
+            //           fontWeight: FontWeight.bold,
+            //           fontSize: 14,
+            //           color: Colors.grey[800],
+            //         ),
+            //       ),
+            //       Text(
+            //         "₹${subtotal.toStringAsFixed(2)}",
+            //         style: TextStyle(
+            //           fontWeight: FontWeight.bold,
+            //           fontSize: 16,
+            //           color: AppColors.of(context).primary,
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -1005,22 +1072,101 @@ class _tablecartState extends State<tablecart> {
     );
   }
 
-  Widget _buildTotalRow(String label, num value, {bool isBold = false}) {
+  // Widget _buildTotalRow(
+  //   String label,
+  //   num value, {
+  //   bool isBold = false,
+  //   VoidCallback? onInfoTap,
+  // }) {
+  //   return Padding(
+  //     padding: EdgeInsets.symmetric(vertical: 4.h),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Text(
+  //               label,
+  //               style: TextStyle(
+  //                 fontSize: 14.sp,
+  //                 fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+  //                 color: isBold ? Colors.black87 : Colors.grey[700],
+  //               ),
+  //             ),
+  //
+  //             if (onInfoTap != null) ...[
+  //               SizedBox(width: 4.w),
+  //
+  //               GestureDetector(
+  //                 onTap: onInfoTap,
+  //                 child: Icon(
+  //                   Icons.info_outline,
+  //                   size: 16.sp,
+  //                   color: Colors.grey,
+  //                 ),
+  //               ),
+  //             ],
+  //           ],
+  //         ),
+  //
+  //         Text(
+  //           "₹${value.toStringAsFixed(2)}",
+  //           style: TextStyle(
+  //             fontSize: 14.sp,
+  //             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+  //             color: isBold
+  //                 ? Theme.of(context).primaryColor
+  //                 : Colors.grey[700],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+  Widget _buildTotalRow(
+    String label,
+    num value, {
+    bool isBold = false,
+    VoidCallback? onInfoTap,
+  }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.h),
+      padding: EdgeInsets.symmetric(vertical: 6.h),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: isBold ? Colors.black87 : Colors.grey[700],
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                      color: isBold ? Colors.black87 : Colors.grey[700],
+                    ),
+                  ),
+                ),
+
+                if (onInfoTap != null) ...[
+                  SizedBox(width: 4.w),
+
+                  GestureDetector(
+                    onTap: onInfoTap,
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 16.sp,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
+
           Text(
-            "₹$value",
+            "₹${value.toStringAsFixed(2)}",
+            textAlign: TextAlign.end,
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
@@ -1445,7 +1591,7 @@ class _tablecartState extends State<tablecart> {
     if (cart == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    final orderType = tableCartData?.orderType ?? "DINE_IN"; // default fallback
+    // default fallback
     final subtotal = tableCartData!.subtotal;
     final gstTotal = tableCartData!.gstTotal;
     final grandTotal = tableCartData!.grandTotal;
@@ -1488,14 +1634,18 @@ class _tablecartState extends State<tablecart> {
                 if (discountAmount > 0) ...[
                   _builddiscountRow("Discount Amount", discountAmount),
                 ],
-                _buildTotalRow("platform Charges", platformcharges),
+                _buildTotalRow("Smart DineIn Fee", platformcharges),
 
-                if (orderType == "TABLE_DINE_IN" && discountAmount > 0) ...[
-                  _buildServiceChargesRow(theme, colorScheme),
-                ],
+                // if (orderType == "TABLE_DINE_IN" && serviceCharges > 0) ...[
 
-                _buildTotalRow("SGST", gstTotal / 2),
-                _buildTotalRow("CGST", gstTotal / 2),
+                // ],
+                _buildTotalRow(
+                  "GST",
+                  gstTotal,
+                  onInfoTap: () => _showGstDialog('GST'),
+                ),
+                _buildServiceChargesRow(theme, colorScheme),
+                // _buildTotalRow("CGST", gstTotal / 2),
                 Divider(height: 24.h, thickness: 1, color: Colors.grey),
                 _buildTotalRow("Grand Total", grandTotal, isBold: true),
               ],
@@ -1508,22 +1658,109 @@ class _tablecartState extends State<tablecart> {
     );
   }
 
-  Widget _builddiscountRow(String label, num value, {bool isBold = false}) {
+  void _showGstDialog(String type) {
+    // final data = cartData;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+
+          titlePadding: EdgeInsets.fromLTRB(16.w, 12.h, 8.w, 0),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$type Details',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: EdgeInsets.all(4.r),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cartuser.border.withOpacity(0.3),
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    size: 16.sp,
+                    color: cartuser.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if ((tableCartData?.platformChargeGst ?? 0) > 0)
+                _dialogRow(
+                  'Platform $type',
+                  ((tableCartData?.platformChargeGst ?? 0)),
+                ),
+              if ((tableCartData?.packingChargeGst ?? 0) > 0)
+                _dialogRow(
+                  'Packing $type',
+                  ((tableCartData?.packingChargeGst ?? 0)),
+                ),
+              if ((tableCartData?.serviceChargeGst ?? 0) > 0)
+                _dialogRow(
+                  'Service $type',
+                  ((tableCartData?.serviceChargeGst ?? 0)),
+                ),
+
+              SizedBox(height: 8),
+              Divider(),
+
+              _dialogRow('Total $type', (tableCartData?.gstTotal ?? 0)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _dialogRow(String label, num value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.h),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [Text(label), Text('₹${_fmt(value)}')],
+      ),
+    );
+  }
+
+  String _fmt(num? v) => (v ?? 0).toStringAsFixed(2);
+
+  Widget _builddiscountRow(String label, num value, {bool isBold = false}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: isBold ? Colors.black87 : Colors.grey[700],
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                color: isBold ? Colors.black87 : Colors.grey[700],
+              ),
             ),
           ),
+
           Text(
-            "-₹$value",
+            "-₹${value.toStringAsFixed(2)}",
+            textAlign: TextAlign.end,
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
@@ -1537,9 +1774,10 @@ class _tablecartState extends State<tablecart> {
 
   Widget _buildServiceChargesRow(ThemeData theme, ColorScheme colorScheme) {
     final serviceCharges = tableCartData?.serviceCharges ?? 0.0;
+
     return Container(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         color: colorScheme.surfaceContainerHighest.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8.r),
       ),
@@ -1549,58 +1787,66 @@ class _tablecartState extends State<tablecart> {
           Text(
             "Service Charges",
             style: theme.textTheme.bodyMedium?.copyWith(
-              // ignore: deprecated_member_use
               color: colorScheme.onSurface.withOpacity(0.9),
             ),
           ),
           Row(
             children: [
-              GestureDetector(
-                onTap: () async {
-                  final newState = !isServiceChargeApplied;
-                  if (tableCartData?.cartId == null) {
-                    return;
-                  }
-                  await food_Authservice.updateServiceCharges(
-                    cartId: tableCartData!.cartId,
-                    serviceCharge: isServiceChargeApplied
-                        ? "NOT_APPLICABLE"
-                        : "APPLICABLE",
-                  );
-                  setState(() {
-                    isServiceChargeApplied = newState;
-                    _initializeData();
-                  });
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isServiceChargeApplied
-                        ? colorScheme.errorContainer
-                        : colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    isServiceChargeApplied ? "Remove" : "Apply",
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: isServiceChargeApplied
-                          ? colorScheme.onErrorContainer
-                          : colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold,
+              // ✅ Only show button when charges exist
+              if (serviceCharges > 0) ...[
+                // ✅ Show "Remove" only when applied, nothing when removed
+                if (isServiceChargeApplied)
+                  GestureDetector(
+                    onTap: () async {
+                      if (tableCartData?.cartId == null) return;
+
+                      await food_Authservice.updateServiceCharges(
+                        cartId: tableCartData!.cartId,
+                        serviceCharge: "NOT_APPLICABLE",
+                      );
+
+                      await _initializeData();
+
+                      setState(() {
+                        isServiceChargeApplied = false;
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        "Remove",
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onErrorContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              SizedBox(width: 10.w),
+                SizedBox(width: 10.w),
+              ],
+
+              // ✅ Amount display
               Text(
-                isServiceChargeApplied
-                    ? "-₹${serviceCharges.toStringAsFixed(2)}"
-                    : "₹${serviceCharges.toStringAsFixed(2)}",
+                serviceCharges > 0
+                    ? (isServiceChargeApplied
+                          ? "₹${serviceCharges.toStringAsFixed(2)}"
+                          : "-₹${serviceCharges.toStringAsFixed(2)}") // removed state
+                    : "₹0.00",
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface,
+                  // ✅ Red color hint when charge is waived
+                  color: isServiceChargeApplied
+                      ? colorScheme.onSurface
+                      : colorScheme.error,
+                  fontWeight: isServiceChargeApplied
+                      ? FontWeight.normal
+                      : FontWeight.w600,
                 ),
               ),
             ],
@@ -1705,6 +1951,16 @@ class _tablecartState extends State<tablecart> {
 // class _QuantityControlState extends State<QuantityControl> {
 //   bool _isUpdating = false;
 //
+//   bool get hasConfirmedQuantity {
+//     return widget.item.previousQuantity > 0;
+//   }
+//
+//   bool get canReduce {
+//     final minQty = hasConfirmedQuantity ? widget.item.previousQuantity : 0;
+//
+//     return widget.item.quantity > minQty;
+//   }
+//
 //   Future<void> _updateQuantity(int newQuantity) async {
 //     setState(() {
 //       _isUpdating = true;
@@ -1719,53 +1975,93 @@ class _tablecartState extends State<tablecart> {
 //       setState(() {
 //         widget.item.quantity = newQuantity;
 //         widget.item.totalPrice = widget.item.price * newQuantity;
-//         _isUpdating = false;
 //       });
-//       // Notify parent to reload cart (totals, grandTotal, etc.)
+//
 //       widget.onQuantityChanged();
 //     } else {
-//       setState(() {
-//         _isUpdating = false;
-//       });
 //       // ignore: use_build_context_synchronously
 //       AppAlert.error(context, "❌ Failed to update quantity");
 //     }
+//
+//     if (mounted) {
+//       setState(() {
+//         _isUpdating = false;
+//       });
+//     }
+//   }
+//
+//   Widget _qtyBtn(IconData icon, Color color, VoidCallback? onTap) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Container(
+//         padding: EdgeInsets.all(6.w),
+//         decoration: BoxDecoration(
+//           color: color.withOpacity(0.10),
+//           borderRadius: BorderRadius.circular(8.r),
+//         ),
+//         child: Icon(
+//           icon,
+//           size: 14.sp,
+//           color: onTap == null ? Colors.grey : color,
+//         ),
+//       ),
+//     );
 //   }
 //
 //   @override
 //   Widget build(BuildContext context) {
-//     return Container(
-//       decoration: BoxDecoration(
-//         border: Border.all(color: Colors.grey.shade400),
-//         borderRadius: BorderRadius.circular(8),
-//       ),
-//       child: Row(
-//         mainAxisSize: MainAxisSize.min,
-//         children: [
-//           IconButton(
-//             icon: Icon(Icons.remove, size: 20),
-//             onPressed: _isUpdating || widget.item.quantity <= 0
-//                 ? null
-//                 : () => _updateQuantity(widget.item.quantity - 1),
+//     return Row(
+//       children: [
+//         Container(
+//           padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+//           decoration: BoxDecoration(
+//             color: cartuser.bg,
+//             borderRadius: BorderRadius.circular(10.r),
+//             border: Border.all(color: cartuser.border),
 //           ),
-//           _isUpdating
-//               ? SizedBox(
-//                   width: 16,
-//                   height: 16,
-//                   child: CircularProgressIndicator(strokeWidth: 2),
-//                 )
-//               : Text(
-//                   "${widget.item.quantity}",
-//                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-//                 ),
-//           IconButton(
-//             icon: Icon(Icons.add_circle_outline, size: 20),
-//             onPressed: _isUpdating
-//                 ? null
-//                 : () => _updateQuantity(widget.item.quantity + 1),
+//           child: Row(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               _qtyBtn(
+//                 Icons.remove_rounded,
+//                 cartuser.red,
+//                 _isUpdating || !canReduce
+//                     ? null
+//                     : () => _updateQuantity(widget.item.quantity - 1),
+//               ),
+//
+//               Padding(
+//                 padding: EdgeInsets.symmetric(horizontal: 10.w),
+//                 child: _isUpdating
+//                     ? SizedBox(
+//                         width: 14.w,
+//                         height: 14.w,
+//                         child: CircularProgressIndicator(
+//                           strokeWidth: 2,
+//                           color: cartuser.green,
+//                         ),
+//                       )
+//                     : Text(
+//                         "${widget.item.quantity}",
+//                         style: TextStyle(
+//                           fontSize: 13.sp,
+//                           fontWeight: FontWeight.w700,
+//                           color: cartuser.textPrimary,
+//                         ),
+//                       ),
+//               ),
+//
+//               _qtyBtn(
+//                 Icons.add_rounded,
+//                 cartuser.green,
+//                 _isUpdating
+//                     ? null
+//                     : () => _updateQuantity(widget.item.quantity + 1),
+//               ),
+//             ],
 //           ),
-//         ],
-//       ),
+//         ),
+//       ],
 //     );
 //   }
 // }
@@ -1787,111 +2083,103 @@ class QuantityControl extends StatefulWidget {
 class _QuantityControlState extends State<QuantityControl> {
   bool _isUpdating = false;
 
-  bool get hasConfirmedQuantity {
-    return widget.item.previousQuantity > 0;
-  }
+  // Minus is blocked at previousQuantity (what's already sent)
+  // If nothing sent yet, minimum is 1
+  int get _floor =>
+      widget.item.previousQuantity > 0 ? widget.item.previousQuantity : 1;
 
-  bool get canReduce {
-    final minQty = hasConfirmedQuantity ? widget.item.previousQuantity : 0;
+  bool get _canDecrease => widget.item.quantity > _floor;
 
-    return widget.item.quantity > minQty;
-  }
+  Future<void> _updateQuantity(int newQty) async {
+    if (_isUpdating) return;
+    setState(() => _isUpdating = true);
 
-  Future<void> _updateQuantity(int newQuantity) async {
-    setState(() {
-      _isUpdating = true;
-    });
-
-    bool success = await food_Authservice.updateCartItemQuantity(
+    final success = await food_Authservice.updateCartItemQuantity(
       itemId: widget.item.itemId,
-      quantity: newQuantity,
+      quantity: newQty,
     );
 
     if (success) {
       setState(() {
-        widget.item.quantity = newQuantity;
-        widget.item.totalPrice = widget.item.price * newQuantity;
+        widget.item.quantity = newQty;
+        widget.item.totalPrice = widget.item.price * newQty;
       });
-
       widget.onQuantityChanged();
     } else {
-      // ignore: use_build_context_synchronously
-      AppAlert.error(context, "❌ Failed to update quantity");
+      if (mounted) AppAlert.error(context, '❌ Failed to update quantity');
     }
 
-    if (mounted) {
-      setState(() {
-        _isUpdating = false;
-      });
-    }
+    if (mounted) setState(() => _isUpdating = false);
+  }
+
+  Widget _qtyBtn(IconData icon, Color color, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(6.w),
+        decoration: BoxDecoration(
+          color: color.withOpacity(onTap == null ? 0.05 : 0.12),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Icon(
+          icon,
+          size: 14.sp,
+          color: onTap == null ? Colors.grey.shade300 : color,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool showSendAgain =
-        widget.item.quantity != widget.item.previousQuantity &&
-        widget.item.orderStatus != null;
-
-    return Row(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade400),
-            borderRadius: BorderRadius.circular(8),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: cartuser.bg,
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: cartuser.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _qtyBtn(
+            Icons.remove_rounded,
+            cartuser.red,
+            (_isUpdating || !_canDecrease)
+                ? null
+                : () => _updateQuantity(widget.item.quantity - 1),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove, size: 20),
-                onPressed: _isUpdating || !canReduce
-                    ? null
-                    : () => _updateQuantity(widget.item.quantity - 1),
-              ),
 
-              _isUpdating
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      "${widget.item.quantity}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            child: _isUpdating
+                ? SizedBox(
+                    width: 14.w,
+                    height: 14.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: cartuser.green,
                     ),
-
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline, size: 20),
-                onPressed: _isUpdating
-                    ? null
-                    : () => _updateQuantity(widget.item.quantity + 1),
-              ),
-            ],
+                  )
+                : Text(
+                    '${widget.item.quantity}',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w700,
+                      color: cartuser.textPrimary,
+                    ),
+                  ),
           ),
-        ),
 
-        if (showSendAgain) ...[
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade100,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Text(
-              "New Qty Added",
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.orange,
-              ),
-            ),
+          _qtyBtn(
+            Icons.add_rounded,
+            cartuser.green,
+            _isUpdating
+                ? null
+                : () => _updateQuantity(widget.item.quantity + 1),
           ),
         ],
-      ],
+      ),
     );
   }
 }
@@ -1913,23 +2201,25 @@ class _QuantityControlState extends State<QuantityControl> {
 //   @override
 //   Widget build(BuildContext context) {
 //     return GestureDetector(
-//       onTap: onSend,
+//       onTap: sent ? null : onSend,
 //       child: Container(
-//         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
 //         decoration: BoxDecoration(
 //           color: sent ? Colors.green : Theme.of(context).primaryColor,
 //           borderRadius: BorderRadius.circular(10),
 //           border: Border.all(color: Colors.black12),
 //         ),
 //         child: Center(
-//           child: Text(
-//             sent ? "Sent" : "Send",
-//             style: TextStyle(
-//               fontSize: 16,
-//               fontWeight: FontWeight.bold,
-//               color: Colors.white,
-//             ),
-//           ),
+//           child:
+//               child ??
+//               Text(
+//                 sent ? "Sent" : "Send",
+//                 style: const TextStyle(
+//                   fontSize: 16,
+//                   fontWeight: FontWeight.bold,
+//                   color: Colors.white,
+//                 ),
+//               ),
 //         ),
 //       ),
 //     );
@@ -1938,40 +2228,52 @@ class _QuantityControlState extends State<QuantityControl> {
 
 class SendButton extends StatelessWidget {
   final CartItem item;
-  final bool sent;
+  final bool isSending;
   final VoidCallback onSend;
-  final Widget? child;
 
   const SendButton({
     super.key,
     required this.item,
-    required this.sent,
+    required this.isSending,
     required this.onSend,
-    this.child,
   });
+
+  bool get _isActive => item.quantity > item.previousQuantity;
 
   @override
   Widget build(BuildContext context) {
+    final bool canTap = _isActive && !isSending;
+
     return GestureDetector(
-      onTap: sent ? null : onSend,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      onTap: canTap ? onSend : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: sent ? Colors.green : Theme.of(context).primaryColor,
+          color: canTap
+              ? Theme.of(context).primaryColor
+              : Colors.grey.shade400, // greyed out when disabled
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.black12),
         ),
         child: Center(
-          child:
-              child ??
-              Text(
-                sent ? "Sent" : "Send",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          child: isSending
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Text(
+                  'Send',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
         ),
       ),
     );

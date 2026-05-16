@@ -531,7 +531,67 @@ class food_Authservice {
     } finally {}
   }
 
-  static Future<int> submitBooking({
+  // static Future<int> submitBooking({
+  //   required int vendorId,
+  //   required String guestName,
+  //   required String phoneNumber,
+  //   required String bookingDate,
+  //   required String startTime,
+  //   required int capacity,
+  // }) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final int userId = prefs.getInt('userId') ?? 0;
+  //
+  //   if (userId == 0) {
+  //     debugPrint("❌ No userId provided");
+  //     return 0;
+  //   }
+  //
+  //   final endpoint =
+  //       "api/seatingdetails/shedule/advance/booking/$userId/$vendorId";
+  //
+  //   final body = {
+  //     "guestName": guestName,
+  //     "phoneNumber": phoneNumber,
+  //     "bookingDate": bookingDate,
+  //     "startTime": startTime,
+  //     "capacity": capacity,
+  //   };
+  //
+  //   try {
+  //     final response = await ApiClient.post(endpoint, body, service: "food");
+  //
+  //     debugPrint("📤 Booking request: ${jsonEncode(body)}");
+  //     debugPrint(
+  //       "📥 Booking response: ${response.statusCode} ${response.body}",
+  //     );
+  //
+  //     return response.statusCode; // ✅ IMPORTANT
+  //   } catch (e) {
+  //     debugPrint("⚠️ Error submitting booking: $e");
+  //     return 0;
+  //   }
+  // }
+
+  static Future<List<int>> fetchSeatingCapacities(int vendorId) async {
+    final endpoint = "api/seatingdetails/get/seating-capacity/$vendorId";
+    try {
+      final response = await ApiClient.get(endpoint, service: "food");
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+
+        return data.map((e) => e as int).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint("Fetch Capacity Error: $e");
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> submitBooking({
     required int vendorId,
     required String guestName,
     required String phoneNumber,
@@ -544,7 +604,7 @@ class food_Authservice {
 
     if (userId == 0) {
       debugPrint("❌ No userId provided");
-      return 0;
+      return null;
     }
 
     final endpoint =
@@ -566,54 +626,23 @@ class food_Authservice {
         "📥 Booking response: ${response.statusCode} ${response.body}",
       );
 
-      return response.statusCode; // ✅ IMPORTANT
+      dynamic responseData;
+
+      // ✅ Check if response is JSON
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        // ✅ Plain text response
+        responseData = response.body;
+      }
+
+      return {"statusCode": response.statusCode, "data": responseData};
     } catch (e) {
       debugPrint("⚠️ Error submitting booking: $e");
-      return 0;
+      return null;
     }
   }
 
-  static Future<bool> bookNow({
-    required int vendorId,
-    required String guestName,
-    required String phoneNumber,
-    required int capacity,
-    int durationMinutes = 45,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final int userId = prefs.getInt('userId') ?? 0;
-    // debugPrint("🟠 [BOOK_API] Preparing booking request...");
-
-    if (userId == 0) {
-      // debugPrint("❌ [BOOK_API] No userId provided");
-      return false;
-    }
-
-    final endpoint =
-        "api/seatingdetails/booknow/$userId/$vendorId?capacity=$capacity&guestName=$guestName&phoneNumber=$phoneNumber";
-
-    try {
-      // debugPrint("📤 [BOOK_API] Sending POST to: $endpoint");
-
-      final response = await ApiClient.post(endpoint, {}, service: "food");
-
-      // debugPrint("📥 [BOOK_API] Response: ${response.statusCode} → ${response.body}");
-
-      final ok = response.statusCode == 200 || response.statusCode == 202;
-      // debugPrint(
-      //   ok
-      //       ? "✅ [BOOK_API] Booking succeeded"
-      //       : "⚠️ [BOOK_API] Booking failed with status ${response.statusCode}",
-      // );
-
-      return ok;
-    } catch (e) {
-      // debugPrint("🚨 [BOOK_API] Error submitting booking: $e");
-      return false;
-    }
-  }
-
-  //
   static Future<bool> addToFavorites(int dishId) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
@@ -815,12 +844,58 @@ class food_Authservice {
     }
   }
 
-  static Future<bool> sendArrivalStatus(int seatingId) async {
+  // static Future<bool> sendArrivalStatus(int seatingId) async {
+  //   final endpoint = "api/seatingdetails/seating-details/$seatingId";
+  //   final body = {'arrivalStatus': 'ARRIVED'};
+  //
+  //   debugPrint("🚀 [sendArrivalStatus] START ----------------------");
+  //   debugPrint("📍 seatingId: $seatingId");
+  //   debugPrint("🌐 endpoint: $endpoint");
+  //   debugPrint("📦 body: $body");
+  //
+  //   try {
+  //     final response = await ApiClient.put(endpoint, body, service: "food");
+  //
+  //     debugPrint("📡 Response Status Code: ${response.statusCode}");
+  //     debugPrint("📡 Response Body: ${response.body}");
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       debugPrint("✅ API SUCCESS - Saving to local storage");
+  //
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setInt('id', seatingId);
+  //
+  //       debugPrint("💾 Stored seatingId in SharedPreferences: $seatingId");
+  //       debugPrint("🎉 [sendArrivalStatus] SUCCESS -------------------");
+  //
+  //       return true;
+  //     } else {
+  //       debugPrint("⚠️ API FAILED with status: ${response.statusCode}");
+  //
+  //       // 🔥 Print backend error
+  //       debugPrint("🧾 Error Response Body: ${response.body}");
+  //
+  //       debugPrint("❌ [sendArrivalStatus] FAILED -------------------");
+  //       return false;
+  //     }
+  //   } catch (e, stackTrace) {
+  //     debugPrint("🔥 Exception in sendArrivalStatus: $e");
+  //     debugPrint("🧵 StackTrace: $stackTrace");
+  //     debugPrint("❌ [sendArrivalStatus] ERROR --------------------");
+  //     return false;
+  //   }
+  // }
+  static Future<bool> sendArrivalStatus(
+    int seatingId,
+    String arrivalStatus,
+  ) async {
     final endpoint = "api/seatingdetails/seating-details/$seatingId";
-    final body = {'arrivalStatus': 'ARRIVED'};
+
+    final body = {'arrivalStatus': arrivalStatus};
 
     debugPrint("🚀 [sendArrivalStatus] START ----------------------");
     debugPrint("📍 seatingId: $seatingId");
+    debugPrint("📌 arrivalStatus: $arrivalStatus");
     debugPrint("🌐 endpoint: $endpoint");
     debugPrint("📦 body: $body");
 
@@ -842,17 +917,16 @@ class food_Authservice {
         return true;
       } else {
         debugPrint("⚠️ API FAILED with status: ${response.statusCode}");
-
-        // 🔥 Print backend error
         debugPrint("🧾 Error Response Body: ${response.body}");
-
         debugPrint("❌ [sendArrivalStatus] FAILED -------------------");
+
         return false;
       }
     } catch (e, stackTrace) {
       debugPrint("🔥 Exception in sendArrivalStatus: $e");
       debugPrint("🧵 StackTrace: $stackTrace");
       debugPrint("❌ [sendArrivalStatus] ERROR --------------------");
+
       return false;
     }
   }

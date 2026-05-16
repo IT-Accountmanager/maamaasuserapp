@@ -35,7 +35,7 @@ class ConfirmedList {
     return ConfirmedList(
       id: json["id"] ?? 0,
       userId: json["userId"] ?? 0,
-      startTime: json["requestTime"] ?? "",
+      startTime: json["startTime"] ?? "",
       durationMinutes: json["durationMinutes"] ?? 0,
       phoneNumber: json["phoneNumber"] ?? "",
       guestName: json["guestName"] ?? "",

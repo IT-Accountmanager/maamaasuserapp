@@ -1707,73 +1707,293 @@ class _RestaurantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final double screenH = MediaQuery.of(context).size.height;
     // final double cardH = (screenH * 0.28).clamp(200.0, 260.0);
-    final double cardH = (screenH * 0.32).clamp(230.0, 300.0);
+    final double cardH = (screenH * 0.30).clamp(220.0, 280.0);
     final double imgH = cardH * 0.58;
 
+    // return GestureDetector(
+    //   onTap: () {
+    //     if (orderType == null) {
+    //       onOrderTypeRequired?.call();
+    //       return;
+    //     }
+    //     Navigator.push(
+    //       context,
+    //       MaterialPageRoute(
+    //         builder: (_) => MenuScreen(
+    //           vendorId: banner.vendorId,
+    //           initialCategoryName: selectedCategoryName,
+    //           // banner: banner,
+    //         ),
+    //       ),
+    //     );
+    //   },
+    //   child: Container(
+    //     height: cardH,
+    //     decoration: BoxDecoration(
+    //       color: restaurentsnewcolour.surface,
+    //       borderRadius: BorderRadius.circular(
+    //         restaurentsnewcolour.cardRadius.r,
+    //       ),
+    //       boxShadow: [
+    //         BoxShadow(
+    //           color: Colors.black.withOpacity(0.07),
+    //           blurRadius: 12,
+    //           offset: const Offset(0, 4),
+    //         ),
+    //       ],
+    //     ),
+    //     child: Column(
+    //       crossAxisAlignment: CrossAxisAlignment.start,
+    //       children: [
+    //         // ── Image ──────────────────────────────────────────────────
+    //         SizedBox(
+    //           height: imgH,
+    //           width: double.infinity,
+    //           child: Stack(
+    //             fit: StackFit.expand,
+    //             children: [
+    //               ClipRRect(
+    //                 borderRadius: BorderRadius.vertical(
+    //                   top: Radius.circular(restaurentsnewcolour.cardRadius.r),
+    //                 ),
+    //                 child: banner.companyBanner.isNotEmpty
+    //                     ? Image.network(
+    //                         banner.companyBanner,
+    //                         fit: BoxFit.cover,
+    //                         errorBuilder: (_, __, ___) => _placeholder(),
+    //                       )
+    //                     : _placeholder(),
+    //               ),
+    //               // Gradient overlay
+    //               Positioned(
+    //                 bottom: 0,
+    //                 left: 0,
+    //                 right: 0,
+    //                 height: imgH * 0.5,
+    //                 child: ClipRRect(
+    //                   borderRadius: BorderRadius.vertical(
+    //                     top: Radius.circular(restaurentsnewcolour.cardRadius.r),
+    //                   ),
+    //                   child: const DecoratedBox(
+    //                     decoration: BoxDecoration(
+    //                       gradient: LinearGradient(
+    //                         begin: Alignment.topCenter,
+    //                         end: Alignment.bottomCenter,
+    //                         colors: [Colors.transparent, Color(0x66000000)],
+    //                       ),
+    //                     ),
+    //                   ),
+    //                 ),
+    //               ),
+    //
+    //               if ((banner.ratings) >= 4.0)
+    //                 Positioned(
+    //                   top: 8.h,
+    //                   left: 10.w,
+    //                   child: Container(
+    //                     padding: EdgeInsets.symmetric(
+    //                       horizontal: 8.w,
+    //                       vertical: 3.h,
+    //                     ),
+    //                     decoration: BoxDecoration(
+    //                       color: Colors.white,
+    //                       borderRadius: BorderRadius.circular(6.r),
+    //                     ),
+    //                     child: Row(
+    //                       mainAxisSize: MainAxisSize.min,
+    //                       children: [
+    //                         Icon(
+    //                           Icons.star_rounded,
+    //                           color: restaurentsnewcolour.primary,
+    //                           size: 11.sp,
+    //                         ),
+    //                         SizedBox(width: 3.w),
+    //                         Text(
+    //                           'Top Rated',
+    //                           style: TextStyle(
+    //                             fontSize: 10.sp,
+    //                             fontWeight: FontWeight.w700,
+    //                             color: restaurentsnewcolour.primary,
+    //                           ),
+    //                         ),
+    //                       ],
+    //                     ),
+    //                   ),
+    //                 ),
+    //             ],
+    //           ),
+    //         ),
+    //
+    //         // ── Info ───────────────────────────────────────────────────
+    //         Expanded(
+    //           child: Padding(
+    //             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+    //             child: Column(
+    //               crossAxisAlignment: CrossAxisAlignment.start,
+    //               mainAxisAlignment: MainAxisAlignment.start,
+    //               children: [
+    //                 // Name + rating
+    //                 Row(
+    //                   crossAxisAlignment: CrossAxisAlignment.start,
+    //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //                   children: [
+    //                     Expanded(
+    //                       child: Text(
+    //                         '${banner.companyName.toUpperCase()}(${banner.type}) ',
+    //                         maxLines: 1,
+    //                         overflow: TextOverflow.ellipsis,
+    //                         style: TextStyle(
+    //                           fontSize: 14.sp,
+    //                           fontWeight: FontWeight.w700,
+    //                           color: restaurentsnewcolour.text,
+    //                         ),
+    //                       ),
+    //                     ),
+    //
+    //                     if ((banner.ratings) > 0) ...[
+    //                       SizedBox(width: 8.w),
+    //                       Container(
+    //                         padding: EdgeInsets.symmetric(
+    //                           horizontal: 6.w,
+    //                           vertical: 3.h,
+    //                         ),
+    //                         decoration: BoxDecoration(
+    //                           color: restaurentsnewcolour.green,
+    //                           borderRadius: BorderRadius.circular(6.r),
+    //                         ),
+    //                         child: Row(
+    //                           mainAxisSize: MainAxisSize.min,
+    //                           children: [
+    //                             const Icon(
+    //                               Icons.star_rounded,
+    //                               color: Colors.white,
+    //                               size: 11,
+    //                             ),
+    //                             SizedBox(width: 2.w),
+    //                             Text(
+    //                               banner.ratings.toString(),
+    //                               style: TextStyle(
+    //                                 color: Colors.white,
+    //                                 fontSize: 11.sp,
+    //                                 fontWeight: FontWeight.w700,
+    //                               ),
+    //                             ),
+    //                           ],
+    //                         ),
+    //                       ),
+    //                     ],
+    //                   ],
+    //                 ),
+    //
+    //                 if (banner.position.isNotEmpty)
+    //                   Text(
+    //                     '${banner.position[0].toUpperCase()}'
+    //                     '${banner.position.substring(1).toLowerCase()}',
+    //                     style: TextStyle(
+    //                       fontSize: 11.sp,
+    //                       color: const Color(0xFF6C63FF),
+    //                       fontWeight: FontWeight.w600,
+    //                     ),
+    //                     maxLines: 1,
+    //                     overflow: TextOverflow.ellipsis,
+    //                   ),
+    //
+    //                 // Address
+    //                 Row(
+    //                   crossAxisAlignment: CrossAxisAlignment.start,
+    //                   children: [
+    //                     Expanded(
+    //                       child: Text(
+    //                         '${banner.addressLine}, ${banner.city}',
+    //                         maxLines: 2,
+    //                         overflow: TextOverflow.ellipsis,
+    //                         style: TextStyle(
+    //                           fontSize: 11.sp,
+    //                           color: restaurentsnewcolour.textLight,
+    //                         ),
+    //                       ),
+    //                     ),
+    //
+    //                     SizedBox(width: 8),
+    //
+    //                     Text(
+    //                       Distancehelpermethod.formatDistance(banner.distance),
+    //                       style: TextStyle(
+    //                         fontSize: 12.sp,
+    //                         fontWeight: FontWeight.w600,
+    //                         color: restaurentsnewcolour.textMuted,
+    //                       ),
+    //                     ),
+    //                   ],
+    //                 ),
+    //               ],
+    //             ),
+    //           ),
+    //         ),
+    //       ],
+    //     ),
+    //   ),
+    // );
     return GestureDetector(
       onTap: () {
         if (orderType == null) {
           onOrderTypeRequired?.call();
           return;
         }
+
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => MenuScreen(
               vendorId: banner.vendorId,
               initialCategoryName: selectedCategoryName,
-              // banner: banner,
             ),
           ),
         );
       },
-      child: Container(
-        height: cardH,
-        decoration: BoxDecoration(
-          color: restaurentsnewcolour.surface,
-          borderRadius: BorderRadius.circular(
-            restaurentsnewcolour.cardRadius.r,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.07),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+      child: IntrinsicHeight(
+        child: Container(
+          decoration: BoxDecoration(
+            color: restaurentsnewcolour.surface,
+            borderRadius: BorderRadius.circular(
+              restaurentsnewcolour.cardRadius.r,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Image ──────────────────────────────────────────────────
-            SizedBox(
-              height: imgH,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(restaurentsnewcolour.cardRadius.r),
-                    ),
-                    child: banner.companyBanner.isNotEmpty
-                        ? Image.network(
-                            banner.companyBanner,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _placeholder(),
-                          )
-                        : _placeholder(),
-                  ),
-                  // Gradient overlay
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: imgH * 0.5,
-                    child: ClipRRect(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.07),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // IMAGE
+              AspectRatio(
+                aspectRatio: 10 / 4,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(restaurentsnewcolour.cardRadius.r),
                       ),
+                      child: banner.companyBanner.isNotEmpty
+                          ? Image.network(
+                              banner.companyBanner,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _placeholder(),
+                            )
+                          : _placeholder(),
+                    ),
+
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 60,
                       child: const DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -1784,63 +2004,59 @@ class _RestaurantCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
 
-                  if ((banner.ratings) >= 4.0)
-                    Positioned(
-                      top: 8.h,
-                      left: 10.w,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 3.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.star_rounded,
-                              color: restaurentsnewcolour.primary,
-                              size: 11.sp,
-                            ),
-                            SizedBox(width: 3.w),
-                            Text(
-                              'Top Rated',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w700,
+                    if ((banner.ratings) >= 4.0)
+                      Positioned(
+                        top: 8,
+                        left: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
                                 color: restaurentsnewcolour.primary,
+                                size: 11,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 3),
+                              Text(
+                                'Top Rated',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: restaurentsnewcolour.primary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // ── Info ───────────────────────────────────────────────────
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              // INFO
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Name + rating
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
-                            '${banner.companyName.toUpperCase()}(${banner.type}) ',
-                            maxLines: 1,
+                            '${banner.companyName.toUpperCase()} (${banner.type})',
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 14.sp,
@@ -1849,19 +2065,10 @@ class _RestaurantCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Text(
-                          banner.type,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: restaurentsnewcolour.textMuted,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
 
                         if ((banner.ratings) > 0) ...[
                           SizedBox(width: 8.w),
+
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 6.w,
@@ -1895,37 +2102,22 @@ class _RestaurantCard extends StatelessWidget {
                       ],
                     ),
 
-                    // Cuisine type + distance
-                    // Row(
-                    //   children: [
-                    //     Flexible(
-                    //       child: Text(
-                    //         banner.type,
-                    //         style: TextStyle(
-                    //           fontSize: 12.sp,
-                    //           color: restaurentsnewcolour.textMuted,
-                    //           fontWeight: FontWeight.w500,
-                    //         ),
-                    //         maxLines: 1,
-                    //         overflow: TextOverflow.ellipsis,
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
+                    SizedBox(height: 4.h),
+
                     if (banner.position.isNotEmpty)
                       Text(
-                        '${banner.position[0].toUpperCase()}'
-                        '${banner.position.substring(1).toLowerCase()}',
+                        '${banner.position[0].toUpperCase()}${banner.position.substring(1).toLowerCase()}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11.sp,
                           color: const Color(0xFF6C63FF),
                           fontWeight: FontWeight.w600,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
 
-                    // Address
+                    SizedBox(height: 6.h),
+
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1941,7 +2133,7 @@ class _RestaurantCard extends StatelessWidget {
                           ),
                         ),
 
-                        SizedBox(width: 8),
+                        SizedBox(width: 8.w),
 
                         Text(
                           Distancehelpermethod.formatDistance(banner.distance),
@@ -1956,8 +2148,8 @@ class _RestaurantCard extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

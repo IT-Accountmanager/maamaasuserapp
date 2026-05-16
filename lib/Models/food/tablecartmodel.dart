@@ -15,6 +15,9 @@ class TableCartModel {
   double? deliveryCharges; // ✅ nullable
   double cgst;
   double sgst;
+  num platformChargeGst;
+  num packingChargeGst;
+  num serviceChargeGst;
   String? couponCode;
   double? discountAmount;
   final int couponId;
@@ -37,6 +40,9 @@ class TableCartModel {
     this.deliveryCharges,
     required this.cgst,
     required this.sgst,
+    required this.packingChargeGst,
+    required this.platformChargeGst,
+    required this.serviceChargeGst,
     this.couponCode,
     this.discountAmount,
     required this.itemId,
@@ -61,6 +67,9 @@ class TableCartModel {
       packingTotal: (json['packingTotal'] ?? 0).toDouble(),
       serviceCharges: (json['serviceCharges'] ?? 0).toDouble(),
       deliveryCharges: json['deliveryCharges']?.toDouble(),
+      serviceChargeGst: (json['serviceChargeGst'] ?? 0).toDouble(),
+      packingChargeGst: (json['packingChargeGst'] ?? 0).toDouble(),
+      platformChargeGst: (json['platformChargeGst'] ?? 0).toDouble(),
       cgst: (json['cgst'] ?? 0).toDouble(),
       sgst: (json['sgst'] ?? 0).toDouble(),
       couponCode: json['couponCode'],

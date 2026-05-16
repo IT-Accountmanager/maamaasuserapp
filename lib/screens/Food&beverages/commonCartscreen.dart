@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/screens/Food&beverages/food_cartscreen.dart';
-import 'package:maamaas/screens/Food&beverages/table/tablecart.dart';
+import 'package:maamaas/screens/Food&beverages/table/tablecart.dart'
+    hide cartuser;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Models/promotions_model/promotions_model.dart';

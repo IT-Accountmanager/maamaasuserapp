@@ -4,7 +4,6 @@ import '../../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-
 class TableTabContent extends StatefulWidget {
   final int vendorId;
   const TableTabContent({super.key, required this.vendorId});
@@ -18,9 +17,19 @@ class _TableTabContentState extends State<TableTabContent> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
   final TextEditingController timeController = TextEditingController();
-  final TextEditingController noofpeople = TextEditingController();
+  // final TextEditingController noofpeople = TextEditingController();
   TimeOfDay? selectedTime;
   bool _isLoading = false;
+
+  List<int> capacities = [];
+  int? selectedCapacity;
+  bool isCapacityLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCapacities();
+  }
 
   @override
   void dispose() {
@@ -28,8 +37,21 @@ class _TableTabContentState extends State<TableTabContent> {
     phoneController.dispose();
     dateController.dispose();
     timeController.dispose();
-    noofpeople.dispose();
+    // noofpeople.dispose();
     super.dispose();
+  }
+
+  Future<void> fetchCapacities() async {
+    setState(() {
+      isCapacityLoading = true;
+    });
+
+    final data = await food_Authservice.fetchSeatingCapacities(widget.vendorId);
+
+    setState(() {
+      capacities = data;
+      isCapacityLoading = false;
+    });
   }
 
   void _showScheduleOrderDialog() {
@@ -76,12 +98,13 @@ class _TableTabContentState extends State<TableTabContent> {
                 const SizedBox(height: 12),
                 _buildTimeField(bottomSheetContext),
                 const SizedBox(height: 12),
-                _buildTextField(
-                  noofpeople,
-                  "Number of People",
-                  Icons.people,
-                  TextInputType.number,
-                ),
+                // _buildTextField(
+                //   noofpeople,
+                //   "Number of People",
+                //   Icons.people,
+                //   TextInputType.number,
+                // ),
+                _buildCapacityDropdown(),
                 const SizedBox(height: 20),
                 _buildSubmitButton(bottomSheetContext),
                 const SizedBox(height: 16),
@@ -89,6 +112,32 @@ class _TableTabContentState extends State<TableTabContent> {
             ),
           ),
         );
+      },
+    );
+  }
+
+  Widget _buildCapacityDropdown() {
+    return DropdownButtonFormField<int>(
+      value: selectedCapacity,
+      decoration: InputDecoration(
+        labelText: "Number of People",
+        prefixIcon: Icon(Icons.people, color: AppColors.of(context).primary),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.of(context).primary),
+        ),
+      ),
+      items: capacities.map((capacity) {
+        return DropdownMenuItem<int>(
+          value: capacity,
+          child: Text("$capacity People"),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          selectedCapacity = value;
+        });
       },
     );
   }
@@ -232,100 +281,242 @@ class _TableTabContentState extends State<TableTabContent> {
       return;
     }
 
-    final status = await food_Authservice.submitBooking(
+    final response = await food_Authservice.submitBooking(
       vendorId: vendorId,
       guestName: nameController.text.trim(),
       phoneNumber: phoneController.text.trim(),
       bookingDate: dateController.text.trim(),
       startTime:
           "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}:00",
-      capacity: int.tryParse(noofpeople.text.trim()) ?? 0,
+      // capacity: int.tryParse(noofpeople.text.trim()) ?? 0,
+      capacity: selectedCapacity ?? 0,
     );
 
-    if (status == 200 || status.toString() == "200") {
+    if (response != null && response['statusCode'] == 200) {
+      final booking = response['data'];
+
       Navigator.pop(context);
 
       _showSuccessDialog(
         "Booking Confirmed",
-        "Your table has been booked successfully!\n\n"
-            "📅 Date: ${dateController.text}\n"
-            "⏰ Time: ${timeController.text}",
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Your table has been booked successfully.",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+
+            const SizedBox(height: 20),
+
+            _buildBookingRow("📅 Date", booking['bookingDate']),
+            _buildBookingRow("⏰ Time", booking['startTime']),
+            _buildBookingRow("🏢 Seating", booking['seating']['name']),
+            _buildBookingRow("👥 Capacity", "${booking['capacity']}"),
+
+            const SizedBox(height: 18),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.green.shade300),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    "Table Code",
+                    style: TextStyle(fontSize: 14, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    booking['code'],
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.access_time_filled,
+                    color: Colors.orange,
+                    size: 20,
+                  ),
+                  SizedBox(width: 10),
+
+                  Expanded(
+                    child: Text(
+                      "Please arrive 30 minutes prior to your scheduled booking time.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       );
-    } else if (status == 202 || status.toString() == "202") {
+    } else if (response != null && response['statusCode'] == 202) {
       Navigator.pop(context);
 
       _showSuccessDialog(
         "Added to Waiting List",
-        "All tables are currently full.\n\n"
-            "You have been added to the waiting list.",
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+
+            Icon(Icons.hourglass_top_rounded, color: Colors.orange, size: 60),
+
+            const SizedBox(height: 18),
+
+            const Text(
+              "All tables are currently full.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            ),
+
+            const SizedBox(height: 10),
+
+            const Text(
+              "You have been added to the waiting list successfully.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: Colors.black87),
+            ),
+
+            const SizedBox(height: 20),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                  SizedBox(width: 10),
+
+                  Expanded(
+                    child: Text(
+                      "We will notify you once a table becomes available.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       );
     } else {
       _showErrorDialog("Failed to schedule booking");
     }
   }
 
+  // bool _areFieldsValid() {
+  //   return nameController.text.trim().isNotEmpty &&
+  //       phoneController.text.trim().isNotEmpty &&
+  //       dateController.text.trim().isNotEmpty &&
+  //       timeController.text.trim().isNotEmpty &&
+  //       noofpeople.text.trim().isNotEmpty &&
+  //       selectedTime != null;
+  // }
   bool _areFieldsValid() {
     return nameController.text.trim().isNotEmpty &&
         phoneController.text.trim().isNotEmpty &&
         dateController.text.trim().isNotEmpty &&
         timeController.text.trim().isNotEmpty &&
-        noofpeople.text.trim().isNotEmpty &&
+        selectedCapacity != null &&
         selectedTime != null;
   }
 
-  void _showSuccessDialog(String title, String message) {
+  Widget _buildBookingRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 15))),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(String title, Widget content) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
         titlePadding: EdgeInsets.zero,
 
         title: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 16),
-            Icon(Icons.check_circle, color: Colors.green, size: 60),
+            const SizedBox(height: 20),
+            const Icon(Icons.check_circle, color: Colors.green, size: 70),
             const SizedBox(height: 12),
             Text(
               title,
               textAlign: TextAlign.center,
               style: const TextStyle(
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
-                fontSize: 20,
               ),
             ),
-            const SizedBox(height: 8),
           ],
         ),
 
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
+        content: content,
 
         actionsAlignment: MainAxisAlignment.center,
         actions: [
-          // ✨ Button 1 → Close Dialog
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
+              backgroundColor: AppColors.of(context).primary,
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: const Text("Close"),
+            child: const Text("Done"),
           ),
         ],
       ),
@@ -397,8 +588,6 @@ class _TableTabContentState extends State<TableTabContent> {
               ),
             ],
           ),
-
-          // const SizedBox(height: 24),
         ],
       ),
     );

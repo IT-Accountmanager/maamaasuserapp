@@ -315,8 +315,8 @@ class FoodPdf {
                   ),
                   pw.SizedBox(height: 8),
                   keyValue('Sub Total', "₹${formatAmount(data['subTotal'])}"),
-                  keyValue('SGST', "₹${formatAmount(data['sgst'])}"),
-                  keyValue('CGST', "₹${formatAmount(data['cgst'])}"),
+                  keyValue('GST', "₹${formatAmount(data['gstTotal'])}"),
+                  // keyValue('CGST', "₹${formatAmount(data['gstTotal'])}"),
                   if ((data['platformCharges'] ?? 0) > 0)
                     keyValue(
                       'Platform Charges',

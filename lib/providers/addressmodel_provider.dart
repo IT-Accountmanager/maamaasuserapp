@@ -194,7 +194,35 @@ class AddressNotifier extends StateNotifier<AddressState> {
   // Send address to cart
   // -----------------------------
   // Update cart delivery address API
-  static Future<bool> updateDeliveryAddress({
+  // static Future<bool> updateDeliveryAddress({
+  //   required int cartId,
+  //   required int addressId,
+  // }) async {
+  //   try {
+  //     final body = {"addressId": addressId, "cartId": cartId};
+  //     final endpoint = "api/cart/delivery/$cartId/address/$addressId";
+  //
+  //     debugPrint("🔹 [UpdateDeliveryAddress] Sending request to: $endpoint");
+  //     debugPrint(
+  //       "🔹 [UpdateDeliveryAddress] Request body: ${jsonEncode(body)}",
+  //     );
+  //
+  //     final response = await ApiClient.put(endpoint, body, service: "food");
+  //
+  //     debugPrint(
+  //       "🔹 [UpdateDeliveryAddress] Status code: ${response.statusCode}",
+  //     );
+  //     debugPrint("🔹 [UpdateDeliveryAddress] Response body: ${response.body}");
+  //
+  //     return response.statusCode == 200;
+  //   } catch (e, st) {
+  //     debugPrint("❌ [UpdateDeliveryAddress] Error: $e");
+  //     debugPrint("❌ [UpdateDeliveryAddress] StackTrace: $st");
+  //     return false;
+  //   }
+  // }
+
+  static Future<String?> updateDeliveryAddress({
     required int cartId,
     required int addressId,
   }) async {
@@ -214,11 +242,20 @@ class AddressNotifier extends StateNotifier<AddressState> {
       );
       debugPrint("🔹 [UpdateDeliveryAddress] Response body: ${response.body}");
 
-      return response.statusCode == 200;
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return null; // success
+      } else {
+        return data["message"] ??
+            data["error"] ??
+            "Failed to update cart address";
+      }
     } catch (e, st) {
       debugPrint("❌ [UpdateDeliveryAddress] Error: $e");
       debugPrint("❌ [UpdateDeliveryAddress] StackTrace: $st");
-      return false;
+
+      return e.toString();
     }
   }
 
