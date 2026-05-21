@@ -781,28 +781,45 @@ class food_Authservice {
   }
 
   static Future<bool> submitRating(
-    int orderId,
-    int rating,
-    String feedback,
-    String category,
-  ) async {
+      int orderId,
+      int rating,
+      String feedback,
+      String category,
+      ) async {
     final endpoint = "api/orders/feedback/$orderId";
 
     try {
-      final response = await ApiClient.put(endpoint, {
+      debugPrint("===== SUBMIT RATING API =====");
+      debugPrint("Endpoint: $endpoint");
+
+      final body = {
         "ratings": rating,
         "feedback": feedback,
         "ratingCategory": category,
         "ratedAt": DateTime.now().toIso8601String(),
-      }, service: 'food');
+      };
+
+      debugPrint("Request Body: $body");
+
+      final response = await ApiClient.put(
+        endpoint,
+        body,
+        service: 'food',
+      );
+
+      debugPrint("Status Code: ${response.statusCode}");
+      debugPrint("Response Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("response:${response.body}");
+        debugPrint("Rating submitted successfully");
         return true;
       } else {
+        debugPrint("Rating submission failed");
         return false;
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("Submit Rating Error: $e");
+      debugPrint("StackTrace: $stackTrace");
       return false;
     }
   }

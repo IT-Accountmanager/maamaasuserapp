@@ -62,14 +62,14 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
     _fadeController.forward();
     _slideController.forward();
 
-    Future.delayed(const Duration(seconds: 10), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainScreenfood()),
-        );
-      }
-    });
+    // Future.delayed(const Duration(seconds: 10), () {
+    //   if (mounted) {
+    //     Navigator.pushReplacement(
+    //       context,
+    //       MaterialPageRoute(builder: (context) => MainScreenfood()),
+    //     );
+    //   }
+    // });
   }
 
   @override
@@ -249,16 +249,19 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
 
     final orderId = data['orderId']?.toString() ?? 'N/A';
 
-    final orderType =
-        (data['orderType'] as String?)?.replaceAll('_', ' ') ?? 'N/A';
+    final rawOrderType = data['orderType']?.toString();
+
+    final orderType = rawOrderType == "TABLE_DINE_IN"
+        ? "Dineout"
+        : rawOrderType?.replaceAll('_', ' ') ?? 'N/A';
 
     final payment =
         (data['paymentMethod'] as String?)?.replaceAll('_', ' ') ?? 'N/A';
 
     final timeStr = dateTime != null
         ? "${(dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12).toString().padLeft(2, '0')}:"
-        "${dateTime.minute.toString().padLeft(2, '0')} "
-        "${dateTime.hour >= 12 ? 'PM' : 'AM'}"
+              "${dateTime.minute.toString().padLeft(2, '0')} "
+              "${dateTime.hour >= 12 ? 'PM' : 'AM'}"
         : 'N/A';
 
     final dateStr = dateTime != null
@@ -734,8 +737,8 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
     final orderType = data['orderType']?.toString().toLowerCase() ?? '';
     final num subTotal = data['subTotal'] ?? 0;
     final num discount = data['discountAmount'] ?? 0;
-    final num sgst = data['sgst'] ?? 0;
-    final num cgst = data['cgst'] ?? 0;
+    final num gst = ((data['sgst'] ?? 0) + (data['cgst'] ?? 0));
+    // final num cgst = data['cgst'] ?? 0;
     final num platformCharges = data['platformCharges'] ?? 0;
     final num packingCharges = data['packingCharges'] ?? 0;
     final num deliveryCharges = data['deliveryCharges'] ?? 0;
@@ -789,8 +792,8 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
             child: Column(
               children: [
                 _priceRow("Sub Total", "₹${subTotal.toStringAsFixed(2)}"),
-                _priceRow("SGST", "₹${sgst.toStringAsFixed(2)}"),
-                _priceRow("CGST", "₹${cgst.toStringAsFixed(2)}"),
+                _priceRow("GST", "₹${gst.toStringAsFixed(2)}"),
+                // _priceRow("CGST", "₹${cgst.toStringAsFixed(2)}"),
                 _priceRow(
                   "Platform Charges",
                   "₹${platformCharges.toStringAsFixed(2)}",

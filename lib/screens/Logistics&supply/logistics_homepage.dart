@@ -138,9 +138,7 @@ class _HomePageState extends State<logistic_HomePage>
       print("📍 ADDRESS CHECK: ${loc?.address}");
 
       // ✅ VALID LOCATION CHECK
-      final isValidLocation =
-          loc != null &&
-          loc.address.trim().isNotEmpty;
+      final isValidLocation = loc != null && loc.address.trim().isNotEmpty;
 
       if (isValidLocation) {
         setState(() {
@@ -245,8 +243,7 @@ class _HomePageState extends State<logistic_HomePage>
 
       if (_updateInfo?.updateAvailability ==
           UpdateAvailability.updateAvailable) {
-        setState(() {
-        });
+        setState(() {});
       }
     } catch (e) {
       debugPrint("Update check failed: $e");
@@ -264,7 +261,6 @@ class _HomePageState extends State<logistic_HomePage>
               //     '${address.},${address.city}, ${address.state} - ${address.pincode}';
               // _locationCategory = address.category;
               _currentLocation = address.fullAddress;
-
             });
             _hasShownLocationDialog = false;
             // await _refreshAll();
@@ -1726,7 +1722,7 @@ class _PorterFormState extends State<PorterForm> {
                   setState(() => selectedVehicleType = v['type'] as String),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: sel ? _kPrimary : _kBg,
                   borderRadius: BorderRadius.circular(_kRadius),
@@ -1774,7 +1770,7 @@ class _PorterFormState extends State<PorterForm> {
                     Text(
                       v['price'] as String,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: sel ? Colors.white : _kAccent,
                       ),
@@ -1796,7 +1792,8 @@ class LocationEntryScreen extends StatefulWidget {
   final List<String> recentLocations;
   final Function(String) onLocationSelected;
 
-  const LocationEntryScreen({super.key,
+  const LocationEntryScreen({
+    super.key,
     required this.type,
     required this.recentLocations,
     required this.onLocationSelected,

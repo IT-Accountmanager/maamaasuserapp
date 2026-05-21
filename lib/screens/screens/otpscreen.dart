@@ -42,7 +42,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
 
   // ── Design tokens
 
-
   @override
   void initState() {
     super.initState();
@@ -226,7 +225,11 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
               ),
             ],
           ),
-          child: Icon(Icons.lock_open_rounded, color: otpscrncolour._brand, size: 38.sp),
+          child: Icon(
+            Icons.lock_open_rounded,
+            color: otpscrncolour._brand,
+            size: 38.sp,
+          ),
         ),
 
         SizedBox(height: 20.h),
@@ -278,11 +281,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
     );
   }
 
-  // String _maskMobile(String number) {
-  //   if (number.length <= 4) return number;
-  //   return 'XXXXXX${number.substring(number.length - 4)}';
-  // }
-
   // ── White card with OTP boxes + button
   Widget _buildOtpCard() {
     return Container(
@@ -326,7 +324,10 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
           // SizedBox(height: 6.h),
           Text(
             'The code expires in a 5 minutes',
-            style: TextStyle(fontSize: 12.sp, color: otpscrncolour._textSecondary),
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: otpscrncolour._textSecondary,
+            ),
           ),
 
           SizedBox(height: 28.h),

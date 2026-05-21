@@ -1423,10 +1423,11 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
               //   }
               // }
               if (address.addressId != 0) {
-                final errorMessage = await AddressNotifier.updateDeliveryAddress(
-                  cartId: cartData!.cartId,
-                  addressId: address.addressId,
-                );
+                final errorMessage =
+                    await AddressNotifier.updateDeliveryAddress(
+                      cartId: cartData!.cartId,
+                      addressId: address.addressId,
+                    );
 
                 if (errorMessage != null && mounted) {
                   AppAlert.error(context, errorMessage);

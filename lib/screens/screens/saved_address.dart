@@ -18,6 +18,7 @@ import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../providers/addressmodel_provider.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import '../skeleton/savedAddress.dart';
+import 'package:geolocator/geolocator.dart';
 
 // ── Design tokens (shared with Ticket & Wallet screens) ───────────────────────
 class savedddcolour {
@@ -61,6 +62,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   bool _isLoading = false;
   Position? _currentPosition;
   String? _currentAddress;
+  GoogleMapController? mapController;
 
   @override
   void initState() {
@@ -242,6 +244,33 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
     }
   }
 
+  // 1. Add these to your State class
+  final TextEditingController _searchController = TextEditingController();
+  List<Prediction> _predictions = [];
+
+  // 2. Search function — calls API and updates list inline
+  Future<void> _searchPlaces(String input) async {
+    if (input.isEmpty) {
+      setState(() => _predictions = []);
+      return;
+    }
+
+    final places = GoogleMapsPlaces(
+      apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+      apiHeaders: await const GoogleApiHeaders().getHeaders(),
+    );
+
+    final response = await places.autocomplete(
+      input,
+      language: 'en',
+      components: [Component(Component.country, 'in')],
+    );
+
+    if (response.isOkay) {
+      setState(() => _predictions = response.predictions);
+    }
+  }
+
   Future<void> _getCurrentLocation() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -349,38 +378,237 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   }
 
   // ── Search bar ───────────────────────────────────────────────────────────
+  // Widget buildSearchBar() {
+  //   return GestureDetector(
+  //     onTap: _handleSearch,
+  //     child: Container(
+  //       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+  //       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(14),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             // ignore: deprecated_member_use
+  //             color: Colors.black.withOpacity(0.06),
+  //             blurRadius: 10,
+  //             offset: const Offset(0, 4),
+  //           ),
+  //         ],
+  //         border: Border.all(color: Colors.grey.shade200),
+  //       ),
+  //       child: Row(
+  //         children: [
+  //           const Icon(Icons.search, color: Color(0xFFFF7043), size: 22),
+  //           const SizedBox(width: 10),
+  //           Expanded(
+  //             child: Text(
+  //               "Search for area, street name...",
+  //               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+  //             ),
+  //           ),
+  //           const Icon(Icons.my_location, size: 20, color: Colors.grey),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+  // Widget buildSearchBar() {
+  //   return GestureDetector(
+  //     onTap: _handleSearch,
+  //     child: Container(
+  //       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+  //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(14),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: Colors.black.withOpacity(0.08),
+  //             blurRadius: 14,
+  //             offset: const Offset(0, 4),
+  //           ),
+  //         ],
+  //       ),
+  //       child: Row(
+  //         children: [
+  //           const Icon(Icons.search_rounded, color: Color(0xFFFF7043), size: 22),
+  //           const SizedBox(width: 12),
+  //           Expanded(
+  //             child: Text(
+  //               "Search for area, street name...",
+  //               style: TextStyle(
+  //                 color: Colors.grey.shade400,
+  //                 fontSize: 14,
+  //                 fontWeight: FontWeight.w400,
+  //               ),
+  //             ),
+  //           ),
+  //           const Icon(Icons.my_location_rounded, size: 20, color: Color(0xFFCCCCCC)),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Widget buildSearchBar() {
-    return GestureDetector(
-      onTap: _handleSearch,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              // ignore: deprecated_member_use
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ── Search input ──────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFFFF7043),
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _searchPlaces, // <-- calls inline, no overlay
+                    autofocus: false,
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    decoration: InputDecoration(
+                      hintText: 'Search for area, street name...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    _searchController.clear();
+                    setState(() => _predictions = []);
+                  },
+                  child: Icon(
+                    _searchController.text.isNotEmpty
+                        ? Icons.close_rounded
+                        : Icons.my_location_rounded,
+                    size: 20,
+                    color: const Color(0xFFCCCCCC),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Inline suggestions ────────────────────────────────
+          if (_predictions.isNotEmpty) ...[
+            Divider(height: 0, thickness: 1, color: Colors.grey.shade100),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _predictions.length,
+              separatorBuilder: (_, __) =>
+                  Divider(height: 0, thickness: 1, color: Colors.grey.shade100),
+              itemBuilder: (context, index) {
+                final item = _predictions[index];
+                return InkWell(
+                  onTap: () async {
+                    final places = GoogleMapsPlaces(
+                      apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+                      apiHeaders: await const GoogleApiHeaders().getHeaders(),
+                    );
+                    final detail = await places.getDetailsByPlaceId(
+                      item.placeId!,
+                    );
+                    final loc = detail.result.geometry!.location;
+                    final latLng = LatLng(loc.lat, loc.lng);
+
+                    _updateLocation(latLng);
+                    mapController?.animateCamera(
+                      CameraUpdate.newLatLngZoom(latLng, 16),
+                    );
+
+                    _searchController.text =
+                        item.structuredFormatting?.mainText ??
+                        item.description ??
+                        '';
+                    setState(() => _predictions = []);
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF7043).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.location_on_rounded,
+                            color: Color(0xFFFF7043),
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.structuredFormatting?.mainText ??
+                                    item.description ??
+                                    '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                              if (item.structuredFormatting?.secondaryText !=
+                                  null)
+                                Text(
+                                  item.structuredFormatting!.secondaryText!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.search, color: Color(0xFFFF7043), size: 22),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                "Search for area, street name...",
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-              ),
-            ),
-            const Icon(Icons.my_location, size: 20, color: Colors.grey),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -1599,6 +1827,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
   LatLng _current = _init;
   bool _isLoading = false;
   bool _hasPermission = true;
+  Position? currentPosition;
 
   @override
   void initState() {
@@ -1619,6 +1848,20 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
       return;
     }
 
+    // ✅ ASSIGN CURRENT POSITION
+    currentPosition = Position(
+      latitude: result.latitude,
+      longitude: result.longitude,
+      timestamp: DateTime.now(),
+      accuracy: 0,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    );
+
     setState(() => _hasPermission = true);
 
     final latLng = LatLng(result.latitude, result.longitude);
@@ -1626,9 +1869,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
     _updateLocation(latLng);
 
     if (mapController != null) {
-      mapController!.animateCamera(
-        CameraUpdate.newLatLngZoom(latLng, 16),
-      );
+      mapController!.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
     }
   }
 
@@ -1691,6 +1932,58 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
     }
   }
 
+  final TextEditingController _searchController = TextEditingController();
+
+  List<Prediction> _predictions = [];
+  Map<String, double> _distanceMap = {};
+
+  Future<void> _searchPlaces(String value) async {
+    if (value.isEmpty) {
+      setState(() {
+        _predictions = [];
+        _distanceMap.clear();
+      });
+      return;
+    }
+
+    final places = GoogleMapsPlaces(
+      apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+      apiHeaders: await const GoogleApiHeaders().getHeaders(),
+    );
+
+    final response = await places.autocomplete(
+      value,
+      language: 'en',
+      components: [Component(Component.country, 'in')],
+    );
+
+    if (response.isOkay) {
+      setState(() {
+        _predictions = response.predictions;
+      });
+
+      // calculate distances
+      for (final item in response.predictions) {
+        final detail = await places.getDetailsByPlaceId(item.placeId!);
+
+        final loc = detail.result.geometry?.location;
+
+        if (loc != null && currentPosition != null) {
+          final meters = Geolocator.distanceBetween(
+            currentPosition!.latitude,
+            currentPosition!.longitude,
+            loc.lat,
+            loc.lng,
+          );
+
+          _distanceMap[item.placeId!] = meters / 1000; // km
+        }
+      }
+
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading && mapController == null) {
@@ -1727,44 +2020,231 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
           const Icon(Icons.location_pin, size: 46, color: Color(0xFFEF4444)),
 
           // Search bar overlay
+          // Positioned(
+          //   top: 12.h,
+          //   left: 12.w,
+          //   right: 12.w,
+          //   child: GestureDetector(
+          //     onTap: _handleSearch,
+          //     child: Container(
+          //       height: 44.h,
+          //       padding: EdgeInsets.symmetric(horizontal: 14.w),
+          //       decoration: BoxDecoration(
+          //         color: Colors.white,
+          //         borderRadius: BorderRadius.circular(12.r),
+          //         boxShadow: const [
+          //           BoxShadow(
+          //             color: Colors.black26,
+          //             blurRadius: 8,
+          //             offset: Offset(0, 2),
+          //           ),
+          //         ],
+          //       ),
+          //       child: Row(
+          //         children: [
+          //           Icon(
+          //             Icons.search_rounded,
+          //             color: savedddcolour.violet,
+          //             size: 18.sp,
+          //           ),
+          //           SizedBox(width: 10.w),
+          //           Text(
+          //             "Search for area, street name...",
+          //             style: TextStyle(
+          //               color: savedddcolour.textMuted,
+          //               fontSize: 13.sp,
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          // ),
           Positioned(
-            top: 12.h,
-            left: 12.w,
-            right: 12.w,
-            child: GestureDetector(
-              onTap: _handleSearch,
-              child: Container(
-                height: 44.h,
-                padding: EdgeInsets.symmetric(horizontal: 14.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.search_rounded,
-                      color: savedddcolour.violet,
-                      size: 18.sp,
-                    ),
-                    SizedBox(width: 10.w),
-                    Text(
-                      "Search for area, street name...",
-                      style: TextStyle(
-                        color: savedddcolour.textMuted,
-                        fontSize: 13.sp,
+            top: 1.h,
+            left: 14.w,
+            right: 14.w,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Single flat search container ────────────────────────
+                Container(
+                  height: 45.h,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14.r),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x2E000000),
+                        blurRadius: 18,
+                        offset: Offset(0, 4),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search_rounded,
+                        color: savedddcolour.violet,
+                        size: 20.sp,
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: _searchPlaces,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.black87,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Search for area, street name…',
+                            hintStyle: TextStyle(
+                              fontSize: 13.sp,
+                              color: Colors.black26,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+
+                SizedBox(height: 8.h),
+
+                // ── Predictions dropdown ────────────────────────────────
+                if (_predictions.isNotEmpty)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14.r),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x20000000),
+                          blurRadius: 20,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _predictions.length,
+                      separatorBuilder: (_, __) => const Divider(
+                        height: 0,
+                        thickness: 1,
+                        color: Color(0xFFF3F3F3),
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = _predictions[index];
+                        return InkWell(
+                          onTap: () async {
+                            final places = GoogleMapsPlaces(
+                              apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+                              apiHeaders: await const GoogleApiHeaders()
+                                  .getHeaders(),
+                            );
+                            final detail = await places.getDetailsByPlaceId(
+                              item.placeId!,
+                            );
+                            final loc = detail.result.geometry!.location;
+                            final latLng = LatLng(loc.lat, loc.lng);
+                            _updateLocation(latLng);
+                            mapController?.animateCamera(
+                              CameraUpdate.newLatLngZoom(latLng, 16),
+                            );
+                            _searchController.text = item.description ?? '';
+                            setState(() => _predictions = []);
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 14.w,
+                              vertical: 11.h,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36.w,
+                                  height: 36.h,
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFFF7043,
+                                    ).withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(10.r),
+                                  ),
+                                  child: Icon(
+                                    Icons.location_on_rounded,
+                                    color: Color(0xFFFF7043),
+                                    size: 15.sp,
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.structuredFormatting?.mainText ??
+                                            item.description ??
+                                            '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                      if (item
+                                              .structuredFormatting
+                                              ?.secondaryText !=
+                                          null)
+                                        Text(
+                                          item
+                                              .structuredFormatting!
+                                              .secondaryText!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 10.sp,
+                                            color: Colors.black38,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8.w,
+                                    vertical: 3.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFFF7043).withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(20.r),
+                                  ),
+                                  child: Text(
+                                    _distanceMap[item.placeId!] != null
+                                        ? '${_distanceMap[item.placeId!]!.toStringAsFixed(1)} km'
+                                        : '-- km',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
             ),
           ),
 

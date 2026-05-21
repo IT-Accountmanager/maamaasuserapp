@@ -50,6 +50,8 @@ class FoodPdf {
 
     final isDelivery = data['orderType']?.toString() == "DELIVERY";
     final isTakeaway = data['orderType']?.toString() == "TAKEAWAY";
+    final isdineout = data['orderType']?.toString() == "TABLE_DINE_IN";
+    final num gstTotal = ((data['sgst'] ?? 0) + (data['cgst'] ?? 0));
 
     // ---------------- Key-Value row helper ----------------
     pw.Widget keyValue(String key, String value, {bool bold = false}) {
@@ -168,7 +170,9 @@ class FoodPdf {
                         }(),
                       keyValue(
                         'Order Type',
-                        safeText(data['orderType']).replaceAll('_', ' '),
+                        data['orderType']?.toString() == "TABLE_DINE_IN"
+                            ? 'Dineout'
+                            : safeText(data['orderType']).replaceAll('_', ' '),
                       ),
                       keyValue(
                         'Payment',
@@ -248,16 +252,6 @@ class FoodPdf {
 
           pw.SizedBox(height: 20),
 
-          // // ---------------- ITEMS TABLE ----------------
-          // pw.Text(
-          //   'Ordered Items',
-          //   style: pw.TextStyle(
-          //     font: ttf,
-          //     fontSize: 14,
-          //     fontWeight: pw.FontWeight.bold,
-          //   ),
-          // ),
-          // pw.SizedBox(height: 8),
           pw.TableHelper.fromTextArray(
             headers: ['#', 'Item', 'Qty', 'Price', 'Total'],
             headerStyle: pw.TextStyle(
@@ -315,11 +309,13 @@ class FoodPdf {
                   ),
                   pw.SizedBox(height: 8),
                   keyValue('Sub Total', "₹${formatAmount(data['subTotal'])}"),
-                  keyValue('GST', "₹${formatAmount(data['gstTotal'])}"),
+
+                  if (gstTotal > 0)
+                    keyValue('GST', "₹${formatAmount(gstTotal)}"),
                   // keyValue('CGST', "₹${formatAmount(data['gstTotal'])}"),
                   if ((data['platformCharges'] ?? 0) > 0)
                     keyValue(
-                      'Platform Charges',
+                      isdineout ? 'SmartDineIn Charges' : 'Platform Charges',
                       "₹${formatAmount(data['platformCharges'])}",
                     ),
                   if ((data['discountAmount'] ?? 0) > 0)

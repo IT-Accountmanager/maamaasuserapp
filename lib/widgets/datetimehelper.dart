@@ -5,10 +5,15 @@ class DateTimeHelper {
 
   /// Converts any DateTime to IST (+5:30) explicitly.
   /// If the DateTime has no timezone info (isUtc == false), it's treated as UTC.
+
   static DateTime _toIST(DateTime? dateTime) {
     if (dateTime == null) return DateTime.now();
-    final utc = dateTime.isUtc ? dateTime : dateTime.toUtc();
-    return utc.add(_istOffset);
+
+    // Convert everything to UTC first
+    final utcTime = dateTime.isUtc ? dateTime : dateTime.toUtc();
+
+    // Then add IST offset
+    return utcTime.add(_istOffset);
   }
 
   static String formatTime(DateTime? dateTime) {

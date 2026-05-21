@@ -2053,16 +2053,45 @@ class _RestaurantCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Expanded(
+                        //   child: Text(
+                        //     '${banner.companyName.toUpperCase()} (${banner.type})',
+                        //
+                        //     maxLines: 2,
+                        //     overflow: TextOverflow.ellipsis,
+                        //     style: TextStyle(
+                        //       fontSize: 14.sp,
+                        //       fontWeight: FontWeight.w700,
+                        //       color: restaurentsnewcolour.text,
+                        //     ),
+                        //   ),
+                        // ),
                         Expanded(
-                          child: Text(
-                            '${banner.companyName.toUpperCase()} (${banner.type})',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w700,
-                              color: restaurentsnewcolour.text,
-                            ),
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                banner.companyName.toUpperCase(),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: restaurentsnewcolour.text,
+                                ),
+                              ),
+
+                              _dot(),
+
+                              Text(
+                                banner.type,
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: restaurentsnewcolour.text,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 

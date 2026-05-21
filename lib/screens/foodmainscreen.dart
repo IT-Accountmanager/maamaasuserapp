@@ -258,6 +258,7 @@ import '../../widgets/widgets/food/currentcart_notifier.dart';
 import '../widgets/datetimehelper.dart';
 import 'Food&beverages/RestaurentsScreen/restaurentsnew.dart';
 import 'Food&beverages/commonCartscreen.dart';
+import 'homescreens/home_page.dart';
 
 class MainScreenfood extends StatefulWidget {
   final int? initialIndex;
@@ -285,6 +286,8 @@ class _MainScreenState extends State<MainScreenfood>
   bool isLoadingOrder = false;
 
   bool _isSubscribedToOrder = false;
+
+  bool _showOrderTracking = true;
 
   @override
   void initState() {
@@ -509,8 +512,9 @@ class _MainScreenState extends State<MainScreenfood>
   }
 
   late final _screens = [
-    Restaurents(scrollController: _scrollController),
+    HomePage(scrollController: _scrollController),
 
+    // Restaurents(scrollController: _scrollController),
     ReelsScreen(key: reelsKey, campaignId: widget.campaignId),
 
     CommonCartScreen(),
@@ -543,216 +547,15 @@ class _MainScreenState extends State<MainScreenfood>
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          /// ACTIVE ORDER BAR
-          // if (activeOrder != null)
-          //   GestureDetector(
-          //     onTap: () {
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(
-          //           builder: (_) => OrderDetailsScreen(
-          //             orderId: activeOrder!.orderId,
-          //             order: activeOrder!,
-          //             formattedDate: DateTimeHelper.formatDate(
-          //               DateTime.utc(
-          //                 activeOrder!.parsedDateTime.year,
-          //                 activeOrder!.parsedDateTime.month,
-          //                 activeOrder!.parsedDateTime.day,
-          //                 activeOrder!.parsedDateTime.hour,
-          //                 activeOrder!.parsedDateTime.minute,
-          //                 activeOrder!.parsedDateTime.second,
-          //                 activeOrder!.parsedDateTime.millisecond,
-          //               ),
-          //             ),
-          //
-          //             formattedTime: DateTimeHelper.formatTime(
-          //               DateTime.utc(
-          //                 activeOrder!.parsedDateTime.year,
-          //                 activeOrder!.parsedDateTime.month,
-          //                 activeOrder!.parsedDateTime.day,
-          //                 activeOrder!.parsedDateTime.hour,
-          //                 activeOrder!.parsedDateTime.minute,
-          //                 activeOrder!.parsedDateTime.second,
-          //                 activeOrder!.parsedDateTime.millisecond,
-          //               ),
-          //             ),
-          //             items: activeOrder!.items,
-          //             isActive: activeOrder!.isActive,
-          //             date: activeOrder!.date,
-          //             time: activeOrder!.time,
-          //           ),
-          //         ),
-          //       ).then((_) {
-          //         loadActiveOrder();
-          //       });
-          //     },
-          //
-          //     child: Container(
-          //       margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-          //
-          //       padding: const EdgeInsets.symmetric(
-          //         horizontal: 14,
-          //         vertical: 14,
-          //       ),
-          //
-          //       decoration: BoxDecoration(
-          //         color: Colors.black,
-          //         borderRadius: BorderRadius.circular(18),
-          //         boxShadow: [
-          //           BoxShadow(
-          //             color: Colors.black.withOpacity(0.15),
-          //             blurRadius: 10,
-          //             offset: const Offset(0, 3),
-          //           ),
-          //         ],
-          //       ),
-          //
-          //       child: Row(
-          //         children: [
-          //           /// LIVE DOT
-          //           Container(
-          //             width: 10,
-          //             height: 10,
-          //             decoration: const BoxDecoration(
-          //               color: Colors.green,
-          //               shape: BoxShape.circle,
-          //             ),
-          //           ),
-          //
-          //           const SizedBox(width: 12),
-          //
-          //           Expanded(
-          //             child: Column(
-          //               crossAxisAlignment: CrossAxisAlignment.start,
-          //               children: [
-          //                 Text(
-          //                   "Order #${activeOrder!.id}",
-          //                   style: const TextStyle(
-          //                     color: Colors.white,
-          //                     fontWeight: FontWeight.w700,
-          //                     fontSize: 14,
-          //                   ),
-          //                 ),
-          //
-          //                 const SizedBox(height: 3),
-          //
-          //                 Text(
-          //                   getOrderStatusText(activeOrder!.status),
-          //                   style: const TextStyle(
-          //                     color: Colors.white70,
-          //                     fontSize: 12,
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-          //
-          //           const Icon(
-          //             Icons.arrow_forward_ios_rounded,
-          //             color: Colors.white,
-          //             size: 16,
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //   ),
-          // if (_currentIndex == 0 && activeOrder != null)
+          // if (_currentIndex == 0 &&
+          //     activeOrder != null &&
+          //     activeOrder!.orderType == OrderType.DELIVERY)
+          //   _ordertracking(),
           if (_currentIndex == 0 &&
               activeOrder != null &&
-              activeOrder!.orderType == OrderType.DELIVERY)
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OrderDetailsScreen(
-                      orderId: activeOrder!.orderId,
-                      order: activeOrder!,
-                      formattedDate: DateTimeHelper.formatDate(
-                        activeOrder!.parsedDateTime.toUtc(),
-                      ),
-                      formattedTime: DateTimeHelper.formatTime(
-                        activeOrder!.parsedDateTime.toUtc(),
-                      ),
-                      items: activeOrder!.items,
-                      isActive: activeOrder!.isActive,
-                      date: activeOrder!.date,
-                      time: activeOrder!.time,
-                    ),
-                  ),
-                ).then((_) => loadActiveOrder());
-              },
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  // color: Theme.of(context).cardColor,
-                  color: Colors.green,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.grey.withOpacity(0.15)),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        // Pulsing live dot in a rounded square
-                        // Container(
-                        //   width: 40,
-                        //   height: 40,
-                        //   decoration: BoxDecoration(
-                        //     color: const Color(0xFFEAFFF4),
-                        //     borderRadius: BorderRadius.circular(12),
-                        //   ),
-                        //   child: Center(child: _PulsingDot()),
-                        // ),
-                        const SizedBox(width: 14),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    "Order #${activeOrder!.id}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    getOrderStatusText(activeOrder!.status),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-
-                        // ── Progress steps ──
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _OrderProgressStepper(status: activeOrder!.status),
-                  ],
-                ),
-              ),
-            ),
+              activeOrder!.orderType == OrderType.DELIVERY &&
+              _showOrderTracking)
+            _ordertracking(),
 
           /// BOTTOM NAV
           SafeArea(
@@ -764,6 +567,195 @@ class _MainScreenState extends State<MainScreenfood>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Widget _ordertracking() {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (_) => OrderDetailsScreen(
+  //             orderId: activeOrder!.orderId,
+  //             order: activeOrder!,
+  //             formattedDate: DateTimeHelper.formatDate(
+  //               activeOrder!.parsedDateTime.toUtc(),
+  //             ),
+  //             formattedTime: DateTimeHelper.formatTime(
+  //               activeOrder!.parsedDateTime.toUtc(),
+  //             ),
+  //             items: activeOrder!.items,
+  //             isActive: activeOrder!.isActive,
+  //             date: activeOrder!.date,
+  //             time: activeOrder!.time,
+  //           ),
+  //         ),
+  //       ).then((_) => loadActiveOrder());
+  //     },
+  //     child: Container(
+  //       margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+  //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  //       decoration: BoxDecoration(
+  //         // color: Theme.of(context).cardColor,
+  //         color: Colors.green,
+  //         borderRadius: BorderRadius.circular(20),
+  //         border: Border.all(color: Colors.grey.withOpacity(0.15)),
+  //       ),
+  //       child: Column(
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Expanded(
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Row(
+  //                       children: [
+  //                         Text(
+  //                           "Order #${activeOrder!.id}",
+  //                           style: const TextStyle(
+  //                             fontWeight: FontWeight.w600,
+  //                             fontSize: 14,
+  //                             color: Colors.white,
+  //                           ),
+  //                         ),
+  //                         const SizedBox(width: 10),
+  //                         Text(
+  //                           getOrderStatusText(activeOrder!.status),
+  //                           style: TextStyle(color: Colors.white, fontSize: 13),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //
+  //               Icon(
+  //                 Icons.chevron_right_rounded,
+  //                 color: Colors.white,
+  //                 size: 20,
+  //               ),
+  //
+  //               // ── Progress steps ──
+  //             ],
+  //           ),
+  //           const SizedBox(height: 16),
+  //           _OrderProgressStepper(status: activeOrder!.status),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  Widget _ordertracking() {
+    return Dismissible(
+      key: const ValueKey('order_tracking_banner'),
+      direction: DismissDirection.horizontal,
+
+      onDismissed: (_) {
+        setState(() {
+          _showOrderTracking = false;
+        });
+      },
+
+      background: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.close, color: Colors.white),
+      ),
+
+      secondaryBackground: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.close, color: Colors.white),
+      ),
+
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OrderDetailsScreen(
+                orderId: activeOrder!.orderId,
+                order: activeOrder!,
+                formattedDate: DateTimeHelper.formatDate(
+                  activeOrder!.parsedDateTime.toUtc(),
+                ),
+                formattedTime: DateTimeHelper.formatTime(
+                  activeOrder!.parsedDateTime.toUtc(),
+                ),
+                items: activeOrder!.items,
+                isActive: activeOrder!.isActive,
+                date: activeOrder!.date,
+                time: activeOrder!.time,
+              ),
+            ),
+          ).then((_) => loadActiveOrder());
+        },
+
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.withOpacity(0.15)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              "Order #${activeOrder!.id}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              getOrderStatusText(activeOrder!.status),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _OrderProgressStepper(status: activeOrder!.status),
+            ],
+          ),
+        ),
       ),
     );
   }

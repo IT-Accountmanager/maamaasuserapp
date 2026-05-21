@@ -33,6 +33,24 @@ class _TableCartButtonState extends State<TableCartButton> {
   void initState() {
     super.initState();
     _loadQuantity();
+    // Re-sync whenever global cart count changes (e.g. after cart clear)
+    CartNotifier.count.addListener(_onCartChanged);
+  }
+
+  @override
+  void dispose() {
+    CartNotifier.count.removeListener(_onCartChanged);
+    super.dispose();
+  }
+
+  void _onCartChanged() {
+    // If cart is empty, reset immediately without a network call
+    if (CartNotifier.count.value == 0) {
+      if (mounted) setState(() => itemCount = 0);
+    } else {
+      // Cart changed but not empty — re-sync this dish's quantity
+      _loadQuantity();
+    }
   }
 
   // ✔ Load previous table-cart quantity (same as normal cart logic)

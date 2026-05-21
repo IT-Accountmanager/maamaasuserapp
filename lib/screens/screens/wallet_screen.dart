@@ -501,7 +501,10 @@ class _WalletScreenState extends State<WalletScreen> {
               children: [
                 Text(
                   item.label,
-                  style: TextStyle(fontSize: 10.sp, color: Walletcolour.textSecondary),
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: Walletcolour.textSecondary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -551,12 +554,18 @@ class _WalletScreenState extends State<WalletScreen> {
                 decoration: BoxDecoration(
                   color: Walletcolour.debit.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: Walletcolour.debit.withOpacity(0.25)),
+                  border: Border.all(
+                    color: Walletcolour.debit.withOpacity(0.25),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.close_rounded, size: 12.sp, color: Walletcolour.debit),
+                    Icon(
+                      Icons.close_rounded,
+                      size: 12.sp,
+                      color: Walletcolour.debit,
+                    ),
                     SizedBox(width: 4.w),
                     Text(
                       'Clear',
@@ -578,12 +587,18 @@ class _WalletScreenState extends State<WalletScreen> {
               decoration: BoxDecoration(
                 color: Walletcolour.violetDim,
                 borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(color: Walletcolour.violet.withOpacity(0.25)),
+                border: Border.all(
+                  color: Walletcolour.violet.withOpacity(0.25),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.tune_rounded, size: 13.sp, color: Walletcolour.violet),
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 13.sp,
+                    color: Walletcolour.violet,
+                  ),
                   SizedBox(width: 5.w),
                   Text(
                     'Filter',
@@ -606,7 +621,9 @@ class _WalletScreenState extends State<WalletScreen> {
   Widget _buildTxnCard(Transactions t) {
     final isDebit = t.transactionType == 'DEBIT';
     final isCashback = t.transactionType == 'CASHBACK';
-    final color = isCashback ? Walletcolour.cashback : (isDebit ? Walletcolour.debit : Walletcolour.credit);
+    final color = isCashback
+        ? Walletcolour.cashback
+        : (isDebit ? Walletcolour.debit : Walletcolour.credit);
     final icon = isCashback
         ? Icons.wallet_giftcard_rounded
         : (isDebit ? Icons.shopping_bag_rounded : Icons.add_circle_rounded);
@@ -659,14 +676,20 @@ class _WalletScreenState extends State<WalletScreen> {
                 SizedBox(height: 3.h),
                 Text(
                   t.description,
-                  style: TextStyle(fontSize: 11.sp, color: Walletcolour.textSecondary),
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Walletcolour.textSecondary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 2.h),
                 Text(
                   DateTimeHelper.formatDateTimeFull(t.transactionDate),
-                  style: TextStyle(fontSize: 10.sp, color: Walletcolour.textMuted),
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: Walletcolour.textMuted,
+                  ),
                 ),
               ],
             ),
@@ -742,7 +765,10 @@ class _WalletScreenState extends State<WalletScreen> {
                 child: TextField(
                   controller: ctrl,
                   keyboardType: TextInputType.number,
-                  style: TextStyle(fontSize: 16.sp, color: Walletcolour.textPrimary),
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: Walletcolour.textPrimary,
+                  ),
                   cursorColor: Walletcolour.violet,
                   decoration: InputDecoration(
                     border: InputBorder.none,
@@ -759,7 +785,10 @@ class _WalletScreenState extends State<WalletScreen> {
                     ),
                     prefixIconConstraints: const BoxConstraints(minWidth: 0),
                     hintText: '0.00',
-                    hintStyle: TextStyle(color: Walletcolour.textMuted, fontSize: 16.sp),
+                    hintStyle: TextStyle(
+                      color: Walletcolour.textMuted,
+                      fontSize: 16.sp,
+                    ),
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
                       vertical: 16.h,

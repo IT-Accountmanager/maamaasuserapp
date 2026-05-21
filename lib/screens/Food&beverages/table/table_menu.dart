@@ -74,11 +74,6 @@ class _MenuScreenState extends State<tablemneuScreen>
   late Animation<double> _fadeAnim;
   BannerContentType selectedContent = BannerContentType.none;
 
-  // Responsive expanded height based on screen size
-  // double get _expandedHeight {
-  //   final screenHeight = MediaQuery.of(context).size.height;
-  //   return (screenHeight * 0.42).clamp(280.0, 420.0);
-  // }
   static const double _expandedHeight = 400.0;
 
   @override
@@ -973,7 +968,11 @@ class SearchField extends StatelessWidget {
   final Function(String) onSearch;
   final Color fillColor;
 
-  const SearchField({super.key, required this.onSearch, required this.fillColor});
+  const SearchField({
+    super.key,
+    required this.onSearch,
+    required this.fillColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1015,7 +1014,8 @@ class VegToggle extends StatelessWidget {
   final Function(bool) onToggle;
   final bool compact;
 
-  const VegToggle({super.key,
+  const VegToggle({
+    super.key,
     required this.isVeg,
     required this.onToggle,
     this.compact = false,

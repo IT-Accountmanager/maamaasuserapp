@@ -1879,9 +1879,9 @@ enum ReferralStatus { invited, registered, verified, activated, rewardReleased }
 class _K {
   // Brand
   static const primary = Color(0xFFE66D33);
-  static const primaryLight = Color(0xFFFBEAE0);
-  static const primaryDark = Color(0xFFC1501F);
-  static const surface = Color(0xFFFFF8F5);
+  // static const primaryLight = Color(0xFFFBEAE0);
+  // static const primaryDark = Color(0xFFC1501F);
+  // static const surface = Color(0xFFFFF8F5);
   static const bg = Color(0xFFF6F7FB);
 
   // Text
@@ -2907,11 +2907,13 @@ class _CategoryReferralsTabState extends State<_CategoryReferralsTab> {
 
     final displayList = filtered.where((r) {
       if (_filterType == 'All') return true;
-      if (_filterType == 'Registered')
+      if (_filterType == 'Registered') {
         return r.status != ReferralStatus.invited;
-      if (_filterType == 'Pending')
+      }
+      if (_filterType == 'Pending') {
         return r.status == ReferralStatus.invited ||
             r.status == ReferralStatus.registered;
+      }
       return true;
     }).toList();
 
@@ -3076,11 +3078,13 @@ class _MoversTabState extends State<_MoversTab> {
 
     final displayList = movers.where((r) {
       if (_filterType == 'All') return true;
-      if (_filterType == 'Registered')
+      if (_filterType == 'Registered') {
         return r.status != ReferralStatus.invited;
-      if (_filterType == 'Pending')
+      }
+      if (_filterType == 'Pending') {
         return r.status == ReferralStatus.invited ||
             r.status == ReferralStatus.registered;
+      }
       return true;
     }).toList();
 
@@ -3754,7 +3758,7 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 16.h),
+      padding: EdgeInsets.symmetric(vertical: 10.h),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),

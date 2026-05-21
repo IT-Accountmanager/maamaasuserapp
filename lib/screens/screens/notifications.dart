@@ -99,21 +99,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
           ),
           actions: [
-            // DELETE ALL
-            // Container(
-            //   margin: const EdgeInsets.only(right: 10),
-            //   decoration: BoxDecoration(
-            //     shape: BoxShape.circle,
-            //     color: Colors.blue.withOpacity(0.1),
-            //   ),
-            //   child: IconButton(
-            //     icon: const Icon(Icons.delete, color: Colors.blue),
-            //     tooltip: "Delete all notifications",
-            //     onPressed: deleteAllNotifications,
-            //   ),
-            // ),
-
-            // MARK ALL READ
             Container(
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
@@ -536,7 +521,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   // Helper functions for date formatting
   String _formatDate(String dateString) {
-    final date = DateTime.parse(dateString);
+    final date = DateTime.parse(dateString).toLocal();
     final now = DateTime.now();
     final difference = now.difference(date);
 
@@ -554,7 +539,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   String _formatFullDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return '${date.day}/${date.month}/${date.year} at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    final date = DateTime.parse(dateString).toLocal();
+
+    return '${date.day}/${date.month}/${date.year} '
+        'at ${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
   }
 }

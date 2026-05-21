@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../Services/App_color_service/app_colours.dart';
 
 /// Drop-in widget that lets users pick the app's primary colour palette.

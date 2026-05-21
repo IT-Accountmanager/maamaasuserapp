@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Models/subscrptions/address_model.dart';
 import '../../Models/subscrptions/location_model.dart';
+import '../../Models/subscrptions/referals.dart';
 import '../../Models/subscrptions/transaction_model.dart';
 import '../../Models/subscrptions/userModel.dart';
 import '../../Models/subscrptions/user_account.dart';
@@ -727,6 +728,42 @@ class subscription_AuthService {
         print("✅ Parsed JSON: $jsonData");
 
         return UserModel.fromJson(jsonData);
+      } else {
+        print("❌ API Error: ${response.statusCode}");
+        return null;
+      }
+    } catch (e, stack) {
+      print("🚨 Exception: $e");
+      print(stack);
+      return null;
+    }
+  }
+
+  static Future<ReferralUsageModel?> getuser1Account() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('userId');
+
+      print("📌 User ID: $userId");
+
+      if (userId == null) {
+        print("❌ User ID is null");
+        return null;
+      }
+
+      final response = await ApiClient.get(
+        "api/user/referrals/given/$userId",
+        service: "subscription",
+      );
+
+      print("📡 Status Code: ${response.statusCode}");
+      print("📦 Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        print("✅ Parsed JSON: $jsonData");
+
+        return ReferralUsageModel.fromJson(jsonData);
       } else {
         print("❌ API Error: ${response.statusCode}");
         return null;

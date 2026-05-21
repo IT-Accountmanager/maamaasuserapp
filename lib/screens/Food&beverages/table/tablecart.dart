@@ -425,7 +425,7 @@ class _tablecartState extends State<tablecart> {
                         if (allItemsDelivered) _buildTableCheckoutCard(),
                         SizedBox(height: 12.h),
                         if (isExpanded) ...[
-                          _buildCouponRow(theme, colorScheme),
+                          _buildCouponRow(),
                           SizedBox(height: 12.h),
                           _buildsummaryCard(theme, colorScheme),
                         ],
@@ -748,85 +748,6 @@ class _tablecartState extends State<tablecart> {
 
                               const SizedBox(width: 10),
 
-                              /// SEND BUTTON
-                              // SendButton(
-                              //   item: item,
-                              //   sent: shouldShowSent(item),
-                              //   onSend: () async {
-                              //     final noteController = _noteControllers
-                              //         .putIfAbsent(
-                              //           item.itemId,
-                              //           () => TextEditingController(
-                              //             text: item.note ?? '',
-                              //           ),
-                              //         );
-                              //
-                              //     final noteText = noteController.text.trim();
-                              //
-                              //     if (_isSendingMap[item.itemId] == true) {
-                              //       return;
-                              //     }
-                              //
-                              //     setState(() {
-                              //       _isSendingMap[item.itemId] = true;
-                              //     });
-                              //
-                              //     try {
-                              //       bool success = await food_Authservice
-                              //           .updateCartItemStatus(
-                              //             itemId: item.itemId,
-                              //             status: 'PENDING',
-                              //             note: noteText.isNotEmpty
-                              //                 ? noteText
-                              //                 : null,
-                              //           );
-                              //
-                              //       if (success) {
-                              //         await _loadCartItems();
-                              //
-                              //         setState(() {
-                              //           send = true;
-                              //         });
-                              //
-                              //         scrollToBottom();
-                              //
-                              //         if (!mounted) return;
-                              //
-                              //         AppAlert.success(
-                              //           context,
-                              //           "✅ Order placed for ${item.dishName}",
-                              //         );
-                              //       } else {
-                              //         AppAlert.error(
-                              //           context,
-                              //           "❌ Failed to place order for ${item.dishName}",
-                              //         );
-                              //       }
-                              //     } finally {
-                              //       if (mounted) {
-                              //         setState(() {
-                              //           _isSendingMap[item.itemId] = false;
-                              //         });
-                              //       }
-                              //     }
-                              //   },
-                              //   child: (_isSendingMap[item.itemId] == true)
-                              //       ? const SizedBox(
-                              //           width: 20,
-                              //           height: 20,
-                              //           child: CircularProgressIndicator(
-                              //             color: Colors.white,
-                              //             strokeWidth: 2,
-                              //           ),
-                              //         )
-                              //       : Text(
-                              //           shouldShowSent(item) ? "Sent" : "Send",
-                              //           style: const TextStyle(
-                              //             color: Colors.white,
-                              //             fontWeight: FontWeight.bold,
-                              //           ),
-                              //         ),
-                              // ),
                               SendButton(
                                 item: item,
                                 isSending: _isSendingMap[item.itemId] == true,
@@ -1178,107 +1099,227 @@ class _tablecartState extends State<tablecart> {
     );
   }
 
-  Widget _buildCouponRow(ThemeData theme, ColorScheme colorScheme) {
-    final bool isCouponApplied =
-        appliedCouponCode != null && appliedCouponCode!.isNotEmpty;
+  // Widget _buildCouponRow(ThemeData theme, ColorScheme colorScheme) {
+  //   final bool isCouponApplied =
+  //       appliedCouponCode != null && appliedCouponCode!.isNotEmpty;
+  //
+  //   return GestureDetector(
+  //     onTap: () {
+  //       if (!isCouponApplied) {
+  //         _showCouponBottomSheet();
+  //       }
+  //     },
+  //     child: Container(
+  //       padding: EdgeInsets.all(12.w),
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(12.r),
+  //         boxShadow: const [
+  //           BoxShadow(
+  //             color: Colors.black12,
+  //             blurRadius: 8,
+  //             offset: Offset(0, 4),
+  //           ),
+  //         ],
+  //       ),
+  //       child: Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Icon(
+  //                 Icons.local_offer_outlined,
+  //                 size: 20.sp,
+  //                 color: isCouponApplied
+  //                     ? colorScheme.primary
+  //                     : Colors.grey.shade600,
+  //               ),
+  //               SizedBox(width: 12.w),
+  //               Text(
+  //                 isCouponApplied ? appliedCouponCode! : "Apply Coupon",
+  //                 style: theme.textTheme.bodyMedium?.copyWith(
+  //                   fontWeight: FontWeight.w500,
+  //                   color: isCouponApplied
+  //                       ? colorScheme.primary
+  //                       : Colors.grey.shade800,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //
+  //           // REMOVE BUTTON
+  //           if (isCouponApplied)
+  //             GestureDetector(
+  //               onTap: () async {
+  //                 if (tableCartData?.cartId == null) {
+  //                   AppAlert.error(context, "Invalid cart");
+  //                   return;
+  //                 }
+  //
+  //                 try {
+  //                   // ✅ REMOVE COUPON → SEND 0
+  //                   final result = await food_Authservice.updateCartSettings(
+  //                     cartId: tableCartData!.cartId,
+  //                     couponId: tableCartData!.couponId, // 🔥 IMPORTANT
+  //                     applyCoupon: "NOT_APPLIED",
+  //                   );
+  //
+  //                   if (!result.success) {
+  //                     AppAlert.error(context, "Failed to remove coupon.");
+  //                     return;
+  //                   }
+  //
+  //                   // Reload server cart FIRST
+  //                   await _initializeData();
+  //
+  //                   // Sync UI AFTER server success
+  //                   setState(() {
+  //                     appliedCouponCode = null;
+  //                     appliedCouponId = null;
+  //                   });
+  //                   AppAlert.success(context, "Coupon removed successfully");
+  //                 } catch (e) {
+  //                   // debugPrint("Coupon remove error: $e");
+  //                   AppAlert.error(context, "Network error. Try again.");
+  //                 }
+  //               },
+  //               child: Text(
+  //                 "Remove",
+  //                 style: theme.textTheme.bodySmall?.copyWith(
+  //                   color: Colors.red,
+  //                   fontWeight: FontWeight.w600,
+  //                 ),
+  //               ),
+  //             )
+  //           else
+  //             Icon(
+  //               Icons.arrow_forward_ios_rounded,
+  //               size: 16.sp,
+  //               color: Colors.grey.shade600,
+  //             ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+  Widget _buildCouponRow() {
+    final applied = (tableCartData?.couponCode ?? '').isNotEmpty;
 
     return GestureDetector(
-      onTap: () {
-        if (!isCouponApplied) {
-          _showCouponBottomSheet();
-        }
-      },
-      child: Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
+      onTap: applied ? null : _showCouponBottomSheet,
+      child: _card(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.local_offer_outlined,
-                  size: 20.sp,
-                  color: isCouponApplied
-                      ? colorScheme.primary
-                      : Colors.grey.shade600,
-                ),
-                SizedBox(width: 12.w),
-                Text(
-                  isCouponApplied ? appliedCouponCode! : "Apply Coupon",
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: isCouponApplied
-                        ? colorScheme.primary
-                        : Colors.grey.shade800,
-                  ),
-                ),
-              ],
+            Container(
+              width: 36.r,
+              height: 36.r,
+              decoration: BoxDecoration(
+                color: applied
+                    ? cartuser.green.withOpacity(0.10)
+                    : cartuser.violetDim,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                applied
+                    ? Icons.check_circle_rounded
+                    : Icons.local_offer_rounded,
+                size: 18.sp,
+                color: applied ? cartuser.green : cartuser.violet,
+              ),
             ),
-
-            // REMOVE BUTTON
-            if (isCouponApplied)
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    applied ? 'Coupon Applied' : 'Apply Coupon',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w700,
+                      color: applied ? cartuser.green : cartuser.textPrimary,
+                    ),
+                  ),
+                  if (applied)
+                    Text(
+                      appliedCouponCode ?? '',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: cartuser.textSecondary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (applied)
               GestureDetector(
                 onTap: () async {
-                  if (tableCartData?.cartId == null) {
-                    AppAlert.error(context, "Invalid cart");
+                  if (tableCartData?.cartId == null) return;
+                  final result = await food_Authservice.updateCartSettings(
+                    cartId: tableCartData!.cartId,
+                    couponId: tableCartData!.couponId,
+                    applyCoupon: "NOT_APPLIED",
+                  );
+                  if (!result.success) {
+                    AppAlert.error(context, "Failed to remove coupon");
                     return;
                   }
-
-                  try {
-                    // ✅ REMOVE COUPON → SEND 0
-                    final result = await food_Authservice.updateCartSettings(
-                      cartId: tableCartData!.cartId,
-                      couponId: tableCartData!.couponId, // 🔥 IMPORTANT
-                      applyCoupon: "NOT_APPLIED",
-                    );
-
-                    if (!result.success) {
-                      AppAlert.error(context, "Failed to remove coupon.");
-                      return;
-                    }
-
-                    // Reload server cart FIRST
-                    await _initializeData();
-
-                    // Sync UI AFTER server success
-                    setState(() {
-                      appliedCouponCode = null;
-                      appliedCouponId = null;
-                    });
-                    AppAlert.success(context, "Coupon removed successfully");
-                  } catch (e) {
-                    // debugPrint("Coupon remove error: $e");
-                    AppAlert.error(context, "Network error. Try again.");
-                  }
+                  setState(() {
+                    appliedCouponCode = null;
+                    appliedCouponId = null;
+                  });
+                  AppAlert.success(context, "Coupon removed");
                 },
-                child: Text(
-                  "Remove",
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w600,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 5.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cartuser.red.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(color: cartuser.red.withOpacity(0.2)),
+                  ),
+                  child: Text(
+                    'Remove',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: cartuser.red,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               )
             else
               Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16.sp,
-                color: Colors.grey.shade600,
+                Icons.chevron_right_rounded,
+                size: 20.sp,
+                color: cartuser.textMuted,
               ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _card({required Widget child, EdgeInsets? padding}) {
+    return Container(
+      width: double.infinity,
+      padding: padding ?? EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: cartuser.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: cartuser.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 
@@ -1597,6 +1638,7 @@ class _tablecartState extends State<tablecart> {
     final grandTotal = tableCartData!.grandTotal;
     final discountAmount = tableCartData?.discountAmount ?? 0;
     final platformcharges = tableCartData?.platformCharges ?? 0;
+    final serviceCharges = tableCartData?.serviceCharges ?? 0;
 
     return Column(
       children: [
@@ -1639,12 +1681,16 @@ class _tablecartState extends State<tablecart> {
                 // if (orderType == "TABLE_DINE_IN" && serviceCharges > 0) ...[
 
                 // ],
-                _buildTotalRow(
-                  "GST",
-                  gstTotal,
-                  onInfoTap: () => _showGstDialog('GST'),
-                ),
-                _buildServiceChargesRow(theme, colorScheme),
+                if (gstTotal > 0) ...[
+                  _buildTotalRow(
+                    "GST",
+                    gstTotal,
+                    onInfoTap: () => _showGstDialog('GST'),
+                  ),
+                ],
+                if (serviceCharges > 0) ...[
+                  _buildServiceChargesRow(theme, colorScheme),
+                ],
                 // _buildTotalRow("CGST", gstTotal / 2),
                 Divider(height: 24.h, thickness: 1, color: Colors.grey),
                 _buildTotalRow("Grand Total", grandTotal, isBold: true),
@@ -1934,138 +1980,6 @@ class _tablecartState extends State<tablecart> {
   }
 }
 
-// class QuantityControl extends StatefulWidget {
-//   final CartItem item;
-//   final VoidCallback onQuantityChanged;
-//
-//   const QuantityControl({
-//     super.key,
-//     required this.item,
-//     required this.onQuantityChanged,
-//   });
-//
-//   @override
-//   State<QuantityControl> createState() => _QuantityControlState();
-// }
-//
-// class _QuantityControlState extends State<QuantityControl> {
-//   bool _isUpdating = false;
-//
-//   bool get hasConfirmedQuantity {
-//     return widget.item.previousQuantity > 0;
-//   }
-//
-//   bool get canReduce {
-//     final minQty = hasConfirmedQuantity ? widget.item.previousQuantity : 0;
-//
-//     return widget.item.quantity > minQty;
-//   }
-//
-//   Future<void> _updateQuantity(int newQuantity) async {
-//     setState(() {
-//       _isUpdating = true;
-//     });
-//
-//     bool success = await food_Authservice.updateCartItemQuantity(
-//       itemId: widget.item.itemId,
-//       quantity: newQuantity,
-//     );
-//
-//     if (success) {
-//       setState(() {
-//         widget.item.quantity = newQuantity;
-//         widget.item.totalPrice = widget.item.price * newQuantity;
-//       });
-//
-//       widget.onQuantityChanged();
-//     } else {
-//       // ignore: use_build_context_synchronously
-//       AppAlert.error(context, "❌ Failed to update quantity");
-//     }
-//
-//     if (mounted) {
-//       setState(() {
-//         _isUpdating = false;
-//       });
-//     }
-//   }
-//
-//   Widget _qtyBtn(IconData icon, Color color, VoidCallback? onTap) {
-//     return GestureDetector(
-//       onTap: onTap,
-//       child: Container(
-//         padding: EdgeInsets.all(6.w),
-//         decoration: BoxDecoration(
-//           color: color.withOpacity(0.10),
-//           borderRadius: BorderRadius.circular(8.r),
-//         ),
-//         child: Icon(
-//           icon,
-//           size: 14.sp,
-//           color: onTap == null ? Colors.grey : color,
-//         ),
-//       ),
-//     );
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Row(
-//       children: [
-//         Container(
-//           padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
-//           decoration: BoxDecoration(
-//             color: cartuser.bg,
-//             borderRadius: BorderRadius.circular(10.r),
-//             border: Border.all(color: cartuser.border),
-//           ),
-//           child: Row(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               _qtyBtn(
-//                 Icons.remove_rounded,
-//                 cartuser.red,
-//                 _isUpdating || !canReduce
-//                     ? null
-//                     : () => _updateQuantity(widget.item.quantity - 1),
-//               ),
-//
-//               Padding(
-//                 padding: EdgeInsets.symmetric(horizontal: 10.w),
-//                 child: _isUpdating
-//                     ? SizedBox(
-//                         width: 14.w,
-//                         height: 14.w,
-//                         child: CircularProgressIndicator(
-//                           strokeWidth: 2,
-//                           color: cartuser.green,
-//                         ),
-//                       )
-//                     : Text(
-//                         "${widget.item.quantity}",
-//                         style: TextStyle(
-//                           fontSize: 13.sp,
-//                           fontWeight: FontWeight.w700,
-//                           color: cartuser.textPrimary,
-//                         ),
-//                       ),
-//               ),
-//
-//               _qtyBtn(
-//                 Icons.add_rounded,
-//                 cartuser.green,
-//                 _isUpdating
-//                     ? null
-//                     : () => _updateQuantity(widget.item.quantity + 1),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }
-
 class QuantityControl extends StatefulWidget {
   final CartItem item;
   final VoidCallback onQuantityChanged;
@@ -2087,8 +2001,18 @@ class _QuantityControlState extends State<QuantityControl> {
   // If nothing sent yet, minimum is 1
   int get _floor =>
       widget.item.previousQuantity > 0 ? widget.item.previousQuantity : 1;
+  //
+  // bool get _canDecrease => widget.item.quantity > _floor;
 
-  bool get _canDecrease => widget.item.quantity > _floor;
+  bool get _canDecrease {
+    // Not yet sent to API
+    if (widget.item.previousQuantity == 0) {
+      return widget.item.quantity > 0;
+    }
+
+    // Already sent to API
+    return widget.item.quantity > widget.item.previousQuantity;
+  }
 
   Future<void> _updateQuantity(int newQty) async {
     if (_isUpdating) return;
@@ -2142,12 +2066,37 @@ class _QuantityControlState extends State<QuantityControl> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // _qtyBtn(
+          //   Icons.remove_rounded,
+          //   cartuser.red,
+          //   (_isUpdating || !_canDecrease)
+          //       ? null
+          //       : () => _updateQuantity(widget.item.quantity - 1),
+          // ),
           _qtyBtn(
             Icons.remove_rounded,
             cartuser.red,
             (_isUpdating || !_canDecrease)
                 ? null
-                : () => _updateQuantity(widget.item.quantity - 1),
+                : () async {
+                    final newQty = widget.item.quantity - 1;
+
+                    // Remove item completely if qty becomes 0
+                    if (newQty == 0) {
+                      // final success = await food_Authservice.removeCartItem(
+                      //   itemId: widget.item.itemId,
+                      // );
+                      final success = await food_Authservice.removeCartItem(
+                        widget.item.itemId,
+                      );
+
+                      if (success) {
+                        widget.onQuantityChanged();
+                      }
+                    } else {
+                      _updateQuantity(newQty);
+                    }
+                  },
           ),
 
           Padding(
@@ -2183,48 +2132,6 @@ class _QuantityControlState extends State<QuantityControl> {
     );
   }
 }
-
-// class SendButton extends StatelessWidget {
-//   final CartItem item;
-//   final bool sent;
-//   final VoidCallback onSend;
-//   final Widget? child;
-//
-//   const SendButton({
-//     super.key,
-//     required this.item,
-//     required this.sent,
-//     required this.onSend,
-//     this.child,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return GestureDetector(
-//       onTap: sent ? null : onSend,
-//       child: Container(
-//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-//         decoration: BoxDecoration(
-//           color: sent ? Colors.green : Theme.of(context).primaryColor,
-//           borderRadius: BorderRadius.circular(10),
-//           border: Border.all(color: Colors.black12),
-//         ),
-//         child: Center(
-//           child:
-//               child ??
-//               Text(
-//                 sent ? "Sent" : "Send",
-//                 style: const TextStyle(
-//                   fontSize: 16,
-//                   fontWeight: FontWeight.bold,
-//                   color: Colors.white,
-//                 ),
-//               ),
-//         ),
-//       ),
-//     );
-//   }
-// }
 
 class SendButton extends StatelessWidget {
   final CartItem item;
