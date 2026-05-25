@@ -1,15 +1,15 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../Models/food/restaurent_banner_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../Models/food/aboutus_model.dart';
-import '../../../Models/food/restaurent_banner_model.dart';
 import '../../../Models/food/team_model.dart';
+import 'package:flutter/material.dart';
+import 'menu_screen.dart';
 import 'Menuhelper.dart';
 import 'colours.dart';
-import 'menu_screen.dart';
+import 'dart:convert';
 
 class BannerSection extends StatefulWidget {
   final bool isVeg;

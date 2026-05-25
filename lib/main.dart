@@ -9,7 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/providers/provider.dart';
-import 'package:maamaas/screens/foodmainscreen.dart';
+import 'package:maamaas/screens/Mainscreen.dart';
 import 'package:maamaas/screens/screens/signup_screen.dart';
 import 'package:maamaas/screens/screens/splash_screen.dart';
 import 'package:maamaas/session_controller.dart';

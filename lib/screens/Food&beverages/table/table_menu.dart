@@ -16,7 +16,7 @@ import '../../skeleton/menu_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../Models/food/dish.dart';
-import '../../foodmainscreen.dart';
+import '../../Mainscreen.dart';
 import 'dart:async';
 import '../Menu/colours.dart';
 import '../Menu/fullscreen.dart';
@@ -95,6 +95,12 @@ class _MenuScreenState extends State<tablemneuScreen>
         setState(() => _isCollapsed = collapsed);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadMenu();
   }
 
   Future<void> _initializeScreen() async {
@@ -1515,239 +1521,399 @@ class ProductCard extends StatelessWidget {
     final isPhone = Radiusc.isPhone(context);
     final imgH = isPhone ? 115.0 : 140.0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Menucolours.surface,
-        borderRadius: Menucolours.r16,
-        border: Border.all(color: Menucolours.borderLight),
-        boxShadow: Menucolours.cardShadow,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Image section ────────────────────────────────────────
-          SizedBox(
-            height: imgH,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                imageWidget,
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0.6, 1.0],
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.15),
-                      ],
-                    ),
-                  ),
-                ),
+    // return Container(
+    //   decoration: BoxDecoration(
+    //     color: Menucolours.surface,
+    //     borderRadius: Menucolours.r16,
+    //     border: Border.all(color: Menucolours.borderLight),
+    //     boxShadow: Menucolours.cardShadow,
+    //   ),
+    //   clipBehavior: Clip.antiAlias,
+    //   child: Column(
+    //     crossAxisAlignment: CrossAxisAlignment.start,
+    //     children: [
+    //       // ── Image section ────────────────────────────────────────
+    //       SizedBox(
+    //         height: imgH,
+    //         child: Stack(
+    //           fit: StackFit.expand,
+    //           children: [
+    //             imageWidget,
+    //             Container(
+    //               decoration: BoxDecoration(
+    //                 gradient: LinearGradient(
+    //                   begin: Alignment.topCenter,
+    //                   end: Alignment.bottomCenter,
+    //                   stops: const [0.6, 1.0],
+    //                   colors: [
+    //                     Colors.transparent,
+    //                     Colors.black.withOpacity(0.15),
+    //                   ],
+    //                 ),
+    //               ),
+    //             ),
+    //
+    //             // Favourite button
+    //             if (discount > 0)
+    //               Positioned(
+    //                 top: 8,
+    //                 left: 8,
+    //                 child: Container(
+    //                   padding: EdgeInsets.symmetric(
+    //                     horizontal: 7.w,
+    //                     vertical: 3.h,
+    //                   ),
+    //                   decoration: BoxDecoration(
+    //                     color: Menucolours.accent,
+    //                     borderRadius: Menucolours.r8,
+    //                   ),
+    //                   child: Text(
+    //                     '${discount.toStringAsFixed(0)}%',
+    //                     style: TextStyle(
+    //                       fontSize: 9.sp,
+    //                       color: Colors.white,
+    //                       fontWeight: FontWeight.w800,
+    //                       letterSpacing: 0.2,
+    //                     ),
+    //                   ),
+    //                 ),
+    //               ),
+    //
+    //             Positioned(
+    //               top: 8,
+    //               right: 8,
+    //               child: Container(
+    //                 width: 30.r,
+    //                 height: 30.r,
+    //                 decoration: BoxDecoration(
+    //                   color: Colors.white,
+    //                   shape: BoxShape.circle,
+    //                   boxShadow: [
+    //                     BoxShadow(
+    //                       color: Colors.black.withOpacity(0.12),
+    //                       blurRadius: 6,
+    //                     ),
+    //                   ],
+    //                 ),
+    //                 child: Center(child: favoriteButton),
+    //               ),
+    //             ),
+    //             // Out-of-stock overlay
+    //             if (isOutOfStock)
+    //               Positioned.fill(
+    //                 child: Container(
+    //                   color: Colors.black.withOpacity(0.52),
+    //                   child: Center(
+    //                     child: Container(
+    //                       padding: EdgeInsets.symmetric(
+    //                         horizontal: 10.w,
+    //                         vertical: 5.h,
+    //                       ),
+    //                       decoration: BoxDecoration(
+    //                         color: Colors.white,
+    //                         borderRadius: Menucolours.r20,
+    //                       ),
+    //                       child: Text(
+    //                         'Out of Stock',
+    //                         style: TextStyle(
+    //                           fontSize: 10.sp,
+    //                           fontWeight: FontWeight.w700,
+    //                           color: Menucolours.nonVegRed,
+    //                         ),
+    //                       ),
+    //                     ),
+    //                   ),
+    //                 ),
+    //               ),
+    //           ],
+    //         ),
+    //       ),
+    //
+    //       // ── Details section ───────────────────────────────────────
+    //       // FIX: Use Expanded with intrinsic layout instead of nested Spacers
+    //       // that caused overflow in constrained grid cells
+    //       Expanded(
+    //         child: Padding(
+    //           padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 8.h),
+    //           child: Column(
+    //             crossAxisAlignment: CrossAxisAlignment.start,
+    //             mainAxisSize: MainAxisSize.max,
+    //             children: [
+    //               // Name + info button row — FIX: no fixed SizedBox height,
+    //               // use flexible height with maxLines clipping
+    //               Row(
+    //                 crossAxisAlignment: CrossAxisAlignment.start,
+    //                 children: [
+    //                   Expanded(
+    //                     child: Text(
+    //                       name,
+    //                       maxLines: 2,
+    //                       overflow: TextOverflow.ellipsis,
+    //                       style: TextStyle(
+    //                         fontSize: 13.sp,
+    //                         fontWeight: FontWeight.bold,
+    //                         color: AppColors.primary,
+    //                         height: 1.3,
+    //                       ),
+    //                     ),
+    //                   ),
+    //                   if (description.trim().isNotEmpty)
+    //                     Padding(
+    //                       padding: EdgeInsets.only(top: 2.h, left: 4.w),
+    //                       child: GestureDetector(
+    //                         onTap: () => showDishBottomSheet(context, dish),
+    //                         child: Container(
+    //                           width: 18.r,
+    //                           height: 18.r,
+    //                           alignment: Alignment.center,
+    //                           decoration: BoxDecoration(
+    //                             color: AppColors.primary,
+    //                             shape: BoxShape.circle,
+    //                           ),
+    //                           child: Text(
+    //                             'i',
+    //                             style: TextStyle(
+    //                               fontSize: 11.sp,
+    //                               fontWeight: FontWeight.bold,
+    //                               color: Colors.white,
+    //                             ),
+    //                           ),
+    //                         ),
+    //                       ),
+    //                     ),
+    //                 ],
+    //               ),
+    //
+    //               SizedBox(height: 4.h),
+    //
+    //               Row(
+    //                 crossAxisAlignment: CrossAxisAlignment.center,
+    //                 children: [
+    //                   if (discount > 0) ...[
+    //                     Text(
+    //                       price,
+    //                       style: TextStyle(
+    //                         decoration: TextDecoration.lineThrough,
+    //                         decorationColor: Menucolours.textM,
+    //                         fontSize: 10.sp,
+    //                         color: Menucolours.textM,
+    //                       ),
+    //                     ),
+    //                     SizedBox(width: 4.w),
+    //                   ],
+    //                   Text(effectivePrice, style: Menucolours.price()),
+    //                   const Spacer(),
+    //                   vegNonVegIndicator(tag),
+    //                 ],
+    //               ),
+    //
+    //               // FIX: use Spacer only if enough space — wrap in Expanded
+    //               const Spacer(),
+    //
+    //               // Cart button — centered, constrained
+    //               Center(
+    //                 child: ConstrainedBox(
+    //                   constraints: BoxConstraints(maxWidth: double.infinity),
+    //                   child: cartButton,
+    //                 ),
+    //               ),
+    //             ],
+    //           ),
+    //         ),
+    //       ),
+    //     ],
+    //   ),
+    // );
 
-                // Favourite button
-                if (discount > 0)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 7.w,
-                        vertical: 3.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Menucolours.accent,
-                        borderRadius: Menucolours.r8,
-                      ),
-                      child: Text(
-                        '${discount.toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontSize: 9.sp,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                  ),
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Menucolours.surface,
+            borderRadius: Menucolours.r16,
+            border: Border.all(color: Menucolours.borderLight),
+            boxShadow: Menucolours.cardShadow,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // IMAGE SECTION
+              SizedBox(
+                height: imgH,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    imageWidget,
 
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    width: 30.r,
-                    height: 30.r,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                    child: Center(child: favoriteButton),
-                  ),
-                ),
-                // Out-of-stock overlay
-                if (isOutOfStock)
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.black.withOpacity(0.52),
-                      child: Center(
+                    if (discount > 0)
+                      Positioned(
+                        top: 8,
+                        left: 8,
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 10.w,
-                            vertical: 5.h,
+                            horizontal: 7.w,
+                            vertical: 3.h,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: Menucolours.r20,
+                            color: Menucolours.accent,
+                            borderRadius: Menucolours.r8,
                           ),
                           child: Text(
-                            'Out of Stock',
+                            '${discount.toStringAsFixed(0)}%',
                             style: TextStyle(
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w700,
-                              color: Menucolours.nonVegRed,
+                              fontSize: 9.sp,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
 
-          // ── Details section ───────────────────────────────────────
-          // FIX: Use Expanded with intrinsic layout instead of nested Spacers
-          // that caused overflow in constrained grid cells
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 8.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  // Name + info button row — FIX: no fixed SizedBox height,
-                  // use flexible height with maxLines clipping
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                            height: 1.3,
-                          ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        width: 30.r,
+                        height: 30.r,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
                         ),
+                        child: Center(child: favoriteButton),
                       ),
-                      if (description.trim().isNotEmpty)
-                        Padding(
-                          padding: EdgeInsets.only(top: 2.h, left: 4.w),
-                          child: GestureDetector(
-                            onTap: () => showDishBottomSheet(context, dish),
-                            child: Container(
-                              width: 18.r,
-                              height: 18.r,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
+                    ),
+                  ],
+                ),
+              ),
+
+              // DETAILS SECTION
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 8.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      // Name + info button row — FIX: no fixed SizedBox height,
+                      // use flexible height with maxLines clipping
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.bold,
                                 color: AppColors.primary,
-                                shape: BoxShape.circle,
+                                height: 1.3,
                               ),
-                              child: Text(
-                                'i',
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                            ),
+                          ),
+                          if (description.trim().isNotEmpty)
+                            Padding(
+                              padding: EdgeInsets.only(top: 2.h, left: 4.w),
+                              child: GestureDetector(
+                                onTap: () => showDishBottomSheet(context, dish),
+                                child: Container(
+                                  width: 18.r,
+                                  height: 18.r,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    'i',
+                                    style: TextStyle(
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
+                        ],
+                      ),
 
-                  SizedBox(height: 4.h),
+                      SizedBox(height: 4.h),
 
-                  // Price row — FIX: use Flexible instead of Spacer inside Row
-                  // to prevent overflow when price text is long
-                  // Row(
-                  //   crossAxisAlignment: CrossAxisAlignment.center,
-                  //   children: [
-                  //     if (discount > 0) ...[
-                  //       Flexible(
-                  //         child: Text(
-                  //           price,
-                  //           overflow: TextOverflow.ellipsis,
-                  //           style: TextStyle(
-                  //             decoration: TextDecoration.lineThrough,
-                  //             decorationColor: Menucolours.textM,
-                  //             fontSize: 10.sp,
-                  //             color: Menucolours.textM,
-                  //           ),
-                  //         ),
-                  //       ),
-                  //       SizedBox(width: 4.w),
-                  //     ],
-                  //     Flexible(
-                  //       child: Text(
-                  //         effectivePrice,
-                  //         overflow: TextOverflow.ellipsis,
-                  //         style: Menucolours.price(),
-                  //       ),
-                  //     ),
-                  //     const Spacer(),
-                  //     vegNonVegIndicator(tag),
-                  //   ],
-                  // ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if (discount > 0) ...[
-                        Text(
-                          price,
-                          style: TextStyle(
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor: Menucolours.textM,
-                            fontSize: 10.sp,
-                            color: Menucolours.textM,
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                      ],
-                      Text(effectivePrice, style: Menucolours.price()),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (discount > 0) ...[
+                            Text(
+                              price,
+                              style: TextStyle(
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor: Menucolours.textM,
+                                fontSize: 10.sp,
+                                color: Menucolours.textM,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                          ],
+                          Text(effectivePrice, style: Menucolours.price()),
+                          const Spacer(),
+                          vegNonVegIndicator(tag),
+                        ],
+                      ),
+
+                      // FIX: use Spacer only if enough space — wrap in Expanded
                       const Spacer(),
-                      vegNonVegIndicator(tag),
+
+                      // Cart button — centered, constrained
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: double.infinity,
+                          ),
+                          child: cartButton,
+                        ),
+                      ),
                     ],
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
 
-                  // FIX: use Spacer only if enough space — wrap in Expanded
-                  const Spacer(),
-
-                  // Cart button — centered, constrained
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: double.infinity),
-                      child: cartButton,
+        // ⭐ FULL CARD OVERLAY (NEW)
+        if (isOutOfStock)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: Menucolours.r16,
+              ),
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14.w,
+                    vertical: 6.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: Menucolours.r20,
+                  ),
+                  child: Text(
+                    'Out of Stock',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Menucolours.nonVegRed,
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }

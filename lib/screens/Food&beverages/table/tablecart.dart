@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:maamaas/screens/Food&beverages/table/tablecartpayment.dart';
 import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
@@ -12,6 +14,7 @@ import '../../../Models/food/tablecartmodel.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../widgets/widgets/food/currentcart_notifier.dart';
 import 'table_menu.dart';
 import '../food_invoice.dart';
 
@@ -73,6 +76,7 @@ class _tablecartState extends State<tablecart> {
   final Map<int, TextEditingController> _noteControllers = {};
   Set<String> selectedSubWallets = {};
   PaymentOverlayState _overlayState = PaymentOverlayState.none;
+  Timer? _statusTimer;
 
   @override
   void initState() {
@@ -81,11 +85,16 @@ class _tablecartState extends State<tablecart> {
     _loadWallet();
     _loadCartItems();
     _initializeData();
+
+    _statusTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      await _initializeData();
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _statusTimer?.cancel();
     super.dispose();
   }
 
@@ -146,6 +155,35 @@ class _tablecartState extends State<tablecart> {
       });
       // ignore: empty_catches
     } catch (e) {}
+  }
+
+  Future<bool> _deleteCart() async {
+    try {
+      final success = await food_Authservice.deleteTableDineInCart();
+
+      if (!mounted) return false;
+
+      if (success) {
+        CartNotifier.count.value = 0;
+
+        AppAlert.success(context, "🗑 Cart deleted successfully");
+
+        setState(() {
+          tableCartData = null;
+          _cartItems.clear();
+        });
+
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      if (!mounted) return false;
+
+      AppAlert.error(context, e.toString().replaceFirst("Exception: ", ""));
+
+      return false;
+    }
   }
 
   double getSelectedWalletBalance() {
@@ -291,6 +329,9 @@ class _tablecartState extends State<tablecart> {
     }
   }
 
+  /*when items are cancelled or delivered
+  * this condition is used to show generated bill button*/
+
   bool get allItemsDelivered {
     if (tableCartData == null) return false;
 
@@ -300,20 +341,31 @@ class _tablecartState extends State<tablecart> {
             .every((i) => i.orderStatus == "DELIVERED");
   }
 
-  bool shouldShowSent(CartItem item) {
-    // Never sent
-    if (item.orderStatus == null) {
-      return false;
-    }
+  /*this condtion is used when items are sent to confirmed then user can not clear the cart fully*/
 
-    // Fully synced with confirmed quantity
-    if (item.quantity == item.previousQuantity) {
-      return true;
-    }
+  bool get canDeleteCart {
+    if (tableCartData == null) return false;
 
-    // Extra quantity added after send
-    return false;
+    // Show delete only when ALL orderStatus are null
+    return tableCartData!.cartItems.isNotEmpty &&
+        tableCartData!.cartItems.every((item) => item.orderStatus == null);
   }
+
+  /* when user upadted quantity is sent */
+  // bool shouldShowSent(CartItem item) {
+  //   // Never sent
+  //   if (item.orderStatus == null) {
+  //     return false;
+  //   }
+  //
+  //   // Fully synced with confirmed quantity
+  //   if (item.quantity == item.previousQuantity) {
+  //     return true;
+  //   }
+  //
+  //   // Extra quantity added after send
+  //   return false;
+  // }
 
   List<String> mapWalletsToEnum(List<String> selectedWallets) {
     return selectedWallets.map((wallet) {
@@ -392,6 +444,62 @@ class _tablecartState extends State<tablecart> {
               title: const Text("Review Your Cart"),
               backgroundColor: Colors.white,
               centerTitle: true,
+
+              actions: [
+                // if (canDeleteCart)
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.red,
+                  ),
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Delete Cart"),
+                        content: const Text(
+                          "Are you sure you want to clear your cart?",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("Cancel"),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text(
+                              "Clear",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      final vendorId = tableCartData?.vendorId;
+                      final seatingId = tableCartData?.seatingId;
+
+                      final deleted = await _deleteCart();
+
+                      if (!mounted) return;
+
+                      // ✅ Navigate ONLY when delete succeeds
+                      if (deleted && vendorId != null && seatingId != null) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => tablemneuScreen(
+                              vendorId: vendorId,
+                              seatingId: seatingId,
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
             ),
           ),
           body: SafeArea(
@@ -417,11 +525,8 @@ class _tablecartState extends State<tablecart> {
                       SizedBox(height: 5.h),
                       _buildaddmoretext(context),
                       SizedBox(height: 12.h),
-
-                      /// ✅ Use tableCartData, not _cartItems
                       if (tableCartData != null &&
                           tableCartData!.cartItems.isNotEmpty) ...[
-                        // if (send) _buildTableCheckoutCard(),
                         if (allItemsDelivered) _buildTableCheckoutCard(),
                         SizedBox(height: 12.h),
                         if (isExpanded) ...[
@@ -918,11 +1023,11 @@ class _tablecartState extends State<tablecart> {
                 decoration: TextDecoration.underline, // Underline effect
               ),
               recognizer: TapGestureRecognizer()
-                ..onTap = () {
+                ..onTap = () async {
                   isExpanded = !isExpanded;
                   // print(seatingId);
 
-                  Navigator.push(
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => tablemneuScreen(
@@ -931,6 +1036,14 @@ class _tablecartState extends State<tablecart> {
                       ),
                     ),
                   );
+
+                  // Reload cart after coming back
+                  await _loadCartItems();
+                  await _initializeData();
+
+                  if (mounted) {
+                    setState(() {});
+                  }
                 },
             ),
           ],
@@ -1225,7 +1338,7 @@ class _tablecartState extends State<tablecart> {
                     ? Icons.check_circle_rounded
                     : Icons.local_offer_rounded,
                 size: 18.sp,
-                color: applied ? cartuser.green : cartuser.violet,
+                color: applied ? cartuser.green : AppColors.primary,
               ),
             ),
             SizedBox(width: 12.w),
@@ -1634,7 +1747,7 @@ class _tablecartState extends State<tablecart> {
     }
     // default fallback
     final subtotal = tableCartData!.subtotal;
-    final gstTotal = tableCartData!.gstTotal;
+    final gstTotal = (tableCartData?.cgst ?? 0) + (tableCartData?.sgst ?? 0);
     final grandTotal = tableCartData!.grandTotal;
     final discountAmount = tableCartData?.discountAmount ?? 0;
     final platformcharges = tableCartData?.platformCharges ?? 0;
@@ -1705,8 +1818,6 @@ class _tablecartState extends State<tablecart> {
   }
 
   void _showGstDialog(String type) {
-    // final data = cartData;
-
     showDialog(
       context: context,
       builder: (context) {
@@ -2066,13 +2177,6 @@ class _QuantityControlState extends State<QuantityControl> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // _qtyBtn(
-          //   Icons.remove_rounded,
-          //   cartuser.red,
-          //   (_isUpdating || !_canDecrease)
-          //       ? null
-          //       : () => _updateQuantity(widget.item.quantity - 1),
-          // ),
           _qtyBtn(
             Icons.remove_rounded,
             cartuser.red,
@@ -2083,9 +2187,6 @@ class _QuantityControlState extends State<QuantityControl> {
 
                     // Remove item completely if qty becomes 0
                     if (newQty == 0) {
-                      // final success = await food_Authservice.removeCartItem(
-                      //   itemId: widget.item.itemId,
-                      // );
                       final success = await food_Authservice.removeCartItem(
                         widget.item.itemId,
                       );

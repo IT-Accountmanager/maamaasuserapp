@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import '../../Services/Auth_service/food_authservice.dart';
+import 'package:flutter/material.dart';
 
 enum OrderType { delivery, takeaway, dinein }
 

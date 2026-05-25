@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import '../../../../Models/food/orders_model.dart';
+import 'package:flutter/material.dart';
 
 class FoodOrdersHelper {
   static Color getStatusColor(OrderStatus status) {
@@ -54,3 +54,45 @@ String ratingCategoryToString(RatingCategory category) {
 }
 
 enum RatingCategory { FOOD_QUALITY, PACKAGING, DELIVERY, SERVICE, OTHERS }
+
+enum OrderType {
+  DINE_IN,
+  DELIVERY,
+  TAKEAWAY,
+  TABLE_DINE_IN;
+
+  static OrderType fromString(dynamic type) {
+    if (type == null) return OrderType.DINE_IN;
+
+    final normalized = type
+        .toString()
+        .trim()
+        .toUpperCase()
+        .replaceAll(' ', '_')
+        .replaceAll('-', '_');
+
+    const map = {
+      'DINE_IN': OrderType.DINE_IN,
+      'DELIVERY': OrderType.DELIVERY,
+      'TAKEAWAY': OrderType.TAKEAWAY,
+      'TABLE_DINE_IN': OrderType.TABLE_DINE_IN,
+    };
+
+    return map[normalized] ?? OrderType.DINE_IN;
+  }
+}
+
+extension OrderTypeExtension on OrderType {
+  String get label {
+    switch (this) {
+      case OrderType.DINE_IN:
+        return "Dine In";
+      case OrderType.DELIVERY:
+        return "Delivery";
+      case OrderType.TAKEAWAY:
+        return "Takeaway";
+      case OrderType.TABLE_DINE_IN:
+        return "Dine Out"; // custom fix
+    }
+  }
+}

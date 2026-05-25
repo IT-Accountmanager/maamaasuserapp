@@ -120,49 +120,122 @@ class promotion_Authservice {
     }
   }
 
-  static Future<void> sendViewAnalytics(Map<String, dynamic> payload) async {
-    final endpoint = "api/user/campaign/view";
-    final startTime = DateTime.now();
-
-    debugPrint("🚀 VIEW ANALYTICS START");
-    debugPrint("📤 Endpoint: $endpoint");
-    debugPrint("📦 Payload: $payload");
+  // static Future<void> sendViewAnalytics(Map<String, dynamic> payload) async {
+  //   final endpoint = "api/user/campaign/view";
+  //   final startTime = DateTime.now();
+  //
+  //   debugPrint("\n================ VIEW ANALYTICS START ================");
+  //   debugPrint("📤 Endpoint: $endpoint");
+  //   debugPrint("📦 Payload: $payload");
+  //
+  //   try {
+  //     final response = await ApiClient.post(
+  //       endpoint,
+  //       payload,
+  //       service: "promotions",
+  //     );
+  //
+  //     final duration = DateTime.now().difference(startTime).inMilliseconds;
+  //
+  //     debugPrint("\n📥 RESPONSE RECEIVED");
+  //     debugPrint("🔢 Status Code : ${response.statusCode}");
+  //
+  //     debugPrint("📑 Headers : ${response.headers}");
+  //     debugPrint("⏱ API Time : $duration ms");
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       debugPrint("✅ VIEW ANALYTICS SUCCESS");
+  //     } else {
+  //       debugPrint("❌ VIEW ANALYTICS FAILED");
+  //       debugPrint("❌ Backend returned non-success status");
+  //     }
+  //   } catch (e, stackTrace) {
+  //     final duration = DateTime.now().difference(startTime).inMilliseconds;
+  //
+  //     debugPrint("\n❌ VIEW ANALYTICS ERROR");
+  //     debugPrint("💥 Error Type : ${e.runtimeType}");
+  //     debugPrint("💥 Error : $e");
+  //     debugPrint("📚 StackTrace : $stackTrace");
+  //     debugPrint("⏱ Failed After : $duration ms");
+  //
+  //     // 🔥 Dio specific logging
+  //     try {
+  //       final err = e as dynamic;
+  //
+  //       debugPrint("\n🔥 EXTRA ERROR DETAILS");
+  //       debugPrint("📛 Message : ${err.message}");
+  //
+  //       if (err.response != null) {
+  //         debugPrint("🔢 Error Status : ${err.response?.statusCode}");
+  //         debugPrint("📄 Error Body : ${err.response?.data}");
+  //         debugPrint("📑 Error Headers : ${err.response?.headers}");
+  //       }
+  //
+  //       debugPrint("📤 Request Data : ${err.requestOptions?.data}");
+  //       debugPrint("🌐 Request URL : ${err.requestOptions?.uri}");
+  //       debugPrint("📑 Request Headers : ${err.requestOptions?.headers}");
+  //       debugPrint("📡 Method : ${err.requestOptions?.method}");
+  //     } catch (_) {}
+  //   }
+  //
+  //   debugPrint("================ VIEW ANALYTICS END =================\n");
+  // }
+  static Future<void> sendViewAnalytics(
+      Map<String, dynamic> payload,
+      ) async {
 
     try {
+
+      debugPrint("");
+      debugPrint("=============== VIEW ANALYTICS START ================");
+      debugPrint("📤 Endpoint: api/user/campaign/view");
+      debugPrint("📦 Payload: $payload");
+      debugPrint("");
+
       final response = await ApiClient.post(
-        endpoint,
+        'api/user/campaign/view',
         payload,
         service: "promotions",
       );
 
-      final duration = DateTime.now().difference(startTime).inMilliseconds;
+      debugPrint("📥 RESPONSE RECEIVED");
+      debugPrint("🔢 Status Code : ${response.statusCode}");
+      debugPrint("📑 Headers : ${response.headers}");
+      debugPrint("");
 
-      debugPrint("📥 Response received");
-      debugPrint("🔢 Status Code: ${response.statusCode}");
-      // debugPrint("📄 Response Body: ${response.data}");
-      debugPrint("⏱ API Time: $duration ms");
+      // ✅ THIS IS THE IMPORTANT FIX
+      if (response.statusCode != 200 &&
+          response.statusCode != 201) {
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("✅ View analytics sent SUCCESS");
-      } else {
-        debugPrint("⚠️ View analytics FAILED (non-200)");
+        debugPrint("❌ VIEW ANALYTICS FAILED");
+        debugPrint("❌ Backend returned non-success status");
+
+        throw Exception(
+          "View analytics failed: ${response.statusCode}",
+        );
       }
-    } catch (e, stackTrace) {
-      final duration = DateTime.now().difference(startTime).inMilliseconds;
 
-      debugPrint("❌ VIEW ANALYTICS ERROR");
-      debugPrint("💥 Error: $e");
-      debugPrint("📚 StackTrace: $stackTrace");
-      debugPrint("⏱ API Time before failure: $duration ms");
+      debugPrint("✅ VIEW ANALYTICS SUCCESS");
+
+    } catch (e) {
+
+      debugPrint("❌ VIEW ANALYTICS ERROR: $e");
+
+      rethrow;
+
+    } finally {
+
+      debugPrint("=============== VIEW ANALYTICS END =================");
+      debugPrint("");
+
     }
-
-    debugPrint("🏁 VIEW ANALYTICS END");
   }
 
   static Future<void> sendLikeAnalytics(Map<String, dynamic> payload) async {
     final endpoint = "api/user/campaign/like";
+    final startTime = DateTime.now();
 
-    debugPrint("🚀 sendLikeAnalytics START");
+    debugPrint("\n================ LIKE ANALYTICS START ================");
     debugPrint("📤 Endpoint: $endpoint");
     debugPrint("📦 Payload: $payload");
 
@@ -173,22 +246,47 @@ class promotion_Authservice {
         service: "promotions",
       );
 
-      debugPrint("📥 Response received");
-      debugPrint("🔢 Status Code: ${response.statusCode}");
-      // debugPrint("📄 Response Body: ${response.data}");
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+
+      debugPrint("\n📥 RESPONSE RECEIVED");
+      debugPrint("🔢 Status Code : ${response.statusCode}");
+      debugPrint("📑 Headers : ${response.headers}");
+      debugPrint("⏱ API Time : $duration ms");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("✅ Like analytics sent successfully");
+        debugPrint("✅ LIKE ANALYTICS SUCCESS");
       } else {
-        debugPrint("⚠️ Failed to send like analytics");
+        debugPrint("❌ LIKE ANALYTICS FAILED");
       }
     } catch (e, stackTrace) {
-      debugPrint("❌ Exception occurred in sendLikeAnalytics");
-      debugPrint("💥 Error: $e");
-      debugPrint("📚 StackTrace: $stackTrace");
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+
+      debugPrint("\n❌ LIKE ANALYTICS ERROR");
+      debugPrint("💥 Error Type : ${e.runtimeType}");
+      debugPrint("💥 Error : $e");
+      debugPrint("📚 StackTrace : $stackTrace");
+      debugPrint("⏱ Failed After : $duration ms");
+
+      try {
+        final err = e as dynamic;
+
+        debugPrint("\n🔥 EXTRA ERROR DETAILS");
+        debugPrint("📛 Message : ${err.message}");
+
+        if (err.response != null) {
+          debugPrint("🔢 Error Status : ${err.response?.statusCode}");
+          debugPrint("📄 Error Body : ${err.response?.data}");
+          debugPrint("📑 Error Headers : ${err.response?.headers}");
+        }
+
+        debugPrint("📤 Request Data : ${err.requestOptions?.data}");
+        debugPrint("🌐 Request URL : ${err.requestOptions?.uri}");
+        debugPrint("📑 Request Headers : ${err.requestOptions?.headers}");
+        debugPrint("📡 Method : ${err.requestOptions?.method}");
+      } catch (_) {}
     }
 
-    debugPrint("🏁 sendLikeAnalytics END");
+    debugPrint("================ LIKE ANALYTICS END =================\n");
   }
 
   static Future<void> sendShareAnalytics(Map<String, dynamic> payload) async {

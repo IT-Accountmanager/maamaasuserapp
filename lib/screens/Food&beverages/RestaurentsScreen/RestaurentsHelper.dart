@@ -1,5 +1,18 @@
 import 'package:flutter/material.dart';
 
+class restaurentsnewcolour {
+  static const primary = Color(0xFFE23744);
+  static const primaryLight = Color(0xFFFFECED);
+  static const green = Color(0xFF1BA672);
+  static const surface = Colors.white;
+  static const bg = Color(0xFFF3F3F8);
+  static const text = Color(0xFF1C1C1C);
+  static const textMuted = Color(0xFF7C7C7C);
+  static const textLight = Color(0xFFB0B0B0);
+  static const border = Color(0xFFECECEC);
+  static const cardRadius = 16.0;
+}
+
 class RestaurentsHelper {
   static const orderTabs = [
     {'label': 'Dine-In', 'icon': Icons.restaurant_rounded, 'type': 'dinein'},

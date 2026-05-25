@@ -1694,36 +1694,23 @@
 //   }
 // }
 
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import '../../../Services/googleservices/googleapiservice.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../Services/Auth_service/delivery_service.dart';
+import '../../../Services/websockets/web_socket_manager.dart';
+import '../../../Models/delivery/fooddelivery.dart';
+import '../../../Models/food/orders_model.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import '../../../Models/delivery/fooddelivery.dart';
-import '../../../Models/food/orders_model.dart';
-import '../../../Services/Auth_service/delivery_service.dart';
-import '../../../Services/googleservices/googleapiservice.dart';
-import '../../../Services/websockets/web_socket_manager.dart';
-
-// ---------------------------------------------------------------------------
-// ModernDeliveryTracking
-// ---------------------------------------------------------------------------
-// FULLY SELF-CONTAINED:
-//   • Subscribes to order-status WS independently (does not share the
-//     parent screen's subscription).
-//   • Subscribes to partner-location WS independently.
-//   • Both subscriptions survive navigation away from the parent screen
-//     as long as this widget is in the tree.
-//   • FullScreenMapPage runs its OWN independent WS subscriptions — it
-//     does not depend on callbacks from this widget at all.
-// ---------------------------------------------------------------------------
 
 class ModernDeliveryTracking extends StatefulWidget {
   final int orderId;

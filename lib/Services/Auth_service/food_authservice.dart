@@ -112,10 +112,10 @@ class food_Authservice {
     }
   }
 
-  static Future<void> saveOrderId(int orderId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('orderId', orderId);
-  }
+  // static Future<void> saveOrderId(int orderId) async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   await prefs.setInt('orderId', orderId);
+  // }
 
   static Future<Map<String, dynamic>?> fetchOrderById([int? orderId]) async {
     final endpoint = "api/orders/order/$orderId";
@@ -453,6 +453,28 @@ class food_Authservice {
     }
   }
 
+  static Future<bool> deleteTableDineInCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final int userId = prefs.getInt("userId") ?? 0;
+    final endpoint = "api/cart/delete/tabledinein/cart?userId=$userId";
+    try {
+      final response = await ApiClient.delete(endpoint, service: "food");
+
+      debugPrint("🗑 Delete Cart Status: ${response.statusCode}");
+      debugPrint("🗑 Delete Cart Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        throw Exception(data["message"] ?? "Failed to delete cart");
+      }
+    } catch (e) {
+      debugPrint("❌ Delete Cart Error: $e");
+      rethrow;
+    }
+  }
+
   static Future<bool> addToTableCart({
     required int dishId,
     required int quantity,
@@ -530,48 +552,6 @@ class food_Authservice {
       rethrow;
     } finally {}
   }
-
-  // static Future<int> submitBooking({
-  //   required int vendorId,
-  //   required String guestName,
-  //   required String phoneNumber,
-  //   required String bookingDate,
-  //   required String startTime,
-  //   required int capacity,
-  // }) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int userId = prefs.getInt('userId') ?? 0;
-  //
-  //   if (userId == 0) {
-  //     debugPrint("❌ No userId provided");
-  //     return 0;
-  //   }
-  //
-  //   final endpoint =
-  //       "api/seatingdetails/shedule/advance/booking/$userId/$vendorId";
-  //
-  //   final body = {
-  //     "guestName": guestName,
-  //     "phoneNumber": phoneNumber,
-  //     "bookingDate": bookingDate,
-  //     "startTime": startTime,
-  //     "capacity": capacity,
-  //   };
-  //
-  //   try {
-  //     final response = await ApiClient.post(endpoint, body, service: "food");
-  //
-  //     debugPrint("📤 Booking request: ${jsonEncode(body)}");
-  //     debugPrint(
-  //       "📥 Booking response: ${response.statusCode} ${response.body}",
-  //     );
-  //
-  //     return response.statusCode; // ✅ IMPORTANT
-  //   } catch (e) {
-  //     debugPrint("⚠️ Error submitting booking: $e");
-  //     return 0;
-  //   }
-  // }
 
   static Future<List<int>> fetchSeatingCapacities(int vendorId) async {
     final endpoint = "api/seatingdetails/get/seating-capacity/$vendorId";
@@ -781,11 +761,11 @@ class food_Authservice {
   }
 
   static Future<bool> submitRating(
-      int orderId,
-      int rating,
-      String feedback,
-      String category,
-      ) async {
+    int orderId,
+    int rating,
+    String feedback,
+    String category,
+  ) async {
     final endpoint = "api/orders/feedback/$orderId";
 
     try {
@@ -801,11 +781,7 @@ class food_Authservice {
 
       debugPrint("Request Body: $body");
 
-      final response = await ApiClient.put(
-        endpoint,
-        body,
-        service: 'food',
-      );
+      final response = await ApiClient.put(endpoint, body, service: 'food');
 
       debugPrint("Status Code: ${response.statusCode}");
       debugPrint("Response Body: ${response.body}");

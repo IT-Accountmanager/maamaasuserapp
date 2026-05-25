@@ -135,24 +135,6 @@ class _TableCartButtonState extends State<TableCartButton> {
     }
   }
 
-  // ✔ Remove item (same as cart button)
-  // Future<void> _handleRemoveItem() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final itemId = prefs.getInt("table_dish_${widget.dishId}_itemId");
-  //
-  //   if (itemId == null) return;
-  //
-  //   bool removed = await food_Authservice.removeCartItem(itemId);
-  //
-  //   if (removed) {
-  //     prefs.remove("table_dish_${widget.dishId}_itemId");
-  //     prefs.remove("table_dish_${widget.dishId}_quantity");
-  //
-  //     setState(() => itemCount = 0);
-  //     Utils.itemCount.value = 0;
-  //   }
-  // }
-
   Future<void> _handleRemoveItem() async {
     final prefs = await SharedPreferences.getInstance();
     final itemId = prefs.getInt("table_dish_${widget.dishId}_itemId");

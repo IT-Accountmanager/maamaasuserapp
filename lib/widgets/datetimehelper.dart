@@ -6,14 +6,20 @@ class DateTimeHelper {
   /// Converts any DateTime to IST (+5:30) explicitly.
   /// If the DateTime has no timezone info (isUtc == false), it's treated as UTC.
 
+  // static DateTime _toIST(DateTime? dateTime) {
+  //   if (dateTime == null) return DateTime.now();
+  //
+  //   // Convert everything to UTC first
+  //   final utcTime = dateTime.isUtc ? dateTime : dateTime.toUtc();
+  //
+  //   // Then add IST offset
+  //   return utcTime.add(_istOffset);
+  // }
   static DateTime _toIST(DateTime? dateTime) {
     if (dateTime == null) return DateTime.now();
 
-    // Convert everything to UTC first
-    final utcTime = dateTime.isUtc ? dateTime : dateTime.toUtc();
-
-    // Then add IST offset
-    return utcTime.add(_istOffset);
+    // UTC -> Device local time (IST in India)
+    return dateTime.toLocal();
   }
 
   static String formatTime(DateTime? dateTime) {
@@ -40,7 +46,9 @@ class DateTimeHelper {
 
   static String formatDateTimeFull(DateTime? dateTime) {
     if (dateTime == null) return 'N/A';
+
     final ist = _toIST(dateTime);
+
     return DateFormat('dd MMM yyyy, hh:mm a').format(ist);
   }
 

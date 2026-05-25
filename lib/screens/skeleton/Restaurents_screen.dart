@@ -8,8 +8,8 @@ class RestaurantsSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _bannerSkeleton(),
-        SizedBox(height: 16.h),
+        // _bannerSkeleton(),
+        // SizedBox(height: 16.h),
         _restaurantListSkeleton(),
       ],
     );
@@ -58,7 +58,7 @@ class RestaurantsSkeleton extends StatelessWidget {
                 color: Colors.black12,
                 blurRadius: 4,
                 offset: Offset(0, 2),
-              )
+              ),
             ],
           ),
           child: Column(
@@ -67,8 +67,9 @@ class RestaurantsSkeleton extends StatelessWidget {
                 height: 130.h,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade300,
-                  borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(16.r)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(16.r),
+                  ),
                 ),
               ),
               Expanded(
@@ -85,7 +86,7 @@ class RestaurantsSkeleton extends StatelessWidget {
                     ],
                   ),
                 ),
-              )
+              ),
             ],
           ),
         );
@@ -129,11 +130,7 @@ class CategorySkeleton extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 6.h),
-              Container(
-                height: 8.h,
-                width: 40.w,
-                color: Colors.grey.shade300,
-              )
+              Container(height: 8.h, width: 40.w, color: Colors.grey.shade300),
             ],
           );
         },

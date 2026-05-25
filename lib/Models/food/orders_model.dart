@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 
+import '../../screens/screens/orders/food orders/food_helper.dart';
+
 enum OrderStatus {
   confirmed,
   beingPrepared,
@@ -128,6 +130,7 @@ class Order {
   final String mobileNo;
   final int ratings;
   final String ratingCategory;
+  final String vendorRegisteredName;
 
   Order({
     required this.id,
@@ -165,6 +168,7 @@ class Order {
     required this.feedback,
     required this.ratings,
     required this.ratingCategory,
+    required this.vendorRegisteredName,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -205,6 +209,7 @@ class Order {
       feedback: json['feedback'] ?? '',
       ratings: json['ratings'] ?? 0,
       ratingCategory: json['ratingCategory'] ?? '',
+      vendorRegisteredName: json["vendorRegisteredName"] ?? '',
     );
   }
 
@@ -276,48 +281,9 @@ class Order {
       feedback: feedback,
       ratings: ratings,
       ratingCategory: ratingCategory,
+      vendorRegisteredName: vendorRegisteredName,
     );
   }
 }
 
-enum OrderType {
-  DINE_IN,
-  DELIVERY,
-  TAKEAWAY,
-  TABLE_DINE_IN;
 
-  static OrderType fromString(dynamic type) {
-    if (type == null) return OrderType.DINE_IN;
-
-    final normalized = type
-        .toString()
-        .trim()
-        .toUpperCase()
-        .replaceAll(' ', '_')
-        .replaceAll('-', '_');
-
-    const map = {
-      'DINE_IN': OrderType.DINE_IN,
-      'DELIVERY': OrderType.DELIVERY,
-      'TAKEAWAY': OrderType.TAKEAWAY,
-      'TABLE_DINE_IN': OrderType.TABLE_DINE_IN,
-    };
-
-    return map[normalized] ?? OrderType.DINE_IN;
-  }
-}
-
-extension OrderTypeExtension on OrderType {
-  String get label {
-    switch (this) {
-      case OrderType.DINE_IN:
-        return "Dine In";
-      case OrderType.DELIVERY:
-        return "Delivery";
-      case OrderType.TAKEAWAY:
-        return "Takeaway";
-      case OrderType.TABLE_DINE_IN:
-        return "Dine Out"; // custom fix
-    }
-  }
-}

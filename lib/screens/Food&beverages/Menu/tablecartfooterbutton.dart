@@ -1,11 +1,10 @@
-import '../../../main.dart';
 import '../../../widgets/widgets/food/currentcart_notifier.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../table/tablecart.dart';
+import '../../../main.dart';
 
 // ignore: camel_case_types
 class table_food_Cart_count extends StatefulWidget {
@@ -66,16 +65,32 @@ class _OrderCartFooterState extends State<table_food_Cart_count>
     routeObserver.subscribe(this, ModalRoute.of(context)!);
   }
 
+  // Future<void> _loadCartData() async {
+  //   try {
+  //     final count = await food_Authservice.fetchCartCount();
+  //     final safeCount = count < 0 ? 0 : count;
+  //
+  //     debugPrint("🟣 API Cart Count → $count");
+  //
+  //     // ✅ Only update if server count is HIGHER than current optimistic count
+  //     // This prevents server lag from wiping out the optimistic UI update
+  //     if (safeCount > CartNotifier.count.value) {
+  //       CartNotifier.count.value = safeCount;
+  //     }
+  //   } catch (e) {
+  //     debugPrint('❌ Cart load error: $e');
+  //   }
+  // }
+
   Future<void> _loadCartData() async {
     try {
       final count = await food_Authservice.fetchCartCount();
       final safeCount = count < 0 ? 0 : count;
 
-      debugPrint("🟣 API Cart Count → $count");
+      debugPrint("🟣 API Cart Count → $safeCount");
 
-      // ✅ Only update if server count is HIGHER than current optimistic count
-      // This prevents server lag from wiping out the optimistic UI update
-      if (safeCount > CartNotifier.count.value) {
+      // ALWAYS sync with server
+      if (CartNotifier.count.value != safeCount) {
         CartNotifier.count.value = safeCount;
       }
     } catch (e) {

@@ -1,17 +1,17 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:in_app_update/in_app_update.dart';
-import 'package:maamaas/screens/homescreens/vertical%20type2.dart';
-import '../../Models/promotions_model/promotions_model.dart';
-import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/Auth_service/promotion_services_Authservice.dart';
+import 'package:maamaas/screens/homescreens/vertical%20type2.dart';
+import '../../Services/Auth_service/Subscription_authservice.dart';
+import '../../Models/promotions_model/promotions_model.dart';
 import '../../Services/googleservices/Location_servces.dart';
-import '../screens/advertisements/Advideo.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../screens/advertisements/banneradvertisement.dart';
+import 'package:in_app_update/in_app_update.dart';
+import '../screens/advertisements/Advideo.dart';
+import 'package:flutter/foundation.dart';
 import '../screens/notifications.dart';
 import '../screens/saved_address.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class _T {
   static const primary = Color(0xFFE23744);
@@ -102,9 +102,7 @@ class _HomePageState extends State<HomePage> {
       print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
 
       // ✅ VALID LOCATION CHECK
-      final isValidLocation =
-          loc != null &&
-          loc.address.trim().isNotEmpty;
+      final isValidLocation = loc != null && loc.address.trim().isNotEmpty;
 
       if (isValidLocation) {
         setState(() {
@@ -208,8 +206,7 @@ class _HomePageState extends State<HomePage> {
 
       if (_updateInfo?.updateAvailability ==
           UpdateAvailability.updateAvailable) {
-        setState(() {
-        });
+        setState(() {});
       }
     } catch (e) {
       debugPrint("Update check failed: $e");
@@ -283,7 +280,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 
   Widget _buildSliverAppBar() {
     return SliverAppBar(

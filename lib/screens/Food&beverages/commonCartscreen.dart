@@ -1,16 +1,13 @@
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/screens/Food&beverages/food_cartscreen.dart';
-import 'package:maamaas/screens/Food&beverages/table/tablecart.dart'
-    hide cartuser;
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../Models/promotions_model/promotions_model.dart';
-import '../../Services/Auth_service/Apiclient.dart';
-import '../foodmainscreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../screens/advertisements/banneradvertisement.dart';
+import '../../Services/Auth_service/Apiclient.dart';
+import 'table/tablecart.dart' hide cartuser;
+import 'package:flutter/material.dart';
+import '../Mainscreen.dart';
+import 'dart:convert';
 
 // ignore: must_be_immutable
 class CommonCartScreen extends StatefulWidget {

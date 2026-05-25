@@ -234,18 +234,7 @@ class _WalletScreenState extends State<WalletScreen> {
         color: Color(0xFF1A1D2E),
         onPressed: () => Navigator.of(context).pop(),
       ),
-      // leading: GestureDetector(
-      //   onTap: () => Navigator.pop(context),
-      //   child: Container(
-      //     margin: const EdgeInsets.all(10),
-      //     decoration: BoxDecoration(color: refercolour.bg, shape: BoxShape.circle),
-      //     child: const Icon(
-      //       Icons.arrow_back_ios_new_rounded,
-      //       size: 16,
-      //       color: refercolour.ink,
-      //     ),
-      //   ),
-      // ),
+
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(height: 1, color: Walletcolour.border),

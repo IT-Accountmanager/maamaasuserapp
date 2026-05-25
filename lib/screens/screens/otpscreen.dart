@@ -1,9 +1,9 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../Services/scaffoldmessenger/messenger.dart';
+import 'package:flutter/material.dart';
 import 'login_page.dart';
+import 'dart:async';
 
 class otpscrncolour {
   static const Color _brand = Color(0xFF6C63FF);

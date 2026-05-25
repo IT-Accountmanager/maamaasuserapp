@@ -1,11 +1,11 @@
+import '../../../Services/Auth_service/promotion_services_Authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../Models/subscrptions/ticket_model.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter/material.dart';
-import '../../../Services/Auth_service/promotion_services_Authservice.dart';
 import '../../../providers/provider.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -20,7 +20,8 @@ class tktcolour {
   static const cardBorder = Color(0xFFE8ECF4); // cool-grey border
 
   // Accent — violet (matches app's existing 0xFF6C63FF brand)
-  static const amber = Color(0xFF6C63FF); // primary CTA
+  static const amber = Color(0xFFE66D33); // primary CTA
+  static const Color primary = Color(0xFFED8452);
 
   // Text
   static const textPrimary = Color(0xFF1A1D2E); // near-black
@@ -148,13 +149,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF6C63FF), Color(0xFF4A43C9)],
+
+              colors: [Color(0xFFFFB36B), Color(0xFFFF8A50), Color(0xFFE96A3C)],
             ),
             borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
-                // ignore: deprecated_member_use
-                color: const Color(0xFF6C63FF).withOpacity(0.28),
+                color: tktcolour.primary.withOpacity(0.28),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),

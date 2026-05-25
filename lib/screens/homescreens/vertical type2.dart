@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:maamaas/screens/Food&beverages/RestaurentsScreen/restaurentsnew.dart';
+import 'package:maamaas/screens/Food&beverages/RestaurentsScreen/Restaurentsmainscreen.dart';
 import '../Logistics&supply/logistics_homepage.dart';
+import 'package:flutter/material.dart';
 
 class QuickAccessItem {
   final String image;

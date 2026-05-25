@@ -18,7 +18,7 @@
 // import 'package:flutter/services.dart';
 // import 'coupons_rewards_screen.dart';
 // import 'orders/orders_screen.dart';
-// import '../foodmainscreen.dart';
+// import '../Mainscreen.dart';
 // import 'Favorites.dart';
 // import 'dart:io';
 //
@@ -946,27 +946,27 @@
 //   }
 // }
 
-import 'package:maamaas/screens/screens/referrznd%20earn.dart';
 import 'package:maamaas/screens/screens/supportteam/support_team.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
+import 'package:maamaas/screens/screens/referrznd%20earn.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:maamaas/screens/screens/saved_address.dart';
 import 'package:maamaas/screens/screens/wallet_screen.dart';
 import 'package:media_compressor/media_compressor.dart';
 import '../../Models/subscrptions/user_account.dart';
 import '../../widgets/widgets/profileavataor.dart';
-import 'Refer_Earn.dart';
-import 'Reviewsandratings.dart';
-import 'login_page.dart';
 import 'profile screen/Profile_Account.dart';
 import '../../widgets/signinrequired.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'coupons_rewards_screen.dart';
 import 'orders/orders_screen.dart';
-import '../foodmainscreen.dart';
+import 'Reviewsandratings.dart';
+import '../Mainscreen.dart';
+import 'Refer_Earn.dart';
+import 'login_page.dart';
 import 'Favorites.dart';
 import 'dart:io';
 

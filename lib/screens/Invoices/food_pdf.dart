@@ -219,8 +219,8 @@ class FoodPdf {
                         'Restaurant Address',
                         [
                               data['vendorFullAddress'],
-                              data['vendorCity'],
-                              data['vendorState'],
+                              // data['vendorCity'],
+                              // data['vendorState'],
                             ]
                             .where((e) => e != null && e.toString().isNotEmpty)
                             .join(', '),

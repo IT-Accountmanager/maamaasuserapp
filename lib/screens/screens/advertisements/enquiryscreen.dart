@@ -1,15 +1,13 @@
-
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../Models/promotions_model/promotions_model.dart';
 import '../../../Services/Auth_service/promotion_services_Authservice.dart';
+import 'package:maamaas/Services/App_color_service/app_colours.dart';
+import '../../../Models/promotions_model/promotions_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../Catering&Services/customised_menu.dart';
 import 'package:flutter/material.dart';
-import 'package:maamaas/Services/App_color_service/app_colours.dart';
 
 class EnquiryFormScreen extends StatefulWidget {
   final int? vendorId;
-  const EnquiryFormScreen({super.key,required this.vendorId,});
+  const EnquiryFormScreen({super.key, required this.vendorId});
 
   @override
   State<EnquiryFormScreen> createState() => _EnquiryFormScreenState();
@@ -22,6 +20,7 @@ class _EnquiryFormScreenState extends State<EnquiryFormScreen> {
     super.initState();
     debugPrint("📦 EnquiryFormScreen VendorId → ${widget.vendorId}");
   }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -29,7 +28,7 @@ class _EnquiryFormScreenState extends State<EnquiryFormScreen> {
         backgroundColor: AppColors.of(context).primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: CustomisedMenu(vendorId:widget.vendorId),
+      body: CustomisedMenu(vendorId: widget.vendorId),
     );
   }
 }

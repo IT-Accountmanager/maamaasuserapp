@@ -134,6 +134,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
         order.ratingCategory.toLowerCase() != 'null' &&
         order.ratingCategory.trim().isNotEmpty;
     final hasFeedback = order.feedback.trim().isNotEmpty;
+    final hasRestaurantName =
+        order.vendorRegisteredName.trim().isNotEmpty &&
+        order.vendorRegisteredName.toLowerCase() != 'null';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -149,10 +152,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
         children: [
           // Header row
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(12),
@@ -166,20 +170,48 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Order #${order.orderId}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1C1B18),
+                    // Restaurant name (prominent, top line)
+                    if (hasRestaurantName)
+                      Text(
+                        order.vendorRegisteredName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1C1B18),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      "Date: ${order.date}",
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFFB0ADA6),
-                      ),
+                    const SizedBox(height: 2),
+                    // Order ID and date on the same row
+                    Row(
+                      children: [
+                        Text(
+                          "Order #${order.orderId}",
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF8A8780),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFCECBC4),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          order.date,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFFB0ADA6),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -187,18 +219,21 @@ class _ReviewScreenState extends State<ReviewScreen> {
             ],
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
           // Stars row
           if (hasRating) ...[
             Row(
               children: List.generate(5, (i) {
-                return Icon(
-                  Icons.star_rounded,
-                  size: 18,
-                  color: i < rating
-                      ? const Color(0xFFF5A623)
-                      : const Color(0xFFE8E5DF),
+                return Padding(
+                  padding: const EdgeInsets.only(right: 2),
+                  child: Icon(
+                    Icons.star_rounded,
+                    size: 18,
+                    color: i < rating
+                        ? const Color(0xFFF5A623)
+                        : const Color(0xFFE8E5DF),
+                  ),
                 );
               }),
             ),

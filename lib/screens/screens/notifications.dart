@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
-
-import '../../Models/subscrptions/notification_model.dart';
 import '../../Services/Auth_service/notification_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../Models/subscrptions/notification_model.dart';
+import 'package:flutter/material.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});

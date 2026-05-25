@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter/material.dart';
 import '../Invoices/food_pdf.dart';
-import '../foodmainscreen.dart';
+import '../Mainscreen.dart';
 
 class invoice {
   static const Color _brandOrange = Color(0xFFFF6B35);
@@ -738,7 +738,6 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
     final num subTotal = data['subTotal'] ?? 0;
     final num discount = data['discountAmount'] ?? 0;
     final num gst = ((data['sgst'] ?? 0) + (data['cgst'] ?? 0));
-    // final num cgst = data['cgst'] ?? 0;
     final num platformCharges = data['platformCharges'] ?? 0;
     final num packingCharges = data['packingCharges'] ?? 0;
     final num deliveryCharges = data['deliveryCharges'] ?? 0;
@@ -793,9 +792,11 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
               children: [
                 _priceRow("Sub Total", "₹${subTotal.toStringAsFixed(2)}"),
                 _priceRow("GST", "₹${gst.toStringAsFixed(2)}"),
-                // _priceRow("CGST", "₹${cgst.toStringAsFixed(2)}"),
+
                 _priceRow(
-                  "Platform Charges",
+                  orderType == 'table_dine_in'
+                      ? "Smart Dine-In Charges"
+                      : "Platform Charges",
                   "₹${platformCharges.toStringAsFixed(2)}",
                 ),
                 if (orderType == 'delivery' || orderType == 'takeaway')

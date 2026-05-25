@@ -13,7 +13,7 @@
 // import '../../Services/Auth_service/notification_service.dart';
 // import '../../Services/googleservices/Location_servces.dart';
 // import '../../Services/scaffoldmessenger/messenger.dart';
-// import '../foodmainscreen.dart';
+// import '../Mainscreen.dart';
 // import 'forgetpassword_screen.dart';
 //
 // class logincolour {

@@ -1,19 +1,19 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/App_color_service/app_colours.dart';
+import '../../Services/Auth_service/Subscription_authservice.dart';
+import '../../Services/Auth_service/notification_service.dart';
+import '../../Services/googleservices/Location_servces.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/screens/screens/signup_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../Services/Auth_service/Apiclient.dart';
-import '../../Services/Auth_service/Subscription_authservice.dart';
-import '../../Services/Auth_service/notification_service.dart';
 import '../../Services/scaffoldmessenger/messenger.dart';
-import '../../Services/googleservices/Location_servces.dart';
+import '../../Services/Auth_service/Apiclient.dart';
 import '../../widgets/app_navigator.dart';
-import '../foodmainscreen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'forgetpassword_screen.dart';
+import '../Mainscreen.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 class _C {
@@ -177,7 +177,7 @@ class _LoginPageState extends State<LoginScreen>
       //   (r) => false,
       // );
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => MainScreenfood()),
+        MaterialPageRoute(builder: (_) => MainScreenfood(showPromotion: true)),
         (r) => false,
       );
     } catch (e, st) {

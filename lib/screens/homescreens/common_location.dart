@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/googleservices/Location_servces.dart';
+import 'package:flutter/material.dart';
 
 /// Centralized location state shared across all screens via InheritedWidget.
 /// Wrap your root widget (e.g. inside MainBottomNav or MaterialApp) with this.

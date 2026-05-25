@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-
 import '../../../Models/promotions_model/promotions_model.dart';
+import 'package:video_player/video_player.dart';
+import 'package:flutter/material.dart';
 
 class PromotionPopup {
   static void show(BuildContext context, Campaign ads) {

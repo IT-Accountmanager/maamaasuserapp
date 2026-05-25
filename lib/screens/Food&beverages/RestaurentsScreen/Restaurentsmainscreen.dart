@@ -1,41 +1,28 @@
-import 'package:flutter/services.dart';
-import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
-import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
-import 'package:maamaas/screens/Food&beverages/RestaurentsScreen/RestaurentsHelper.dart';
-import '../../../Models/food/food_categries_model.dart';
-import '../../../Models/food/restaurent_banner_model.dart';
-import '../../../Models/promotions_model/promotions_model.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:in_app_update/in_app_update.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'dart:async';
-import '../../../Services/App_color_service/app_colours.dart';
-import '../../../Services/Auth_service/Subscription_authservice.dart';
-import '../../../Services/Auth_service/food_authservice.dart';
-import '../../../Services/Auth_service/promotion_services_Authservice.dart';
-import '../../../Services/googleservices/Location_servces.dart';
-import '../../Catering&Services/Caterings.dart';
-import '../../screens/advertisements/Advideo.dart';
-import '../../screens/advertisements/banneradvertisement.dart';
+import '../Menu/menu_screen.dart';
+import '../distancehelpermethod.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../../screens/notifications.dart';
 import '../../screens/saved_address.dart';
 import '../../skeleton/Restaurents_screen.dart';
-import '../Menu/menu_screen.dart';
-import '../distancehelpermethod.dart';
-
-class restaurentsnewcolour {
-  static const primary = Color(0xFFE23744);
-  static const primaryLight = Color(0xFFFFECED);
-  static const green = Color(0xFF1BA672);
-  static const surface = Colors.white;
-  static const bg = Color(0xFFF3F3F8);
-  static const text = Color(0xFF1C1C1C);
-  static const textMuted = Color(0xFF7C7C7C);
-  static const textLight = Color(0xFFB0B0B0);
-  static const border = Color(0xFFECECEC);
-  static const cardRadius = 16.0;
-}
+import '../../Catering&Services/Caterings.dart';
+import 'package:in_app_update/in_app_update.dart';
+import '../../screens/advertisements/Advideo.dart';
+import '../../../Models/food/food_categries_model.dart';
+import '../../../Models/food/restaurent_banner_model.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../Services/App_color_service/app_colours.dart';
+import '../../../Services/Auth_service/food_authservice.dart';
+import '../../screens/advertisements/banneradvertisement.dart';
+import '../../../Services/googleservices/Location_servces.dart';
+import '../../../Models/promotions_model/promotions_model.dart';
+import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
+import '../../../Services/Auth_service/Subscription_authservice.dart';
+import '../../../Services/Auth_service/promotion_services_Authservice.dart';
+import 'package:maamaas/screens/Food&beverages/RestaurentsScreen/RestaurentsHelper.dart';
 
 class Restaurents extends StatefulWidget {
   final ScrollController scrollController;

@@ -1,10 +1,10 @@
 // ignore: file_names
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../Services/Auth_service/Subscription_authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/subscrptions/user_account.dart';
-import '../../../Services/Auth_service/Subscription_authservice.dart';
+import 'package:flutter/material.dart';
 import 'delete account.dart';
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────

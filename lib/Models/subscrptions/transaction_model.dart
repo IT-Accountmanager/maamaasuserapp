@@ -22,7 +22,8 @@ class Transactions {
       amount: (json['amount'] ?? 0).toDouble(),
         description: json['description']?? '',
       transactionType: json['transactionType']?.toString() ?? 'UNKNOWN',
-      transactionDate: DateTime.tryParse(json['transactionTime'] ?? '') ?? DateTime.now(),
-    );
+      transactionDate: DateTime.parse(
+        "${json['transactionTime']}Z",
+      ),   );
   }
 }

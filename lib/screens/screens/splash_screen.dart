@@ -9,7 +9,7 @@ import '../../Services/App_color_service/app_colours.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/fcmservice/fcm_services.dart';
 import '../../Services/googleservices/Location_servces.dart';
-import '../foodmainscreen.dart';
+import '../Mainscreen.dart';
 import 'login_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -166,7 +166,7 @@ class _SplashScreenState extends State<SplashScreen>
           pageBuilder: (_, __, ___) =>
               // isLoggedIn ? const MainScreenfood() : const LoginPage(),
               // isLoggedIn ? MainScreenfood() : const LoginPage(),
-              isLoggedIn ? MainScreenfood() : const LoginScreen(),
+              isLoggedIn ? MainScreenfood(showPromotion: true,) : const LoginScreen(),
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),
           transitionDuration: const Duration(milliseconds: 500),

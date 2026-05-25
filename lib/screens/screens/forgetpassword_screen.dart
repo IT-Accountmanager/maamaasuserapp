@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:http/http.dart' as http;
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 import 'login_page.dart';
 
 class ForgetPasswordScreen extends StatefulWidget {
@@ -239,7 +239,9 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                           : () {
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (_) => LoginScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => LoginScreen(),
+                                ),
                               );
                             },
                       style: TextButton.styleFrom(

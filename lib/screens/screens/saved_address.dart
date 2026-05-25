@@ -10,6 +10,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:maamaas/Services/App_color_service/app_colours.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/screens/screens/selectaddress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -328,7 +329,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
       appBar: _buildAppBar(),
       body: SafeArea(
         child: RefreshIndicator(
-          color: savedddcolour.violet,
+          color: AppColors.primary,
           backgroundColor: savedddcolour.surface,
           onRefresh: () async => _refreshTable(),
           child: ListView(
@@ -626,7 +627,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
               height: 36.w,
               decoration: BoxDecoration(
                 // ignore: deprecated_member_use
-                color: savedddcolour.violet.withOpacity(0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -635,7 +636,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                   height: 18.r,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: savedddcolour.violet,
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -697,9 +698,9 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
     }
     return _listTile(
       margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
-      iconBg: savedddcolour.violet.withOpacity(0.10),
+      iconBg: AppColors.primary.withOpacity(0.10),
       icon: Icons.my_location_rounded,
-      iconColor: savedddcolour.violet,
+      iconColor: AppColors.primary,
       title: 'Use Current Location',
       subtitle: _currentAddress!,
       onTap: () {
@@ -822,7 +823,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                 child: Padding(
                   padding: EdgeInsets.all(24.h),
                   child: CircularProgressIndicator(
-                    color: savedddcolour.violet,
+                    color: AppColors.primary,
                     strokeWidth: 2,
                   ),
                 ),
@@ -1321,7 +1322,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                             children: [
                               Icon(
                                 Icons.location_on_rounded,
-                                color: savedddcolour.violet,
+                                color: AppColors.primary,
                                 size: 18.sp,
                               ),
                               SizedBox(width: 8.w),
@@ -1425,7 +1426,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                             style: TextStyle(
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w600,
-                              color: savedddcolour.violet,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
@@ -1670,10 +1671,10 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             readOnly: readOnly,
             keyboardType: keyboard,
             style: TextStyle(fontSize: 14.sp, color: savedddcolour.textPrimary),
-            cursorColor: savedddcolour.violet,
+            cursorColor: AppColors.primary,
             decoration: InputDecoration(
               border: InputBorder.none,
-              prefixIcon: Icon(icon, size: 18.sp, color: savedddcolour.violet),
+              prefixIcon: Icon(icon, size: 18.sp, color: AppColors.primary),
               hintText: hint,
               hintStyle: TextStyle(
                 color: savedddcolour.textMuted,
@@ -1714,7 +1715,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             controller: phoneNumberController,
             keyboardType: TextInputType.phone,
             maxLength: 10,
-            style: TextStyle(fontSize: 14.sp, color: savedddcolour.textPrimary),
+            style: TextStyle(fontSize: 14.sp, color: AppColors.primary),
             enabled: _isEditable,
             cursorColor: savedddcolour.violet,
             decoration: InputDecoration(
@@ -1767,7 +1768,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         child: ElevatedButton(
           onPressed: _saveAddress,
           style: ElevatedButton.styleFrom(
-            backgroundColor: savedddcolour.violet,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -2062,15 +2063,15 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
           // ),
           Positioned(
             top: 1.h,
-            left: 14.w,
-            right: 14.w,
+            left: 0.w,
+            right: 0.w,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── Single flat search container ────────────────────────
                 Container(
-                  height: 45.h,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  height: 40.h,
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14.r),
@@ -2250,7 +2251,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
 
           // Current location FAB
           Positioned(
-            bottom: 60.h,
+            bottom: 10.h,
             right: 12.w,
             child: GestureDetector(
               onTap: _getCurrentLocation,
@@ -2258,11 +2259,11 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                 width: 38.r,
                 height: 38.r,
                 decoration: BoxDecoration(
-                  color: savedddcolour.violet,
+                  color: AppColors.primary,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: savedddcolour.violet.withOpacity(0.3),
+                      color: AppColors.primary.withOpacity(0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

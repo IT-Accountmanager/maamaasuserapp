@@ -1,6 +1,6 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../screens/notifications.dart';
 import '../screens/saved_address.dart';
 import 'common_location.dart';
@@ -12,16 +12,6 @@ class AppBarTokens {
   static const textMuted = Color(0xFF7C7C7C);
 }
 
-/// A ready-to-use [SliverAppBar] that reads location from [LocationProvider].
-/// Drop this into any screen's [CustomScrollView] as the first sliver.
-///
-/// Parameters:
-///   [scrollController]  – same controller your screen passes to the sliver.
-///   [bannerChild]       – the hero content shown below the location row
-///                         when the bar is expanded (e.g. image banner).
-///   [expandedHeight]    – height of the fully expanded bar (default ~70 % screen).
-///   [collapsedBarColor] – AppBar colour when collapsed (default white).
-///   [primaryColor]      – accent colour used for collapsed icons (default red).
 class SharedSliverAppBar extends StatefulWidget {
   final ScrollController scrollController;
   final Widget? bannerChild;

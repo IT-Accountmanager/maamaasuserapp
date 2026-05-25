@@ -8,7 +8,7 @@
 // // import '../../Services/websockets/web_socket_manager.dart';
 // // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // // import '../../Services/scaffoldmessenger/messenger.dart';
-// // import 'package:maamaas/screens/foodmainscreen.dart';
+// // import 'package:maamaas/screens/Mainscreen.dart';
 // // import 'package:maamaas/widgets/signinrequired.dart';
 // // import '../../Models/subscrptions/coupon_model.dart';
 // // import '../../Models/subscrptions/wallet_model.dart';
@@ -2051,7 +2051,7 @@
 // import '../../Services/websockets/web_socket_manager.dart';
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import '../../Services/scaffoldmessenger/messenger.dart';
-// import 'package:maamaas/screens/foodmainscreen.dart';
+// import 'package:maamaas/screens/Mainscreen.dart';
 // import 'package:maamaas/widgets/signinrequired.dart';
 // import '../../Models/subscrptions/coupon_model.dart';
 // import '../../Models/subscrptions/wallet_model.dart';

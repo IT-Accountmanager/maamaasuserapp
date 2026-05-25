@@ -429,14 +429,13 @@
 //
 
 // ignore_for_file: deprecated_member_use
-
+import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../Services/Auth_service/food_authservice.dart';
+import '../../Models/subscrptions/coupon_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../Models/subscrptions/coupon_model.dart';
-import '../../Services/Auth_service/food_authservice.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 class couponscolours {
@@ -624,7 +623,11 @@ class _SummaryBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_offer_rounded, color: couponscolours.brand, size: 18),
+          const Icon(
+            Icons.local_offer_rounded,
+            color: couponscolours.brand,
+            size: 18,
+          ),
           SizedBox(width: 10.w),
           Text(
             '$active active coupon${active == 1 ? '' : 's'}',
@@ -720,11 +723,23 @@ class _CouponCard extends StatelessWidget {
   ({Color bg, Color fg, Color badge}) get _palette {
     switch (coupon.couponType.toUpperCase()) {
       case 'FOOD':
-        return (bg: couponscolours.greenSoft, fg: couponscolours.green, badge: couponscolours.green);
+        return (
+          bg: couponscolours.greenSoft,
+          fg: couponscolours.green,
+          badge: couponscolours.green,
+        );
       case 'DELIVERY':
-        return (bg: couponscolours.amberSoft, fg: couponscolours.amber, badge: couponscolours.amber);
+        return (
+          bg: couponscolours.amberSoft,
+          fg: couponscolours.amber,
+          badge: couponscolours.amber,
+        );
       default:
-        return (bg: couponscolours.brandSoft, fg: couponscolours.brand, badge: couponscolours.brand);
+        return (
+          bg: couponscolours.brandSoft,
+          fg: couponscolours.brand,
+          badge: couponscolours.brand,
+        );
     }
   }
 
@@ -806,7 +821,11 @@ class _CouponCard extends StatelessWidget {
                         _Badge(label: coupon.couponType, bg: p.bg, fg: p.fg),
                         const Spacer(),
                         if (expired)
-                          _Badge(label: 'Expired', bg: couponscolours.redSoft, fg: couponscolours.red),
+                          _Badge(
+                            label: 'Expired',
+                            bg: couponscolours.redSoft,
+                            fg: couponscolours.red,
+                          ),
                       ],
                     ),
                     SizedBox(height: 10.h),
@@ -815,18 +834,27 @@ class _CouponCard extends StatelessWidget {
                     if (coupon.minimumOrderValue > 0)
                       Text(
                         'Min order ₹${coupon.minimumOrderValue.toInt()}',
-                        style: TextStyle(fontSize: 11.sp, color: couponscolours.sub),
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: couponscolours.sub,
+                        ),
                       ),
                     if (coupon.minimumOrderValue <= 0)
                       Text(
                         'Applicable on any order',
-                        style: TextStyle(fontSize: 11.sp, color: couponscolours.sub),
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: couponscolours.sub,
+                        ),
                       ),
 
                     SizedBox(height: 4.h),
                     Text(
                       'Valid till ${_fmtDate(coupon.endDate.toIso8601String())}',
-                      style: TextStyle(fontSize: 10.sp, color: couponscolours.muted),
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: couponscolours.muted,
+                      ),
                     ),
                   ],
                 ),

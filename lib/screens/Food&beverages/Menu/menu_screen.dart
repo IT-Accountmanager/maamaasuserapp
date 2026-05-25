@@ -1,25 +1,25 @@
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../Models/food/aboutus_model.dart';
-import '../../../Models/food/team_model.dart';
 import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../widgets/widgets/food/favorite_button.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
-import 'Menuhelper.dart';
-import 'cart_button.dart';
-import 'cart_footer_button.dart';
+import '../../../Models/food/aboutus_model.dart';
+import '../../../Models/food/team_model.dart';
 import '../../skeleton/menu_skeleton.dart';
+import '../../../Models/food/dish.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../Models/food/dish.dart';
-import '../../foodmainscreen.dart';
-import 'dart:async';
+import 'cart_footer_button.dart';
+import '../../Mainscreen.dart';
 import '../table/Table.dart';
+import 'cart_button.dart';
+import 'fullscreen.dart';
+import 'Menuhelper.dart';
 import 'Top_banner.dart';
 import 'colours.dart';
-import 'fullscreen.dart';
+import 'dart:async';
 
 class MenuResponse {
   final List<Dish> categories;
@@ -1000,7 +1000,11 @@ class SearchField extends StatelessWidget {
   final Function(String) onSearch;
   final Color fillColor;
 
-  const SearchField({super.key, required this.onSearch, required this.fillColor});
+  const SearchField({
+    super.key,
+    required this.onSearch,
+    required this.fillColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1047,7 +1051,8 @@ class VegToggle extends StatelessWidget {
   final Function(bool) onToggle;
   final bool compact;
 
-  const VegToggle({super.key,
+  const VegToggle({
+    super.key,
     required this.isVeg,
     required this.onToggle,
     this.compact = false,
@@ -1219,7 +1224,6 @@ class _DishGridTabState extends State<DishGridTab> {
       });
       return;
     }
-
 
     final dishes = (widget.parentId != null && widget.parentId! > 0)
         ? menu.dishes.where((d) => d.parentId == widget.parentId).toList()
