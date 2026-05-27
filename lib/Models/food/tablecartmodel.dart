@@ -93,24 +93,27 @@ class CartItem {
   double totalPrice;
   String? note;
   String? orderStatus;
-  String? dishImage; // ✅ nullable
-  String? orderType; // ✅ nullable
+  String? dishImage;
+  String? orderType;
+
+  bool? available;
 
   CartItem.empty()
-    : itemId = 0,
-      price = 0.0,
-      dishName = '',
-      dishId = 0,
-      gst = 0.0,
-      packingCharges = 0.0,
-      quantity = 0,
-        previousQuantity =0,
-      chefType = '',
-      totalPrice = 0.0,
-      note = '',
-      orderStatus = '',
-      dishImage = '',
-      orderType = ''; // <-- ✅ initialize here
+      : itemId = 0,
+        price = 0.0,
+        dishName = '',
+        dishId = 0,
+        gst = 0.0,
+        packingCharges = 0.0,
+        quantity = 0,
+        previousQuantity = 0,
+        chefType = '',
+        totalPrice = 0.0,
+        note = '',
+        orderStatus = '',
+        dishImage = '',
+        orderType = '',
+        available = true; // ✅ NEW
 
   CartItem({
     required this.itemId,
@@ -123,6 +126,7 @@ class CartItem {
     required this.previousQuantity,
     required this.chefType,
     required this.totalPrice,
+    required this.available, // ✅ NEW
     this.note,
     this.orderStatus,
     this.dishImage,
@@ -133,18 +137,23 @@ class CartItem {
     return CartItem(
       itemId: json['itemId'] ?? 0,
       price: (json['price'] ?? 0).toDouble(),
-      dishName: json['dishName'] ?? '', // ✅ FIX
+      dishName: json['dishName'] ?? '',
       dishId: json['dishId'] ?? 0,
       gst: (json['gst'] ?? 0).toDouble(),
       packingCharges: (json['packingCharges'] ?? 0).toDouble(),
       quantity: json['quantity'] ?? 0,
-      previousQuantity:json['previousQuantity'] ?? 0,
-      chefType: json['chefType'] ?? '', // ✅ FIX
+      previousQuantity: json['previousQuantity'] ?? 0,
+      chefType: json['chefType'] ?? '',
       totalPrice: (json['totalPrice'] ?? 0).toDouble(),
+
+      available: json['available'] == null
+          ? true
+          : json['available'] as bool,
+
       note: json['note'],
       orderStatus: json['orderStatus'],
       dishImage: json['dishImage'],
-      orderType: json['orderType'], // nullable → OK
+      orderType: json['orderType'],
     );
   }
 
@@ -157,8 +166,12 @@ class CartItem {
       'gst': gst,
       'packingCharges': packingCharges,
       'quantity': quantity,
+      'previousQuantity': previousQuantity,
       'chefType': chefType,
       'totalPrice': totalPrice,
+
+      'available': available, // ✅ NEW
+
       'note': note,
       'orderStatus': orderStatus,
       'dishImage': dishImage,

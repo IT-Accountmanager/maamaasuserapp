@@ -94,25 +94,48 @@ class Authservice {
     final endpoint = 'api/banner/$vendorId';
 
     try {
+      print("════════ FETCH VENDOR BANNER START ════════");
+      print("📤 Endpoint: $endpoint");
+      print("🏪 Vendor ID: $vendorId");
+
       final response = await ApiClient.get(
         endpoint,
         service: "food",
         requiresAuth: false,
       );
 
-      if (response.body.isNotEmpty) {
-      } else {}
+      print("📥 Status Code: ${response.statusCode}");
+      print("📦 Raw Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
 
+        print("✅ JSON Decoded Successfully");
+        print("📍 Latitude: ${jsonData['latitude']}");
+        print("📍 Longitude: ${jsonData['longitude']}");
+        print("🏢 Company: ${jsonData['companyName']}");
+
         final banner = Restaurent_Banner.fromJson(jsonData);
+
+        print("✅ Banner Model Parsed");
+        print("📍 Parsed Latitude: ${banner.latitude}");
+        print("📍 Parsed Longitude: ${banner.longitude}");
+        print("════════ FETCH VENDOR BANNER END ════════");
 
         return banner;
       } else {
+        print("❌ API FAILED");
+        print("❌ Status Code: ${response.statusCode}");
+        print("❌ Body: ${response.body}");
+
         throw Exception('Failed to load banner data: ${response.statusCode}');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("════════ FETCH VENDOR BANNER ERROR ════════");
+      print("❌ Exception: $e");
+      print("📌 StackTrace: $stackTrace");
+      print("═══════════════════════════════════════════");
+
       throw Exception('Failed to load banner data');
     }
   }

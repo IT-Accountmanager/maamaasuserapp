@@ -312,7 +312,11 @@ class FoodPdf {
 
                   if (gstTotal > 0)
                     keyValue('GST', "₹${formatAmount(gstTotal)}"),
-                  // keyValue('CGST', "₹${formatAmount(data['gstTotal'])}"),
+                  if (isdineout)
+                    keyValue(
+                      "Service Charges",
+                      "₹${formatAmount(data['serviceCharge'])}",
+                    ),
                   if ((data['platformCharges'] ?? 0) > 0)
                     keyValue(
                       isdineout ? 'SmartDineIn Charges' : 'Platform Charges',
@@ -328,6 +332,7 @@ class FoodPdf {
                       'Packing Charges',
                       "₹${formatAmount(data['packingCharges'])}",
                     ),
+
                   if (isDelivery)
                     keyValue(
                       'Delivery Charges',

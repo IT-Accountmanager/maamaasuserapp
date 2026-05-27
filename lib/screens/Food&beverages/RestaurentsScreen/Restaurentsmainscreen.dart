@@ -547,7 +547,8 @@ class _RestaurentsState extends State<Restaurents> {
                   key: _orderTypeKey,
                   pinned: false,
                   delegate: _StickyDelegate(
-                    height: _showOrderTypeHint ? 88.h : 62.h,
+                    // height: _showOrderTypeHint ? 88.h : 62.h,
+                    height: _showOrderTypeHint ? 165.h : 115.h,
                     child: Container(
                       color: restaurentsnewcolour.surface,
                       child: Column(
@@ -1121,75 +1122,142 @@ class _RestaurentsState extends State<Restaurents> {
   // ORDER TYPE TABS
   // ══════════════════════════════════════════════════════════════════════════
 
+  // Widget _buildOrderTypeTabs() {
+  //   return ValueListenableBuilder<String?>(
+  //     valueListenable: selectedOrderTypeNotifier,
+  //     builder: (_, selected, __) {
+  //       return AnimatedContainer(
+  //         duration: const Duration(milliseconds: 200),
+  //
+  //         child: SingleChildScrollView(
+  //           scrollDirection: Axis.horizontal,
+  //           child: Row(
+  //             children: RestaurentsHelper.orderTabs.map((tab) {
+  //               final type = tab['type'] as String;
+  //               final isSelected = selected == type;
+  //
+  //               return GestureDetector(
+  //                 onTap: () => _handleOrderTypeSelection(type),
+  //                 child: AnimatedContainer(
+  //                   duration: const Duration(milliseconds: 220),
+  //                   curve: Curves.easeInOut,
+  //                   margin: EdgeInsets.only(right: 8.w),
+  //                   padding: EdgeInsets.symmetric(
+  //                     horizontal: 14.w, // 👈 important for scroll look
+  //                     vertical: 10.h,
+  //                   ),
+  //                   decoration: BoxDecoration(
+  //                     // color: isSelected ? AppColors.primary : restaurentsnewcolour.surface,
+  //                     color: isSelected ? Colors.green : AppColors.primary,
+  //
+  //                     borderRadius: BorderRadius.circular(10.r),
+  //                     // border: Border.all(
+  //                     //   color: isSelected ? AppColors.primary : Colors.black,
+  //                     //   width: isSelected ? 0 : 1.5,
+  //                     // ),
+  //                     boxShadow: isSelected
+  //                         ? [
+  //                             BoxShadow(
+  //                               color: restaurentsnewcolour.green.withOpacity(
+  //                                 0.28,
+  //                               ),
+  //                               blurRadius: 12,
+  //                               offset: const Offset(0, 4),
+  //                             ),
+  //                           ]
+  //                         : [],
+  //                   ),
+  //                   child: Row(
+  //                     mainAxisSize: MainAxisSize.min, // 👈 important
+  //                     children: [
+  //                       Icon(
+  //                         tab['icon'] as IconData,
+  //                         size: 16.sp,
+  //                         color: isSelected ? Colors.white : Colors.white,
+  //                       ),
+  //                       SizedBox(width: 6.w),
+  //                       Text(
+  //                         tab['label'] as String,
+  //                         style: TextStyle(
+  //                           fontSize: 13.sp,
+  //                           fontWeight: FontWeight.bold,
+  //                           color: isSelected ? Colors.white : Colors.white,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               );
+  //             }).toList(),
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+
   Widget _buildOrderTypeTabs() {
     return ValueListenableBuilder<String?>(
       valueListenable: selectedOrderTypeNotifier,
       builder: (_, selected, __) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        final itemWidth = (MediaQuery.of(context).size.width - 48.w) / 3;
 
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: RestaurentsHelper.orderTabs.map((tab) {
-                final type = tab['type'] as String;
-                final isSelected = selected == type;
+        return Wrap(
+          alignment: WrapAlignment.center, // 👈 add this
+          spacing: 8.w,
+          runSpacing: 10.h,
+          children: RestaurentsHelper.orderTabs.map((tab) {
+            final type = tab['type'] as String;
+            final isSelected = selected == type;
 
-                return GestureDetector(
-                  onTap: () => _handleOrderTypeSelection(type),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeInOut,
-                    margin: EdgeInsets.only(right: 8.w),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 14.w, // 👈 important for scroll look
-                      vertical: 10.h,
-                    ),
-                    decoration: BoxDecoration(
-                      // color: isSelected ? AppColors.primary : restaurentsnewcolour.surface,
-                      color: isSelected ? Colors.green : AppColors.primary,
-
-                      borderRadius: BorderRadius.circular(10.r),
-                      // border: Border.all(
-                      //   color: isSelected ? AppColors.primary : Colors.black,
-                      //   width: isSelected ? 0 : 1.5,
-                      // ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: restaurentsnewcolour.green.withOpacity(
-                                  0.28,
-                                ),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : [],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min, // 👈 important
-                      children: [
-                        Icon(
-                          tab['icon'] as IconData,
-                          size: 16.sp,
-                          color: isSelected ? Colors.white : Colors.white,
-                        ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          tab['label'] as String,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.white,
+            return GestureDetector(
+              onTap: () => _handleOrderTypeSelection(type),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeInOut,
+                width: itemWidth,
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.green : AppColors.primary,
+                  borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: restaurentsnewcolour.green.withOpacity(0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                      ],
+                        ]
+                      : [],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      tab['icon'] as IconData,
+                      size: 18.sp,
+                      color: Colors.white,
                     ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
+
+                    SizedBox(width: 6.w),
+
+                    Flexible(
+                      child: Text(
+                        tab['label'] as String,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         );
       },
     );

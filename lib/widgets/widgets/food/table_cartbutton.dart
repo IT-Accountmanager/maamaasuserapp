@@ -77,8 +77,13 @@ class _TableCartButtonState extends State<TableCartButton> {
       final TableCartModel cart = cartList.first;
 
       // now this works because cart is a TaleCartModel
+      // final matchedItems = cart.cartItems
+      //     .where((item) => item.dishId == widget.dishId)
+      //     .toList();
       final matchedItems = cart.cartItems
-          .where((item) => item.dishId == widget.dishId)
+          .where(
+            (item) => item.dishId == widget.dishId && item.orderStatus == null,
+          )
           .toList();
 
       if (matchedItems.isNotEmpty) {
@@ -164,159 +169,207 @@ class _TableCartButtonState extends State<TableCartButton> {
     return SizedBox(
       width: 120.w,
       height: 39.h,
-      child: itemCount == 0
-          ? ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  side: BorderSide(
-                    color: AppColors.of(context).primary,
-                    width: 1.w,
-                  ),
+      // child: itemCount == 0
+      //     ? ElevatedButton(
+      //         style: ElevatedButton.styleFrom(
+      //           shape: RoundedRectangleBorder(
+      //             borderRadius: BorderRadius.circular(10.r),
+      //             side: BorderSide(
+      //               color: AppColors.of(context).primary,
+      //               width: 1.w,
+      //             ),
+      //           ),
+      //           padding: EdgeInsets.symmetric(horizontal: 10.w),
+      //         ),
+      //         onPressed: _isLoading
+      //             ? null
+      //             : () async {
+      //                 setState(() => _isLoading = true);
+      //
+      //                 try {
+      //                   CartMode.type.value = CartType.table;
+      //
+      //                   await _handleAddToCart(1);
+      //
+      //                   setState(() => itemCount = 1);
+      //                 } catch (e) {
+      //                   AppAlert.error(context, "Failed to add item");
+      //                 } finally {
+      //                   if (mounted) setState(() => _isLoading = false);
+      //                 }
+      //               },
+      //         child: _isLoading
+      //             ? SizedBox(
+      //                 height: 18,
+      //                 width: 18,
+      //                 child: CircularProgressIndicator(
+      //                   strokeWidth: 2,
+      //                   color: Colors.black,
+      //                 ),
+      //               )
+      //             : Text(
+      //                 "Add Cart",
+      //                 style: TextStyle(
+      //                   fontSize: 14.sp,
+      //                   fontWeight: FontWeight.w600,
+      //                   color: Colors.white,
+      //                 ),
+      //               ),
+      //       )
+      //     : Container(
+      //         decoration: BoxDecoration(
+      //           borderRadius: BorderRadius.circular(10.r),
+      //           border: Border.all(
+      //             color: AppColors.of(context).primary,
+      //             width: 1.w,
+      //           ),
+      //         ),
+      //         child: Row(
+      //           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //           children: [
+      //             IconButton(
+      //               icon: Icon(Icons.remove, size: 14.sp),
+      //               onPressed: _isLoading
+      //                   ? null
+      //                   : () async {
+      //                       setState(() => _isLoading = true);
+      //
+      //                       try {
+      //                         if (itemCount > 1) {
+      //                           final newQty = itemCount - 1;
+      //
+      //                           final prefs =
+      //                               await SharedPreferences.getInstance();
+      //                           final itemId = prefs.getInt(
+      //                             "table_dish_${widget.dishId}_itemId",
+      //                           );
+      //
+      //                           if (itemId != null) {
+      //                             await food_Authservice.updateCartItemQuantity(
+      //                               itemId: itemId,
+      //                               quantity: newQty,
+      //                             );
+      //                           }
+      //                           final cartList = await food_Authservice
+      //                               .fetchTableCart();
+      //                           if (cartList.isNotEmpty) {
+      //                             CartNotifier.count.value =
+      //                                 cartList.first.cartItems.length;
+      //                           }
+      //
+      //                           setState(() => itemCount = newQty);
+      //                         } else {
+      //                           await _handleRemoveItem();
+      //                         }
+      //                       } catch (e) {
+      //                         AppAlert.error(context, "Update failed");
+      //                       } finally {
+      //                         if (mounted) setState(() => _isLoading = false);
+      //                       }
+      //                     },
+      //               padding: EdgeInsets.zero,
+      //             ),
+      //             Text(
+      //               "$itemCount",
+      //               style: TextStyle(
+      //                 fontSize: 12.sp,
+      //                 fontWeight: FontWeight.bold,
+      //                 color: Colors.black,
+      //               ),
+      //             ),
+      //             IconButton(
+      //               icon: Icon(Icons.add, size: 14.sp),
+      //               onPressed: _isLoading
+      //                   ? null
+      //                   : () async {
+      //                       setState(() => _isLoading = true);
+      //
+      //                       try {
+      //                         if (itemCount >= widget.balanceQuantity) {
+      //                           AppAlert.error(context, "Item is out of stock");
+      //                           return;
+      //                         }
+      //
+      //                         final newQty = itemCount + 1;
+      //
+      //                         final prefs =
+      //                             await SharedPreferences.getInstance();
+      //                         final itemId = prefs.getInt(
+      //                           "table_dish_${widget.dishId}_itemId",
+      //                         );
+      //
+      //                         if (itemId != null) {
+      //                           await food_Authservice.updateCartItemQuantity(
+      //                             itemId: itemId,
+      //                             quantity: newQty,
+      //                           );
+      //                         }
+      //                         final cartList = await food_Authservice
+      //                             .fetchTableCart();
+      //                         if (cartList.isNotEmpty) {
+      //                           CartNotifier.count.value =
+      //                               cartList.first.cartItems.length;
+      //                         }
+      //
+      //                         setState(() => itemCount = newQty);
+      //                       } catch (e) {
+      //                         AppAlert.error(context, "Update failed");
+      //                       } finally {
+      //                         if (mounted) setState(() => _isLoading = false);
+      //                       }
+      //                     },
+      //             ),
+      //           ],
+      //         ),
+      //       ),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: itemCount == 0
+              ? AppColors.of(context).primary
+              : Colors.green,
+
+          disabledBackgroundColor: Colors.green,
+          disabledForegroundColor: Colors.white,
+
+          padding: EdgeInsets.symmetric(horizontal: 10.w),
+        ),
+        onPressed: _isLoading || itemCount > 0
+            ? null
+            : () async {
+                setState(() => _isLoading = true);
+
+                try {
+                  CartMode.type.value = CartType.table;
+
+                  await _handleAddToCart(1);
+
+                  setState(() => itemCount = 1);
+                } catch (e) {
+                  AppAlert.error(context, "Failed to add item");
+                } finally {
+                  if (mounted) {
+                    setState(() => _isLoading = false);
+                  }
+                }
+              },
+        child: _isLoading
+            ? SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-              ),
-              onPressed: _isLoading
-                  ? null
-                  : () async {
-                      setState(() => _isLoading = true);
-
-                      try {
-                        CartMode.type.value = CartType.table;
-
-                        await _handleAddToCart(1);
-
-                        setState(() => itemCount = 1);
-                      } catch (e) {
-                        AppAlert.error(context, "Failed to add item");
-                      } finally {
-                        if (mounted) setState(() => _isLoading = false);
-                      }
-                    },
-              child: _isLoading
-                  ? SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      ),
-                    )
-                  : Text(
-                      "Add Cart",
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-            )
-          : Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(
-                  color: AppColors.of(context).primary,
-                  width: 1.w,
+              )
+            : Text(
+                itemCount == 0 ? "Add Cart" : "Added to Cart",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.remove, size: 14.sp),
-                    onPressed: _isLoading
-                        ? null
-                        : () async {
-                            setState(() => _isLoading = true);
-
-                            try {
-                              if (itemCount > 1) {
-                                final newQty = itemCount - 1;
-
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-                                final itemId = prefs.getInt(
-                                  "table_dish_${widget.dishId}_itemId",
-                                );
-
-                                if (itemId != null) {
-                                  await food_Authservice.updateCartItemQuantity(
-                                    itemId: itemId,
-                                    quantity: newQty,
-                                  );
-                                }
-                                final cartList = await food_Authservice
-                                    .fetchTableCart();
-                                if (cartList.isNotEmpty) {
-                                  CartNotifier.count.value =
-                                      cartList.first.cartItems.length;
-                                }
-
-                                setState(() => itemCount = newQty);
-                              } else {
-                                await _handleRemoveItem();
-                              }
-                            } catch (e) {
-                              AppAlert.error(context, "Update failed");
-                            } finally {
-                              if (mounted) setState(() => _isLoading = false);
-                            }
-                          },
-                    padding: EdgeInsets.zero,
-                  ),
-                  Text(
-                    "$itemCount",
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.add, size: 14.sp),
-                    onPressed: _isLoading
-                        ? null
-                        : () async {
-                            setState(() => _isLoading = true);
-
-                            try {
-                              if (itemCount >= widget.balanceQuantity) {
-                                AppAlert.error(context, "Item is out of stock");
-                                return;
-                              }
-
-                              final newQty = itemCount + 1;
-
-                              final prefs =
-                                  await SharedPreferences.getInstance();
-                              final itemId = prefs.getInt(
-                                "table_dish_${widget.dishId}_itemId",
-                              );
-
-                              if (itemId != null) {
-                                await food_Authservice.updateCartItemQuantity(
-                                  itemId: itemId,
-                                  quantity: newQty,
-                                );
-                              }
-                              final cartList = await food_Authservice
-                                  .fetchTableCart();
-                              if (cartList.isNotEmpty) {
-                                CartNotifier.count.value =
-                                    cartList.first.cartItems.length;
-                              }
-
-                              setState(() => itemCount = newQty);
-                            } catch (e) {
-                              AppAlert.error(context, "Update failed");
-                            } finally {
-                              if (mounted) setState(() => _isLoading = false);
-                            }
-                          },
-                  ),
-                ],
-              ),
-            ),
+      ),
     );
   }
 }

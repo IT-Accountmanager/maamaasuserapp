@@ -11,27 +11,6 @@ class CartNotifier {
   }
 }
 
-// ignore: camel_case_types
-// class websocketCartNotifier extends StateNotifier<CartModel?> {
-//   websocketCartNotifier() : super(null);
-//
-//   void updateCart(CartModel newCart) {
-//     state = newCart;
-//
-//     // ✅ Always sync CartNotifier.count whenever cart state changes
-//     final totalItems =
-//         newCart.cartItems?.fold<int>(0, (sum, item) => sum + (item.quantity)) ??
-//         0;
-//
-//     CartNotifier.update(totalItems);
-//   }
-//
-//   // ✅ Call this when cart is fully cleared
-//   void clearCart() {
-//     state = null;
-//     CartNotifier.update(0);
-//   }
-// }
 class websocketCartNotifier extends StateNotifier<CartModel?> {
   websocketCartNotifier() : super(null);
 
@@ -41,7 +20,7 @@ class websocketCartNotifier extends StateNotifier<CartModel?> {
     final totalItems =
         newCart.cartItems?.fold<int>(
           0,
-          (sum, item) => sum + (item.quantity ?? 0),
+          (sum, item) => sum + (item.quantity),
         ) ??
         0;
 

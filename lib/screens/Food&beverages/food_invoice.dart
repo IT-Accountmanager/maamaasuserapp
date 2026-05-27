@@ -742,6 +742,7 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
     final num packingCharges = data['packingCharges'] ?? 0;
     final num deliveryCharges = data['deliveryCharges'] ?? 0;
     final num grandTotal = data['grandTotal'] ?? 0;
+    final num serviceCharge = data['serviceCharge'] ?? 0;
 
     return Container(
       decoration: BoxDecoration(
@@ -809,6 +810,12 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
                     "Delivery Charges",
                     "₹${deliveryCharges.toStringAsFixed(2)}",
                   ),
+                if (orderType == 'table_dine_in' && serviceCharge > 0)
+                  _priceRow(
+                    "Service Charges",
+                    "₹${serviceCharge.toStringAsFixed(2)}",
+                  ),
+
                 if (discount > 0)
                   _priceRow(
                     "Discount",

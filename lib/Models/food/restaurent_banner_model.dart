@@ -20,8 +20,10 @@ class Restaurent_Banner {
   final List<String> orderTypes;
   final String addressLine;
   final double distance; // ✅ facebookLink
-  final double ratings;  // ✅ NON-NULL youtubeLink
+  final double ratings; // ✅ NON-NULL youtubeLink
   final String position;
+  final num latitude;
+  final num longitude;
 
   Restaurent_Banner({
     required this.bannerId,
@@ -46,6 +48,8 @@ class Restaurent_Banner {
     required this.distance,
     required this.ratings,
     required this.position,
+    required this.latitude,
+    required this.longitude,
   });
 
   factory Restaurent_Banner.fromJson(Map<String, dynamic> json) {
@@ -57,12 +61,12 @@ class Restaurent_Banner {
       instagramLink: json['instagramLink'] ?? "",
       facebookLink: json['facebookLink'] ?? "",
       twitterLink: json['twitterLink'] ?? "",
-      youtubeLink:json['youtubeLink'] ?? '',
-      linkedinLink:json['linkedinLink']?? '',
+      youtubeLink: json['youtubeLink'] ?? '',
+      linkedinLink: json['linkedinLink'] ?? '',
       companyBanner: json['companyBanner'] ?? "",
       companyLogo: json['companyLogo'] ?? "",
-      startTime: json['startTime']?? '',
-      lastTime: json['lastTime']?? '',
+      startTime: json['startTime'] ?? '',
+      lastTime: json['lastTime'] ?? '',
       vendorId: json['vendorId'] ?? 0,
       city: json['city'] ?? "",
       orderTypes: List<String>.from(json['orderTypes'] ?? []),
@@ -79,6 +83,8 @@ class Restaurent_Banner {
       ratings: (json['ratings'] ?? 0).toDouble(),
 
       position: json["position"]?.toString() ?? "",
+      latitude: json['latitude'] ?? 0,
+      longitude: json['longitude'] ?? 0,
     );
   }
 }

@@ -44,9 +44,9 @@ class _cartwalletState extends State<cartwallet> {
     super.initState();
     _scrollController = ScrollController();
     _amountController = TextEditingController();
-    _wallet = widget.wallet;     // ✅ fix 1
-    cartData = widget.cartData;  // ✅ fix 2
-    isLoading = false;           // ✅ no fetch needed
+    _wallet = widget.wallet; // ✅ fix 1
+    cartData = widget.cartData; // ✅ fix 2
+    isLoading = false; // ✅ no fetch needed
   }
 
   @override
@@ -78,7 +78,6 @@ class _cartwalletState extends State<cartwallet> {
 
     return total;
   }
-
 
   void _notifyParent() {
     widget.onSelectionChanged(selectedPaymentMethod, selectedSubWallets);

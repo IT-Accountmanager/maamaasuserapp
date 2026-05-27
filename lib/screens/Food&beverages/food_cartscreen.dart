@@ -1,3 +1,2274 @@
+// import '../../Services/Auth_service/promotion_services_Authservice.dart';
+// import '../../Services/Auth_service/Subscription_authservice.dart';
+// import '../../widgets/widgets/food/currentcart_notifier.dart';
+// import '../../Models/promotions_model/promotions_model.dart';
+// import '../screens/advertisements/banneradvertisement.dart';
+// import 'package:flutter_screenutil/flutter_screenutil.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+// import '../../Services/paymentservice/razorpayservice.dart';
+// import '../../Services/Auth_service/food_authservice.dart';
+// import '../../Services/websockets/web_socket_manager.dart';
+// import '../../Services/scaffoldmessenger/messenger.dart';
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:maamaas/widgets/signinrequired.dart';
+// import '../../Models/subscrptions/coupon_model.dart';
+// import '../../Models/subscrptions/wallet_model.dart';
+// import '../../providers/addressmodel_provider.dart';
+// import 'package:maamaas/screens/Mainscreen.dart';
+// import '../../widgets/widgets/cart wallet.dart';
+// import '../../Models/food/cart_model.dart';
+// import '../screens/ordertypebutton.dart';
+// import '../skeleton/cart_skeleton.dart';
+// import 'package:flutter/gestures.dart';
+// import 'package:flutter/material.dart';
+// import '../screens/saved_address.dart';
+// import 'Menu/menu_screen.dart';
+// import 'food_invoice.dart';
+//
+// // ── Design tokens ─────────────────────────────────────────────────────────────
+// class cartuser {
+//   static const bg = Color(0xFFF5F6FA);
+//   static const surface = Color(0xFFFFFFFF);
+//   static const border = Color(0xFFE8ECF4);
+//
+//   static const violet = Color(0xFF6C63FF);
+//   static const violetDim = Color(0x1A6C63FF);
+//
+//   static const textPrimary = Color(0xFF1A1D2E);
+//   static const textSecondary = Color(0xFF64748B);
+//   static const textMuted = Color(0xFFB0B8CC);
+//
+//   static const green = Color(0xFF10B981);
+//   static const red = Color(0xFFEF4444);
+//   static const amber = Color(0xFFF59E0B);
+// }
+//
+// enum PaymentOverlayState {
+//   none,
+//   placingOrder,
+//   openingGateway,
+//   processing,
+//   success,
+// }
+//
+// // ignore: camel_case_types
+// class food_cartScreen extends ConsumerStatefulWidget {
+//   final int? vendorId;
+//   final int? cartId;
+//   final double? savedAmount;
+//   final bool showSavedPopup;
+//
+//   const food_cartScreen({
+//     super.key,
+//     this.vendorId,
+//     this.cartId,
+//     this.savedAmount,
+//     this.showSavedPopup = false,
+//   });
+//
+//   @override
+//   ConsumerState<food_cartScreen> createState() => _food_cartScreenState();
+// }
+//
+// // ignore: camel_case_types
+// class _food_cartScreenState extends ConsumerState<food_cartScreen> {
+//   CartModel? cartData;
+//   bool isLoading = true;
+//   bool isPlacingOrder = false;
+//   bool couponApplied = false;
+//   String selectedPaymentMethod = "";
+//   String couponCode = "";
+//   bool isExpanded = false;
+//   Wallet? wallet;
+//   int? appliedCouponId;
+//   String? appliedCouponCode;
+//   DateTime? _selectedDate;
+//   TimeOfDay? _selectedTime;
+//   late ScrollController _scrollController;
+//   String _orderType = "";
+//   bool isCouponLoading = false;
+//   Set<String> selectedSubWallets = {};
+//   int userId = 0;
+//   List<Campaign> homepageAds = [];
+//   bool _isSummaryExpanded = false;
+//   final List<Map<String, dynamic>> _pendingSocketUpdates = [];
+//
+//   PaymentOverlayState _overlayState = PaymentOverlayState.none;
+//
+//   bool _isLoadingCart = false;
+//   // ignore: prefer_final_fields
+//   int _socketVersion = 0; // incremented by every _applySocketUpdate call
+//   String? _lastSocketEventKey;
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _scrollController = ScrollController();
+//     _loadAllData(); // ← handles socket subscription internally now
+//   }
+//
+//   @override
+//   void dispose() {
+//     _scrollController.dispose();
+//     WebSocketManager().unsubscribeUserCart(userId);
+//     super.dispose();
+//   }
+//
+//   Future<void> _loadAllData() async {
+//     if (mounted) setState(() => isLoading = true);
+//
+//     // ✅ Subscribe socket FIRST — before any await — so zero events are missed
+//     final prefs = await SharedPreferences.getInstance();
+//     userId = prefs.getInt('userId') ?? 0;
+//     WebSocketManager().subscribeUserCart(userId, _updateCartFromSocket);
+//
+//     // Only block socket→HTTP race AFTER subscription is live
+//     _isLoadingCart = true;
+//
+//     try {
+//       final results = await Future.wait([
+//         food_Authservice.fetchCart(),
+//         subscription_AuthService.fetchWallet(),
+//         promotion_Authservice.fetchcampaign(),
+//       ]);
+//
+//       if (!mounted) return;
+//
+//       final freshCart = results[0] as CartModel?;
+//       final walletData = results[1] as Wallet;
+//       final ads = results[2] as List<Campaign>;
+//
+//       setState(() {
+//         // Only use HTTP cart if socket hasn't already populated cartData
+//         if (cartData == null) {
+//           cartData = freshCart;
+//         } else {
+//           // Socket already gave us live data — just sync totals from HTTP
+//           if (freshCart != null) {
+//             cartData!.grandTotal = freshCart.grandTotal;
+//             cartData!.subtotal = freshCart.subtotal;
+//             cartData!.gstTotal = freshCart.gstTotal;
+//             cartData!.deliveryCharges = freshCart.deliveryCharges;
+//             cartData!.discountAmount = freshCart.discountAmount;
+//             cartData!.platformCharges = freshCart.platformCharges;
+//             // cartData!.orderType =freshCart.orderType;
+//             cartData!.deliveryAddress = freshCart.deliveryAddress;
+//             cartData!.packingTotal = freshCart.packingTotal;
+//           }
+//         }
+//
+//         if (cartData?.hasAnyScheduledItem ?? false) {
+//           _orderType = 'schedule';
+//         }
+//
+//         wallet = walletData;
+//         homepageAds = ads
+//             .where(
+//               (c) =>
+//                   c.medium == Medium.APP &&
+//                   c.addDisplayPosition == AddDisplayPosition.CHECKOUT_PAGE,
+//             )
+//             .toList();
+//         isLoading = false;
+//       });
+//
+//       _isLoadingCart = false;
+//       _flushPendingSocketUpdates(); // apply anything that arrived during HTTP fetch
+//     } catch (e) {
+//       _isLoadingCart = false;
+//       if (mounted) setState(() => isLoading = false);
+//       debugPrint("❌ Load error: $e");
+//     }
+//   }
+//
+//   List<String> mapWalletsToEnum(List<String> s) => s.map((w) {
+//     switch (w) {
+//       case "Cashbacks":
+//         return "CASHBACK";
+//       case "Self Loaded":
+//         return "SELF_LOADED";
+//       case "Postpaid used amount":
+//         return "POST_PAID";
+//       case "Company Loaded":
+//         return "COMPANY_LOADED";
+//       case "Earned Amount":
+//         return "EARNED_AMOUNT";
+//       default:
+//         return w.toUpperCase().replaceAll(' ', '_');
+//     }
+//   }).toList();
+//
+//   void _updateCartFromSocket(Map<String, dynamic> data) {
+//     final socketItems = data['cartItems'] as List? ?? [];
+//
+//     // ✅ Dedup: same cartId + same updatedAt on every item = true duplicate
+//     final allUpdatedAt = socketItems
+//         .map((i) => (i as Map)['updatedAt']?.toString() ?? '')
+//         .join(',');
+//     final eventKey = '${data['cartId']}_$allUpdatedAt';
+//     if (eventKey == _lastSocketEventKey) return;
+//     _lastSocketEventKey = eventKey;
+//     Future.delayed(
+//       const Duration(milliseconds: 400),
+//       () => _lastSocketEventKey = null,
+//     );
+//
+//     debugPrint("🟡 SOCKET UPDATE: cartItems=${socketItems.length}");
+//
+//     if (!mounted) return;
+//
+//     // ✅ cartData == null means socket arrived before HTTP — build directly
+//     if (cartData == null) {
+//       setState(() {
+//         cartData = CartModel.fromJson(data);
+//         isLoading = false;
+//       });
+//       return;
+//     }
+//
+//     if (_isLoadingCart) {
+//       // HTTP in-flight — buffer latest, apply after
+//       _pendingSocketUpdates
+//         ..clear()
+//         ..add(data);
+//       return;
+//     }
+//
+//     _applySocketUpdate(data);
+//   }
+//
+//   void _flushPendingSocketUpdates() {
+//     if (_pendingSocketUpdates.isEmpty) return;
+//     final latest = _pendingSocketUpdates.last; // latest wins
+//     _pendingSocketUpdates.clear();
+//     _applySocketUpdate(latest);
+//   }
+//
+//   void _applySocketUpdate(Map<String, dynamic> data) {
+//     final List socketItems = data['cartItems'] ?? [];
+//     if (!mounted) return;
+//
+//     // ✅ Snapshot old list BEFORE setState — prevents self-referential overwrite
+//     final oldItems = List<CartItem>.from(cartData!.cartItems);
+//
+//     setState(() {
+//       cartData!.cartItems = socketItems.map((json) {
+//         final map = json as Map<String, dynamic>;
+//         final idx = oldItems.indexWhere((i) => i.itemId == map['itemId']);
+//
+//         if (idx != -1) {
+//           final old = oldItems[idx];
+//           return CartItem(
+//             itemId: old.itemId,
+//             dishName: old.dishName,
+//             dishId: old.dishId,
+//             chefType: old.chefType,
+//             dishImage: old.dishImage, // ✅ preserved from snapshot
+//             actualPrice: (map['actualPrice'] ?? old.actualPrice).toDouble(),
+//             gst: (map['gst'] ?? old.gst).toDouble(),
+//             quantity: map['quantity'] ?? old.quantity,
+//             price: (map['price'] ?? old.price).toDouble(),
+//             totalPrice: (map['totalPrice'] ?? old.totalPrice).toDouble(),
+//             packingCharges: (map['packingCharges'] ?? old.packingCharges)
+//                 .toDouble(),
+//             balanceQuantity: map['balanceQuantity'] ?? old.balanceQuantity,
+//             available: map['available'] ?? old.available,
+//             shedule: map.containsKey('shedule')
+//                 ? map['shedule'] == true
+//                 : old.shedule,
+//           );
+//         }
+//         return CartItem.fromJson(map);
+//       }).toList();
+//
+//       cartData!.subtotal = (data['subtotal'] ?? 0).toDouble();
+//       cartData!.gstTotal = (data['gstTotal'] ?? 0).toDouble();
+//       cartData!.packingTotal = (data['packingTotal'] ?? 0).toDouble();
+//       cartData!.platformCharges = (data['platformCharges'] ?? 0).toDouble();
+//       cartData!.deliveryCharges = (data['deliveryCharges'] ?? 0).toDouble();
+//       cartData!.discountAmount = (data['discountAmount'] ?? 0).toDouble();
+//       cartData!.grandTotal = (data['grandTotal'] ?? 0).toDouble();
+//       cartData!.cgst = (data['cgst'] ?? 0).toDouble();
+//       cartData!.sgst = (data['sgst'] ?? 0).toDouble();
+//       cartData!.deliveryAddress =
+//           data['deliveryAddress'] ?? cartData!.deliveryAddress;
+//       cartData!.mobileNo = data['mobileNo'] ?? cartData!.mobileNo;
+//       cartData!.name = data['name'] ?? cartData!.name;
+//
+//       final rawCoupon = data['couponCode'];
+//       cartData!.couponCode = rawCoupon is String
+//           ? rawCoupon
+//           : rawCoupon is Map
+//           ? rawCoupon['code']
+//           : null;
+//     });
+//   }
+//
+//   // _loadCart: explicit refresh (e.g. after coupon apply).
+//   // Same version-guard as _loadAllData — socket always wins over HTTP.
+//   Future<void> _loadCart() async {
+//     _isLoadingCart = true;
+//     setState(() => isLoading = true);
+//     final versionAtStart = _socketVersion;
+//     try {
+//       final c = await food_Authservice.fetchCart();
+//       if (mounted) {
+//         setState(() {
+//           if (_socketVersion == versionAtStart) {
+//             cartData = c;
+//             if (cartData?.hasAnyScheduledItem ?? false) {
+//               _orderType = 'schedule';
+//             }
+//             debugPrint("✅ _loadCart: HTTP cart applied");
+//           } else {
+//             debugPrint("⚠️ _loadCart: HTTP cart DROPPED — socket won");
+//           }
+//           isLoading = false;
+//         });
+//       }
+//     } catch (_) {
+//       if (mounted) setState(() => isLoading = false);
+//     } finally {
+//       _isLoadingCart = false;
+//       _flushPendingSocketUpdates();
+//     }
+//   }
+//
+//   double getSelectedWalletBalance() {
+//     if (wallet == null) return 0;
+//     double t = 0;
+//     if (selectedSubWallets.contains("Company Loaded")) {
+//       t += wallet!.companyLoadedAmount;
+//     }
+//     if (selectedSubWallets.contains("Self Loaded")) {
+//       t += wallet!.selfLoadedAmount;
+//     }
+//     if (selectedSubWallets.contains("Cashbacks")) t += wallet!.cashbackAmount;
+//     if (selectedSubWallets.contains("Postpaid used amount")) {
+//       t += wallet!.postPaidUsage;
+//     }
+//     return t;
+//   }
+//
+//   Future<void> placeOrder() async {
+//     final hasScheduledItems = cartData?.hasAnyScheduledItem ?? false;
+//     if (hasScheduledItems && (_selectedDate == null || _selectedTime == null)) {
+//       AppAlert.error(
+//         context,
+//         "📅 Please select date & time to schedule your order",
+//       );
+//       return;
+//     }
+//
+//     if ((cartData?.orderType ?? '').trim().toLowerCase() == 'delivery') {
+//       if ((cartData?.deliveryAddress ?? '').trim().isEmpty) {
+//         AppAlert.error(context, "⚠️ Please select delivery address");
+//         return;
+//       }
+//     }
+//     if (selectedPaymentMethod == "Maamaas_Wallet") {
+//       final wb = getSelectedWalletBalance();
+//       final gt = (cartData?.grandTotal ?? 0).toDouble();
+//       if (wb < gt) {
+//         AppAlert.error(
+//           context,
+//           "❌ Insufficient wallet balance\nWallet: ₹${wb.toStringAsFixed(2)}\nOrder Total: ₹${gt.toStringAsFixed(2)}",
+//         );
+//         return;
+//       }
+//     }
+//     if (selectedPaymentMethod.isEmpty) {
+//       AppAlert.error(context, "⚠️ Please select a payment method");
+//       return;
+//     }
+//
+//     setState(() => isPlacingOrder = true);
+//     try {
+//       final bool isUserScheduled =
+//           _selectedDate != null || _selectedTime != null;
+//
+//       if (selectedPaymentMethod == "Online_Payment") {
+//         final amount = (cartData?.grandTotal ?? 0).toDouble();
+//
+//         if (mounted) {
+//           setState(() => _overlayState = PaymentOverlayState.openingGateway);
+//         }
+//         final orderId = await food_Authservice.createOrder(amount);
+//         if (mounted) {
+//           setState(() => _overlayState = PaymentOverlayState.openingGateway);
+//         }
+//
+//         if (orderId == null) {
+//           AppAlert.error(context, "❌ Failed to create payment order");
+//           return;
+//         }
+//         final rp = RazorpayService();
+//         rp.onSuccess = (res) async {
+//           final pid = res.paymentId!;
+//           final oid = res.orderId!;
+//           if (mounted) {
+//             setState(() => _overlayState = PaymentOverlayState.processing);
+//           }
+//           final ok = isUserScheduled
+//               ? await _placeScheduledOrder(
+//                   paymentMethod: "Online_Payment",
+//                   razorpayPaymentId: pid,
+//                   razorpayOrderId: oid,
+//                   amount: amount,
+//                 )
+//               : await _placeDirectOrder(
+//                   paymentMethod: "Online_Payment",
+//                   razorpayPaymentId: pid,
+//                   razorpayOrderId: oid,
+//                   amount: amount,
+//                 );
+//
+//           if (!ok && mounted) {
+//             setState(() => _overlayState = PaymentOverlayState.processing);
+//           }
+//
+//           if (ok) {
+//             food_Authservice
+//                 .capturePayment(paymentId: pid, amount: amount)
+//                 // ignore: body_might_complete_normally_catch_error
+//                 .catchError((_) {});
+//           } else {
+//             AppAlert.error(context, "❌ Order failed. Refund in 3–5 days.");
+//           }
+//         };
+//         rp.onError = (res) {
+//           if (mounted) {
+//             setState(() {
+//               _overlayState = PaymentOverlayState.none;
+//               isPlacingOrder = false;
+//             });
+//           }
+//           AppAlert.error(context, "Payment failed: ${res.message}");
+//         };
+//         rp.startPayment(
+//           orderId: orderId,
+//           amount: amount,
+//           description: "Online Payment via Razorpay",
+//         );
+//         return;
+//       }
+//
+//       final amt = cartData!.grandTotal.toDouble();
+//       if (isUserScheduled) {
+//         await _placeScheduledOrder(
+//           paymentMethod: selectedPaymentMethod,
+//           razorpayPaymentId: "",
+//           razorpayOrderId: "",
+//           amount: amt,
+//         );
+//       } else {
+//         await _placeDirectOrder(
+//           paymentMethod: selectedPaymentMethod,
+//           razorpayPaymentId: "",
+//           razorpayOrderId: "",
+//           amount: amt,
+//         );
+//       }
+//     } catch (e) {
+//       debugPrint("❌ Place Order Error: $e");
+//
+//       String message = "Error placing order";
+//       if (e.toString().contains("Exception:")) {
+//         message = e.toString().replaceFirst("Exception: ", "");
+//       } else {
+//         message = e.toString();
+//       }
+//
+//       if (mounted) {
+//         setState(() => _overlayState = PaymentOverlayState.none);
+//       }
+//
+//       AppAlert.error(context, message);
+//     } finally {
+//       if (mounted) setState(() => isPlacingOrder = false);
+//     }
+//   }
+//
+//   Future<bool> _placeScheduledOrder({
+//     required String paymentMethod,
+//     required String razorpayPaymentId,
+//     required String razorpayOrderId,
+//     required double amount,
+//   }) async {
+//     final prefs = await SharedPreferences.getInstance();
+//     final cartId = prefs.getInt('cartId');
+//     if (cartId == null) return false;
+//     final result = await food_Authservice.scheduleOrder(
+//       cartId: cartId,
+//       date: _selectedDate ?? DateTime.now(),
+//       time: _selectedTime ?? TimeOfDay.now(),
+//       paymentMethod: paymentMethod,
+//       razorpayPaymentId: razorpayPaymentId,
+//       razorpayOrderId: razorpayOrderId,
+//       walletTypes: mapWalletsToEnum(selectedSubWallets.toList()),
+//       amount: amount,
+//     );
+//     if (result.containsKey('orderId')) {
+//       final oid = result['orderId'];
+//       await prefs.setInt('orderId', oid);
+//       if (mounted) {
+//         setState(() => _overlayState = PaymentOverlayState.processing);
+//         await Future.delayed(const Duration(milliseconds: 2200));
+//         if (mounted) {
+//           Navigator.pushReplacement(
+//             context,
+//             MaterialPageRoute(builder: (_) => food_Invoice(orderId: oid)),
+//           );
+//         }
+//       }
+//       return true;
+//     }
+//     return false;
+//   }
+//
+//   Future<bool> _placeDirectOrder({
+//     required String paymentMethod,
+//     required String razorpayPaymentId,
+//     required String razorpayOrderId,
+//     required double amount,
+//   }) async {
+//     final prefs = await SharedPreferences.getInstance();
+//     final cartId = prefs.getInt('cartId');
+//     if (cartId == null) return false;
+//     final result = await food_Authservice.placeDirectOrder(
+//       cartId: cartId,
+//       paymentMethod: paymentMethod,
+//       razorpayPaymentId: razorpayPaymentId,
+//       razorpayOrderId: razorpayOrderId,
+//       walletTypes: mapWalletsToEnum(selectedSubWallets.toList()),
+//       amount: amount,
+//     );
+//     if (result.containsKey('orderId')) {
+//       final oid = result['orderId'];
+//       await prefs.setInt('orderId', oid);
+//       if (mounted) {
+//         setState(() => _overlayState = PaymentOverlayState.processing);
+//         await Future.delayed(const Duration(milliseconds: 2200));
+//         if (mounted) {
+//           Navigator.pushReplacement(
+//             context,
+//             MaterialPageRoute(builder: (_) => food_Invoice(orderId: oid)),
+//           );
+//         }
+//       }
+//       return true;
+//     }
+//     return false;
+//   }
+//
+//   Future<void> changeQuantity(CartItem item, int newQty) async {
+//     final old = item.quantity;
+//
+//     // ✅ Optimistic update shown immediately
+//     setState(() => item.quantity = newQty);
+//
+//     // ✅ Block incoming socket events while the HTTP call is in-flight
+//     _isLoadingCart = true;
+//
+//     final ok = await food_Authservice.updateCartQuantity(item.itemId, newQty);
+//
+//     if (!ok) {
+//       // Rollback optimistic update on failure
+//       setState(() {
+//         item.quantity = old;
+//         item.totalPrice = item.price * old;
+//       });
+//     }
+//
+//     // ✅ Release the gate — the next socket event (backend echo) will carry
+//     //    the correctly recalculated totals (GST, grand total, etc.)
+//     _isLoadingCart = false;
+//     _flushPendingSocketUpdates();
+//   }
+//
+//   // ── FIX Bug 4: pull-to-refresh now uses _loadAllData which correctly
+//   //   sets _isLoadingCart = true, so socket events are buffered during refresh.
+//   Future<void> _onRefresh() async {
+//     await _loadAllData();
+//   }
+//
+//   String _fmt(num? v) => (v ?? 0).toStringAsFixed(2);
+//
+//   // ═══════════════════════════════════════════════════════════════════════════
+//   @override
+//   Widget build(BuildContext context) {
+//     ScreenUtil.init(context);
+//     return Stack(
+//       children: [
+//         Scaffold(
+//           backgroundColor: cartuser.bg,
+//           appBar: _buildAppBar(),
+//           body: AuthGuard(
+//             child: SafeArea(
+//               child: RefreshIndicator(
+//                 onRefresh: _onRefresh,
+//                 color: cartuser.violet,
+//                 backgroundColor: cartuser.surface,
+//                 child: isLoading
+//                     ? SingleChildScrollView(
+//                         physics: const AlwaysScrollableScrollPhysics(),
+//                         padding: EdgeInsets.all(16.w),
+//                         child: const CartSkeleton(
+//                           type: CartSkeletonType.fullCart,
+//                         ),
+//                       )
+//                     : SingleChildScrollView(
+//                         controller: _scrollController,
+//                         physics: const AlwaysScrollableScrollPhysics(),
+//                         padding: EdgeInsets.symmetric(
+//                           horizontal: 16.w,
+//                           vertical: 12.h,
+//                         ),
+//                         child: Column(
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             if (cartData == null || cartData!.cartItems.isEmpty)
+//                               _buildEmptyCart()
+//                             else ...[
+//                               _buildCartItems(),
+//                               SizedBox(height: 10.h),
+//                               _buildAddMoreText(),
+//                               SizedBox(height: 12.h),
+//
+//                               OrderCartFooter(
+//                                 onOrderTypeChanged: () async {
+//                                   // Use _loadCart (which gates socket correctly)
+//                                   // instead of a raw fetchCart call
+//                                   await _loadCart();
+//                                 },
+//                               ),
+//
+//                               // ── Ads banner ───────────────────────────
+//                               if (homepageAds.isNotEmpty) ...[
+//                                 SizedBox(height: 12.h),
+//                                 _sectionLabel('Recommended for you'),
+//                                 SizedBox(height: 8.h),
+//                                 ClipRRect(
+//                                   borderRadius: BorderRadius.circular(16.r),
+//                                   child: BannerAdvertisement(
+//                                     ads: homepageAds,
+//                                     height: 200,
+//                                   ),
+//                                 ),
+//                               ],
+//
+//                               SizedBox(height: 12.h),
+//                               _buildCouponRow(),
+//                               SizedBox(height: 10.h),
+//
+//                               if ((cartData?.orderType ?? '')
+//                                       .trim()
+//                                       .toLowerCase() ==
+//                                   'delivery')
+//                                 _buildDeliveryAddress(),
+//
+//                               SizedBox(height: 10.h),
+//                               _buildSummaryCard(),
+//                               SizedBox(height: 12.h),
+//                               _buildScheduleOrder(),
+//                               SizedBox(height: 12.h),
+//                               _buildPaymentToggle(),
+//                               if (isExpanded) ...[
+//                                 SizedBox(height: 12.h),
+//                                 _buildCheckoutDetails(),
+//                               ],
+//                               SizedBox(height: 24.h),
+//                             ],
+//                           ],
+//                         ),
+//                       ),
+//               ),
+//             ),
+//           ),
+//         ),
+//
+//         if (_overlayState != PaymentOverlayState.none)
+//           Positioned.fill(
+//             child: AbsorbPointer(
+//               child: Material(
+//                 type: MaterialType.transparency,
+//                 child: Container(
+//                   // ignore: deprecated_member_use
+//                   color: Colors.black.withOpacity(0.7),
+//                   child: Center(child: _overlayContent()),
+//                 ),
+//               ),
+//             ),
+//           ),
+//       ],
+//     );
+//   }
+//
+//   Widget _overlayContent() {
+//     switch (_overlayState) {
+//       case PaymentOverlayState.placingOrder:
+//         return _dialogLoader("Placing your order...");
+//       case PaymentOverlayState.openingGateway:
+//         return _dialogLoader("Opening payment gateway...");
+//       case PaymentOverlayState.processing:
+//         return _dialogLoader("Processing payment...");
+//       default:
+//         return const SizedBox.shrink();
+//     }
+//   }
+//
+//   Widget _dialogLoader(String text) {
+//     return Material(
+//       color: Colors.transparent,
+//       child: Container(
+//         key: ValueKey(text),
+//         padding: const EdgeInsets.all(20),
+//         decoration: BoxDecoration(
+//           color: Colors.white,
+//           borderRadius: BorderRadius.circular(16),
+//         ),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             const CircularProgressIndicator(),
+//             const SizedBox(height: 14),
+//             DefaultTextStyle(
+//               style: const TextStyle(
+//                 fontSize: 14,
+//                 fontWeight: FontWeight.w600,
+//                 decoration: TextDecoration.none,
+//               ),
+//               child: Text(text),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Future<void> _clearCartLocally() async {
+//     // 1. Reset global badge — this triggers _onGlobalCountReset in every
+//     //    CartButton that is still alive in the widget tree (e.g. if MenuScreen
+//     //    is in the background stack), resetting their itemCount to 0.
+//     CartNotifier.count.value = 0;
+//
+//     // 2. Wipe ALL dish-level SharedPreferences keys so that CartButton's
+//     //    _loadQuantity() always reads 0 after a cart clear, even for widgets
+//     //    that haven't been rebuilt yet.
+//     final prefs = await SharedPreferences.getInstance();
+//     final allKeys = prefs.getKeys();
+//     for (final key in allKeys) {
+//       if (key.startsWith('dish_')) {
+//         await prefs.remove(key);
+//       }
+//     }
+//
+//     debugPrint("🧹 Local cart cleared — CartNotifier=0, prefs wiped");
+//   }
+//
+//   PreferredSizeWidget _buildAppBar() {
+//     final bool isCartEmpty = (cartData?.cartItems.isEmpty ?? true);
+//
+//     return AppBar(
+//       backgroundColor: cartuser.surface,
+//       elevation: 0,
+//       centerTitle: true,
+//       automaticallyImplyLeading: true,
+//
+//       title: Text(
+//         isCartEmpty ? 'Empty Cart' : 'Review Your Cart',
+//         style: TextStyle(
+//           fontSize: 17.sp,
+//           fontWeight: FontWeight.w700,
+//           color: cartuser.textPrimary,
+//         ),
+//       ),
+//
+//       iconTheme: const IconThemeData(color: cartuser.textPrimary),
+//
+//       actions: [
+//         if (isCartEmpty)
+//           Padding(
+//             padding: EdgeInsets.only(right: 12.w),
+//             child: GestureDetector(
+//               onTap: () => Navigator.pushReplacement(
+//                 context,
+//                 MaterialPageRoute(builder: (_) => MainScreenfood()),
+//               ),
+//               child: Container(
+//                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+//                 decoration: BoxDecoration(
+//                   color: cartuser.violet,
+//                   borderRadius: BorderRadius.circular(20.r),
+//                 ),
+//                 child: Row(
+//                   mainAxisSize: MainAxisSize.min,
+//                   children: [
+//                     Icon(
+//                       Icons.restaurant_menu,
+//                       size: 14.sp,
+//                       color: Colors.white,
+//                     ),
+//                     SizedBox(width: 4.w),
+//                     Text(
+//                       'Browse',
+//                       style: TextStyle(
+//                         fontSize: 12.sp,
+//                         fontWeight: FontWeight.w600,
+//                         color: Colors.white,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//
+//         if (!isCartEmpty)
+//           GestureDetector(
+//             onTap: () async {
+//               final ok = await food_Authservice.deleteCart();
+//               if (!mounted) return;
+//
+//               if (ok) {
+//                 await _clearCartLocally();
+//                 if (!mounted) return;
+//
+//                 Navigator.pushReplacement(
+//                   context,
+//                   MaterialPageRoute(builder: (_) => MainScreenfood()),
+//                 );
+//
+//                 AppAlert.success(context, 'Cart cleared');
+//               } else {
+//                 AppAlert.error(context, 'Failed to clear cart');
+//               }
+//             },
+//             child: Container(
+//               margin: EdgeInsets.only(right: 12.w),
+//               padding: EdgeInsets.all(8.w),
+//               decoration: BoxDecoration(
+//                 // ignore: deprecated_member_use
+//                 color: cartuser.red.withOpacity(0.08),
+//                 shape: BoxShape.circle,
+//                 border: Border.all(color: cartuser.red.withOpacity(0.2)),
+//               ),
+//               child: Icon(
+//                 Icons.delete_outline_rounded,
+//                 size: 18.sp,
+//                 color: cartuser.red,
+//               ),
+//             ),
+//           ),
+//       ],
+//
+//       bottom: PreferredSize(
+//         preferredSize: const Size.fromHeight(1),
+//         child: Container(height: 1, color: cartuser.border),
+//       ),
+//     );
+//   }
+//
+//   // ── Section label ───────────────────────────────────────────────────────
+//   Widget _sectionLabel(String text) {
+//     return Text(
+//       text,
+//       style: TextStyle(
+//         fontSize: 14.sp,
+//         fontWeight: FontWeight.w700,
+//         color: cartuser.textPrimary,
+//       ),
+//     );
+//   }
+//
+//   // ── Cart items card ─────────────────────────────────────────────────────
+//   Widget _buildCartItems() {
+//     if (cartData == null || cartData!.cartItems.isEmpty) {
+//       return const SizedBox.shrink();
+//     }
+//
+//     return _card(
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           ...cartData!.cartItems.map((item) {
+//             final isLast = item == cartData!.cartItems.last;
+//             return Column(
+//               key: ValueKey(item.itemId),
+//               children: [
+//                 Padding(
+//                   padding: EdgeInsets.symmetric(vertical: 10.h),
+//                   child: Row(
+//                     children: [
+//                       Expanded(
+//                         child: Text(
+//                           item.dishName,
+//                           maxLines: 2,
+//                           overflow: TextOverflow.ellipsis,
+//                           style: TextStyle(
+//                             fontSize: 14.sp,
+//                             fontWeight: FontWeight.w600,
+//                             color: cartuser.textPrimary,
+//                           ),
+//                         ),
+//                       ),
+//
+//                       SizedBox(width: 8.w),
+//
+//                       _buildQtyControl(item),
+//
+//                       SizedBox(width: 12.w),
+//
+//                       SizedBox(
+//                         width: 80.w,
+//                         child: Text(
+//                           '₹${item.totalPrice.toStringAsFixed(2)}',
+//                           textAlign: TextAlign.right,
+//                           style: TextStyle(
+//                             fontSize: 14.sp,
+//                             fontWeight: FontWeight.w700,
+//                             color: cartuser.violet,
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//                 if (!isLast) Divider(height: 1, color: cartuser.border),
+//               ],
+//             );
+//           }),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildQtyControl(CartItem item) {
+//     return Container(
+//       decoration: BoxDecoration(
+//         color: cartuser.bg,
+//         borderRadius: BorderRadius.circular(10.r),
+//         border: Border.all(color: cartuser.border),
+//       ),
+//       child: Row(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           _qtyBtn(
+//             Icons.remove_rounded,
+//             cartuser.red,
+//             () => changeQuantity(item, item.quantity - 1),
+//           ),
+//           Padding(
+//             padding: EdgeInsets.symmetric(horizontal: 10.w),
+//             child: Text(
+//               '${item.quantity}',
+//               style: TextStyle(
+//                 fontSize: 13.sp,
+//                 fontWeight: FontWeight.w700,
+//                 color: cartuser.textPrimary,
+//               ),
+//             ),
+//           ),
+//           _qtyBtn(
+//             Icons.add_rounded,
+//             cartuser.green,
+//             () => changeQuantity(item, item.quantity + 1),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _qtyBtn(IconData icon, Color color, VoidCallback onTap) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Container(
+//         padding: EdgeInsets.all(6.w),
+//         decoration: BoxDecoration(
+//           color: color.withOpacity(0.10),
+//           borderRadius: BorderRadius.circular(8.r),
+//         ),
+//         child: Icon(icon, size: 14.sp, color: color),
+//       ),
+//     );
+//   }
+//
+//   // ── "Add more items" text ───────────────────────────────────────────────
+//   Widget _buildAddMoreText() {
+//     return Center(
+//       child: RichText(
+//         text: TextSpan(
+//           text: 'Missed something? ',
+//           style: TextStyle(fontSize: 13.sp, color: cartuser.textSecondary),
+//           children: [
+//             TextSpan(
+//               text: 'Add more items',
+//               style: TextStyle(
+//                 fontSize: 13.sp,
+//                 fontWeight: FontWeight.w700,
+//                 color: cartuser.violet,
+//                 decoration: TextDecoration.underline,
+//               ),
+//               recognizer: TapGestureRecognizer()
+//                 ..onTap = () => Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (_) => MenuScreen(vendorId: cartData!.vendorId),
+//                   ),
+//                 ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   // ── Coupon row ──────────────────────────────────────────────────────────
+//   Widget _buildCouponRow() {
+//     final applied = (cartData?.couponCode ?? '').isNotEmpty;
+//
+//     return GestureDetector(
+//       onTap: applied ? null : _showCouponBottomSheet,
+//       child: _card(
+//         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+//         child: Row(
+//           children: [
+//             Container(
+//               width: 36.r,
+//               height: 36.r,
+//               decoration: BoxDecoration(
+//                 color: applied
+//                     ? cartuser.green.withOpacity(0.10)
+//                     : cartuser.violetDim,
+//                 shape: BoxShape.circle,
+//               ),
+//               child: Icon(
+//                 applied
+//                     ? Icons.check_circle_rounded
+//                     : Icons.local_offer_rounded,
+//                 size: 18.sp,
+//                 color: applied ? cartuser.green : cartuser.violet,
+//               ),
+//             ),
+//             SizedBox(width: 12.w),
+//             Expanded(
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text(
+//                     applied ? 'Coupon Applied' : 'Apply Coupon',
+//                     style: TextStyle(
+//                       fontSize: 13.sp,
+//                       fontWeight: FontWeight.w700,
+//                       color: applied ? cartuser.green : cartuser.textPrimary,
+//                     ),
+//                   ),
+//                   if (applied)
+//                     Text(
+//                       appliedCouponCode ?? '',
+//                       style: TextStyle(
+//                         fontSize: 11.sp,
+//                         color: cartuser.textSecondary,
+//                       ),
+//                     ),
+//                 ],
+//               ),
+//             ),
+//             if (applied)
+//               GestureDetector(
+//                 onTap: () async {
+//                   if (cartData?.cartId == null) return;
+//                   final result = await food_Authservice.updateCartSettings(
+//                     cartId: cartData!.cartId,
+//                     couponId: cartData!.couponId,
+//                     applyCoupon: "NOT_APPLIED",
+//                   );
+//                   if (!result.success) {
+//                     AppAlert.error(context, "Failed to remove coupon");
+//                     return;
+//                   }
+//                   setState(() {
+//                     appliedCouponCode = null;
+//                     appliedCouponId = null;
+//                   });
+//                   AppAlert.success(context, "Coupon removed");
+//                 },
+//                 child: Container(
+//                   padding: EdgeInsets.symmetric(
+//                     horizontal: 10.w,
+//                     vertical: 5.h,
+//                   ),
+//                   decoration: BoxDecoration(
+//                     color: cartuser.red.withOpacity(0.08),
+//                     borderRadius: BorderRadius.circular(20.r),
+//                     border: Border.all(color: cartuser.red.withOpacity(0.2)),
+//                   ),
+//                   child: Text(
+//                     'Remove',
+//                     style: TextStyle(
+//                       fontSize: 11.sp,
+//                       color: cartuser.red,
+//                       fontWeight: FontWeight.w600,
+//                     ),
+//                   ),
+//                 ),
+//               )
+//             else
+//               Icon(
+//                 Icons.chevron_right_rounded,
+//                 size: 20.sp,
+//                 color: cartuser.textMuted,
+//               ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   void _showCouponBottomSheet() async {
+//     setState(() => isCouponLoading = true);
+//     final coupons = await food_Authservice.fetchCoupons();
+//     final cartVendor = cartData?.vendorId;
+//     setState(() => isCouponLoading = false);
+//
+//     coupons.sort((a, b) {
+//       if (a.isExpired != b.isExpired) return a.isExpired ? 1 : -1;
+//       final am = !a.isApplicableForVendor(cartVendor);
+//       final bm = !b.isApplicableForVendor(cartVendor);
+//       if (am != bm) return am ? 1 : -1;
+//       return 0;
+//     });
+//
+//     showModalBottomSheet(
+//       // ignore: use_build_context_synchronously
+//       context: context,
+//       isScrollControlled: true,
+//       backgroundColor: Colors.transparent,
+//       builder: (ctx) => Scaffold(
+//         backgroundColor: Colors.transparent,
+//         body: SafeArea(
+//           top: false,
+//           child: Container(
+//             height: MediaQuery.of(ctx).size.height * 1,
+//             decoration: BoxDecoration(
+//               color: cartuser.bg,
+//               borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+//             ),
+//             child: Column(
+//               children: [
+//                 _couponHeader(),
+//                 coupons.isEmpty
+//                     ? Expanded(child: _emptyCouponView())
+//                     : Expanded(
+//                         child: ListView.builder(
+//                           padding: EdgeInsets.all(16.w),
+//                           itemCount: coupons.length,
+//                           itemBuilder: (_, i) {
+//                             final c = coupons[i];
+//                             return _couponTile(
+//                               coupon: c,
+//                               isExpired: c.isExpired,
+//                               isMismatch: !c.isApplicableForVendor(cartVendor),
+//                               isDisabled:
+//                                   c.isExpired ||
+//                                   !c.isApplicableForVendor(cartVendor),
+//                             );
+//                           },
+//                         ),
+//                       ),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _couponHeader() {
+//     return Container(
+//       padding: EdgeInsets.fromLTRB(30.w, 20.h, 16.w, 16.h),
+//       decoration: BoxDecoration(
+//         color: cartuser.surface,
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+//         border: Border(bottom: BorderSide(color: cartuser.border)),
+//       ),
+//       child: Row(
+//         children: [
+//           Text(
+//             'Available Coupons',
+//             style: TextStyle(
+//               fontSize: 16.sp,
+//               fontWeight: FontWeight.w800,
+//               color: cartuser.textPrimary,
+//             ),
+//           ),
+//           const Spacer(),
+//           GestureDetector(
+//             onTap: () => Navigator.pop(context),
+//             child: Container(
+//               padding: EdgeInsets.all(6.w),
+//               decoration: BoxDecoration(
+//                 color: cartuser.border,
+//                 shape: BoxShape.circle,
+//               ),
+//               child: Icon(
+//                 Icons.close_rounded,
+//                 size: 16.sp,
+//                 color: cartuser.textSecondary,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _couponTile({
+//     required CouponModel coupon,
+//     required bool isExpired,
+//     required bool isMismatch,
+//     required bool isDisabled,
+//   }) {
+//     final color = isExpired
+//         ? cartuser.red
+//         : isMismatch
+//         ? cartuser.amber
+//         : cartuser.green;
+//
+//     return Container(
+//       margin: EdgeInsets.only(bottom: 10.h),
+//       decoration: BoxDecoration(
+//         color: cartuser.surface,
+//         borderRadius: BorderRadius.circular(14.r),
+//         border: Border.all(color: color.withOpacity(0.3)),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.04),
+//             blurRadius: 8,
+//             offset: const Offset(0, 2),
+//           ),
+//         ],
+//       ),
+//       child: ListTile(
+//         contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+//         leading: Container(
+//           width: 38.r,
+//           height: 38.r,
+//           decoration: BoxDecoration(
+//             color: color.withOpacity(0.10),
+//             shape: BoxShape.circle,
+//           ),
+//           child: Icon(Icons.local_offer_rounded, color: color, size: 18.sp),
+//         ),
+//         title: Row(
+//           children: [
+//             Text(
+//               coupon.code,
+//               style: TextStyle(
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 13.sp,
+//                 color: cartuser.textPrimary,
+//               ),
+//             ),
+//             SizedBox(width: 8.w),
+//             Container(
+//               padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+//               decoration: BoxDecoration(
+//                 color: cartuser.violet.withOpacity(0.08),
+//                 borderRadius: BorderRadius.circular(6.r),
+//               ),
+//               child: Text(
+//                 coupon.couponType,
+//                 style: TextStyle(
+//                   fontSize: 10.sp,
+//                   color: cartuser.violet,
+//                   fontWeight: FontWeight.w600,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//         subtitle: Padding(
+//           padding: EdgeInsets.only(top: 4.h),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Text(
+//                 isExpired
+//                     ? 'Expired'
+//                     : isMismatch
+//                     ? 'Not applicable for this restaurant'
+//                     : coupon.discountType == "PERCENTAGE"
+//                     ? 'Get ${coupon.discountPercentage.toStringAsFixed(0)}% off'
+//                     : 'Get ₹${coupon.discountPercentage.toStringAsFixed(0)} off',
+//                 style: TextStyle(fontSize: 12.sp, color: color),
+//               ),
+//               if (!isExpired && !isMismatch)
+//                 Text(
+//                   coupon.minimumOrderValue <= 0
+//                       ? 'Applicable on any order'
+//                       : 'Min order ₹${coupon.minimumOrderValue.toInt()}',
+//                   style: TextStyle(fontSize: 11.sp, color: cartuser.textMuted),
+//                 ),
+//             ],
+//           ),
+//         ),
+//         trailing: isDisabled
+//             ? Icon(Icons.block_rounded, color: color, size: 18.sp)
+//             : Icon(
+//                 Icons.arrow_forward_ios_rounded,
+//                 size: 14.sp,
+//                 color: cartuser.textMuted,
+//               ),
+//         onTap: isDisabled
+//             ? () => AppAlert.error(
+//                 context,
+//                 isExpired
+//                     ? 'Coupon expired'
+//                     : 'Not applicable for this restaurant',
+//               )
+//             : () => _applyCoupon(coupon),
+//       ),
+//     );
+//   }
+//
+//   Widget _emptyCouponView() {
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           Icon(
+//             Icons.confirmation_number_outlined,
+//             size: 48.sp,
+//             color: cartuser.textMuted,
+//           ),
+//           SizedBox(height: 12.h),
+//           Text(
+//             'No coupons available',
+//             style: TextStyle(
+//               fontSize: 15.sp,
+//               fontWeight: FontWeight.w700,
+//               color: cartuser.textSecondary,
+//             ),
+//           ),
+//           SizedBox(height: 4.h),
+//           Text(
+//             'Check back later for new offers',
+//             style: TextStyle(fontSize: 12.sp, color: cartuser.textMuted),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Future<void> _applyCoupon(CouponModel coupon) async {
+//     if (cartData?.cartId == null) {
+//       AppAlert.error(context, "Cart is empty");
+//       return;
+//     }
+//     final result = await food_Authservice.updateCartSettings(
+//       cartId: cartData!.cartId,
+//       couponId: coupon.id,
+//       applyCoupon: "APPLIED",
+//     );
+//     if (!result.success) {
+//       // ignore: use_build_context_synchronously
+//       AppAlert.error(context, result.error ?? "Failed to apply coupon");
+//       return;
+//     }
+//     // _loadCart correctly gates the socket during the HTTP fetch
+//     await _loadCart();
+//     setState(() {
+//       appliedCouponCode = coupon.code;
+//       appliedCouponId = coupon.id;
+//     });
+//     // ignore: use_build_context_synchronously
+//     AppAlert.success(context, "Coupon ${coupon.code} applied!");
+//     // ignore: use_build_context_synchronously
+//     Navigator.pop(context);
+//   }
+//
+//   // ── Delivery address ────────────────────────────────────────────────────
+//   Widget _buildDeliveryAddress() {
+//     ref.watch(addressProvider);
+//     final hasAddr = (cartData?.deliveryAddress ?? '').trim().isNotEmpty;
+//
+//     return GestureDetector(
+//       onTap: () => Navigator.push(
+//         context,
+//         MaterialPageRoute(
+//           builder: (_) => SavedAddress(
+//             hideExtraWidgets: true,
+//             onAddressSelected: (address) async {
+//               await ref
+//                   .read(addressProvider.notifier)
+//                   .updateLocalAddress(
+//                     city: address.city,
+//                     stateName: address.state,
+//                     pincode: address.pincode,
+//                     latitude: address.latitude,
+//                     longitude: address.longitude,
+//                     fullAddress: address.fullAddress,
+//                     category: address.category,
+//                   );
+//
+//               // if (address.addressId != 0) {
+//               //   final ok = await AddressNotifier.updateDeliveryAddress(
+//               //     cartId: cartData!.cartId,
+//               //     addressId: address.addressId,
+//               //   );
+//               //
+//               //   if (!ok && mounted) {
+//               //     AppAlert.error(context, "Failed to update cart address");
+//               //   }
+//               // }
+//               if (address.addressId != 0) {
+//                 final errorMessage =
+//                     await AddressNotifier.updateDeliveryAddress(
+//                       cartId: cartData!.cartId,
+//                       addressId: address.addressId,
+//                     );
+//
+//                 if (errorMessage != null && mounted) {
+//                   AppAlert.error(context, errorMessage);
+//                 }
+//               }
+//             },
+//           ),
+//         ),
+//       ),
+//       child: _card(
+//         child: Row(
+//           children: [
+//             Container(
+//               width: 40.r,
+//               height: 40.r,
+//               decoration: BoxDecoration(
+//                 color: hasAddr
+//                     ? cartuser.violet.withOpacity(0.08)
+//                     : cartuser.red.withOpacity(0.08),
+//                 shape: BoxShape.circle,
+//               ),
+//               child: Icon(
+//                 Icons.location_on_rounded,
+//                 size: 20.sp,
+//                 color: hasAddr ? cartuser.violet : cartuser.red,
+//               ),
+//             ),
+//             SizedBox(width: 12.w),
+//             Expanded(
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text(
+//                     hasAddr ? 'Delivery Address' : 'Select Delivery Address',
+//                     style: TextStyle(
+//                       fontSize: 13.sp,
+//                       fontWeight: FontWeight.w700,
+//                       color: cartuser.textPrimary,
+//                     ),
+//                   ),
+//                   if (hasAddr) ...[
+//                     SizedBox(height: 2.h),
+//                     Text(
+//                       [
+//                         cartData!.deliveryAddress,
+//                         cartData!.name,
+//                         cartData!.mobileNo,
+//                       ].where((e) => e.toString().trim().isNotEmpty).join(', '),
+//                       style: TextStyle(
+//                         fontSize: 11.sp,
+//                         color: cartuser.textSecondary,
+//                       ),
+//                       maxLines: 2,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                     SizedBox(height: 2.h),
+//                     Text(
+//                       'Tap to change',
+//                       style: TextStyle(
+//                         fontSize: 11.sp,
+//                         color: cartuser.violet,
+//                         fontWeight: FontWeight.w600,
+//                       ),
+//                     ),
+//                   ],
+//                 ],
+//               ),
+//             ),
+//             Icon(
+//               Icons.chevron_right_rounded,
+//               size: 20.sp,
+//               color: cartuser.textMuted,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   // ── Order summary card ──────────────────────────────────────────────────
+//   Widget _buildSummaryCard() {
+//     if (cartData == null || isLoading) {
+//       return CartSkeleton(type: CartSkeletonType.summary);
+//     }
+//
+//     final orderType = cartData?.orderType ?? '';
+//     final subtotal = cartData?.subtotal ?? 0;
+//     final packing = cartData?.packingTotal ?? 0;
+//     final delivery = cartData?.deliveryCharges ?? 0;
+//     final platform = cartData?.platformCharges ?? 0;
+//     final discount = cartData?.discountAmount ?? 0;
+//     final gst = cartData?.gstTotal ?? 0;
+//     final grandTotal = cartData?.grandTotal ?? 0;
+//     final type = orderType.toUpperCase();
+//
+//     return _card(
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           // Header
+//           GestureDetector(
+//             onTap: () =>
+//                 setState(() => _isSummaryExpanded = !_isSummaryExpanded),
+//             child: Row(
+//               children: [
+//                 Container(
+//                   width: 36.r,
+//                   height: 36.r,
+//                   decoration: BoxDecoration(
+//                     color: cartuser.violetDim,
+//                     borderRadius: BorderRadius.circular(10.r),
+//                   ),
+//                   child: Icon(
+//                     Icons.receipt_long_rounded,
+//                     size: 18.sp,
+//                     color: cartuser.violet,
+//                   ),
+//                 ),
+//                 SizedBox(width: 10.w),
+//                 Expanded(
+//                   child: Text(
+//                     'Order Summary',
+//                     style: TextStyle(
+//                       fontSize: 14.sp,
+//                       fontWeight: FontWeight.w700,
+//                       color: cartuser.textPrimary,
+//                     ),
+//                   ),
+//                 ),
+//                 AnimatedRotation(
+//                   turns: _isSummaryExpanded ? 0.5 : 0,
+//                   duration: const Duration(milliseconds: 200),
+//                   child: Icon(
+//                     Icons.keyboard_arrow_down_rounded,
+//                     color: cartuser.textSecondary,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//
+//           // Expandable details
+//           AnimatedCrossFade(
+//             duration: const Duration(milliseconds: 200),
+//             crossFadeState: _isSummaryExpanded
+//                 ? CrossFadeState.showFirst
+//                 : CrossFadeState.showSecond,
+//             firstChild: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 SizedBox(height: 12.h),
+//                 Divider(height: 1, color: cartuser.border),
+//                 SizedBox(height: 10.h),
+//
+//                 _summaryRow('Subtotal', subtotal),
+//
+//                 if (platform > 0) _summaryRow('Platform Charges', platform),
+//
+//                 if ((type == 'DELIVERY' || type == 'TAKEAWAY') && packing > 0)
+//                   _summaryRow('Packing Charges', packing),
+//
+//                 if (orderType.toUpperCase() == 'DELIVERY')
+//                   _summaryRow('Delivery Charges', delivery),
+//
+//                 if (discount > 0)
+//                   _summaryRow('Discount', -discount, color: cartuser.green),
+//
+//                 if ((gst) > 0) ...[
+//                   _summaryRow(
+//                     'GST',
+//                     gst,
+//                     onInfoTap: () => _showGstDialog('GST'),
+//                   ),
+//                   // _summaryRow(
+//                   //   'CGST',
+//                   //   gst / 2,
+//                   //   onInfoTap: () => _showGstDialog('CGST'),
+//                   // ),
+//                 ],
+//
+//                 SizedBox(height: 4.h),
+//               ],
+//             ),
+//             secondChild: const SizedBox.shrink(),
+//           ),
+//
+//           Divider(height: 16.h, color: cartuser.border),
+//
+//           // Grand total
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               Text(
+//                 'Grand Total',
+//                 style: TextStyle(
+//                   fontSize: 15.sp,
+//                   fontWeight: FontWeight.w800,
+//                   color: cartuser.textPrimary,
+//                 ),
+//               ),
+//               Column(
+//                 crossAxisAlignment: CrossAxisAlignment.end,
+//                 children: [
+//                   Text(
+//                     '₹${_fmt(grandTotal)}',
+//                     style: TextStyle(
+//                       fontSize: 15.sp,
+//                       fontWeight: FontWeight.w800,
+//                       color: cartuser.violet,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _summaryRow(
+//     String label,
+//     num value, {
+//     Color? color,
+//     VoidCallback? onInfoTap,
+//   }) {
+//     return Padding(
+//       padding: EdgeInsets.symmetric(vertical: 3.h),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//         children: [
+//           Row(
+//             children: [
+//               Text(
+//                 label,
+//                 style: TextStyle(
+//                   fontSize: 12.sp,
+//                   color: cartuser.textSecondary,
+//                 ),
+//               ),
+//
+//               if (onInfoTap != null) ...[
+//                 SizedBox(width: 4.w),
+//                 GestureDetector(
+//                   onTap: onInfoTap,
+//                   child: Icon(
+//                     Icons.info_outline,
+//                     size: 14.sp,
+//                     color: cartuser.textSecondary,
+//                   ),
+//                 ),
+//               ],
+//             ],
+//           ),
+//
+//           Text(
+//             value < 0 ? '-₹${_fmt(-value)}' : '₹${_fmt(value)}',
+//             style: TextStyle(
+//               fontSize: 12.sp,
+//               fontWeight: FontWeight.w600,
+//               color: color ?? cartuser.textPrimary,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   void _showGstDialog(String type) {
+//     // final data = cartData;
+//
+//     showDialog(
+//       context: context,
+//       builder: (context) {
+//         return AlertDialog(
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(12.r),
+//           ),
+//
+//           titlePadding: EdgeInsets.fromLTRB(16.w, 12.h, 8.w, 0),
+//           title: Row(
+//             children: [
+//               Expanded(
+//                 child: Text(
+//                   '$type Details',
+//                   style: TextStyle(
+//                     fontWeight: FontWeight.w700,
+//                     fontSize: 14.sp,
+//                   ),
+//                 ),
+//               ),
+//               GestureDetector(
+//                 onTap: () => Navigator.pop(context),
+//                 child: Container(
+//                   padding: EdgeInsets.all(4.r),
+//                   decoration: BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     color: cartuser.border.withOpacity(0.3),
+//                   ),
+//                   child: Icon(
+//                     Icons.close,
+//                     size: 16.sp,
+//                     color: cartuser.textSecondary,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//
+//           content: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               if ((cartData?.platformChargeGst ?? 0) > 0)
+//                 _dialogRow(
+//                   'Platform $type',
+//                   ((cartData?.platformChargeGst ?? 0)),
+//                 ),
+//               if ((cartData?.packingChargeGst ?? 0) > 0)
+//                 _dialogRow(
+//                   'Packing $type',
+//                   ((cartData?.packingChargeGst ?? 0)),
+//                 ),
+//               if ((cartData?.serviceChargeGst ?? 0) > 0)
+//                 _dialogRow(
+//                   'Service $type',
+//                   ((cartData?.serviceChargeGst ?? 0)),
+//                 ),
+//
+//               SizedBox(height: 8),
+//               Divider(),
+//
+//               _dialogRow('Total $type', ((cartData?.gstTotal ?? 0) / 2)),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+//
+//   Widget _dialogRow(String label, num value) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 4),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//         children: [Text(label), Text('₹${_fmt(value)}')],
+//       ),
+//     );
+//   }
+//
+//   // ── Schedule order ──────────────────────────────────────────────────────
+//   Widget _buildScheduleOrder() {
+//     final isUserScheduled =
+//         _orderType == "schedule" &&
+//         _selectedDate != null &&
+//         _selectedTime != null;
+//
+//     final hasScheduledItems = cartData?.hasAnyScheduledItem ?? false;
+//
+//     return _card(
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           /// 🔹 Title
+//           if (!isUserScheduled)
+//             Text(
+//               "Schedule your order",
+//               style: TextStyle(
+//                 fontSize: 15.sp,
+//                 fontWeight: FontWeight.w700,
+//                 color: cartuser.textPrimary,
+//               ),
+//             ),
+//
+//           isUserScheduled ? SizedBox(height: 14.h) : SizedBox.shrink(),
+//
+//           /// 🔸 Warning
+//           if (hasScheduledItems) ...[
+//             Container(
+//               margin: EdgeInsets.only(bottom: 12.h),
+//               padding: EdgeInsets.all(12.w),
+//               decoration: BoxDecoration(
+//                 color: Colors.orange.withOpacity(0.08),
+//                 borderRadius: BorderRadius.circular(10.r),
+//               ),
+//               child: Row(
+//                 children: [
+//                   Icon(Icons.info_outline, color: Colors.orange, size: 18.sp),
+//                   SizedBox(width: 8.w),
+//                   Expanded(
+//                     child: Text(
+//                       "Some items require scheduling to continue.",
+//                       style: TextStyle(
+//                         fontSize: 12.sp,
+//                         color: cartuser.textPrimary,
+//                         fontWeight: FontWeight.w500,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//
+//           /// 🟣 BEFORE SELECT (Row style)
+//           if (!isUserScheduled)
+//             InkWell(
+//               borderRadius: BorderRadius.circular(12.r),
+//               onTap: () async {
+//                 setState(() {
+//                   _orderType = 'schedule';
+//                 });
+//                 await _pickScheduleDateTime();
+//               },
+//               child: Container(
+//                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+//                 decoration: BoxDecoration(
+//                   color: cartuser.surface,
+//                   borderRadius: BorderRadius.circular(12.r),
+//                   border: Border.all(color: cartuser.border),
+//                 ),
+//                 child: Row(
+//                   children: [
+//                     /// 📅 Calendar Icon
+//                     Container(
+//                       padding: EdgeInsets.all(8.w),
+//                       decoration: BoxDecoration(
+//                         color: cartuser.violet.withOpacity(0.1),
+//                         shape: BoxShape.circle,
+//                       ),
+//                       child: Icon(
+//                         Icons.calendar_today_rounded,
+//                         size: 16.sp,
+//                         color: cartuser.violet,
+//                       ),
+//                     ),
+//
+//                     SizedBox(width: 12.w),
+//
+//                     /// Text
+//                     Expanded(
+//                       child: Text(
+//                         hasScheduledItems
+//                             ? "Schedule to continue"
+//                             : "Choose date & time",
+//                         style: TextStyle(
+//                           fontSize: 13.sp,
+//                           fontWeight: FontWeight.w600,
+//                           color: cartuser.textPrimary,
+//                         ),
+//                       ),
+//                     ),
+//
+//                     /// Arrow
+//                     Icon(
+//                       Icons.arrow_forward_ios,
+//                       size: 14.sp,
+//                       color: cartuser.textSecondary,
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//
+//           /// 🟢 AFTER SELECT (Your existing card, slightly polished)
+//           if (isUserScheduled) ...[
+//             SizedBox(height: 12.h),
+//             Container(
+//               padding: EdgeInsets.all(14.w),
+//               decoration: BoxDecoration(
+//                 color: cartuser.green.withOpacity(0.06),
+//                 borderRadius: BorderRadius.circular(12.r),
+//                 border: Border.all(color: cartuser.green.withOpacity(0.25)),
+//               ),
+//               child: Row(
+//                 children: [
+//                   /// ✅ Icon
+//                   Container(
+//                     padding: EdgeInsets.all(8.w),
+//                     decoration: BoxDecoration(
+//                       color: cartuser.green.withOpacity(0.15),
+//                       shape: BoxShape.circle,
+//                     ),
+//                     child: Icon(
+//                       Icons.check,
+//                       color: cartuser.green,
+//                       size: 16.sp,
+//                     ),
+//                   ),
+//
+//                   SizedBox(width: 10.w),
+//
+//                   /// Date + Time
+//                   Expanded(
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           "Scheduled",
+//                           style: TextStyle(
+//                             fontSize: 12.sp,
+//                             fontWeight: FontWeight.w700,
+//                             color: cartuser.green,
+//                           ),
+//                         ),
+//                         SizedBox(height: 2.h),
+//                         Text(
+//                           '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}  •  ${_selectedTime!.format(context)}',
+//                           style: TextStyle(
+//                             fontSize: 12.sp,
+//                             color: cartuser.textSecondary,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//
+//                   /// Edit
+//                   GestureDetector(
+//                     onTap: _pickScheduleDateTime,
+//                     child: Text(
+//                       "Edit",
+//                       style: TextStyle(
+//                         fontSize: 12.sp,
+//                         fontWeight: FontWeight.w600,
+//                         color: cartuser.violet,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Future<void> _pickScheduleDateTime() async {
+//     final now = DateTime.now();
+//     final first = now.add(const Duration(minutes: 25));
+//
+//     final date = await showDatePicker(
+//       context: context,
+//       initialDate: first,
+//       firstDate: first,
+//       lastDate: now.add(const Duration(days: 365)),
+//       builder: (ctx, child) => Theme(
+//         data: Theme.of(ctx).copyWith(
+//           colorScheme: const ColorScheme.light(
+//             primary: cartuser.violet,
+//             onPrimary: Colors.white,
+//             onSurface: Colors.black,
+//           ),
+//           textButtonTheme: TextButtonThemeData(
+//             style: TextButton.styleFrom(foregroundColor: cartuser.violet),
+//           ),
+//         ),
+//         child: child!,
+//       ),
+//     );
+//     if (date == null) return;
+//
+//     while (true) {
+//       final time = await showTimePicker(
+//         // ignore: use_build_context_synchronously
+//         context: context,
+//         initialTime: TimeOfDay.now(),
+//         builder: (ctx, child) => Theme(
+//           data: Theme.of(ctx).copyWith(
+//             timePickerTheme: TimePickerThemeData(
+//               backgroundColor: Colors.white,
+//               dialHandColor: cartuser.violet,
+//               dialBackgroundColor: cartuser.bg,
+//             ),
+//             colorScheme: const ColorScheme.light(
+//               primary: cartuser.violet,
+//               onPrimary: Colors.white,
+//               onSurface: Colors.black,
+//             ),
+//             textButtonTheme: TextButtonThemeData(
+//               style: TextButton.styleFrom(foregroundColor: cartuser.violet),
+//             ),
+//           ),
+//           child: child!,
+//         ),
+//       );
+//       if (time == null) return;
+//
+//       final selected = DateTime(
+//         date.year,
+//         date.month,
+//         date.day,
+//         time.hour,
+//         time.minute,
+//       );
+//       if (selected.isBefore(now.add(const Duration(minutes: 25)))) {
+//         AppAlert.error(context, "Select a time at least 25 minutes from now");
+//         continue;
+//       }
+//       setState(() {
+//         _selectedDate = date;
+//         _selectedTime = time;
+//       });
+//       break;
+//     }
+//   }
+//
+//   // ── Payment toggle button ───────────────────────────────────────────────
+//   Widget _buildPaymentToggle() {
+//     return GestureDetector(
+//       onTap: () {
+//         setState(() => isExpanded = !isExpanded);
+//         WidgetsBinding.instance.addPostFrameCallback((_) {
+//           if (isExpanded) {
+//             _scrollController.animateTo(
+//               _scrollController.position.maxScrollExtent,
+//               duration: const Duration(milliseconds: 400),
+//               curve: Curves.easeOut,
+//             );
+//           }
+//         });
+//       },
+//       child: Container(
+//         width: double.infinity,
+//         padding: EdgeInsets.symmetric(vertical: 14.h),
+//         decoration: BoxDecoration(
+//           gradient: const LinearGradient(
+//             colors: [Color(0xFF6C63FF), Color(0xFF4A43C9)],
+//             begin: Alignment.topLeft,
+//             end: Alignment.bottomRight,
+//           ),
+//           borderRadius: BorderRadius.circular(16.r),
+//           boxShadow: [
+//             BoxShadow(
+//               color: cartuser.violet.withOpacity(0.30),
+//               blurRadius: 16,
+//               offset: const Offset(0, 6),
+//             ),
+//           ],
+//         ),
+//         child: Row(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             Icon(
+//               isExpanded
+//                   ? Icons.keyboard_arrow_up_rounded
+//                   : Icons.payment_rounded,
+//               color: Colors.white,
+//               size: 20.sp,
+//             ),
+//             SizedBox(width: 8.w),
+//             Text(
+//               isExpanded ? 'Hide Payment Options' : 'Choose Payment Method',
+//               style: TextStyle(
+//                 fontSize: 15.sp,
+//                 fontWeight: FontWeight.w700,
+//                 color: Colors.white,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildCheckoutDetails() {
+//     return Column(
+//       children: [
+//         cartwallet(
+//           wallet: wallet,
+//           cartData: cartData,
+//           onSelectionChanged: (method, subWallets) {
+//             setState(() {
+//               selectedPaymentMethod = method;
+//               selectedSubWallets = subWallets;
+//             });
+//           },
+//         ),
+//         SizedBox(height: 14.h),
+//         _buildPlaceOrderButton(),
+//       ],
+//     );
+//   }
+//
+//   // ── Place order button ──────────────────────────────────────────────────
+//   Widget _buildPlaceOrderButton() {
+//     return SizedBox(
+//       width: double.infinity,
+//       height: 54.h,
+//       child: ElevatedButton(
+//         onPressed: isPlacingOrder ? null : placeOrder,
+//         style: ElevatedButton.styleFrom(
+//           backgroundColor: cartuser.green,
+//           foregroundColor: Colors.white,
+//           elevation: 0,
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(16.r),
+//           ),
+//           shadowColor: cartuser.green.withOpacity(0.3),
+//         ),
+//         child: isPlacingOrder
+//             ? SizedBox(
+//                 width: 20.r,
+//                 height: 20.r,
+//                 child: const CircularProgressIndicator(
+//                   color: Colors.white,
+//                   strokeWidth: 2.5,
+//                 ),
+//               )
+//             : Row(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   Icon(Icons.check_circle_rounded, size: 18.sp),
+//                   SizedBox(width: 8.w),
+//                   Text(
+//                     'Place Order',
+//                     style: TextStyle(
+//                       fontSize: 15.sp,
+//                       fontWeight: FontWeight.w700,
+//                     ),
+//                   ),
+//                   SizedBox(width: 8.w),
+//                   Container(
+//                     padding: EdgeInsets.symmetric(
+//                       horizontal: 10.w,
+//                       vertical: 4.h,
+//                     ),
+//                     decoration: BoxDecoration(
+//                       color: Colors.white.withOpacity(0.15),
+//                       borderRadius: BorderRadius.circular(20.r),
+//                     ),
+//                     child: Text(
+//                       '₹${(cartData?.grandTotal ?? 0).toStringAsFixed(2)}',
+//                       style: TextStyle(
+//                         fontSize: 13.sp,
+//                         fontWeight: FontWeight.w700,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//       ),
+//     );
+//   }
+//
+//   // ── Empty cart ──────────────────────────────────────────────────────────
+//   Widget _buildEmptyCart() {
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           SizedBox(height: 40.h),
+//           // Container(
+//           //   width: 90.r,
+//           //   height: 90.r,
+//           //   decoration: BoxDecoration(
+//           //     color: cartuser.violetDim,
+//           //     shape: BoxShape.circle,
+//           //   ),
+//           //   child: Icon(
+//           //     Icons.shopping_bag_outlined,
+//           //     size: 40.sp,
+//           //     color: cartuser.violet,
+//           //   ),
+//           // ),
+//           // SizedBox(height: 20.h),
+//           // Text(
+//           //   'Your cart is empty',
+//           //   style: TextStyle(
+//           //     fontSize: 18.sp,
+//           //     fontWeight: FontWeight.w800,
+//           //     color: cartuser.textPrimary,
+//           //   ),
+//           // ),
+//           // SizedBox(height: 6.h),
+//           // Text(
+//           //   'Add some delicious items to get started',
+//           //   style: TextStyle(fontSize: 13.sp, color: cartuser.textSecondary),
+//           // ),
+//           // SizedBox(height: 24.h),
+//           // GestureDetector(
+//           //   onTap: () => Navigator.pushReplacement(
+//           //     context,
+//           //     MaterialPageRoute(builder: (_) => MainScreenfood()),
+//           //   ),
+//           //   child: Container(
+//           //     padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
+//           //     decoration: BoxDecoration(
+//           //       color: cartuser.violet,
+//           //       borderRadius: BorderRadius.circular(14.r),
+//           //       boxShadow: [
+//           //         BoxShadow(
+//           //           color: cartuser.violet.withOpacity(0.3),
+//           //           blurRadius: 16,
+//           //           offset: const Offset(0, 6),
+//           //         ),
+//           //       ],
+//           //     ),
+//           //     child: Text(
+//           //       'Browse Menu',
+//           //       style: TextStyle(
+//           //         fontSize: 14.sp,
+//           //         fontWeight: FontWeight.w700,
+//           //         color: Colors.white,
+//           //       ),
+//           //     ),
+//           //   ),
+//           // ),
+//           SizedBox(height: 24.h),
+//           if (homepageAds.isNotEmpty)
+//             ClipRRect(
+//               borderRadius: BorderRadius.circular(16.r),
+//               child: BannerAdvertisement(ads: homepageAds, height: 200),
+//             ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   // ── Shared card shell ───────────────────────────────────────────────────
+//   Widget _card({required Widget child, EdgeInsets? padding}) {
+//     return Container(
+//       width: double.infinity,
+//       padding: padding ?? EdgeInsets.all(16.w),
+//       decoration: BoxDecoration(
+//         color: cartuser.surface,
+//         borderRadius: BorderRadius.circular(16.r),
+//         border: Border.all(color: cartuser.border),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.04),
+//             blurRadius: 8,
+//             offset: const Offset(0, 2),
+//           ),
+//         ],
+//       ),
+//       child: child,
+//     );
+//   }
+// }
+
 import '../../Services/Auth_service/promotion_services_Authservice.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../widgets/widgets/food/currentcart_notifier.dart';
@@ -25,24 +2296,40 @@ import '../screens/saved_address.dart';
 import 'Menu/menu_screen.dart';
 import 'food_invoice.dart';
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+// ─── Design Tokens ────────────────────────────────────────────────────────────
 class cartuser {
-  static const bg = Color(0xFFF5F6FA);
+  // Backgrounds
+  static const bg = Color(0xFFF7F8FA);
   static const surface = Color(0xFFFFFFFF);
-  static const border = Color(0xFFE8ECF4);
 
+  // Brand — warm orange (Zomato/Swiggy energy)
+  static const brand = Color(0xFFFF6B35);
+  static const brandLight = Color(0xFFFFF0EB);
+  static const brandDark = Color(0xFFE55A27);
+
+  // Text
+  static const textPrimary = Color(0xFF1C1C1E);
+  static const textSecondary = Color(0xFF6B7280);
+  static const textMuted = Color(0xFFB0B8C8);
+
+  // Semantic
+  static const green = Color(0xFF22C55E);
+  static const greenLight = Color(0xFFDCFCE7);
+  static const red = Color(0xFFEF4444);
+  static const redLight = Color(0xFFFEE2E2);
+  static const amber = Color(0xFFF59E0B);
+  static const amberLight = Color(0xFFFEF3C7);
+  static const blue = Color(0xFF3B82F6);
+  static const blueLight = Color(0xFFEFF6FF);
+
+  // Borders / shadow
+  static const border = Color(0xFFEEF0F5);
+  static final shadow = Colors.black.withOpacity(0.05);
   static const violet = Color(0xFF6C63FF);
   static const violetDim = Color(0x1A6C63FF);
-
-  static const textPrimary = Color(0xFF1A1D2E);
-  static const textSecondary = Color(0xFF64748B);
-  static const textMuted = Color(0xFFB0B8CC);
-
-  static const green = Color(0xFF10B981);
-  static const red = Color(0xFFEF4444);
-  static const amber = Color(0xFFF59E0B);
 }
 
+// ─── Enums ────────────────────────────────────────────────────────────────────
 enum PaymentOverlayState {
   none,
   placingOrder,
@@ -51,6 +2338,7 @@ enum PaymentOverlayState {
   success,
 }
 
+// ─── Main Widget ──────────────────────────────────────────────────────────────
 // ignore: camel_case_types
 class food_cartScreen extends ConsumerStatefulWidget {
   final int? vendorId;
@@ -97,14 +2385,14 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
 
   bool _isLoadingCart = false;
   // ignore: prefer_final_fields
-  int _socketVersion = 0; // incremented by every _applySocketUpdate call
+  int _socketVersion = 0;
   String? _lastSocketEventKey;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _loadAllData(); // ← handles socket subscription internally now
+    _loadAllData();
   }
 
   @override
@@ -114,15 +2402,14 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     super.dispose();
   }
 
+  // ── All data / socket logic (unchanged) ───────────────────────────────────
   Future<void> _loadAllData() async {
     if (mounted) setState(() => isLoading = true);
 
-    // ✅ Subscribe socket FIRST — before any await — so zero events are missed
     final prefs = await SharedPreferences.getInstance();
     userId = prefs.getInt('userId') ?? 0;
     WebSocketManager().subscribeUserCart(userId, _updateCartFromSocket);
 
-    // Only block socket→HTTP race AFTER subscription is live
     _isLoadingCart = true;
 
     try {
@@ -139,11 +2426,9 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       final ads = results[2] as List<Campaign>;
 
       setState(() {
-        // Only use HTTP cart if socket hasn't already populated cartData
         if (cartData == null) {
           cartData = freshCart;
         } else {
-          // Socket already gave us live data — just sync totals from HTTP
           if (freshCart != null) {
             cartData!.grandTotal = freshCart.grandTotal;
             cartData!.subtotal = freshCart.subtotal;
@@ -151,16 +2436,11 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             cartData!.deliveryCharges = freshCart.deliveryCharges;
             cartData!.discountAmount = freshCart.discountAmount;
             cartData!.platformCharges = freshCart.platformCharges;
-            // cartData!.orderType =freshCart.orderType;
             cartData!.deliveryAddress = freshCart.deliveryAddress;
             cartData!.packingTotal = freshCart.packingTotal;
           }
         }
-
-        if (cartData?.hasAnyScheduledItem ?? false) {
-          _orderType = 'schedule';
-        }
-
+        if (cartData?.hasAnyScheduledItem ?? false) _orderType = 'schedule';
         wallet = walletData;
         homepageAds = ads
             .where(
@@ -173,11 +2453,10 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       });
 
       _isLoadingCart = false;
-      _flushPendingSocketUpdates(); // apply anything that arrived during HTTP fetch
+      _flushPendingSocketUpdates();
     } catch (e) {
       _isLoadingCart = false;
       if (mounted) setState(() => isLoading = false);
-      debugPrint("❌ Load error: $e");
     }
   }
 
@@ -200,8 +2479,6 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
 
   void _updateCartFromSocket(Map<String, dynamic> data) {
     final socketItems = data['cartItems'] as List? ?? [];
-
-    // ✅ Dedup: same cartId + same updatedAt on every item = true duplicate
     final allUpdatedAt = socketItems
         .map((i) => (i as Map)['updatedAt']?.toString() ?? '')
         .join(',');
@@ -213,11 +2490,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       () => _lastSocketEventKey = null,
     );
 
-    debugPrint("🟡 SOCKET UPDATE: cartItems=${socketItems.length}");
-
     if (!mounted) return;
-
-    // ✅ cartData == null means socket arrived before HTTP — build directly
     if (cartData == null) {
       setState(() {
         cartData = CartModel.fromJson(data);
@@ -225,21 +2498,18 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       });
       return;
     }
-
     if (_isLoadingCart) {
-      // HTTP in-flight — buffer latest, apply after
       _pendingSocketUpdates
         ..clear()
         ..add(data);
       return;
     }
-
     _applySocketUpdate(data);
   }
 
   void _flushPendingSocketUpdates() {
     if (_pendingSocketUpdates.isEmpty) return;
-    final latest = _pendingSocketUpdates.last; // latest wins
+    final latest = _pendingSocketUpdates.last;
     _pendingSocketUpdates.clear();
     _applySocketUpdate(latest);
   }
@@ -247,15 +2517,11 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
   void _applySocketUpdate(Map<String, dynamic> data) {
     final List socketItems = data['cartItems'] ?? [];
     if (!mounted) return;
-
-    // ✅ Snapshot old list BEFORE setState — prevents self-referential overwrite
     final oldItems = List<CartItem>.from(cartData!.cartItems);
-
     setState(() {
       cartData!.cartItems = socketItems.map((json) {
         final map = json as Map<String, dynamic>;
         final idx = oldItems.indexWhere((i) => i.itemId == map['itemId']);
-
         if (idx != -1) {
           final old = oldItems[idx];
           return CartItem(
@@ -263,7 +2529,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             dishName: old.dishName,
             dishId: old.dishId,
             chefType: old.chefType,
-            dishImage: old.dishImage, // ✅ preserved from snapshot
+            dishImage: old.dishImage,
             actualPrice: (map['actualPrice'] ?? old.actualPrice).toDouble(),
             gst: (map['gst'] ?? old.gst).toDouble(),
             quantity: map['quantity'] ?? old.quantity,
@@ -304,8 +2570,6 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     });
   }
 
-  // _loadCart: explicit refresh (e.g. after coupon apply).
-  // Same version-guard as _loadAllData — socket always wins over HTTP.
   Future<void> _loadCart() async {
     _isLoadingCart = true;
     setState(() => isLoading = true);
@@ -316,12 +2580,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         setState(() {
           if (_socketVersion == versionAtStart) {
             cartData = c;
-            if (cartData?.hasAnyScheduledItem ?? false) {
-              _orderType = 'schedule';
-            }
-            debugPrint("✅ _loadCart: HTTP cart applied");
-          } else {
-            debugPrint("⚠️ _loadCart: HTTP cart DROPPED — socket won");
+            if (cartData?.hasAnyScheduledItem ?? false) _orderType = 'schedule';
           }
           isLoading = false;
         });
@@ -337,16 +2596,13 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
   double getSelectedWalletBalance() {
     if (wallet == null) return 0;
     double t = 0;
-    if (selectedSubWallets.contains("Company Loaded")) {
+    if (selectedSubWallets.contains("Company Loaded"))
       t += wallet!.companyLoadedAmount;
-    }
-    if (selectedSubWallets.contains("Self Loaded")) {
+    if (selectedSubWallets.contains("Self Loaded"))
       t += wallet!.selfLoadedAmount;
-    }
     if (selectedSubWallets.contains("Cashbacks")) t += wallet!.cashbackAmount;
-    if (selectedSubWallets.contains("Postpaid used amount")) {
+    if (selectedSubWallets.contains("Postpaid used amount"))
       t += wallet!.postPaidUsage;
-    }
     return t;
   }
 
@@ -355,14 +2611,13 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     if (hasScheduledItems && (_selectedDate == null || _selectedTime == null)) {
       AppAlert.error(
         context,
-        "📅 Please select date & time to schedule your order",
+        "Please select date & time to schedule your order",
       );
       return;
     }
-
     if ((cartData?.orderType ?? '').trim().toLowerCase() == 'delivery') {
       if ((cartData?.deliveryAddress ?? '').trim().isEmpty) {
-        AppAlert.error(context, "⚠️ Please select delivery address");
+        AppAlert.error(context, "Please select a delivery address");
         return;
       }
     }
@@ -372,13 +2627,13 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       if (wb < gt) {
         AppAlert.error(
           context,
-          "❌ Insufficient wallet balance\nWallet: ₹${wb.toStringAsFixed(2)}\nOrder Total: ₹${gt.toStringAsFixed(2)}",
+          "Insufficient wallet balance\nWallet: ₹${wb.toStringAsFixed(2)}\nOrder Total: ₹${gt.toStringAsFixed(2)}",
         );
         return;
       }
     }
     if (selectedPaymentMethod.isEmpty) {
-      AppAlert.error(context, "⚠️ Please select a payment method");
+      AppAlert.error(context, "Please select a payment method");
       return;
     }
 
@@ -389,26 +2644,18 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
 
       if (selectedPaymentMethod == "Online_Payment") {
         final amount = (cartData?.grandTotal ?? 0).toDouble();
-
-        if (mounted) {
+        if (mounted)
           setState(() => _overlayState = PaymentOverlayState.openingGateway);
-        }
         final orderId = await food_Authservice.createOrder(amount);
-        if (mounted) {
-          setState(() => _overlayState = PaymentOverlayState.openingGateway);
-        }
-
         if (orderId == null) {
-          AppAlert.error(context, "❌ Failed to create payment order");
+          AppAlert.error(context, "Failed to create payment order");
           return;
         }
         final rp = RazorpayService();
         rp.onSuccess = (res) async {
-          final pid = res.paymentId!;
-          final oid = res.orderId!;
-          if (mounted) {
+          final pid = res.paymentId!, oid = res.orderId!;
+          if (mounted)
             setState(() => _overlayState = PaymentOverlayState.processing);
-          }
           final ok = isUserScheduled
               ? await _placeScheduledOrder(
                   paymentMethod: "Online_Payment",
@@ -422,27 +2669,19 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   razorpayOrderId: oid,
                   amount: amount,
                 );
-
-          if (!ok && mounted) {
-            setState(() => _overlayState = PaymentOverlayState.processing);
-          }
-
-          if (ok) {
+          if (ok)
             food_Authservice
                 .capturePayment(paymentId: pid, amount: amount)
-                // ignore: body_might_complete_normally_catch_error
                 .catchError((_) {});
-          } else {
-            AppAlert.error(context, "❌ Order failed. Refund in 3–5 days.");
-          }
+          else
+            AppAlert.error(context, "Order failed. Refund in 3–5 days.");
         };
         rp.onError = (res) {
-          if (mounted) {
+          if (mounted)
             setState(() {
               _overlayState = PaymentOverlayState.none;
               isPlacingOrder = false;
             });
-          }
           AppAlert.error(context, "Payment failed: ${res.message}");
         };
         rp.startPayment(
@@ -470,19 +2709,10 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         );
       }
     } catch (e) {
-      debugPrint("❌ Place Order Error: $e");
-
-      String message = "Error placing order";
-      if (e.toString().contains("Exception:")) {
-        message = e.toString().replaceFirst("Exception: ", "");
-      } else {
-        message = e.toString();
-      }
-
-      if (mounted) {
-        setState(() => _overlayState = PaymentOverlayState.none);
-      }
-
+      String message = e.toString().contains("Exception:")
+          ? e.toString().replaceFirst("Exception: ", "")
+          : e.toString();
+      if (mounted) setState(() => _overlayState = PaymentOverlayState.none);
       AppAlert.error(context, message);
     } finally {
       if (mounted) setState(() => isPlacingOrder = false);
@@ -514,12 +2744,11 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       if (mounted) {
         setState(() => _overlayState = PaymentOverlayState.processing);
         await Future.delayed(const Duration(milliseconds: 2200));
-        if (mounted) {
+        if (mounted)
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => food_Invoice(orderId: oid)),
           );
-        }
       }
       return true;
     }
@@ -549,12 +2778,11 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       if (mounted) {
         setState(() => _overlayState = PaymentOverlayState.processing);
         await Future.delayed(const Duration(milliseconds: 2200));
-        if (mounted) {
+        if (mounted)
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => food_Invoice(orderId: oid)),
           );
-        }
       }
       return true;
     }
@@ -563,41 +2791,36 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
 
   Future<void> changeQuantity(CartItem item, int newQty) async {
     final old = item.quantity;
-
-    // ✅ Optimistic update shown immediately
     setState(() => item.quantity = newQty);
-
-    // ✅ Block incoming socket events while the HTTP call is in-flight
     _isLoadingCart = true;
-
     final ok = await food_Authservice.updateCartQuantity(item.itemId, newQty);
-
-    if (!ok) {
-      // Rollback optimistic update on failure
+    if (!ok)
       setState(() {
         item.quantity = old;
         item.totalPrice = item.price * old;
       });
-    }
-
-    // ✅ Release the gate — the next socket event (backend echo) will carry
-    //    the correctly recalculated totals (GST, grand total, etc.)
     _isLoadingCart = false;
     _flushPendingSocketUpdates();
   }
 
-  // ── FIX Bug 4: pull-to-refresh now uses _loadAllData which correctly
-  //   sets _isLoadingCart = true, so socket events are buffered during refresh.
-  Future<void> _onRefresh() async {
-    await _loadAllData();
-  }
+  Future<void> _onRefresh() async => _loadAllData();
 
   String _fmt(num? v) => (v ?? 0).toStringAsFixed(2);
+
+  Future<void> _clearCartLocally() async {
+    CartNotifier.count.value = 0;
+    final prefs = await SharedPreferences.getInstance();
+    final allKeys = prefs.getKeys();
+    for (final key in allKeys) {
+      if (key.startsWith('dish_')) await prefs.remove(key);
+    }
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context);
+
     return Stack(
       children: [
         Scaffold(
@@ -607,8 +2830,9 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             child: SafeArea(
               child: RefreshIndicator(
                 onRefresh: _onRefresh,
-                color: cartuser.violet,
+                color: cartuser.brand,
                 backgroundColor: cartuser.surface,
+                strokeWidth: 2.5,
                 child: isLoading
                     ? SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
@@ -620,10 +2844,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                     : SingleChildScrollView(
                         controller: _scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 12.h,
-                        ),
+                        padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 32.h),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -631,33 +2852,30 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                               _buildEmptyCart()
                             else ...[
                               _buildCartItems(),
-                              SizedBox(height: 10.h),
-                              _buildAddMoreText(),
-                              SizedBox(height: 12.h),
+                              SizedBox(height: 8.h),
+                              _buildAddMoreRow(),
+                              SizedBox(height: 14.h),
 
                               OrderCartFooter(
-                                onOrderTypeChanged: () async {
-                                  // Use _loadCart (which gates socket correctly)
-                                  // instead of a raw fetchCart call
-                                  await _loadCart();
-                                },
+                                onOrderTypeChanged: () async =>
+                                    await _loadCart(),
                               ),
 
-                              // ── Ads banner ───────────────────────────
+                              // Ads banner
                               if (homepageAds.isNotEmpty) ...[
-                                SizedBox(height: 12.h),
+                                SizedBox(height: 14.h),
                                 _sectionLabel('Recommended for you'),
                                 SizedBox(height: 8.h),
                                 ClipRRect(
-                                  borderRadius: BorderRadius.circular(16.r),
+                                  borderRadius: BorderRadius.circular(14.r),
                                   child: BannerAdvertisement(
                                     ads: homepageAds,
-                                    height: 200,
+                                    height: 180,
                                   ),
                                 ),
                               ],
 
-                              SizedBox(height: 12.h),
+                              SizedBox(height: 14.h),
                               _buildCouponRow(),
                               SizedBox(height: 10.h),
 
@@ -686,15 +2904,13 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             ),
           ),
         ),
-
         if (_overlayState != PaymentOverlayState.none)
           Positioned.fill(
             child: AbsorbPointer(
               child: Material(
                 type: MaterialType.transparency,
                 child: Container(
-                  // ignore: deprecated_member_use
-                  color: Colors.black.withOpacity(0.7),
+                  color: Colors.black.withOpacity(0.65),
                   child: Center(child: _overlayContent()),
                 ),
               ),
@@ -704,41 +2920,186 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
+  // ── App Bar ───────────────────────────────────────────────────────────────
+  PreferredSizeWidget _buildAppBar() {
+    final bool isEmpty = (cartData?.cartItems.isEmpty ?? true);
+
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(56),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: cartuser.surface,
+          border: Border(bottom: BorderSide(color: cartuser.border)),
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 18,
+                  color: cartuser.textPrimary,
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+              Expanded(
+                child: Text(
+                  isEmpty ? 'Cart' : 'Your Cart',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: cartuser.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ),
+              if (isEmpty)
+                Padding(
+                  padding: EdgeInsets.only(right: 12.w),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => MainScreenfood()),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cartuser.brandLight,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 14,
+                            color: cartuser.brand,
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                            'Browse',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: cartuser.brand,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                GestureDetector(
+                  onTap: () async {
+                    final ok = await food_Authservice.deleteCart();
+                    if (!mounted) return;
+                    if (ok) {
+                      await _clearCartLocally();
+                      if (!mounted) return;
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => MainScreenfood()),
+                      );
+                      AppAlert.success(context, 'Cart cleared');
+                    } else {
+                      AppAlert.error(context, 'Failed to clear cart');
+                    }
+                  },
+                  child: Container(
+                    margin: EdgeInsets.only(right: 12.w),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: cartuser.redLight,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline_rounded,
+                      size: 18,
+                      color: cartuser.red,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Overlay ───────────────────────────────────────────────────────────────
   Widget _overlayContent() {
     switch (_overlayState) {
       case PaymentOverlayState.placingOrder:
-        return _dialogLoader("Placing your order...");
+        return _dialogLoader(
+          "Placing your order...",
+          Icons.shopping_bag_outlined,
+        );
       case PaymentOverlayState.openingGateway:
-        return _dialogLoader("Opening payment gateway...");
+        return _dialogLoader(
+          "Opening payment gateway...",
+          Icons.lock_outline_rounded,
+        );
       case PaymentOverlayState.processing:
-        return _dialogLoader("Processing payment...");
+        return _dialogLoader("Confirming payment...", Icons.verified_outlined);
       default:
         return const SizedBox.shrink();
     }
   }
 
-  Widget _dialogLoader(String text) {
+  Widget _dialogLoader(String text, IconData icon) {
     return Material(
       color: Colors.transparent,
       child: Container(
         key: ValueKey(text),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: cartuser.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 24),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 14),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: cartuser.brandLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: cartuser.brand,
+                  strokeWidth: 2.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             DefaultTextStyle(
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
+                color: cartuser.textPrimary,
                 decoration: TextDecoration.none,
               ),
               child: Text(text),
+            ),
+            const SizedBox(height: 4),
+            const DefaultTextStyle(
+              style: TextStyle(
+                fontSize: 12,
+                color: cartuser.textSecondary,
+                decoration: TextDecoration.none,
+              ),
+              child: Text("Please don't close this screen"),
             ),
           ],
         ),
@@ -746,142 +3107,93 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
-  Future<void> _clearCartLocally() async {
-    // 1. Reset global badge — this triggers _onGlobalCountReset in every
-    //    CartButton that is still alive in the widget tree (e.g. if MenuScreen
-    //    is in the background stack), resetting their itemCount to 0.
-    CartNotifier.count.value = 0;
-
-    // 2. Wipe ALL dish-level SharedPreferences keys so that CartButton's
-    //    _loadQuantity() always reads 0 after a cart clear, even for widgets
-    //    that haven't been rebuilt yet.
-    final prefs = await SharedPreferences.getInstance();
-    final allKeys = prefs.getKeys();
-    for (final key in allKeys) {
-      if (key.startsWith('dish_')) {
-        await prefs.remove(key);
-      }
-    }
-
-    debugPrint("🧹 Local cart cleared — CartNotifier=0, prefs wiped");
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    final bool isCartEmpty = (cartData?.cartItems.isEmpty ?? true);
-
-    return AppBar(
-      backgroundColor: cartuser.surface,
-      elevation: 0,
-      centerTitle: true,
-      automaticallyImplyLeading: true,
-
-      title: Text(
-        isCartEmpty ? 'Empty Cart' : 'Review Your Cart',
-        style: TextStyle(
-          fontSize: 17.sp,
-          fontWeight: FontWeight.w700,
-          color: cartuser.textPrimary,
-        ),
-      ),
-
-      iconTheme: const IconThemeData(color: cartuser.textPrimary),
-
-      actions: [
-        if (isCartEmpty)
-          Padding(
-            padding: EdgeInsets.only(right: 12.w),
-            child: GestureDetector(
-              onTap: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => MainScreenfood()),
-              ),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: cartuser.violet,
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.restaurant_menu,
-                      size: 14.sp,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      'Browse',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-        if (!isCartEmpty)
-          GestureDetector(
-            onTap: () async {
-              final ok = await food_Authservice.deleteCart();
-              if (!mounted) return;
-
-              if (ok) {
-                await _clearCartLocally();
-                if (!mounted) return;
-
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => MainScreenfood()),
-                );
-
-                AppAlert.success(context, 'Cart cleared');
-              } else {
-                AppAlert.error(context, 'Failed to clear cart');
-              }
-            },
-            child: Container(
-              margin: EdgeInsets.only(right: 12.w),
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: cartuser.red.withOpacity(0.08),
-                shape: BoxShape.circle,
-                border: Border.all(color: cartuser.red.withOpacity(0.2)),
-              ),
-              child: Icon(
-                Icons.delete_outline_rounded,
-                size: 18.sp,
-                color: cartuser.red,
-              ),
-            ),
-          ),
-      ],
-
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: cartuser.border),
-      ),
-    );
-  }
-
-  // ── Section label ───────────────────────────────────────────────────────
+  // ── Section Label ─────────────────────────────────────────────────────────
   Widget _sectionLabel(String text) {
     return Text(
       text,
-      style: TextStyle(
-        fontSize: 14.sp,
+      style: const TextStyle(
+        fontSize: 14,
         fontWeight: FontWeight.w700,
         color: cartuser.textPrimary,
       ),
     );
   }
 
-  // ── Cart items card ─────────────────────────────────────────────────────
+  // ── Empty Cart ────────────────────────────────────────────────────────────
+  Widget _buildEmptyCart() {
+    return Center(
+      child: Column(
+        children: [
+          SizedBox(height: 40.h),
+          Container(
+            width: 96,
+            height: 96,
+            decoration: const BoxDecoration(
+              color: cartuser.brandLight,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.shopping_bag_outlined,
+              size: 44,
+              color: cartuser.brand,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Your cart is empty',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: cartuser.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Add some delicious items to get started',
+            style: TextStyle(fontSize: 14, color: cartuser.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          GestureDetector(
+            onTap: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => MainScreenfood()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+              decoration: BoxDecoration(
+                color: cartuser.brand,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: cartuser.brand.withOpacity(0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Text(
+                'Browse Menu',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          if (homepageAds.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14.r),
+              child: BannerAdvertisement(ads: homepageAds, height: 180),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── Cart Items ────────────────────────────────────────────────────────────
   Widget _buildCartItems() {
     if (cartData == null || cartData!.cartItems.isEmpty) {
       return const SizedBox.shrink();
@@ -891,43 +3203,118 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Vendor/restaurant label row
+          // Padding(
+          //   padding: EdgeInsets.only(bottom: 12.h),
+          //   child: Row(
+          //     children: [
+          //       // Container(
+          //       //   padding: const EdgeInsets.symmetric(
+          //       //     horizontal: 10,
+          //       //     vertical: 5,
+          //       //   ),
+          //       //   decoration: BoxDecoration(
+          //       //     color: cartuser.brandLight,
+          //       //     borderRadius: BorderRadius.circular(8),
+          //       //   ),
+          //       //   child: Row(
+          //       //     mainAxisSize: MainAxisSize.min,
+          //       //     children: [
+          //       //       const Icon(
+          //       //         Icons.storefront_rounded,
+          //       //         size: 13,
+          //       //         color: cartuser.brand,
+          //       //       ),
+          //       //       const SizedBox(width: 5),
+          //       //       const Text(
+          //       //         'Your Order',
+          //       //         style: TextStyle(
+          //       //           fontSize: 12,
+          //       //           fontWeight: FontWeight.w700,
+          //       //           color: cartuser.brand,
+          //       //         ),
+          //       //       ),
+          //       //     ],
+          //       //   ),
+          //       // ),
+          //       const Spacer(),
+          //       Text(
+          //         '${cartData!.cartItems.length} ${cartData!.cartItems.length == 1 ? 'item' : 'items'}',
+          //         style: const TextStyle(
+          //           fontSize: 12,
+          //           color: cartuser.textSecondary,
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // Divider(height: 1, color: cartuser.border),
           ...cartData!.cartItems.map((item) {
             final isLast = item == cartData!.cartItems.last;
             return Column(
               key: ValueKey(item.itemId),
               children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10.h),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
                   child: Row(
                     children: [
+                      // Veg indicator
+                      // Container(
+                      //   margin: const EdgeInsets.only(right: 8, top: 2),
+                      //   width: 14,
+                      //   height: 14,
+                      //   decoration: BoxDecoration(
+                      //     border: Border.all(color: cartuser.green, width: 1.5),
+                      //     borderRadius: BorderRadius.circular(3),
+                      //   ),
+                      //   child: Center(
+                      //     child: Container(
+                      //       width: 7,
+                      //       height: 7,
+                      //       decoration: const BoxDecoration(
+                      //         color: cartuser.green,
+                      //         shape: BoxShape.circle,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       Expanded(
-                        child: Text(
-                          item.dishName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: cartuser.textPrimary,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.dishName,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: cartuser.textPrimary,
+                              ),
+                            ),
+                            // const SizedBox(height: 2),
+                            // Text(
+                            //   '₹${item.price.toStringAsFixed(0)} each',
+                            //   style: const TextStyle(
+                            //     fontSize: 12,
+                            //     color: cartuser.textMuted,
+                            //   ),
+                            // ),
+                          ],
                         ),
                       ),
-
-                      SizedBox(width: 8.w),
-
+                      SizedBox(width: 10.w),
                       _buildQtyControl(item),
-
                       SizedBox(width: 12.w),
-
                       SizedBox(
-                        width: 80.w,
+                        width: 72.w,
                         child: Text(
                           '₹${item.totalPrice.toStringAsFixed(2)}',
                           textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 14.sp,
+                          style: const TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: cartuser.violet,
+                            color: cartuser.textPrimary,
                           ),
                         ),
                       ),
@@ -983,7 +3370,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(6.w),
+        padding: EdgeInsets.all(7.w),
         decoration: BoxDecoration(
           color: color.withOpacity(0.10),
           borderRadius: BorderRadius.circular(8.r),
@@ -993,29 +3380,46 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
-  // ── "Add more items" text ───────────────────────────────────────────────
-  Widget _buildAddMoreText() {
-    return Center(
-      child: RichText(
-        text: TextSpan(
-          text: 'Missed something? ',
-          style: TextStyle(fontSize: 13.sp, color: cartuser.textSecondary),
+  // ── Add More Row ──────────────────────────────────────────────────────────
+  Widget _buildAddMoreRow() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MenuScreen(vendorId: cartData!.vendorId),
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: cartuser.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cartuser.brand.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextSpan(
-              text: 'Add more items',
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w700,
-                color: cartuser.violet,
-                decoration: TextDecoration.underline,
-              ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MenuScreen(vendorId: cartData!.vendorId),
+            const Icon(
+              Icons.add_circle_outline_rounded,
+              size: 17,
+              color: cartuser.brand,
+            ),
+            const SizedBox(width: 8),
+            RichText(
+              text: const TextSpan(
+                text: 'Missed something? ',
+                style: TextStyle(fontSize: 13, color: cartuser.textSecondary),
+                children: [
+                  TextSpan(
+                    text: 'Add more items',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: cartuser.brand,
+                    ),
                   ),
-                ),
+                ],
+              ),
             ),
           ],
         ),
@@ -1023,7 +3427,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
-  // ── Coupon row ──────────────────────────────────────────────────────────
+  // ── Coupon Row ────────────────────────────────────────────────────────────
   Widget _buildCouponRow() {
     final applied = (cartData?.couponCode ?? '').isNotEmpty;
 
@@ -1034,23 +3438,21 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         child: Row(
           children: [
             Container(
-              width: 36.r,
-              height: 36.r,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: applied
-                    ? cartuser.green.withOpacity(0.10)
-                    : cartuser.violetDim,
-                shape: BoxShape.circle,
+                color: applied ? cartuser.greenLight : cartuser.brandLight,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 applied
                     ? Icons.check_circle_rounded
                     : Icons.local_offer_rounded,
-                size: 18.sp,
-                color: applied ? cartuser.green : cartuser.violet,
+                size: 20,
+                color: applied ? cartuser.green : cartuser.brand,
               ),
             ),
-            SizedBox(width: 12.w),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1058,19 +3460,20 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   Text(
                     applied ? 'Coupon Applied' : 'Apply Coupon',
                     style: TextStyle(
-                      fontSize: 13.sp,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: applied ? cartuser.green : cartuser.textPrimary,
                     ),
                   ),
-                  if (applied)
-                    Text(
-                      appliedCouponCode ?? '',
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: cartuser.textSecondary,
-                      ),
+                  Text(
+                    applied
+                        ? (appliedCouponCode ?? '')
+                        : 'Save more on your order',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: cartuser.textSecondary,
                     ),
+                  ),
                 ],
               ),
             ),
@@ -1094,29 +3497,27 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   AppAlert.success(context, "Coupon removed");
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
-                    vertical: 5.h,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: cartuser.red.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(color: cartuser.red.withOpacity(0.2)),
+                    color: cartuser.redLight,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Remove',
                     style: TextStyle(
-                      fontSize: 11.sp,
+                      fontSize: 12,
                       color: cartuser.red,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               )
             else
-              Icon(
+              const Icon(
                 Icons.chevron_right_rounded,
-                size: 20.sp,
                 color: cartuser.textMuted,
               ),
           ],
@@ -1149,19 +3550,29 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         body: SafeArea(
           top: false,
           child: Container(
-            height: MediaQuery.of(ctx).size.height * 1,
+            height: MediaQuery.of(ctx).size.height * 0.92,
             decoration: BoxDecoration(
-              color: cartuser.bg,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+              color: cartuser.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
             ),
             child: Column(
               children: [
+                // drag handle
+                Container(
+                  margin: const EdgeInsets.only(top: 10),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cartuser.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
                 _couponHeader(),
                 coupons.isEmpty
                     ? Expanded(child: _emptyCouponView())
                     : Expanded(
                         child: ListView.builder(
-                          padding: EdgeInsets.all(16.w),
+                          padding: EdgeInsets.fromLTRB(16.w, 8, 16.w, 24),
                           itemCount: coupons.length,
                           itemBuilder: (_, i) {
                             final c = coupons[i];
@@ -1185,38 +3596,25 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
   }
 
   Widget _couponHeader() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(30.w, 20.h, 16.w, 16.h),
-      decoration: BoxDecoration(
-        color: cartuser.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        border: Border(bottom: BorderSide(color: cartuser.border)),
-      ),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 12.h, 8.w, 12.h),
       child: Row(
         children: [
-          Text(
+          const Text(
             'Available Coupons',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
               color: cartuser.textPrimary,
             ),
           ),
           const Spacer(),
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                color: cartuser.border,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.close_rounded,
-                size: 16.sp,
-                color: cartuser.textSecondary,
-              ),
+          IconButton(
+            icon: const Icon(
+              Icons.close_rounded,
+              color: cartuser.textSecondary,
             ),
+            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
@@ -1229,105 +3627,136 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     required bool isMismatch,
     required bool isDisabled,
   }) {
-    final color = isExpired
+    final Color accent = isExpired
         ? cartuser.red
         : isMismatch
         ? cartuser.amber
         : cartuser.green;
+    final Color accentBg = isExpired
+        ? cartuser.redLight
+        : isMismatch
+        ? cartuser.amberLight
+        : cartuser.greenLight;
 
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),
       decoration: BoxDecoration(
         color: cartuser.surface,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: accent.withOpacity(0.25)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: cartuser.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-        leading: Container(
-          width: 38.r,
-          height: 38.r,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.10),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.local_offer_rounded, color: color, size: 18.sp),
-        ),
-        title: Row(
-          children: [
-            Text(
-              coupon.code,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13.sp,
-                color: cartuser.textPrimary,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color: cartuser.violet.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(6.r),
-              ),
-              child: Text(
-                coupon.couponType,
-                style: TextStyle(
-                  fontSize: 10.sp,
-                  color: cartuser.violet,
-                  fontWeight: FontWeight.w600,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14.r),
+          onTap: isDisabled
+              ? () => AppAlert.error(
+                  context,
+                  isExpired
+                      ? 'Coupon expired'
+                      : 'Not applicable for this restaurant',
+                )
+              : () => _applyCoupon(coupon),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: accentBg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.local_offer_rounded,
+                    color: accent,
+                    size: 20,
+                  ),
                 ),
-              ),
-            ),
-          ],
-        ),
-        subtitle: Padding(
-          padding: EdgeInsets.only(top: 4.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isExpired
-                    ? 'Expired'
-                    : isMismatch
-                    ? 'Not applicable for this restaurant'
-                    : coupon.discountType == "PERCENTAGE"
-                    ? 'Get ${coupon.discountPercentage.toStringAsFixed(0)}% off'
-                    : 'Get ₹${coupon.discountPercentage.toStringAsFixed(0)} off',
-                style: TextStyle(fontSize: 12.sp, color: color),
-              ),
-              if (!isExpired && !isMismatch)
-                Text(
-                  coupon.minimumOrderValue <= 0
-                      ? 'Applicable on any order'
-                      : 'Min order ₹${coupon.minimumOrderValue.toInt()}',
-                  style: TextStyle(fontSize: 11.sp, color: cartuser.textMuted),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            coupon.code,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: cartuser.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cartuser.brandLight,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              coupon.couponType,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: cartuser.brand,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        isExpired
+                            ? 'Expired'
+                            : isMismatch
+                            ? 'Not applicable for this restaurant'
+                            : coupon.discountType == "PERCENTAGE"
+                            ? '${coupon.discountPercentage.toStringAsFixed(0)}% off your order'
+                            : '₹${coupon.discountPercentage.toStringAsFixed(0)} off your order',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDisabled
+                              ? cartuser.textMuted
+                              : cartuser.textSecondary,
+                        ),
+                      ),
+                      if (!isExpired && !isMismatch)
+                        Text(
+                          coupon.minimumOrderValue <= 0
+                              ? 'Applicable on any order'
+                              : 'Min order ₹${coupon.minimumOrderValue.toInt()}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: cartuser.textMuted,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-            ],
+                Icon(
+                  isDisabled
+                      ? Icons.block_rounded
+                      : Icons.chevron_right_rounded,
+                  size: 18,
+                  color: isDisabled ? cartuser.textMuted : accent,
+                ),
+              ],
+            ),
           ),
         ),
-        trailing: isDisabled
-            ? Icon(Icons.block_rounded, color: color, size: 18.sp)
-            : Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14.sp,
-                color: cartuser.textMuted,
-              ),
-        onTap: isDisabled
-            ? () => AppAlert.error(
-                context,
-                isExpired
-                    ? 'Coupon expired'
-                    : 'Not applicable for this restaurant',
-              )
-            : () => _applyCoupon(coupon),
       ),
     );
   }
@@ -1337,24 +3766,32 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.confirmation_number_outlined,
-            size: 48.sp,
-            color: cartuser.textMuted,
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            'No coupons available',
-            style: TextStyle(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w700,
-              color: cartuser.textSecondary,
+          Container(
+            width: 64,
+            height: 64,
+            decoration: const BoxDecoration(
+              color: cartuser.bg,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.confirmation_number_outlined,
+              size: 32,
+              color: cartuser.textMuted,
             ),
           ),
-          SizedBox(height: 4.h),
-          Text(
+          const SizedBox(height: 16),
+          const Text(
+            'No coupons available',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: cartuser.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
             'Check back later for new offers',
-            style: TextStyle(fontSize: 12.sp, color: cartuser.textMuted),
+            style: TextStyle(fontSize: 13, color: cartuser.textSecondary),
           ),
         ],
       ),
@@ -1376,19 +3813,18 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       AppAlert.error(context, result.error ?? "Failed to apply coupon");
       return;
     }
-    // _loadCart correctly gates the socket during the HTTP fetch
     await _loadCart();
     setState(() {
       appliedCouponCode = coupon.code;
       appliedCouponId = coupon.id;
     });
     // ignore: use_build_context_synchronously
-    AppAlert.success(context, "Coupon ${coupon.code} applied!");
+    AppAlert.success(context, "🎉 ${coupon.code} applied!");
     // ignore: use_build_context_synchronously
     Navigator.pop(context);
   }
 
-  // ── Delivery address ────────────────────────────────────────────────────
+  // ── Delivery Address ──────────────────────────────────────────────────────
   Widget _buildDeliveryAddress() {
     ref.watch(addressProvider);
     final hasAddr = (cartData?.deliveryAddress ?? '').trim().isNotEmpty;
@@ -1411,27 +3847,14 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                     fullAddress: address.fullAddress,
                     category: address.category,
                   );
-
-              // if (address.addressId != 0) {
-              //   final ok = await AddressNotifier.updateDeliveryAddress(
-              //     cartId: cartData!.cartId,
-              //     addressId: address.addressId,
-              //   );
-              //
-              //   if (!ok && mounted) {
-              //     AppAlert.error(context, "Failed to update cart address");
-              //   }
-              // }
               if (address.addressId != 0) {
                 final errorMessage =
                     await AddressNotifier.updateDeliveryAddress(
                       cartId: cartData!.cartId,
                       addressId: address.addressId,
                     );
-
-                if (errorMessage != null && mounted) {
+                if (errorMessage != null && mounted)
                   AppAlert.error(context, errorMessage);
-                }
               }
             },
           ),
@@ -1441,18 +3864,16 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         child: Row(
           children: [
             Container(
-              width: 40.r,
-              height: 40.r,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: hasAddr
-                    ? cartuser.violet.withOpacity(0.08)
-                    : cartuser.red.withOpacity(0.08),
-                shape: BoxShape.circle,
+                color: hasAddr ? cartuser.brandLight : cartuser.redLight,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.location_on_rounded,
-                size: 20.sp,
-                color: hasAddr ? cartuser.violet : cartuser.red,
+                size: 22,
+                color: hasAddr ? cartuser.brand : cartuser.red,
               ),
             ),
             SizedBox(width: 12.w),
@@ -1462,56 +3883,55 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                 children: [
                   Text(
                     hasAddr ? 'Delivery Address' : 'Select Delivery Address',
-                    style: TextStyle(
-                      fontSize: 13.sp,
+                    style: const TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: cartuser.textPrimary,
                     ),
                   ),
                   if (hasAddr) ...[
-                    SizedBox(height: 2.h),
+                    const SizedBox(height: 3),
                     Text(
                       [
                         cartData!.deliveryAddress,
                         cartData!.name,
                         cartData!.mobileNo,
                       ].where((e) => e.toString().trim().isNotEmpty).join(', '),
-                      style: TextStyle(
-                        fontSize: 11.sp,
+                      style: const TextStyle(
+                        fontSize: 12,
                         color: cartuser.textSecondary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 2.h),
-                    Text(
+                    const SizedBox(height: 2),
+                    const Text(
                       'Tap to change',
                       style: TextStyle(
-                        fontSize: 11.sp,
-                        color: cartuser.violet,
+                        fontSize: 12,
+                        color: cartuser.brand,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
+                  ] else
+                    const Text(
+                      'Required for delivery',
+                      style: TextStyle(fontSize: 12, color: cartuser.red),
+                    ),
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20.sp,
-              color: cartuser.textMuted,
-            ),
+            const Icon(Icons.chevron_right_rounded, color: cartuser.textMuted),
           ],
         ),
       ),
     );
   }
 
-  // ── Order summary card ──────────────────────────────────────────────────
+  // ── Summary Card ──────────────────────────────────────────────────────────
   Widget _buildSummaryCard() {
-    if (cartData == null || isLoading) {
+    if (cartData == null || isLoading)
       return CartSkeleton(type: CartSkeletonType.summary);
-    }
 
     final orderType = cartData?.orderType ?? '';
     final subtotal = cartData?.subtotal ?? 0;
@@ -1527,31 +3947,31 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header (tappable to expand)
           GestureDetector(
             onTap: () =>
                 setState(() => _isSummaryExpanded = !_isSummaryExpanded),
             child: Row(
               children: [
                 Container(
-                  width: 36.r,
-                  height: 36.r,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
-                    color: cartuser.violetDim,
-                    borderRadius: BorderRadius.circular(10.r),
+                    color: cartuser.brandLight,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.receipt_long_rounded,
-                    size: 18.sp,
-                    color: cartuser.violet,
+                    size: 18,
+                    color: cartuser.brand,
                   ),
                 ),
-                SizedBox(width: 10.w),
-                Expanded(
+                const SizedBox(width: 10),
+                const Expanded(
                   child: Text(
-                    'Order Summary',
+                    'Bill Summary',
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: cartuser.textPrimary,
                     ),
@@ -1560,7 +3980,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                 AnimatedRotation(
                   turns: _isSummaryExpanded ? 0.5 : 0,
                   duration: const Duration(milliseconds: 200),
-                  child: Icon(
+                  child: const Icon(
                     Icons.keyboard_arrow_down_rounded,
                     color: cartuser.textSecondary,
                   ),
@@ -1569,77 +3989,51 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             ),
           ),
 
-          // Expandable details
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 200),
             crossFadeState: _isSummaryExpanded
                 ? CrossFadeState.showFirst
                 : CrossFadeState.showSecond,
             firstChild: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 12.h),
+                const SizedBox(height: 12),
                 Divider(height: 1, color: cartuser.border),
-                SizedBox(height: 10.h),
-
-                _summaryRow('Subtotal', subtotal),
-
-                if (platform > 0) _summaryRow('Platform Charges', platform),
-
+                const SizedBox(height: 10),
+                _billRow('Subtotal', subtotal),
+                if (platform > 0) _billRow('Platform Charges', platform),
                 if ((type == 'DELIVERY' || type == 'TAKEAWAY') && packing > 0)
-                  _summaryRow('Packing Charges', packing),
-
-                if (orderType.toUpperCase() == 'DELIVERY')
-                  _summaryRow('Delivery Charges', delivery),
-
+                  _billRow('Packing Charges', packing),
+                if (type == 'DELIVERY') _billRow('Delivery Charges', delivery),
                 if (discount > 0)
-                  _summaryRow('Discount', -discount, color: cartuser.green),
-
-                if ((gst) > 0) ...[
-                  _summaryRow(
-                    'GST',
-                    gst,
-                    onInfoTap: () => _showGstDialog('GST'),
-                  ),
-                  // _summaryRow(
-                  //   'CGST',
-                  //   gst / 2,
-                  //   onInfoTap: () => _showGstDialog('CGST'),
-                  // ),
-                ],
-
-                SizedBox(height: 4.h),
+                  _billRow('Discount', -discount, isDiscount: true),
+                if (gst > 0)
+                  _billRow('GST', gst, onInfo: () => _showGstDialog('GST')),
+                const SizedBox(height: 4),
               ],
             ),
             secondChild: const SizedBox.shrink(),
           ),
 
-          Divider(height: 16.h, color: cartuser.border),
+          Divider(height: 16, color: cartuser.border),
 
-          // Grand total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Grand Total',
                 style: TextStyle(
-                  fontSize: 15.sp,
+                  fontSize: 15,
                   fontWeight: FontWeight.w800,
                   color: cartuser.textPrimary,
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '₹${_fmt(grandTotal)}',
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w800,
-                      color: cartuser.violet,
-                    ),
-                  ),
-                ],
+              Text(
+                '₹${_fmt(grandTotal)}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: cartuser.brand,
+                ),
               ),
             ],
           ),
@@ -1648,14 +4042,14 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
-  Widget _summaryRow(
+  Widget _billRow(
     String label,
     num value, {
-    Color? color,
-    VoidCallback? onInfoTap,
+    bool isDiscount = false,
+    VoidCallback? onInfo,
   }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 3.h),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1663,32 +4057,30 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12.sp,
+                style: const TextStyle(
+                  fontSize: 13,
                   color: cartuser.textSecondary,
                 ),
               ),
-
-              if (onInfoTap != null) ...[
-                SizedBox(width: 4.w),
+              if (onInfo != null) ...[
+                const SizedBox(width: 4),
                 GestureDetector(
-                  onTap: onInfoTap,
-                  child: Icon(
-                    Icons.info_outline,
-                    size: 14.sp,
-                    color: cartuser.textSecondary,
+                  onTap: onInfo,
+                  child: const Icon(
+                    Icons.info_outline_rounded,
+                    size: 14,
+                    color: cartuser.textMuted,
                   ),
                 ),
               ],
             ],
           ),
-
           Text(
             value < 0 ? '-₹${_fmt(-value)}' : '₹${_fmt(value)}',
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: color ?? cartuser.textPrimary,
+              color: isDiscount ? cartuser.green : cartuser.textSecondary,
             ),
           ),
         ],
@@ -1697,130 +4089,123 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
   }
 
   void _showGstDialog(String type) {
-    // final data = cartData;
-
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-
-          titlePadding: EdgeInsets.fromLTRB(16.w, 12.h, 8.w, 0),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '$type Details',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14.sp,
-                  ),
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$type Breakdown',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: EdgeInsets.all(4.r),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: cartuser.border.withOpacity(0.3),
-                  ),
-                  child: Icon(
-                    Icons.close,
-                    size: 16.sp,
-                    color: cartuser.textSecondary,
-                  ),
-                ),
+            ),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.close_rounded,
+                size: 20,
+                color: cartuser.textSecondary,
               ),
-            ],
-          ),
-
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if ((cartData?.platformChargeGst ?? 0) > 0)
-                _dialogRow(
-                  'Platform $type',
-                  ((cartData?.platformChargeGst ?? 0)),
-                ),
-              if ((cartData?.packingChargeGst ?? 0) > 0)
-                _dialogRow(
-                  'Packing $type',
-                  ((cartData?.packingChargeGst ?? 0)),
-                ),
-              if ((cartData?.serviceChargeGst ?? 0) > 0)
-                _dialogRow(
-                  'Service $type',
-                  ((cartData?.serviceChargeGst ?? 0)),
-                ),
-
-              SizedBox(height: 8),
-              Divider(),
-
-              _dialogRow('Total $type', ((cartData?.gstTotal ?? 0) / 2)),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _dialogRow(String label, num value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(label), Text('₹${_fmt(value)}')],
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if ((cartData?.platformChargeGst ?? 0) > 0)
+              _dialogRow('Platform GST', cartData?.platformChargeGst ?? 0),
+            if ((cartData?.packingChargeGst ?? 0) > 0)
+              _dialogRow('Packing GST', cartData?.packingChargeGst ?? 0),
+            if ((cartData?.serviceChargeGst ?? 0) > 0)
+              _dialogRow('Service GST', cartData?.serviceChargeGst ?? 0),
+            const Divider(height: 20),
+            _dialogRow(
+              'Total GST',
+              (cartData?.gstTotal ?? 0) / 2,
+              isBold: true,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // ── Schedule order ──────────────────────────────────────────────────────
+  Widget _dialogRow(String label, num value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: cartuser.textSecondary,
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
+            ),
+          ),
+          Text(
+            '₹${_fmt(value)}',
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
+              color: isBold ? cartuser.textPrimary : cartuser.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Schedule Order ────────────────────────────────────────────────────────
   Widget _buildScheduleOrder() {
     final isUserScheduled =
         _orderType == "schedule" &&
         _selectedDate != null &&
         _selectedTime != null;
-
     final hasScheduledItems = cartData?.hasAnyScheduledItem ?? false;
 
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// 🔹 Title
           if (!isUserScheduled)
-            Text(
-              "Schedule your order",
+            const Text(
+              'Schedule Order',
               style: TextStyle(
-                fontSize: 15.sp,
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: cartuser.textPrimary,
               ),
             ),
 
-          isUserScheduled ? SizedBox(height: 14.h) : SizedBox.shrink(),
-
-          /// 🔸 Warning
           if (hasScheduledItems) ...[
+            const SizedBox(height: 10),
             Container(
-              margin: EdgeInsets.only(bottom: 12.h),
-              padding: EdgeInsets.all(12.w),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(10.r),
+                color: cartuser.amberLight,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.orange, size: 18.sp),
-                  SizedBox(width: 8.w),
-                  Expanded(
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    color: cartuser.amber,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
                     child: Text(
-                      "Some items require scheduling to continue.",
+                      'Some items in your cart require scheduling.',
                       style: TextStyle(
-                        fontSize: 12.sp,
+                        fontSize: 12,
                         color: cartuser.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1831,128 +4216,116 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             ),
           ],
 
-          /// 🟣 BEFORE SELECT (Row style)
-          if (!isUserScheduled)
-            InkWell(
-              borderRadius: BorderRadius.circular(12.r),
+          if (!isUserScheduled) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
               onTap: () async {
-                setState(() {
-                  _orderType = 'schedule';
-                });
+                setState(() => _orderType = 'schedule');
                 await _pickScheduleDateTime();
               },
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 13,
+                ),
                 decoration: BoxDecoration(
-                  color: cartuser.surface,
-                  borderRadius: BorderRadius.circular(12.r),
+                  color: cartuser.bg,
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: cartuser.border),
                 ),
                 child: Row(
                   children: [
-                    /// 📅 Calendar Icon
                     Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: cartuser.violet.withOpacity(0.1),
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: cartuser.brandLight,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.calendar_today_rounded,
-                        size: 16.sp,
-                        color: cartuser.violet,
+                        size: 16,
+                        color: cartuser.brand,
                       ),
                     ),
-
-                    SizedBox(width: 12.w),
-
-                    /// Text
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         hasScheduledItems
-                            ? "Schedule to continue"
-                            : "Choose date & time",
-                        style: TextStyle(
-                          fontSize: 13.sp,
+                            ? 'Schedule to continue'
+                            : 'Choose date & time',
+                        style: const TextStyle(
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: cartuser.textPrimary,
                         ),
                       ),
                     ),
-
-                    /// Arrow
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14.sp,
-                      color: cartuser.textSecondary,
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: cartuser.textMuted,
+                      size: 18,
                     ),
                   ],
                 ),
               ),
             ),
+          ],
 
-          /// 🟢 AFTER SELECT (Your existing card, slightly polished)
           if (isUserScheduled) ...[
-            SizedBox(height: 12.h),
+            const SizedBox(height: 12),
             Container(
-              padding: EdgeInsets.all(14.w),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: cartuser.green.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: cartuser.green.withOpacity(0.25)),
+                color: cartuser.greenLight,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: cartuser.green.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  /// ✅ Icon
                   Container(
-                    padding: EdgeInsets.all(8.w),
-                    decoration: BoxDecoration(
-                      color: cartuser.green.withOpacity(0.15),
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: cartuser.green,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.check,
-                      color: cartuser.green,
-                      size: 16.sp,
+                    child: const Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 14,
                     ),
                   ),
-
-                  SizedBox(width: 10.w),
-
-                  /// Date + Time
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Scheduled",
+                        const Text(
+                          'Scheduled',
                           style: TextStyle(
-                            fontSize: 12.sp,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: cartuser.green,
                           ),
                         ),
-                        SizedBox(height: 2.h),
+                        const SizedBox(height: 2),
                         Text(
                           '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}  •  ${_selectedTime!.format(context)}',
-                          style: TextStyle(
-                            fontSize: 12.sp,
+                          style: const TextStyle(
+                            fontSize: 12,
                             color: cartuser.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  /// Edit
                   GestureDetector(
                     onTap: _pickScheduleDateTime,
-                    child: Text(
-                      "Edit",
+                    child: const Text(
+                      'Edit',
                       style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: cartuser.violet,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: cartuser.brand,
                       ),
                     ),
                   ),
@@ -1968,7 +4341,6 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
   Future<void> _pickScheduleDateTime() async {
     final now = DateTime.now();
     final first = now.add(const Duration(minutes: 25));
-
     final date = await showDatePicker(
       context: context,
       initialDate: first,
@@ -1977,19 +4349,18 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(
-            primary: cartuser.violet,
+            primary: cartuser.brand,
             onPrimary: Colors.white,
             onSurface: Colors.black,
           ),
           textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(foregroundColor: cartuser.violet),
+            style: TextButton.styleFrom(foregroundColor: cartuser.brand),
           ),
         ),
         child: child!,
       ),
     );
     if (date == null) return;
-
     while (true) {
       final time = await showTimePicker(
         // ignore: use_build_context_synchronously
@@ -1997,25 +4368,19 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         initialTime: TimeOfDay.now(),
         builder: (ctx, child) => Theme(
           data: Theme.of(ctx).copyWith(
-            timePickerTheme: TimePickerThemeData(
-              backgroundColor: Colors.white,
-              dialHandColor: cartuser.violet,
-              dialBackgroundColor: cartuser.bg,
-            ),
             colorScheme: const ColorScheme.light(
-              primary: cartuser.violet,
+              primary: cartuser.brand,
               onPrimary: Colors.white,
               onSurface: Colors.black,
             ),
             textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(foregroundColor: cartuser.violet),
+              style: TextButton.styleFrom(foregroundColor: cartuser.brand),
             ),
           ),
           child: child!,
         ),
       );
       if (time == null) return;
-
       final selected = DateTime(
         date.year,
         date.month,
@@ -2035,7 +4400,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     }
   }
 
-  // ── Payment toggle button ───────────────────────────────────────────────
+  // ── Payment Toggle ────────────────────────────────────────────────────────
   Widget _buildPaymentToggle() {
     return GestureDetector(
       onTap: () {
@@ -2052,17 +4417,17 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       },
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 14.h),
+        padding: const EdgeInsets.symmetric(vertical: 15),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF6C63FF), Color(0xFF4A43C9)],
+            colors: [Color(0xFFFF6B35), Color(0xFFE84E1B)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: cartuser.violet.withOpacity(0.30),
+              color: cartuser.brand.withOpacity(0.28),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -2076,13 +4441,13 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   ? Icons.keyboard_arrow_up_rounded
                   : Icons.payment_rounded,
               color: Colors.white,
-              size: 20.sp,
+              size: 20,
             ),
-            SizedBox(width: 8.w),
+            const SizedBox(width: 8),
             Text(
               isExpanded ? 'Hide Payment Options' : 'Choose Payment Method',
-              style: TextStyle(
-                fontSize: 15.sp,
+              style: const TextStyle(
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
               ),
@@ -2112,7 +4477,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
-  // ── Place order button ──────────────────────────────────────────────────
+  // ── Place Order Button ────────────────────────────────────────────────────
   Widget _buildPlaceOrderButton() {
     return SizedBox(
       width: double.infinity,
@@ -2122,16 +4487,16 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: cartuser.green,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: cartuser.textMuted,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r),
           ),
-          shadowColor: cartuser.green.withOpacity(0.3),
         ),
         child: isPlacingOrder
             ? SizedBox(
-                width: 20.r,
-                height: 20.r,
+                width: 22,
+                height: 22,
                 child: const CircularProgressIndicator(
                   color: Colors.white,
                   strokeWidth: 2.5,
@@ -2140,8 +4505,8 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_rounded, size: 18.sp),
-                  SizedBox(width: 8.w),
+                  const Icon(Icons.bolt_rounded, size: 20),
+                  const SizedBox(width: 8),
                   Text(
                     'Place Order',
                     style: TextStyle(
@@ -2149,15 +4514,15 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(width: 8.w),
+                  const SizedBox(width: 10),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 4.h,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20.r),
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       '₹${(cartData?.grandTotal ?? 0).toStringAsFixed(2)}',
@@ -2173,81 +4538,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     );
   }
 
-  // ── Empty cart ──────────────────────────────────────────────────────────
-  Widget _buildEmptyCart() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(height: 40.h),
-          // Container(
-          //   width: 90.r,
-          //   height: 90.r,
-          //   decoration: BoxDecoration(
-          //     color: cartuser.violetDim,
-          //     shape: BoxShape.circle,
-          //   ),
-          //   child: Icon(
-          //     Icons.shopping_bag_outlined,
-          //     size: 40.sp,
-          //     color: cartuser.violet,
-          //   ),
-          // ),
-          // SizedBox(height: 20.h),
-          // Text(
-          //   'Your cart is empty',
-          //   style: TextStyle(
-          //     fontSize: 18.sp,
-          //     fontWeight: FontWeight.w800,
-          //     color: cartuser.textPrimary,
-          //   ),
-          // ),
-          // SizedBox(height: 6.h),
-          // Text(
-          //   'Add some delicious items to get started',
-          //   style: TextStyle(fontSize: 13.sp, color: cartuser.textSecondary),
-          // ),
-          // SizedBox(height: 24.h),
-          // GestureDetector(
-          //   onTap: () => Navigator.pushReplacement(
-          //     context,
-          //     MaterialPageRoute(builder: (_) => MainScreenfood()),
-          //   ),
-          //   child: Container(
-          //     padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
-          //     decoration: BoxDecoration(
-          //       color: cartuser.violet,
-          //       borderRadius: BorderRadius.circular(14.r),
-          //       boxShadow: [
-          //         BoxShadow(
-          //           color: cartuser.violet.withOpacity(0.3),
-          //           blurRadius: 16,
-          //           offset: const Offset(0, 6),
-          //         ),
-          //       ],
-          //     ),
-          //     child: Text(
-          //       'Browse Menu',
-          //       style: TextStyle(
-          //         fontSize: 14.sp,
-          //         fontWeight: FontWeight.w700,
-          //         color: Colors.white,
-          //       ),
-          //     ),
-          //   ),
-          // ),
-          SizedBox(height: 24.h),
-          if (homepageAds.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16.r),
-              child: BannerAdvertisement(ads: homepageAds, height: 200),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ── Shared card shell ───────────────────────────────────────────────────
+  // ── Shared card shell ─────────────────────────────────────────────────────
   Widget _card({required Widget child, EdgeInsets? padding}) {
     return Container(
       width: double.infinity,
@@ -2258,7 +4549,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         border: Border.all(color: cartuser.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: cartuser.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
