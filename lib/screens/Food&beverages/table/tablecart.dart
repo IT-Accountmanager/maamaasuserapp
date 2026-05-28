@@ -3032,39 +3032,41 @@ class _tablecartState extends State<tablecart>
 
   // ── Empty State ───────────────────────────────────────────────────────────
   Widget _buildEmptyCart() {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.6,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: const BoxDecoration(
-              color: _C.brandLight,
-              shape: BoxShape.circle,
+    return Center(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.6,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: const BoxDecoration(
+                color: _C.brandLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.shopping_cart_outlined,
+                size: 44,
+                color: _C.brand,
+              ),
             ),
-            child: const Icon(
-              Icons.shopping_cart_outlined,
-              size: 44,
-              color: _C.brand,
+            const SizedBox(height: 20),
+            const Text(
+              'Your cart is empty',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _C.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Your cart is empty',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: _C.textPrimary,
+            const SizedBox(height: 8),
+            const Text(
+              'Browse the menu and add something delicious',
+              style: TextStyle(fontSize: 14, color: _C.textSecondary),
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Browse the menu and add something delicious',
-            style: TextStyle(fontSize: 14, color: _C.textSecondary),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -3579,11 +3581,11 @@ class _tablecartState extends State<tablecart>
     if (cart == null) return const SizedBox.shrink();
 
     final subtotal = cart.subtotal;
-    final gstTotal = (cart.cgst ?? 0) + (cart.sgst ?? 0);
+    final gstTotal = (cart.cgst) + (cart.sgst);
     final grandTotal = cart.grandTotal;
     final discountAmount = cart.discountAmount ?? 0;
-    final platformCharges = cart.platformCharges ?? 0;
-    final serviceCharges = cart.serviceCharges ?? 0;
+    final platformCharges = cart.platformCharges;
+    final serviceCharges = cart.serviceCharges;
 
     return Column(
       children: [
@@ -4420,6 +4422,8 @@ class _QuantityControlState extends State<QuantityControl> {
     return widget.item.quantity > widget.item.previousQuantity;
   }
 
+  bool get _isSentItem => widget.item.orderStatus != null;
+
   Future<void> _updateQuantity(int newQty) async {
     if (_isUpdating) return;
     setState(() => _isUpdating = true);
@@ -4472,24 +4476,66 @@ class _QuantityControlState extends State<QuantityControl> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // _qtyBtn(
+          //   Icons.remove_rounded,
+          //   _C.red,
+          //   (_isUpdating || !_canDecrease)
+          //       ? null
+          //       : () async {
+          //           final newQty = widget.item.quantity - 1;
+          //
+          //           // Remove item completely if qty becomes 0
+          //           if (newQty == 0) {
+          //             final success = await food_Authservice.removeCartItem(
+          //               widget.item.itemId,
+          //             );
+          //
+          //             if (success) {
+          //               widget.onQuantityChanged();
+          //             }
+          //           } else {
+          //             _updateQuantity(newQty);
+          //           }
+          //         },
+          // ),
+          // MINUS
           _qtyBtn(
             Icons.remove_rounded,
             _C.red,
-            (_isUpdating || !_canDecrease)
+            !_canDecrease
                 ? null
                 : () async {
                     final newQty = widget.item.quantity - 1;
 
-                    // Remove item completely if qty becomes 0
-                    if (newQty == 0) {
-                      final success = await food_Authservice.removeCartItem(
-                        widget.item.itemId,
+                    // SHOW POPUP ONLY FOR SENT ITEMS
+                    if (_isSentItem) {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text("Remove Item"),
+                          content: const Text(
+                            "This item is already sent. Do you want to decrease quantity?",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text(
+                                "Yes",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
                       );
 
-                      if (success) {
-                        widget.onQuantityChanged();
-                      }
-                    } else {
+                      if (confirm != true) return;
+                    }
+
+                    if (newQty >= 0) {
                       _updateQuantity(newQty);
                     }
                   },
@@ -4516,12 +4562,26 @@ class _QuantityControlState extends State<QuantityControl> {
                   ),
           ),
 
+          // _qtyBtn(
+          //   Icons.add_rounded,
+          //   _C.green,
+          //   _isUpdating
+          //       ? null
+          //       : () => _updateQuantity(widget.item.quantity + 1),
+          // ),
           _qtyBtn(
             Icons.add_rounded,
             _C.green,
-            _isUpdating
-                ? null
-                : () => _updateQuantity(widget.item.quantity + 1),
+            _isSentItem
+                ? null // disable when item already sent
+                : () {
+                    if (!(widget.item.available ?? true)) {
+                      AppAlert.error(context, 'Not enough stock for this dish');
+                      return;
+                    }
+
+                    _updateQuantity(widget.item.quantity + 1);
+                  },
           ),
         ],
       ),

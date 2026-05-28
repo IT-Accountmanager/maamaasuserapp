@@ -1410,6 +1410,7 @@ import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/widgets/datetimehelper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
+import '../../../Models/food/tablecartmodel.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../Models/food/table_confirmedlist_model.dart';
 import '../../../Models/food/table_waitinglist_model.dart';
@@ -1913,6 +1914,98 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
     if (confirm == true) await _cancelArrival();
   }
 
+  Future<void> _handleLeaveTable() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => const _LeaveTableDialog(),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _loading = true);
+
+    final canLeave = await _canLeaveTable();
+
+    if (!canLeave) {
+      setState(() => _loading = false);
+
+      if (mounted) {
+        AppAlert.error(
+          context,
+          'Cannot leave table while items are active/preparing',
+        );
+      }
+
+      return;
+    }
+
+    // clear cart
+    final cleared = await food_Authservice.deleteTableDineInCart();
+
+    if (!cleared) {
+      setState(() => _loading = false);
+
+      if (mounted) {
+        AppAlert.error(context, 'Failed to clear table cart');
+      }
+
+      return;
+    }
+
+    // cancel table
+    final cancelled = await food_Authservice.sendArrivalStatus(
+      widget.item.id,
+      'CANCELLED',
+    );
+
+    setState(() => _loading = false);
+
+    if (!cancelled) {
+      if (mounted) {
+        AppAlert.error(context, 'Failed to leave table');
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _arrivalStatus = 'CANCELLED';
+        _arrived = false;
+      });
+
+      AppAlert.success(context, 'Table left successfully');
+    }
+  }
+
+  Future<bool> _canLeaveTable() async {
+    try {
+      final List<TableCartModel> cartData = await food_Authservice
+          .fetchTableCart();
+
+      if (cartData.isEmpty) {
+        return true;
+      }
+
+      for (final cart in cartData) {
+        final items = cart.cartItems;
+
+        for (final item in items) {
+          final status = item.orderStatus;
+
+          // active order exists
+          if (status != null && status.toString().trim().isNotEmpty) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    } catch (e) {
+      print("Validation Error => $e");
+      return false;
+    }
+  }
+
   Future<double?> _getDistanceFromRestaurant() async {
     try {
       LocationPermission perm = await Geolocator.checkPermission();
@@ -2147,7 +2240,10 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
                           loading: _loading,
                           locked: _isArrivalLocked,
                           onArrived: _handleArrivalTap,
-                          onCancel: _handleCancelTap,
+                          onBeforeArrivalCancel: _handleCancelTap,
+
+                          onAfterArrivalCancel: _handleLeaveTable,
+
                           onDirections: _openGoogleMapsDirections,
                           onAddItems: () => Navigator.push(
                             context,
@@ -2313,7 +2409,8 @@ class _ActionButtons extends StatelessWidget {
   final bool loading;
   final bool locked;
   final VoidCallback onArrived;
-  final VoidCallback onCancel;
+  final VoidCallback onBeforeArrivalCancel;
+  final VoidCallback onAfterArrivalCancel;
   final VoidCallback onAddItems;
   final VoidCallback onDirections;
 
@@ -2322,7 +2419,8 @@ class _ActionButtons extends StatelessWidget {
     required this.loading,
     required this.locked,
     required this.onArrived,
-    required this.onCancel,
+    required this.onBeforeArrivalCancel,
+    required this.onAfterArrivalCancel,
     required this.onAddItems,
     required this.onDirections,
   });
@@ -2342,41 +2440,31 @@ class _ActionButtons extends StatelessWidget {
     }
 
     if (arrived) {
-      return _ActionButton(
-        label: 'Add Items to Order',
-        icon: Icons.restaurant_menu_rounded,
-        color: Colors.white,
-        bg: _T.brand,
-        onTap: onAddItems,
-        fullWidth: true,
+      return Row(
+        children: [
+          Expanded(
+            child: _ActionButton(
+              label: 'Add Items to Order',
+              icon: Icons.restaurant_menu_rounded,
+              color: Colors.white,
+              bg: _T.brand,
+              onTap: onAddItems,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          _ActionButton(
+            label: 'Leave Table',
+            icon: Icons.logout_rounded,
+            color: Colors.white,
+            bg: Colors.orange,
+            onTap: onAfterArrivalCancel,
+          ),
+        ],
       );
     }
 
-    // return Row(
-    //   children: [
-    //     Expanded(
-    //       flex: 3,
-    //       child: _ActionButton(
-    //         label: locked ? 'Arrived (30 min before)' : "I've Arrived",
-    //         icon: locked
-    //             ? Icons.lock_clock_rounded
-    //             : Icons.where_to_vote_rounded,
-    //         color: locked ? _T.inkMuted : Colors.white,
-    //         bg: locked ? _T.completedLight : _T.confirmed,
-    //         disabled: locked,
-    //         onTap: onArrived,
-    //       ),
-    //     ),
-    //     const SizedBox(width: 8),
-    //     _ActionButton(
-    //       label: 'Cancel',
-    //       icon: Icons.close_rounded,
-    //       color: _T.danger,
-    //       bg: _T.dangerLight,
-    //       onTap: onCancel,
-    //     ),
-    //   ],
-    // );
     return Column(
       children: [
         Row(
@@ -2401,7 +2489,7 @@ class _ActionButtons extends StatelessWidget {
               icon: Icons.close_rounded,
               color: Colors.white,
               bg: _T.danger,
-              onTap: onCancel,
+              onTap: onBeforeArrivalCancel,
             ),
           ],
         ),
@@ -2833,6 +2921,66 @@ class _EmptyView extends StatelessWidget {
           const SizedBox(height: 6),
           Text(message, style: _T.bodyMd),
         ],
+      ),
+    );
+  }
+}
+
+class _LeaveTableDialog extends StatelessWidget {
+  const _LeaveTableDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.logout_rounded, size: 40, color: Colors.orange),
+
+            const SizedBox(height: 16),
+
+            const Text(
+              'Leave Table?',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+
+            const SizedBox(height: 10),
+
+            const Text(
+              'You can leave table only when all ordered items are inactive.',
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(context, false);
+                    },
+                    child: const Text('No'),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context, true);
+                    },
+                    child: const Text('Yes'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
