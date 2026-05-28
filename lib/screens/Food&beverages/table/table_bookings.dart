@@ -2132,11 +2132,11 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
                             label: 'Guests',
                             value: '${item.capacity} people',
                           ),
-                          _InfoCell(
-                            icon: Icons.timer_rounded,
-                            label: 'Duration',
-                            value: '${item.durationMinutes} min',
-                          ),
+                          // _InfoCell(
+                          //   icon: Icons.timer_rounded,
+                          //   label: 'Duration',
+                          //   value: '${item.durationMinutes} min',
+                          // ),
                         ],
                       ),
 

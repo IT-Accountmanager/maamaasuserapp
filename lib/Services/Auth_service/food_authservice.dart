@@ -521,6 +521,56 @@ class food_Authservice {
     }
   }
 
+  // static Future<bool> addToTableCart({
+  //   required int dishId,
+  //   required int quantity,
+  //   required int seatingId,
+  // }) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final int userId = prefs.getInt('userId') ?? 0;
+  //   final String customerId = prefs.getString("customerId") ?? '';
+  //
+  //   final endpoint =
+  //       "api/cart/add/table/cart/add-item?userId=$userId&seatingId=$seatingId&customerId=$customerId";
+  //   final body = {"dishId": dishId, "quantity": quantity};
+  //
+  //   try {
+  //     print("🟡 ADD TO TABLE CART START");
+  //     print("➡️ Endpoint: $endpoint");
+  //     print("➡️ Body: $body");
+  //     print("➡️ userId: $userId, seatingId: $seatingId");
+  //
+  //     final response = await ApiClient.post(endpoint, body, service: "food");
+  //
+  //     print("📥 STATUS CODE: ${response.statusCode}");
+  //     print("📥 RESPONSE BODY: ${response.body}");
+  //
+  //     if (response.statusCode != 200 && response.statusCode != 201) {
+  //       print("❌ API FAILED (Invalid status code)");
+  //       return false;
+  //     }
+  //
+  //     final data = jsonDecode(response.body);
+  //     print("✅ DECODED RESPONSE: $data");
+  //
+  //     final int? cartId = data['cartId'];
+  //
+  //     if (cartId != null) {
+  //       await prefs.setInt('cartId', cartId);
+  //       print("🟢 CART ID SAVED: $cartId");
+  //     } else {
+  //       print("⚠️ cartId NOT FOUND in response");
+  //     }
+  //
+  //     print("🟢 ADD TO CART SUCCESS");
+  //     return true;
+  //   } catch (e, stack) {
+  //     print("🔥 ERROR IN addToTableCart");
+  //     print("❌ Error: $e");
+  //     print("📍 StackTrace: $stack");
+  //     return false;
+  //   }
+  // }
   static Future<bool> addToTableCart({
     required int dishId,
     required int quantity,
@@ -532,13 +582,15 @@ class food_Authservice {
 
     final endpoint =
         "api/cart/add/table/cart/add-item?userId=$userId&seatingId=$seatingId&customerId=$customerId";
-    final body = {"dishId": dishId, "quantity": quantity};
+
+    final body = [
+      {"dishId": dishId, "quantity": quantity},
+    ];
 
     try {
       print("🟡 ADD TO TABLE CART START");
       print("➡️ Endpoint: $endpoint");
       print("➡️ Body: $body");
-      print("➡️ userId: $userId, seatingId: $seatingId");
 
       final response = await ApiClient.post(endpoint, body, service: "food");
 
@@ -546,26 +598,19 @@ class food_Authservice {
       print("📥 RESPONSE BODY: ${response.body}");
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        print("❌ API FAILED (Invalid status code)");
         return false;
       }
 
       final data = jsonDecode(response.body);
-      print("✅ DECODED RESPONSE: $data");
 
       final int? cartId = data['cartId'];
 
       if (cartId != null) {
         await prefs.setInt('cartId', cartId);
-        print("🟢 CART ID SAVED: $cartId");
-      } else {
-        print("⚠️ cartId NOT FOUND in response");
       }
 
-      print("🟢 ADD TO CART SUCCESS");
       return true;
     } catch (e, stack) {
-      print("🔥 ERROR IN addToTableCart");
       print("❌ Error: $e");
       print("📍 StackTrace: $stack");
       return false;

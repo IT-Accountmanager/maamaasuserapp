@@ -2402,86 +2402,82 @@ class _tablecartState extends State<tablecart>
   }
 
   // ── WebSocket / data methods (unchanged logic) ────────────────────────────
-  // Future<void> _initializeRealtimeCart() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final userId = prefs.getInt('userId');
-  //   if (userId == null) return;
-  //   _userId = userId;
-  //   _wsManager.subscribeUserCart(userId, (data) async {
-  //     if (!mounted) return;
-  //     try {
-  //       final updatedCart = TableCartModel.fromJson(data);
-  //       setState(() {
-  //         tableCartData = updatedCart;
-  //         _cartItems = List<CartItem>.from(updatedCart.cartItems);
-  //         final delivered =
-  //             updatedCart.cartItems.isNotEmpty &&
-  //             updatedCart.cartItems
-  //                 .where((i) => i.orderStatus != "CANCELLED")
-  //                 .every((i) => i.orderStatus == "DELIVERED");
-  //         if (!delivered) isExpanded = false;
-  //         _isLoading = false;
-  //       });
-  //     } catch (_) {}
-  //   });
-  // }
   Future<void> _initializeRealtimeCart() async {
     final prefs = await SharedPreferences.getInstance();
-
     final userId = prefs.getInt('userId');
-
     if (userId == null) return;
-
     _userId = userId;
-
-    // _wsManager.subscribeUserCart(userId, (data) async {
-    //   debugPrint('📦 CART WS EVENT RECEIVED');
-    //
-    //   if (!mounted) return;
-    //
-    //   // Prevent multiple rapid API calls
-    //   _cartReloadDebounce?.cancel();
-    //
-    //   _cartReloadDebounce = Timer(
-    //     const Duration(milliseconds: 500),
-    //         () async {
-    //       debugPrint('🔄 Reloading full cart from API');
-    //
-    //       await _loadCartItems();
-    //     },
-    //   );
-    // });
     _wsManager.subscribeUserCart(userId, (data) async {
       if (!mounted) return;
-
-      _cartReloadDebounce?.cancel();
-
-      _cartReloadDebounce = Timer(
-        const Duration(milliseconds: 500),
-            () async {
-
-          // Preserve current scroll position
-          final currentOffset = _scrollController.hasClients
-              ? _scrollController.offset
-              : 0.0;
-
-          await _loadCartItems();
-
-          // Restore scroll position
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_scrollController.hasClients) {
-              _scrollController.jumpTo(
-                currentOffset.clamp(
-                  0,
-                  _scrollController.position.maxScrollExtent,
-                ),
-              );
-            }
-          });
-        },
-      );
+      try {
+        final updatedCart = TableCartModel.fromJson(data);
+        setState(() {
+          tableCartData = updatedCart;
+          _cartItems = List<CartItem>.from(updatedCart.cartItems);
+          final delivered =
+              updatedCart.cartItems.isNotEmpty &&
+              updatedCart.cartItems
+                  .where((i) => i.orderStatus != "CANCELLED")
+                  .every((i) => i.orderStatus == "DELIVERED");
+          if (!delivered) isExpanded = false;
+          _isLoading = false;
+        });
+      } catch (_) {}
     });
   }
+  // Future<void> _initializeRealtimeCart() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //
+  //   final userId = prefs.getInt('userId');
+  //
+  //   if (userId == null) return;
+  //
+  //   _userId = userId;
+  //
+  //   _wsManager.subscribeUserCart(userId, (data) async {
+  //     debugPrint('📦 CART WS EVENT RECEIVED');
+  //
+  //     if (!mounted) return;
+  //
+  //     // Prevent multiple rapid API calls
+  //     _cartReloadDebounce?.cancel();
+  //
+  //     _cartReloadDebounce = Timer(
+  //       const Duration(milliseconds: 500),
+  //           () async {
+  //         debugPrint('🔄 Reloading full cart from API');
+  //
+  //         await _loadCartItems();
+  //       },
+  //     );
+  //   });
+  //   // _wsManager.subscribeUserCart(userId, (data) async {
+  //   //   if (!mounted) return;
+  //   //
+  //   //   _cartReloadDebounce?.cancel();
+  //   //
+  //   //   _cartReloadDebounce = Timer(const Duration(milliseconds: 500), () async {
+  //   //     // Preserve current scroll position
+  //   //     final currentOffset = _scrollController.hasClients
+  //   //         ? _scrollController.offset
+  //   //         : 0.0;
+  //   //
+  //   //     await _loadCartItems();
+  //   //
+  //   //     // Restore scroll position
+  //   //     WidgetsBinding.instance.addPostFrameCallback((_) {
+  //   //       if (_scrollController.hasClients) {
+  //   //         _scrollController.jumpTo(
+  //   //           currentOffset.clamp(
+  //   //             0,
+  //   //             _scrollController.position.maxScrollExtent,
+  //   //           ),
+  //   //         );
+  //   //       }
+  //   //     });
+  //   //   });
+  //   // });
+  // }
 
   void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3196,12 +3192,13 @@ class _tablecartState extends State<tablecart>
                     style: const TextStyle(fontSize: 12, color: _C.textMuted),
                   ),
                   const Spacer(),
+
+                  QuantityControl(
+                    item: item,
+                    onQuantityChanged: () => setState(() {}),
+                  ),
+                  const SizedBox(width: 8),
                   if (item.orderStatus == null) ...[
-                    QuantityControl(
-                      item: item,
-                      onQuantityChanged: () => setState(() {}),
-                    ),
-                    const SizedBox(width: 8),
                     SendButton(
                       item: item,
                       isSending: _isSendingMap[item.itemId] == true,
@@ -4254,6 +4251,141 @@ class _tablecartState extends State<tablecart>
 }
 
 // ─── Quantity Control ─────────────────────────────────────────────────────────
+// class QuantityControl extends StatefulWidget {
+//   final CartItem item;
+//   final VoidCallback onQuantityChanged;
+//
+//   const QuantityControl({
+//     super.key,
+//     required this.item,
+//     required this.onQuantityChanged,
+//   });
+//
+//   @override
+//   State<QuantityControl> createState() => _QuantityControlState();
+// }
+//
+// class _QuantityControlState extends State<QuantityControl> {
+//   bool _isUpdating = false;
+//
+//   bool get _canDecrease {
+//     if (widget.item.previousQuantity == 0) return widget.item.quantity > 0;
+//     return widget.item.quantity > widget.item.previousQuantity;
+//   }
+//
+//   void _updateQuantityUI(int newQty) {
+//     setState(() {
+//       widget.item.quantity = newQty;
+//       widget.item.totalPrice = widget.item.price * newQty;
+//     });
+//     widget.onQuantityChanged();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       decoration: BoxDecoration(
+//         color: _C.bg,
+//         borderRadius: BorderRadius.circular(10.r),
+//         border: Border.all(color: _C.border),
+//       ),
+//       child: Row(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           _btn(
+//             Icons.remove_rounded,
+//             _canDecrease
+//                 ? () {
+//                     if (widget.item.quantity - 1 >= 0) {
+//                       _updateQuantityUI(widget.item.quantity - 1);
+//                     }
+//                   }
+//                 : null,
+//           ),
+//           // _btn(
+//           //   Icons.remove_rounded,
+//           //   _canDecrease
+//           //       ? () async {
+//           //           final newQty = widget.item.quantity - 1;
+//           //
+//           //           // Remove item when quantity becomes 0
+//           //           if (newQty <= 0) {
+//           //             setState(() => _isUpdating = true);
+//           //
+//           //             try {
+//           //               final success = await food_Authservice.deleteCartItem(
+//           //                 itemId: widget.item.itemId,
+//           //               );
+//           //
+//           //               if (success) {
+//           //                 widget.item.quantity = 0;
+//           //
+//           //                 widget.onQuantityChanged();
+//           //
+//           //                 if (mounted) {
+//           //                   ScaffoldMessenger.of(context).showSnackBar(
+//           //                     const SnackBar(
+//           //                       content: Text('Item removed from cart'),
+//           //                     ),
+//           //                   );
+//           //                 }
+//           //               } else {
+//           //                 if (mounted) {
+//           //                   AppAlert.error(context, 'Failed to remove item');
+//           //                 }
+//           //               }
+//           //             } catch (e) {
+//           //               if (mounted) {
+//           //                 AppAlert.error(context, 'Something went wrong');
+//           //               }
+//           //             } finally {
+//           //               if (mounted) {
+//           //                 setState(() => _isUpdating = false);
+//           //               }
+//           //             }
+//           //
+//           //             return;
+//           //           }
+//           //
+//           //           // Normal decrease
+//           //           _updateQuantityUI(newQty);
+//           //         }
+//           //       : null,
+//           // ),
+//           Padding(
+//             padding: EdgeInsets.symmetric(horizontal: 10.w),
+//             child: Text(
+//               '${widget.item.quantity}',
+//               style: TextStyle(
+//                 fontSize: 14.sp,
+//                 fontWeight: FontWeight.w700,
+//                 color: _C.textPrimary,
+//               ),
+//             ),
+//           ),
+//           _btn(Icons.add_rounded, () {
+//             if (!(widget.item.available ?? true)) {
+//               AppAlert.error(context, 'Not enough stock for this dish');
+//               return;
+//             }
+//             _updateQuantityUI(widget.item.quantity + 1);
+//           }),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _btn(IconData icon, VoidCallback? onTap) {
+//     final active = onTap != null;
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Container(
+//         padding: EdgeInsets.all(7.w),
+//         child: Icon(icon, size: 14.sp, color: active ? _C.brand : _C.textMuted),
+//       ),
+//     );
+//   }
+// }
 class QuantityControl extends StatefulWidget {
   final CartItem item;
   final VoidCallback onQuantityChanged;
@@ -4271,22 +4403,67 @@ class QuantityControl extends StatefulWidget {
 class _QuantityControlState extends State<QuantityControl> {
   bool _isUpdating = false;
 
+  // Minus is blocked at previousQuantity (what's already sent)
+  // If nothing sent yet, minimum is 1
+  int get _floor =>
+      widget.item.previousQuantity > 0 ? widget.item.previousQuantity : 1;
+  //
+  // bool get _canDecrease => widget.item.quantity > _floor;
+
   bool get _canDecrease {
-    if (widget.item.previousQuantity == 0) return widget.item.quantity > 0;
+    // Not yet sent to API
+    if (widget.item.previousQuantity == 0) {
+      return widget.item.quantity > 0;
+    }
+
+    // Already sent to API
     return widget.item.quantity > widget.item.previousQuantity;
   }
 
-  void _updateQuantityUI(int newQty) {
-    setState(() {
-      widget.item.quantity = newQty;
-      widget.item.totalPrice = widget.item.price * newQty;
-    });
-    widget.onQuantityChanged();
+  Future<void> _updateQuantity(int newQty) async {
+    if (_isUpdating) return;
+    setState(() => _isUpdating = true);
+
+    final success = await food_Authservice.updateCartItemQuantity(
+      itemId: widget.item.itemId,
+      quantity: newQty,
+    );
+
+    if (success) {
+      setState(() {
+        widget.item.quantity = newQty;
+        widget.item.totalPrice = widget.item.price * newQty;
+      });
+      widget.onQuantityChanged();
+    } else {
+      if (mounted) AppAlert.error(context, '❌ Failed to update quantity');
+    }
+
+    if (mounted) setState(() => _isUpdating = false);
+  }
+
+  Widget _qtyBtn(IconData icon, Color color, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(6.w),
+        decoration: BoxDecoration(
+          color: color.withOpacity(onTap == null ? 0.05 : 0.12),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Icon(
+          icon,
+          size: 14.sp,
+          color: onTap == null ? Colors.grey.shade300 : color,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: _C.bg,
         borderRadius: BorderRadius.circular(10.r),
@@ -4295,96 +4472,58 @@ class _QuantityControlState extends State<QuantityControl> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _btn(
+          _qtyBtn(
             Icons.remove_rounded,
-            _canDecrease
-                ? () {
-                    if (widget.item.quantity - 1 >= 0) {
-                      _updateQuantityUI(widget.item.quantity - 1);
+            _C.red,
+            (_isUpdating || !_canDecrease)
+                ? null
+                : () async {
+                    final newQty = widget.item.quantity - 1;
+
+                    // Remove item completely if qty becomes 0
+                    if (newQty == 0) {
+                      final success = await food_Authservice.removeCartItem(
+                        widget.item.itemId,
+                      );
+
+                      if (success) {
+                        widget.onQuantityChanged();
+                      }
+                    } else {
+                      _updateQuantity(newQty);
                     }
-                  }
-                : null,
+                  },
           ),
-          // _btn(
-          //   Icons.remove_rounded,
-          //   _canDecrease
-          //       ? () async {
-          //           final newQty = widget.item.quantity - 1;
-          //
-          //           // Remove item when quantity becomes 0
-          //           if (newQty <= 0) {
-          //             setState(() => _isUpdating = true);
-          //
-          //             try {
-          //               final success = await food_Authservice.deleteCartItem(
-          //                 itemId: widget.item.itemId,
-          //               );
-          //
-          //               if (success) {
-          //                 widget.item.quantity = 0;
-          //
-          //                 widget.onQuantityChanged();
-          //
-          //                 if (mounted) {
-          //                   ScaffoldMessenger.of(context).showSnackBar(
-          //                     const SnackBar(
-          //                       content: Text('Item removed from cart'),
-          //                     ),
-          //                   );
-          //                 }
-          //               } else {
-          //                 if (mounted) {
-          //                   AppAlert.error(context, 'Failed to remove item');
-          //                 }
-          //               }
-          //             } catch (e) {
-          //               if (mounted) {
-          //                 AppAlert.error(context, 'Something went wrong');
-          //               }
-          //             } finally {
-          //               if (mounted) {
-          //                 setState(() => _isUpdating = false);
-          //               }
-          //             }
-          //
-          //             return;
-          //           }
-          //
-          //           // Normal decrease
-          //           _updateQuantityUI(newQty);
-          //         }
-          //       : null,
-          // ),
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 10.w),
-            child: Text(
-              '${widget.item.quantity}',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w700,
-                color: _C.textPrimary,
-              ),
-            ),
+            child: _isUpdating
+                ? SizedBox(
+                    width: 14.w,
+                    height: 14.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _C.green,
+                    ),
+                  )
+                : Text(
+                    '${widget.item.quantity}',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w700,
+                      color: _C.textPrimary,
+                    ),
+                  ),
           ),
-          _btn(Icons.add_rounded, () {
-            if (!(widget.item.available ?? true)) {
-              AppAlert.error(context, 'Not enough stock for this dish');
-              return;
-            }
-            _updateQuantityUI(widget.item.quantity + 1);
-          }),
-        ],
-      ),
-    );
-  }
 
-  Widget _btn(IconData icon, VoidCallback? onTap) {
-    final active = onTap != null;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(7.w),
-        child: Icon(icon, size: 14.sp, color: active ? _C.brand : _C.textMuted),
+          _qtyBtn(
+            Icons.add_rounded,
+            _C.green,
+            _isUpdating
+                ? null
+                : () => _updateQuantity(widget.item.quantity + 1),
+          ),
+        ],
       ),
     );
   }

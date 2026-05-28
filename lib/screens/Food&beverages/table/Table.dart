@@ -304,7 +304,12 @@ class _TableTabContentState extends State<TableTabContent> {
                             const SizedBox(height: 12),
                           ],
 
-                          _buildTimeField(bottomSheetContext),
+                          // _buildTimeField(bottomSheetContext),
+                          _buildTimeField(
+                            bottomSheetContext,
+                            bottomSheetSetState,
+                          ),
+
                           const SizedBox(height: 12),
                           // _buildTextField(
                           //   noofpeople,
@@ -312,7 +317,8 @@ class _TableTabContentState extends State<TableTabContent> {
                           //   Icons.people,
                           //   TextInputType.number,
                           // ),
-                          _buildCapacityDropdown(),
+                          // _buildCapacityDropdown(),
+                          _buildCapacityDropdown(bottomSheetSetState),
                           const SizedBox(height: 20),
                           _buildSubmitButton(bottomSheetContext),
                           const SizedBox(height: 16),
@@ -326,7 +332,8 @@ class _TableTabContentState extends State<TableTabContent> {
     );
   }
 
-  Widget _buildCapacityDropdown() {
+  // Widget _buildCapacityDropdown() {
+  Widget _buildCapacityDropdown(StateSetter bottomSheetSetState) {
     return DropdownButtonFormField<int>(
       value: selectedCapacity,
       decoration: InputDecoration(
@@ -344,8 +351,13 @@ class _TableTabContentState extends State<TableTabContent> {
           child: Text("$capacity People"),
         );
       }).toList(),
+      // onChanged: (value) {
+      //   setState(() {
+      //     selectedCapacity = value;
+      //   });
+      // },
       onChanged: (value) {
-        setState(() {
+        bottomSheetSetState(() {
           selectedCapacity = value;
         });
       },
@@ -455,7 +467,11 @@ class _TableTabContentState extends State<TableTabContent> {
     );
   }
 
-  Widget _buildTimeField(BuildContext context) {
+  // Widget _buildTimeField(BuildContext context) {
+  Widget _buildTimeField(
+    BuildContext context,
+    StateSetter bottomSheetSetState,
+  ) {
     return TextField(
       controller: timeController,
       readOnly: true,
@@ -508,7 +524,13 @@ class _TableTabContentState extends State<TableTabContent> {
             return;
           }
 
-          setState(() {
+          // setState(() {
+          //   selectedTime = picked;
+          //
+          //   timeController.text =
+          //       "${picked.hour}:${picked.minute.toString().padLeft(2, '0')}";
+          // });
+          bottomSheetSetState(() {
             selectedTime = picked;
 
             timeController.text =
