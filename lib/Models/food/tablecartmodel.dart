@@ -99,21 +99,21 @@ class CartItem {
   bool? available;
 
   CartItem.empty()
-      : itemId = 0,
-        price = 0.0,
-        dishName = '',
-        dishId = 0,
-        gst = 0.0,
-        packingCharges = 0.0,
-        quantity = 0,
-        previousQuantity = 0,
-        chefType = '',
-        totalPrice = 0.0,
-        note = '',
-        orderStatus = '',
-        dishImage = '',
-        orderType = '',
-        available = true; // ✅ NEW
+    : itemId = 0,
+      price = 0.0,
+      dishName = '',
+      dishId = 0,
+      gst = 0.0,
+      packingCharges = 0.0,
+      quantity = 0,
+      previousQuantity = 0,
+      chefType = '',
+      totalPrice = 0.0,
+      note = '',
+      orderStatus = '',
+      dishImage = '',
+      orderType = '',
+      available = true; // ✅ NEW
 
   CartItem({
     required this.itemId,
@@ -146,9 +146,7 @@ class CartItem {
       chefType: json['chefType'] ?? '',
       totalPrice: (json['totalPrice'] ?? 0).toDouble(),
 
-      available: json['available'] == null
-          ? true
-          : json['available'] as bool,
+      available: json['available'] == null ? true : json['available'] as bool,
 
       note: json['note'],
       orderStatus: json['orderStatus'],

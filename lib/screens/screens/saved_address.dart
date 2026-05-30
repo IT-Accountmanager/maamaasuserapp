@@ -222,27 +222,27 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
     setState(() => isLoading = false);
   }
 
-  Future<void> _handleSearch() async {
-    Prediction? p = await PlacesAutocomplete.show(
-      context: context,
-      apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
-      mode: Mode.overlay,
-      language: 'en',
-      components: [Component(Component.country, 'in')],
-      logo: const SizedBox.shrink(),
-    );
-    if (p != null) {
-      final places = GoogleMapsPlaces(
-        apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
-        apiHeaders: await const GoogleApiHeaders().getHeaders(),
-      );
-      final detail = await places.getDetailsByPlaceId(p.placeId!);
-      final loc = detail.result.geometry!.location;
-      _updateLocation(LatLng(loc.lat, loc.lng));
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    }
-  }
+  // Future<void> _handleSearch() async {
+  //   Prediction? p = await PlacesAutocomplete.show(
+  //     context: context,
+  //     apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
+  //     mode: Mode.overlay,
+  //     language: 'en',
+  //     components: [Component(Component.country, 'in')],
+  //     logo: const SizedBox.shrink(),
+  //   );
+  //   if (p != null) {
+  //     final places = GoogleMapsPlaces(
+  //       apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
+  //       apiHeaders: await const GoogleApiHeaders().getHeaders(),
+  //     );
+  //     final detail = await places.getDetailsByPlaceId(p.placeId!);
+  //     final loc = detail.result.geometry!.location;
+  //     _updateLocation(LatLng(loc.lat, loc.lng));
+  //     // ignore: use_build_context_synchronously
+  //     Navigator.pop(context);
+  //   }
+  // }
 
   // 1. Add these to your State class
   final TextEditingController _searchController = TextEditingController();

@@ -1,4 +1,6 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import 'package:maamaas/screens/Food&beverages/table/seating_details.dart';
+
 import '../../../Models/food/Restaurentscdhule.dart';
 import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
@@ -18,15 +20,13 @@ class _TableTabContentState extends State<TableTabContent> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
   final TextEditingController timeController = TextEditingController();
-  // final TextEditingController noofpeople = TextEditingController();
   TimeOfDay? selectedTime;
   bool _isLoading = false;
 
   List<int> capacities = [];
   int? selectedCapacity;
   bool isCapacityLoading = false;
-  // Restaurent_Banner? banner;
-  // bool isBannerLoading = true;
+
   List<RestaurantSchedule> schedules = [];
   RestaurantSchedule? selectedDaySchedule;
 
@@ -36,7 +36,6 @@ class _TableTabContentState extends State<TableTabContent> {
   @override
   void initState() {
     super.initState();
-    fetchCapacities();
     _loadSchedules();
     nameController.addListener(() => setState(() {}));
     phoneController.addListener(() => setState(() {}));
@@ -50,21 +49,7 @@ class _TableTabContentState extends State<TableTabContent> {
     phoneController.dispose();
     dateController.dispose();
     timeController.dispose();
-    // noofpeople.dispose();
     super.dispose();
-  }
-
-  Future<void> fetchCapacities() async {
-    setState(() {
-      isCapacityLoading = true;
-    });
-
-    final data = await food_Authservice.fetchSeatingCapacities(widget.vendorId);
-
-    setState(() {
-      capacities = data;
-      isCapacityLoading = false;
-    });
   }
 
   Future<void> _loadSchedules() async {
@@ -99,22 +84,12 @@ class _TableTabContentState extends State<TableTabContent> {
     }
   }
 
-  void _clearFields() {
-    nameController.clear();
-    phoneController.clear();
-    dateController.clear();
-    timeController.clear();
-
-    selectedTime = null;
-    selectedCapacity = null;
-  }
-
   bool get isFormValid {
     return nameController.text.trim().isNotEmpty &&
         phoneController.text.trim().isNotEmpty &&
         dateController.text.trim().isNotEmpty &&
         timeController.text.trim().isNotEmpty &&
-        selectedCapacity != null &&
+        // selectedCapacity != null &&
         selectedTime != null &&
         !_isLoading;
   }
@@ -304,21 +279,11 @@ class _TableTabContentState extends State<TableTabContent> {
                             const SizedBox(height: 12),
                           ],
 
-                          // _buildTimeField(bottomSheetContext),
                           _buildTimeField(
                             bottomSheetContext,
                             bottomSheetSetState,
                           ),
 
-                          const SizedBox(height: 12),
-                          // _buildTextField(
-                          //   noofpeople,
-                          //   "Number of People",
-                          //   Icons.people,
-                          //   TextInputType.number,
-                          // ),
-                          // _buildCapacityDropdown(),
-                          _buildCapacityDropdown(bottomSheetSetState),
                           const SizedBox(height: 20),
                           _buildSubmitButton(bottomSheetContext),
                           const SizedBox(height: 16),
@@ -328,38 +293,6 @@ class _TableTabContentState extends State<TableTabContent> {
             );
           },
         );
-      },
-    );
-  }
-
-  // Widget _buildCapacityDropdown() {
-  Widget _buildCapacityDropdown(StateSetter bottomSheetSetState) {
-    return DropdownButtonFormField<int>(
-      value: selectedCapacity,
-      decoration: InputDecoration(
-        labelText: "Number of People",
-        prefixIcon: Icon(Icons.people, color: AppColors.of(context).primary),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.of(context).primary),
-        ),
-      ),
-      items: capacities.map((capacity) {
-        return DropdownMenuItem<int>(
-          value: capacity,
-          child: Text("$capacity People"),
-        );
-      }).toList(),
-      // onChanged: (value) {
-      //   setState(() {
-      //     selectedCapacity = value;
-      //   });
-      // },
-      onChanged: (value) {
-        bottomSheetSetState(() {
-          selectedCapacity = value;
-        });
       },
     );
   }
@@ -524,12 +457,6 @@ class _TableTabContentState extends State<TableTabContent> {
             return;
           }
 
-          // setState(() {
-          //   selectedTime = picked;
-          //
-          //   timeController.text =
-          //       "${picked.hour}:${picked.minute.toString().padLeft(2, '0')}";
-          // });
           bottomSheetSetState(() {
             selectedTime = picked;
 
@@ -545,285 +472,75 @@ class _TableTabContentState extends State<TableTabContent> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: !isFormValid
-            ? null
-            : () async {
-                setState(() => _isLoading = true);
-                await _submitBooking(context);
-                setState(() => _isLoading = false);
-              },
+        onPressed: isFormValid
+            ? () {
+          if (nameController.text.trim().isEmpty) {
+            AppAlert.error(context, "Please enter name");
+            return;
+          }
+
+          if (phoneController.text.trim().isEmpty) {
+            AppAlert.error(context, "Please enter phone number");
+            return;
+          }
+
+          if (dateController.text.trim().isEmpty) {
+            AppAlert.error(context, "Please select booking date");
+            return;
+          }
+
+          if (timeController.text.trim().isEmpty ||
+              selectedTime == null) {
+            AppAlert.error(context, "Please select booking time");
+            return;
+          }
+
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SeatingScreen(
+                  vendorId: widget.vendorId,
+                  guestName: nameController.text.trim(),
+                  phoneNumber: phoneController.text.trim(),
+                  bookingDate: dateController.text.trim(),
+                  startTime:
+                  "${selectedTime!.hour.toString().padLeft(2, '0')}:"
+                      "${selectedTime!.minute.toString().padLeft(2, '0')}:00",
+                  capacity: selectedCapacity ?? 0,
+                ),
+              ),
+            );
+          }
+        }
+            : null, // ✅ Button disabled when form invalid
+
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.of(context).primary,
+          disabledBackgroundColor: Colors.grey.shade400,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
+
         child: _isLoading
             ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            color: Colors.white,
+            strokeWidth: 2,
+          ),
+        )
             : const Text(
-                "Schedule Booking",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-      ),
-    );
-  }
-
-  Future<void> _submitBooking(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userId');
-    final vendorId = widget.vendorId;
-
-    if (userId == null) {
-      _showErrorDialog('User not logged in');
-      return;
-    }
-
-    if (!_areFieldsValid()) {
-      _showErrorDialog('Please fill all fields');
-      return;
-    }
-
-    final response = await food_Authservice.submitBooking(
-      vendorId: vendorId,
-      guestName: nameController.text.trim(),
-      phoneNumber: phoneController.text.trim(),
-      bookingDate: dateController.text.trim(),
-      startTime:
-          "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}:00",
-      // capacity: int.tryParse(noofpeople.text.trim()) ?? 0,
-      capacity: selectedCapacity ?? 0,
-    );
-
-    if (response != null && response['statusCode'] == 200) {
-      final booking = response['data'];
-      _clearFields();
-
-      Navigator.pop(context);
-
-      _showSuccessDialog(
-        "Booking Confirmed",
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Your table has been booked successfully.",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-
-            const SizedBox(height: 20),
-
-            _buildBookingRow("📅 Date", booking['bookingDate']),
-            _buildBookingRow("⏰ Time", booking['startTime']),
-            _buildBookingRow("🏢 Seating", booking['seating']['name']),
-            _buildBookingRow("👥 Capacity", "${booking['capacity']}"),
-
-            const SizedBox(height: 18),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.green.shade300),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    "Table Code",
-                    style: TextStyle(fontSize: 14, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    booking['code'],
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.access_time_filled,
-                    color: Colors.orange,
-                    size: 20,
-                  ),
-                  SizedBox(width: 10),
-
-                  Expanded(
-                    child: Text(
-                      "Please arrive 30 minutes prior to your scheduled booking time.",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    } else if (response != null && response['statusCode'] == 202) {
-      Navigator.pop(context);
-
-      _showSuccessDialog(
-        "Added to Waiting List",
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-
-            Icon(Icons.hourglass_top_rounded, color: Colors.orange, size: 60),
-
-            const SizedBox(height: 18),
-
-            const Text(
-              "All tables are currently full.",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-            ),
-
-            const SizedBox(height: 10),
-
-            const Text(
-              "You have been added to the waiting list successfully.",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Colors.black87),
-            ),
-
-            const SizedBox(height: 20),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.orange.shade200),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                  SizedBox(width: 10),
-
-                  Expanded(
-                    child: Text(
-                      "We will notify you once a table becomes available.",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    } else {
-      _showErrorDialog("Failed to schedule booking");
-    }
-  }
-
-  bool _areFieldsValid() {
-    return nameController.text.trim().isNotEmpty &&
-        phoneController.text.trim().isNotEmpty &&
-        dateController.text.trim().isNotEmpty &&
-        timeController.text.trim().isNotEmpty &&
-        //       noofpeople.text.trim().isNotEmpty &&
-        selectedCapacity != null &&
-        selectedTime != null;
-  }
-
-  Widget _buildBookingRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
+          "Select Table",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 15))),
-        ],
-      ),
-    );
-  }
-
-  void _showSuccessDialog(String title, Widget content) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-        titlePadding: EdgeInsets.zero,
-
-        title: Column(
-          children: [
-            const SizedBox(height: 20),
-            const Icon(Icons.check_circle, color: Colors.green, size: 70),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-          ],
         ),
-
-        content: content,
-
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.of(context).primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text("Done"),
-          ),
-        ],
       ),
     );
   }
@@ -911,8 +628,6 @@ class _TableTabContentState extends State<TableTabContent> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Icon(icon, size: 24),
-          // const SizedBox(height: 8),
           Text(
             text,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),

@@ -1,9 +1,10 @@
 import '../../Models/food/Restaurentscdhule.dart';
 import '../../Models/food/aboutus_model.dart';
+import '../../Models/food/seatingdetails.dart';
 import '../../Models/food/team_model.dart';
 import '../../Models/subscrptions/advertisement_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../Models/food/table_confirmedlist_model.dart';
+import '../../Models/food/table_confirmedlist_model.dart' hide Seating;
 import '../../Models/food/restaurent_banner_model.dart';
 import '../../Models/food/table_waitinglist_model.dart';
 import '../../Models/subscrptions/coupon_model.dart';
@@ -645,6 +646,67 @@ class food_Authservice {
     }
   }
 
+  static Future<bool> createTableRequest({
+    required int userId,
+    required int itemId,
+    required int cartId,
+    required String tableCode,
+    required String requestType,
+    required String reason,
+  }) async {
+    try {
+      print("========== CREATE TABLE REQUEST ==========");
+
+      final endpoint = "api/table-requests/create";
+
+      print("ENDPOINT => $endpoint");
+
+      final prefs = await SharedPreferences.getInstance();
+
+      final storedUserId = prefs.getInt('userId');
+
+      print("ARG USER ID => $userId");
+      print("PREF USER ID => $storedUserId");
+
+      final body = {
+        "userId": storedUserId ?? userId,
+        "itemId": itemId,
+        "cartId": cartId,
+        "tableCode": tableCode,
+        "requestType": requestType,
+        "reason": reason,
+      };
+
+      print("REQUEST BODY => $body");
+
+      final response = await ApiClient.post(
+        endpoint,
+        body,
+        service: 'food',
+      );
+
+      print("STATUS CODE => ${response.statusCode}");
+      print("RESPONSE BODY => ${response.body}");
+
+      final success =
+          response.statusCode == 200 ||
+              response.statusCode == 201;
+
+      print("REQUEST SUCCESS => $success");
+
+      print("==========================================");
+
+      return success;
+    } catch (e, stack) {
+      print("========== CREATE REQUEST ERROR ==========");
+      print("ERROR => $e");
+      print("STACK => $stack");
+      print("==========================================");
+
+      return false;
+    }
+  }
+
   static Future<List<FavoriteDish>> getFavoritesByUserId() async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
@@ -690,6 +752,52 @@ class food_Authservice {
     }
   }
 
+  /// ===============================
+  /// AUTH SERVICE
+  /// ===============================
+
+  static Future<List<SeatingDetails>> fetchVendorBookings({
+    required int vendorId,
+    required String date,
+  }) async {
+    try {
+      final endpoint =
+          "api/seatingdetails/vendor/$vendorId/vendor-bookings?date=$date";
+
+      final response = await ApiClient.get(endpoint, service: "food");
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+
+        return data.map((e) => SeatingDetails.fromJson(e)).toList();
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint("fetchVendorBookings Error: $e");
+      return [];
+    }
+  }
+
+  static Future<List<Seating>> fetchAllTables({required int vendorId}) async {
+    try {
+      final endpoint = "api/seating/all/vendor/$vendorId";
+
+      final response = await ApiClient.get(endpoint, service: "food");
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+
+        return data.map((e) => Seating.fromJson(e)).toList();
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint("fetchVendorBookings Error: $e");
+      return [];
+    }
+  }
+
   static Future<Map<String, dynamic>?> submitBooking({
     required int vendorId,
     required String guestName,
@@ -697,6 +805,7 @@ class food_Authservice {
     required String bookingDate,
     required String startTime,
     required int capacity,
+    required int seatingId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
@@ -706,15 +815,17 @@ class food_Authservice {
       return null;
     }
 
-    final endpoint =
-        "api/seatingdetails/shedule/advance/booking/$userId/$vendorId";
+    final endpoint = "api/seatingdetails/shedule/advance/booking/$vendorId";
 
     final body = {
+      "userId": userId,
       "guestName": guestName,
       "phoneNumber": phoneNumber,
       "bookingDate": bookingDate,
       "startTime": startTime,
       "capacity": capacity,
+      "paymentEnable": false,
+      "tableId": seatingId,
     };
 
     try {
@@ -922,12 +1033,14 @@ class food_Authservice {
   static Future<List<ConfirmedList>> fetchConfirmedList() async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
+    final String customerId = prefs.getString("customerId") ?? '';
 
     if (userId == 0) {
       return [];
     }
 
-    final endpoint = "api/seatingdetails/get/by/$userId";
+    final endpoint =
+        "api/seatingdetails/get/by/tabledetails?userId=$userId&customerId=$customerId";
 
     try {
       final response = await ApiClient.get(

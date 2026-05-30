@@ -2229,6 +2229,2731 @@
 //   );
 // }
 
+// import 'package:maamaas/Models/food/orders_model.dart';
+// import 'package:maamaas/screens/Food&beverages/table/tablecartpayment.dart';
+// import '../../../Services/App_color_service/app_colours.dart';
+// import '../../../Services/Auth_service/Subscription_authservice.dart';
+// import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+// import '../../../widgets/widgets/food/currentcart_notifier.dart';
+// import '../../../Services/paymentservice/razorpayservice.dart';
+// import '../../../Services/websockets/web_socket_manager.dart';
+// import '../../../Services/Auth_service/food_authservice.dart';
+// import 'package:flutter_screenutil/flutter_screenutil.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+// import '../../../Models/subscrptions/coupon_model.dart';
+// import '../../../Models/subscrptions/wallet_model.dart';
+// import '../../../Models/food/tablecartmodel.dart';
+// import 'package:flutter/material.dart';
+// import 'package:shimmer/shimmer.dart';
+// import '../../Mainscreen.dart';
+// import '../food_invoice.dart';
+// import 'table_menu.dart';
+// import 'dart:async';
+//
+// // ─── Design Tokens ───────────────────────────────────────────────────────────
+// class tabecartcolour {
+//   // Backgrounds
+//   static const bg = Color(0xFFF7F8FA);
+//   static const surface = Color(0xFFFFFFFF);
+//   static const surfaceElevated = Color(0xFFFBFCFE);
+//
+//   // Brand
+//   static const brand = Color(0xFFFF6B35); // warm orange – food-app energy
+//   static const brandLight = Color(0xFFFFF0EB);
+//   static const brandDark = Color(0xFFE55A27);
+//
+//   // Text
+//   static const textPrimary = Color(0xFF1C1C1E);
+//   static const textSecondary = Color(0xFF6B7280);
+//   static const textMuted = Color(0xFFB0B8C8);
+//
+//   // Semantic
+//   static const green = Color(0xFF22C55E);
+//   static const greenLight = Color(0xFFDCFCE7);
+//   static const red = Color(0xFFEF4444);
+//   static const redLight = Color(0xFFFEE2E2);
+//   static const amber = Color(0xFFF59E0B);
+//   static const amberLight = Color(0xFFFEF3C7);
+//   static const blue = Color(0xFF3B82F6);
+//   static const blueLight = Color(0xFFEFF6FF);
+//
+//   // Border / shadow
+//   static const border = Color(0xFFEEF0F5);
+//   static const shadow = Color(0x0A000000);
+// }
+//
+// // ─── Status Badge Helper ──────────────────────────────────────────────────────
+// class _StatusBadge extends StatelessWidget {
+//   final String status;
+//   const _StatusBadge(this.status);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final s = status.toUpperCase();
+//     Color bg, fg;
+//     IconData icon;
+//
+//     if (s == 'DELIVERED') {
+//       bg = tabecartcolour.greenLight;
+//       fg = tabecartcolour.green;
+//       icon = Icons.check_circle_rounded;
+//     } else if (s == 'CANCELLED') {
+//       bg = tabecartcolour.redLight;
+//       fg = tabecartcolour.red;
+//       icon = Icons.cancel_rounded;
+//     } else if (s == 'CONFIRMED' || s == 'PENDING') {
+//       bg = tabecartcolour.amberLight;
+//       fg = tabecartcolour.amber;
+//       icon = Icons.schedule_rounded;
+//     } else {
+//       bg = tabecartcolour.blueLight;
+//       fg = tabecartcolour.blue;
+//       icon = Icons.info_rounded;
+//     }
+//
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+//       decoration: BoxDecoration(
+//         color: bg,
+//         borderRadius: BorderRadius.circular(20),
+//       ),
+//       child: Row(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Icon(icon, size: 12, color: fg),
+//           const SizedBox(width: 4),
+//           Text(
+//             s.replaceAll('_', ' '),
+//             style: TextStyle(
+//               fontSize: 11,
+//               fontWeight: FontWeight.w700,
+//               color: fg,
+//               letterSpacing: 0.2,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+//
+// // ─── Enums ────────────────────────────────────────────────────────────────────
+// enum PaymentOverlayState {
+//   none,
+//   placingOrder,
+//   openingGateway,
+//   processing,
+//   success,
+// }
+//
+// // ─── Main Widget ──────────────────────────────────────────────────────────────
+// class tablecart extends StatefulWidget {
+//   final int seatingId;
+//   const tablecart({super.key, required this.seatingId});
+//
+//   @override
+//   State<tablecart> createState() => _tablecartState();
+// }
+//
+// class _tablecartState extends State<tablecart>
+//     with SingleTickerProviderStateMixin {
+//   TableCartModel? tableCartData;
+//   String selectedPaymentMethod = "";
+//   String selectedSubWallet = "";
+//   bool isPlacingOrder = false;
+//   Map<String, dynamic>? checkoutData;
+//   List<CartItem> _cartItems = [];
+//   bool _isLoading = true;
+//   String? _error;
+//   bool isSent = false;
+//   bool isExpanded = false;
+//   bool isServiceChargeApplied = true;
+//   Wallet? wallet;
+//   int? appliedCouponId;
+//   String? appliedCouponCode;
+//   bool send = false;
+//   final Map<int, bool> _isSendingMap = {};
+//   late ScrollController _scrollController;
+//   bool isCouponLoading = false;
+//   final Map<int, TextEditingController> _noteControllers = {};
+//   Set<String> selectedSubWallets = {};
+//   PaymentOverlayState _overlayState = PaymentOverlayState.none;
+//   int selectedQuantity = 0;
+//
+//   final WebSocketManager _wsManager = WebSocketManager();
+//   int? _userId;
+//   Timer? _cartReloadDebounce;
+//   @override
+//   void initState() {
+//     super.initState();
+//     _scrollController = ScrollController();
+//     _loadWallet();
+//     _loadCartItems();
+//     _initializeData();
+//     _initializeRealtimeCart();
+//   }
+//
+//   @override
+//   void dispose() {
+//     if (_userId != null) _wsManager.unsubscribeUserCart(_userId!);
+//     _scrollController.dispose();
+//     for (final c in _noteControllers.values) c.dispose();
+//     _cartReloadDebounce?.cancel();
+//
+//     super.dispose();
+//   }
+//
+//   // ── WebSocket / data methods (unchanged logic) ────────────────────────────
+//   Future<void> _initializeRealtimeCart() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     final userId = prefs.getInt('userId');
+//     if (userId == null) return;
+//     _userId = userId;
+//     _wsManager.subscribeUserCart(userId, (data) async {
+//       if (!mounted) return;
+//       try {
+//         final updatedCart = TableCartModel.fromJson(data);
+//         setState(() {
+//           tableCartData = updatedCart;
+//           _cartItems = List<CartItem>.from(updatedCart.cartItems);
+//           final delivered =
+//               updatedCart.cartItems.isNotEmpty &&
+//               updatedCart.cartItems
+//                   .where((i) => i.orderStatus != "CANCELLED")
+//                   .every((i) => i.orderStatus == "DELIVERED");
+//           if (!delivered) isExpanded = false;
+//           _isLoading = false;
+//         });
+//       } catch (_) {}
+//     });
+//   }
+//   // Future<void> _initializeRealtimeCart() async {
+//   //   final prefs = await SharedPreferences.getInstance();
+//   //
+//   //   final userId = prefs.getInt('userId');
+//   //
+//   //   if (userId == null) return;
+//   //
+//   //   _userId = userId;
+//   //
+//   //   _wsManager.subscribeUserCart(userId, (data) async {
+//   //     debugPrint('📦 CART WS EVENT RECEIVED');
+//   //
+//   //     if (!mounted) return;
+//   //
+//   //     // Prevent multiple rapid API calls
+//   //     _cartReloadDebounce?.cancel();
+//   //
+//   //     _cartReloadDebounce = Timer(
+//   //       const Duration(milliseconds: 500),
+//   //           () async {
+//   //         debugPrint('🔄 Reloading full cart from API');
+//   //
+//   //         await _loadCartItems();
+//   //       },
+//   //     );
+//   //   });
+//   //   // _wsManager.subscribeUserCart(userId, (data) async {
+//   //   //   if (!mounted) return;
+//   //   //
+//   //   //   _cartReloadDebounce?.cancel();
+//   //   //
+//   //   //   _cartReloadDebounce = Timer(const Duration(milliseconds: 500), () async {
+//   //   //     // Preserve current scroll position
+//   //   //     final currentOffset = _scrollController.hasClients
+//   //   //         ? _scrollController.offset
+//   //   //         : 0.0;
+//   //   //
+//   //   //     await _loadCartItems();
+//   //   //
+//   //   //     // Restore scroll position
+//   //   //     WidgetsBinding.instance.addPostFrameCallback((_) {
+//   //   //       if (_scrollController.hasClients) {
+//   //   //         _scrollController.jumpTo(
+//   //   //           currentOffset.clamp(
+//   //   //             0,
+//   //   //             _scrollController.position.maxScrollExtent,
+//   //   //           ),
+//   //   //         );
+//   //   //       }
+//   //   //     });
+//   //   //   });
+//   //   // });
+//   // }
+//
+//   void scrollToBottom() {
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       if (_scrollController.hasClients) {
+//         _scrollController.animateTo(
+//           _scrollController.position.maxScrollExtent,
+//           duration: const Duration(milliseconds: 400),
+//           curve: Curves.easeOut,
+//         );
+//       }
+//     });
+//   }
+//
+//   void scrollToTop() {
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       if (_scrollController.hasClients) {
+//         _scrollController.animateTo(
+//           0,
+//           duration: const Duration(milliseconds: 400),
+//           curve: Curves.easeOut,
+//         );
+//       }
+//     });
+//   }
+//
+//   Future<void> _loadWallet() async {
+//     final w = await subscription_AuthService.fetchWallet();
+//     setState(() => wallet = w);
+//   }
+//
+//   Future<void> _onRefresh() async {
+//     try {
+//       final updatedCarts = await food_Authservice.fetchTableCart();
+//       final updatedWallet = await subscription_AuthService.fetchWallet();
+//       if (!mounted) return;
+//       setState(() {
+//         if (updatedCarts.isNotEmpty) {
+//           final freshCart = updatedCarts.first;
+//           tableCartData = freshCart;
+//           _cartItems = List<CartItem>.from(freshCart.cartItems);
+//           final delivered =
+//               freshCart.cartItems.isNotEmpty &&
+//               freshCart.cartItems
+//                   .where((i) => i.orderStatus != "CANCELLED")
+//                   .every((i) => i.orderStatus == "DELIVERED");
+//           if (!delivered) isExpanded = false;
+//         } else {
+//           tableCartData = null;
+//           _cartItems = [];
+//         }
+//         wallet = updatedWallet;
+//       });
+//     } catch (_) {}
+//   }
+//
+//   Future<void> _initializeData() async {
+//     try {
+//       final data = await food_Authservice.fetchTableCart();
+//       if (data.isEmpty) return;
+//       if (!mounted) return;
+//       setState(() => tableCartData = data.first);
+//     } catch (_) {}
+//   }
+//
+//   Future<bool> _deleteCart() async {
+//     try {
+//       final success = await food_Authservice.deleteTableDineInCart();
+//       if (!mounted) return false;
+//       if (success) {
+//         CartNotifier.count.value = 0;
+//         AppAlert.success(context, "Cart cleared");
+//         setState(() {
+//           tableCartData = null;
+//           _cartItems.clear();
+//         });
+//         return true;
+//       }
+//       return false;
+//     } catch (e) {
+//       if (!mounted) return false;
+//       AppAlert.error(context, e.toString().replaceFirst("Exception: ", ""));
+//       return false;
+//     }
+//   }
+//
+//   double getSelectedWalletBalance() {
+//     if (wallet == null) return 0;
+//     double t = 0;
+//     if (selectedSubWallets.contains("Company Loaded")) {
+//       t += wallet!.companyLoadedAmount;
+//     }
+//     if (selectedSubWallets.contains("Self Loaded")) {
+//       t += wallet!.selfLoadedAmount;
+//     }
+//     if (selectedSubWallets.contains("Cashbacks")) t += wallet!.cashbackAmount;
+//     if (selectedSubWallets.contains("Postpaid used amount")) {
+//       t += wallet!.postPaidUsage;
+//     }
+//     return t;
+//   }
+//
+//   Future<void> placeOrder() async {
+//     if (selectedPaymentMethod.isEmpty) {
+//       AppAlert.error(context, "Please select a payment method");
+//       return;
+//     }
+//     if (selectedPaymentMethod == "Maamaas_Wallet" &&
+//         selectedSubWallets.isEmpty) {
+//       AppAlert.error(context, "Please select at least one wallet type");
+//       return;
+//     }
+//     if (selectedPaymentMethod == "Maamaas_Wallet") {
+//       final wb = getSelectedWalletBalance();
+//       final gt = (tableCartData?.grandTotal ?? 0).toDouble();
+//       if (wb < gt) {
+//         AppAlert.error(
+//           context,
+//           "Insufficient wallet balance\nWallet: ₹${wb.toStringAsFixed(2)}\nOrder Total: ₹${gt.toStringAsFixed(2)}",
+//         );
+//         return;
+//       }
+//     }
+//     setState(() => isPlacingOrder = true);
+//     try {
+//       if (selectedPaymentMethod == "Online_Payment") {
+//         final amount = (tableCartData?.grandTotal ?? 0).toDouble();
+//         if (mounted) {
+//           setState(() => _overlayState = PaymentOverlayState.openingGateway);
+//         }
+//         final orderId = await food_Authservice.createOrder(amount);
+//         if (mounted) {
+//           setState(() => _overlayState = PaymentOverlayState.openingGateway);
+//         }
+//         if (orderId == null) {
+//           AppAlert.error(context, "Failed to create payment order");
+//           return;
+//         }
+//         final rp = RazorpayService();
+//         rp.onSuccess = (res) async {
+//           final pid = res.paymentId!;
+//           final oid = res.orderId!;
+//           if (mounted) {
+//             setState(() => _overlayState = PaymentOverlayState.processing);
+//           }
+//           await _callOrderApi(
+//             paymentMethod: "Online_Payment",
+//             razorpayPaymentId: pid,
+//             razorpayOrderId: oid,
+//             amount: amount,
+//           );
+//           if (mounted) setState(() => _overlayState = PaymentOverlayState.none);
+//           if (mounted) {
+//             food_Authservice
+//                 .capturePayment(paymentId: pid, amount: amount)
+//                 .catchError((_) {});
+//           } else {
+//             AppAlert.error(context, "Order failed. Refund in 3–5 days.");
+//           }
+//         };
+//         rp.onError = (res) {
+//           if (mounted) {
+//             setState(() {
+//               _overlayState = PaymentOverlayState.none;
+//               isPlacingOrder = false;
+//             });
+//           }
+//           AppAlert.error(context, "Payment failed: ${res.message}");
+//         };
+//         rp.startPayment(
+//           orderId: orderId,
+//           amount: amount,
+//           description: "Online Payment via Razorpay",
+//         );
+//         return;
+//       }
+//       final amt = tableCartData!.grandTotal.toDouble();
+//       await _callOrderApi(
+//         paymentMethod: selectedPaymentMethod,
+//         razorpayPaymentId: "",
+//         razorpayOrderId: "",
+//         amount: amt,
+//       );
+//     } catch (e) {
+//       String message = e.toString().contains("Exception:")
+//           ? e.toString().replaceFirst("Exception: ", "")
+//           : e.toString();
+//       if (mounted) setState(() => _overlayState = PaymentOverlayState.none);
+//       AppAlert.error(context, message);
+//     } finally {
+//       if (mounted) setState(() => isPlacingOrder = false);
+//     }
+//   }
+//
+//   bool get allItemsDelivered {
+//     if (tableCartData == null) return false;
+//     return tableCartData!.cartItems.isNotEmpty &&
+//         tableCartData!.cartItems
+//             .where((i) => i.orderStatus != "CANCELLED")
+//             .every((i) => i.orderStatus == "DELIVERED");
+//   }
+//
+//   bool get canDeleteCart {
+//     if (tableCartData == null) return false;
+//     return tableCartData!.cartItems.isNotEmpty &&
+//         tableCartData!.cartItems.every((item) => item.orderStatus == null);
+//   }
+//
+//   List<String> mapWalletsToEnum(List<String> selected) {
+//     return selected.map((w) {
+//       switch (w) {
+//         case "Cashbacks":
+//           return "CASHBACK";
+//         case "Self Loaded":
+//           return "SELF_LOADED";
+//         case "Postpaid used amount":
+//           return "POST_PAID";
+//         case "Company Loaded":
+//           return "COMPANY_LOADED";
+//         case "Earned Amount":
+//           return "EARNED_AMOUNT";
+//         default:
+//           return w.toUpperCase().replaceAll(' ', '_');
+//       }
+//     }).toList();
+//   }
+//
+//   Future<void> _callOrderApi({
+//     required String paymentMethod,
+//     required String razorpayPaymentId,
+//     required String razorpayOrderId,
+//     required double amount,
+//   }) async {
+//     final prefs = await SharedPreferences.getInstance();
+//     final cartId = prefs.getInt('cartId');
+//     if (cartId == null) return;
+//     final result = await food_Authservice.placeDirectOrder(
+//       cartId: cartId,
+//       paymentMethod: paymentMethod,
+//       razorpayPaymentId: razorpayPaymentId,
+//       razorpayOrderId: razorpayOrderId,
+//       walletTypes: mapWalletsToEnum(selectedSubWallets.toList()),
+//       amount: amount,
+//     );
+//     if (result['success'] == false) {
+//       AppAlert.error(context, result['error'] ?? "Unknown error");
+//       return;
+//     }
+//     final orderId = result['orderId'];
+//     if (orderId == null || orderId is! int) {
+//       AppAlert.error(context, "Invalid Order ID returned");
+//       return;
+//     }
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(builder: (_) => food_Invoice(orderId: orderId)),
+//     );
+//   }
+//
+//   Future<void> _loadCartItems({int? updatedItemId}) async {
+//     setState(() {
+//       _isLoading = true;
+//       _error = null;
+//     });
+//     try {
+//       final result = await food_Authservice.fetchTableCart();
+//       if (result.isNotEmpty) {
+//         final freshCart = result.first;
+//         final fetchedItems = freshCart.cartItems;
+//         setState(() {
+//           tableCartData = freshCart;
+//           final delivered =
+//               freshCart.cartItems.isNotEmpty &&
+//               freshCart.cartItems
+//                   .where((i) => i.orderStatus != "CANCELLED")
+//                   .every((i) => i.orderStatus == "DELIVERED");
+//           if (!delivered) isExpanded = false;
+//           if (updatedItemId != null) {
+//             final updatedItem = fetchedItems.firstWhere(
+//               (item) => item.itemId == updatedItemId,
+//               orElse: () => CartItem.empty(),
+//             );
+//             final index = _cartItems.indexWhere(
+//               (item) => item.itemId == updatedItemId,
+//             );
+//             if (index != -1 && updatedItem.itemId != 0) {
+//               _cartItems[index] = updatedItem;
+//             } else {
+//               _cartItems = fetchedItems;
+//             }
+//           } else {
+//             _cartItems = fetchedItems;
+//           }
+//           _isLoading = false;
+//         });
+//       } else {
+//         setState(() {
+//           _cartItems = [];
+//           tableCartData = null;
+//           _isLoading = false;
+//         });
+//       }
+//     } catch (e) {
+//       setState(() {
+//         _error = e.toString();
+//         _isLoading = false;
+//       });
+//     }
+//   }
+//
+//   // ── BUILD ─────────────────────────────────────────────────────────────────
+//   @override
+//   Widget build(BuildContext context) {
+//     ScreenUtil.init(context);
+//
+//     return Stack(
+//       children: [
+//         Scaffold(
+//           backgroundColor: tabecartcolour.bg,
+//           appBar: _buildAppBar(),
+//           body: SafeArea(
+//             child: RefreshIndicator(
+//               onRefresh: _onRefresh,
+//               color: tabecartcolour.brand,
+//               backgroundColor: Colors.white,
+//               displacement: 40,
+//               strokeWidth: 2.5,
+//               child: SingleChildScrollView(
+//                 controller: _scrollController,
+//                 physics: const AlwaysScrollableScrollPhysics(),
+//                 padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 32.h),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     if (!_isLoading &&
+//                         (tableCartData == null ||
+//                             tableCartData!.cartItems.isEmpty))
+//                       _buildEmptyCart()
+//                     else ...[
+//                       _buildCartItems(context),
+//                       SizedBox(height: 8.h),
+//                       _buildAddMoreRow(context),
+//                       SizedBox(height: 16.h),
+//                       if (tableCartData != null &&
+//                           tableCartData!.cartItems.isNotEmpty) ...[
+//                         if (allItemsDelivered) _buildGenerateBillButton(),
+//                         SizedBox(height: 12.h),
+//                         if (isExpanded) ...[
+//                           _buildCouponRow(),
+//                           SizedBox(height: 12.h),
+//                           _buildSummaryCard(),
+//                         ],
+//                       ],
+//                     ],
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ),
+//         if (_overlayState != PaymentOverlayState.none)
+//           Positioned.fill(
+//             child: AbsorbPointer(
+//               child: Container(
+//                 color: Colors.black.withOpacity(0.6),
+//                 child: Center(child: _overlayContent()),
+//               ),
+//             ),
+//           ),
+//       ],
+//     );
+//   }
+//
+//   // ── App Bar ───────────────────────────────────────────────────────────────
+//   PreferredSizeWidget _buildAppBar() {
+//     return PreferredSize(
+//       preferredSize: const Size.fromHeight(56),
+//       child: Container(
+//         decoration: const BoxDecoration(
+//           color: Colors.white,
+//           border: Border(bottom: BorderSide(color: tabecartcolour.border, width: 1)),
+//         ),
+//         child: SafeArea(
+//           child: Row(
+//             children: [
+//               const SizedBox(width: 4),
+//               IconButton(
+//                 icon: const Icon(
+//                   Icons.arrow_back_ios_new_rounded,
+//                   size: 18,
+//                   color: tabecartcolour.textPrimary,
+//                 ),
+//                 onPressed: () {
+//                   if (Navigator.canPop(context)) {
+//                     Navigator.pop(context);
+//                   } else {
+//                     Navigator.pushReplacement(
+//                       context,
+//                       MaterialPageRoute(builder: (_) => const MainScreenfood()),
+//                     );
+//                   }
+//                 },
+//               ),
+//               Expanded(
+//                 child: Center(
+//                   child: Text(
+//                     'Table ${tableCartData?.tableCode ?? ''}',
+//                     style: const TextStyle(
+//                       fontSize: 15,
+//                       fontWeight: FontWeight.w700,
+//                       color: tabecartcolour.brand,
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               IconButton(
+//                 icon: const Icon(
+//                   Icons.delete_outline_rounded,
+//                   color: tabecartcolour.red,
+//                   size: 22,
+//                 ),
+//                 onPressed: _confirmDeleteCart,
+//               ),
+//               const SizedBox(width: 4),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Future<void> _confirmDeleteCart() async {
+//     final confirm = await showDialog<bool>(
+//       context: context,
+//       builder: (_) => AlertDialog(
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+//         title: const Text(
+//           'Clear Cart?',
+//           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+//         ),
+//         content: const Text(
+//           'All items will be removed from your cart.',
+//           style: TextStyle(color: tabecartcolour.textSecondary),
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Navigator.pop(context, false),
+//             child: const Text(
+//               'Cancel',
+//               style: TextStyle(color: tabecartcolour.textSecondary),
+//             ),
+//           ),
+//           TextButton(
+//             onPressed: () => Navigator.pop(context, true),
+//             child: const Text(
+//               'Clear',
+//               style: TextStyle(color: tabecartcolour.red, fontWeight: FontWeight.w700),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//     if (confirm == true) {
+//       final vendorId = tableCartData?.vendorId;
+//       final seatingId = tableCartData?.seatingId;
+//       final deleted = await _deleteCart();
+//       if (!mounted) return;
+//       if (deleted && vendorId != null && seatingId != null) {
+//         Navigator.pushReplacement(
+//           context,
+//           MaterialPageRoute(
+//             builder: (_) =>
+//                 tablemneuScreen(vendorId: vendorId, seatingId: seatingId),
+//           ),
+//         );
+//       }
+//     }
+//   }
+//
+//   // ── Overlay ───────────────────────────────────────────────────────────────
+//   Widget _overlayContent() {
+//     switch (_overlayState) {
+//       case PaymentOverlayState.placingOrder:
+//         return _dialogLoader(
+//           "Placing your order...",
+//           Icons.shopping_bag_outlined,
+//         );
+//       case PaymentOverlayState.openingGateway:
+//         return _dialogLoader(
+//           "Redirecting To Razorpay...",
+//           Icons.lock_outline_rounded,
+//         );
+//       case PaymentOverlayState.processing:
+//         return _dialogLoader("Confirming payment...", Icons.verified_outlined);
+//       default:
+//         return const SizedBox.shrink();
+//     }
+//   }
+//
+//   Widget _dialogLoader(String text, IconData icon) {
+//     return Material(
+//       color: Colors.transparent,
+//       child: Container(
+//         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+//         decoration: BoxDecoration(
+//           color: Colors.white,
+//           borderRadius: BorderRadius.circular(20),
+//           boxShadow: [
+//             BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 24),
+//           ],
+//         ),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             Container(
+//               width: 56,
+//               height: 56,
+//               decoration: BoxDecoration(
+//                 color: tabecartcolour.brandLight,
+//                 shape: BoxShape.circle,
+//               ),
+//               child: const Center(
+//                 child: CircularProgressIndicator(
+//                   color: tabecartcolour.brand,
+//                   strokeWidth: 2.5,
+//                 ),
+//               ),
+//             ),
+//             const SizedBox(height: 16),
+//             DefaultTextStyle(
+//               style: const TextStyle(
+//                 fontSize: 14,
+//                 fontWeight: FontWeight.w600,
+//                 color: tabecartcolour.textPrimary,
+//                 decoration: TextDecoration.none,
+//               ),
+//               child: Text(text),
+//             ),
+//             const SizedBox(height: 4),
+//             const DefaultTextStyle(
+//               style: TextStyle(
+//                 fontSize: 12,
+//                 color: tabecartcolour.textSecondary,
+//                 decoration: TextDecoration.none,
+//               ),
+//               child: Text('Please don\'t close this screen'),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   // ── Empty State ───────────────────────────────────────────────────────────
+//   Widget _buildEmptyCart() {
+//     return Center(
+//       child: SizedBox(
+//         height: MediaQuery.of(context).size.height * 0.6,
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             Container(
+//               width: 96,
+//               height: 96,
+//               decoration: const BoxDecoration(
+//                 color: tabecartcolour.brandLight,
+//                 shape: BoxShape.circle,
+//               ),
+//               child: const Icon(
+//                 Icons.shopping_cart_outlined,
+//                 size: 44,
+//                 color: tabecartcolour.brand,
+//               ),
+//             ),
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Your cart is empty',
+//               style: TextStyle(
+//                 fontSize: 20,
+//                 fontWeight: FontWeight.w700,
+//                 color: tabecartcolour.textPrimary,
+//               ),
+//             ),
+//             const SizedBox(height: 8),
+//             const Text(
+//               'Browse the menu and add something delicious',
+//               style: TextStyle(fontSize: 14, color: tabecartcolour.textSecondary),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   // ── Cart Items Card ───────────────────────────────────────────────────────
+//   Widget _buildCartItems(BuildContext context) {
+//     if (_isLoading) {
+//       return _buildCartSkeleton();
+//     }
+//     if (_error != null) {
+//       return _buildErrorState();
+//     }
+//     if (_cartItems.isEmpty) return _buildEmptyCart();
+//
+//     final orderedItems = _cartItems
+//         .where((i) => i.orderStatus != null)
+//         .toList();
+//     final pendingItems = _cartItems
+//         .where((i) => i.orderStatus == null)
+//         .toList();
+//     final displayItems = [...orderedItems, ...pendingItems];
+//
+//     return _surfaceCard(
+//       padding: EdgeInsets.all(16.w),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           ...displayItems.asMap().entries.map((entry) {
+//             final idx = entry.key;
+//             final item = entry.value;
+//             final isLast = idx == displayItems.length - 1;
+//             return _buildCartItemRow(item, isLast);
+//           }),
+//
+//           // if()
+//           Container(
+//             margin: EdgeInsets.only(top: 16),
+//             padding: EdgeInsets.symmetric(vertical: 12),
+//             decoration: BoxDecoration(
+//               border: Border(
+//                 top: BorderSide(width: 1, color: Colors.grey[200]!),
+//               ),
+//             ),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 Text(
+//                   "Sub Total",
+//                   style: TextStyle(
+//                     fontWeight: FontWeight.bold,
+//                     fontSize: 14,
+//                     color: Colors.grey[800],
+//                   ),
+//                 ),
+//                 Text(
+//                   "₹${tableCartData!.subtotal.toStringAsFixed(2)}",
+//                   style: TextStyle(
+//                     fontWeight: FontWeight.bold,
+//                     fontSize: 16,
+//                     color: AppColors.of(context).primary,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildCartItemRow(CartItem item, bool isLast) {
+//     return Column(
+//       key: ValueKey('${item.itemId}_${item.orderStatus}_${item.quantity}'),
+//       children: [
+//         Padding(
+//           padding: EdgeInsets.symmetric(vertical: 12.h),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Row(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Expanded(
+//                  _buildCartItemRow      fontSize: 15,
+//                         fontWeight: FontWeight.w600,
+//                         color: item.orderStatus == "CANCELLED"
+//                             ? tabecartcolour.textMuted
+//                             : tabecartcolour.textPrimary,
+//                         decoration: item.orderStatus == "CANCELLED"
+//                             ? TextDecoration.lineThrough
+//                             : null,
+//                       ),
+//                     ),
+//                   ),
+//
+//                   if (item.orderStatus != null) ...[
+//                     Text(
+//                       "₹${item.totalPrice}",
+//                       style: const TextStyle(
+//                         fontSize: 15,
+//                         fontWeight: FontWeight.w700,
+//                         color: tabecartcolour.textPrimary,
+//                       ),
+//                     ),
+//                   ],
+//                 ],
+//               ),
+//               const SizedBox(height: 8),
+//               Row(
+//                 children: [
+//                   const SizedBox(width: 22), // align under name
+//                   Text(
+//                     '₹${item.price} each',
+//                     style: const TextStyle(fontSize: 12, color: tabecartcolour.textMuted),
+//                   ),
+//                   const Spacer(),
+//
+//
+//                   if (item.orderStatus != OrderStatus.orderIsReady &&
+//                       item.orderStatus != OrderStatus.waitingForPickup &&
+//                       item.orderStatus != OrderStatus.delivered) ...[
+//                     QuantityControl(
+//                       item: item,
+//                       onQuantityChanged: () => setState(() {}),
+//                       cartId: tableCartData!.cartId,
+//                       tableCode: tableCartData!.tableCode,
+//                       userId: tableCartData!.userId,
+//                     ),
+//                   ],
+//                   const SizedBox(width: 8),
+//                   if (item.orderStatus == null) ...[
+//                     SendButton(
+//                       item: item,
+//                       isSending: _isSendingMap[item.itemId] == true,
+//                       onSend: () => _sendItem(item),
+//                     ),
+//                   ] else
+//                     _StatusBadge(item.orderStatus ?? ''),
+//                 ],
+//               ),
+//               // Note field
+//               if (item.orderStatus == null) ...[
+//                 const SizedBox(height: 10),
+//                 TextField(
+//                   controller: _getNoteController(item),
+//                   maxLines: 1,
+//                   textInputAction: TextInputAction.done,
+//                   style: const TextStyle(fontSize: 13),
+//                   decoration: InputDecoration(
+//                     hintText: 'Cooking instructions or special request...',
+//                     hintStyle: const TextStyle(
+//                       fontSize: 13,
+//                       color: tabecartcolour.textMuted,
+//                     ),
+//                     prefixIcon: const Icon(
+//                       Icons.edit_note_rounded,
+//                       size: 18,
+//                       color: tabecartcolour.textMuted,
+//                     ),
+//                     contentPadding: const EdgeInsets.symmetric(
+//                       horizontal: 12,
+//                       vertical: 10,
+//                     ),
+//                     filled: true,
+//                     fillColor: tabecartcolour.bg,
+//                     border: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                       borderSide: const BorderSide(color: tabecartcolour.border),
+//                     ),
+//                     enabledBorder: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                       borderSide: const BorderSide(color: tabecartcolour.border),
+//                     ),
+//                     focusedBorder: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                       borderSide: const BorderSide(color: tabecartcolour.brand, width: 1.5),
+//                     ),
+//                   ),
+//                   onChanged: (v) => item.note = v,
+//                 ),
+//               ],
+//             ],
+//           ),
+//         ),
+//         if (!isLast) Divider(height: 1, thickness: 1, color: tabecartcolour.border),
+//       ],
+//     );
+//   }
+//
+//   Future<void> _sendItem(CartItem item) async {
+//     if (_isSendingMap[item.itemId] == true) return;
+//
+//     final note = _getNoteController(item).text.trim();
+//
+//     setState(() => _isSendingMap[item.itemId] = true);
+//
+//     try {
+//       // 🔹 Get dynamic status from API
+//       final billingData = await food_Authservice.getBillingSettings(
+//         tableCartData!.vendorId,
+//       );
+//       print('billingData = $billingData');
+//
+//       final initialStatus =
+//           (billingData['userInitialOrderStatus']?.toString() ?? 'PENDING')
+//               .trim();
+//       print('initialStatus = $initialStatus');
+//
+//       final success = await food_Authservice.updateCartItemStatus(
+//         itemId: item.itemId,
+//         quantity: item.quantity,
+//         // status: 'PENDING',
+//         status: initialStatus,
+//         note: note.isNotEmpty ? note : null,
+//       );
+//
+//       if (success) {
+//         setState(() {
+//           item.previousQuantity = item.quantity;
+//
+//           // 🔹 Dynamic status
+//           item.orderStatus = initialStatus;
+//         });
+//
+//         // scrollToBottom();
+//
+//         if (!mounted) return;
+//
+//         AppAlert.success(context, 'Order placed for ${item.dishName}');
+//       } else {
+//         if (!mounted) return;
+//
+//         AppAlert.error(context, 'Failed to send order for ${item.dishName}');
+//       }
+//     } finally {
+//       if (mounted) {
+//         setState(() => _isSendingMap[item.itemId] = false);
+//       }
+//     }
+//   }
+//
+//   TextEditingController _getNoteController(CartItem item) {
+//     return _noteControllers.putIfAbsent(
+//       item.itemId,
+//       () => TextEditingController(text: item.note ?? ''),
+//     );
+//   }
+//
+//   Widget _buildCartSkeleton() {
+//     return _surfaceCard(
+//       padding: EdgeInsets.all(16.w),
+//       child: Shimmer.fromColors(
+//         baseColor: Colors.grey.shade200,
+//         highlightColor: Colors.grey.shade50,
+//         child: Column(
+//           children: List.generate(
+//             3,
+//             (_) => Container(
+//               margin: const EdgeInsets.only(bottom: 16),
+//               height: 64,
+//               decoration: BoxDecoration(
+//                 color: Colors.white,
+//                 borderRadius: BorderRadius.circular(8),
+//               ),
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildErrorState() {
+//     return _surfaceCard(
+//       padding: EdgeInsets.all(24.w),
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Container(
+//             width: 56,
+//             height: 56,
+//             decoration: const BoxDecoration(
+//               color: tabecartcolour.redLight,
+//               shape: BoxShape.circle,
+//             ),
+//             child: const Icon(
+//               Icons.error_outline_rounded,
+//               color: tabecartcolour.red,
+//               size: 28,
+//             ),
+//           ),
+//           const SizedBox(height: 12),
+//           const Text(
+//             'Could not load cart',
+//             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+//           ),
+//           const SizedBox(height: 6),
+//           Text(
+//             _error!,
+//             textAlign: TextAlign.center,
+//             style: const TextStyle(fontSize: 13, color: tabecartcolour.textSecondary),
+//           ),
+//           const SizedBox(height: 16),
+//           ElevatedButton.icon(
+//             onPressed: _loadCartItems,
+//             icon: const Icon(Icons.refresh_rounded, size: 18),
+//             label: const Text('Try Again'),
+//             style: ElevatedButton.styleFrom(
+//               backgroundColor: tabecartcolour.brand,
+//               foregroundColor: Colors.white,
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(10),
+//               ),
+//               elevation: 0,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   // ── "Add more" row ────────────────────────────────────────────────────────
+//   Widget _buildAddMoreRow(BuildContext context) {
+//     return GestureDetector(
+//       onTap: () async {
+//         await Navigator.push(
+//           context,
+//           MaterialPageRoute(
+//             builder: (_) => tablemneuScreen(
+//               vendorId: tableCartData!.vendorId,
+//               seatingId: tableCartData!.seatingId,
+//             ),
+//           ),
+//         );
+//         await _loadCartItems();
+//         await _initializeData();
+//         if (mounted) setState(() {});
+//       },
+//       child: Container(
+//         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+//         decoration: BoxDecoration(
+//           color: Colors.white,
+//           borderRadius: BorderRadius.circular(12),
+//           border: Border.all(color: tabecartcolour.brand.withOpacity(0.3)),
+//         ),
+//         child: Row(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             Icon(Icons.add_circle_outline_rounded, size: 18, color: tabecartcolour.brand),
+//             const SizedBox(width: 8),
+//             RichText(
+//               text: TextSpan(
+//                 text: 'Missed something? ',
+//                 style: const TextStyle(fontSize: 14, color: tabecartcolour.textSecondary),
+//                 children: [
+//                   TextSpan(
+//                     text: 'Add more items',
+//                     style: TextStyle(
+//                       fontSize: 14,
+//                       fontWeight: FontWeight.w700,
+//                       color: tabecartcolour.brand,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   // ── Generate Bill Button ──────────────────────────────────────────────────
+//   Widget _buildGenerateBillButton() {
+//     return SizedBox(
+//       width: double.infinity,
+//       child: ElevatedButton.icon(
+//         onPressed: () {
+//           _initializeData();
+//           setState(() => isExpanded = !isExpanded);
+//           if (!isExpanded)
+//             scrollToTop();
+//           else
+//             scrollToBottom();
+//         },
+//         icon: Icon(
+//           isExpanded ? Icons.receipt_long_rounded : Icons.receipt_rounded,
+//           size: 18,
+//         ),
+//         label: Text(
+//           isExpanded ? 'Hide Bill' : 'View & Pay Bill',
+//           style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
+//         ),
+//         style: ElevatedButton.styleFrom(
+//           backgroundColor: tabecartcolour.brand,
+//           foregroundColor: Colors.white,
+//           padding: EdgeInsets.symmetric(vertical: 14.h),
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(14.r),
+//           ),
+//           elevation: 0,
+//         ),
+//       ),
+//     );
+//   }
+//
+//   // ── Coupon Row ────────────────────────────────────────────────────────────
+//   Widget _buildCouponRow() {
+//     final applied = (tableCartData?.couponCode ?? '').isNotEmpty;
+//
+//     return GestureDetector(
+//       onTap: applied ? null : _showCouponBottomSheet,
+//       child: _surfaceCard(
+//         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+//         child: Row(
+//           children: [
+//             Container(
+//               width: 40,
+//               height: 40,
+//               decoration: BoxDecoration(
+//                 color: applied ? tabecartcolour.greenLight : tabecartcolour.brandLight,
+//                 borderRadius: BorderRadius.circular(10),
+//               ),
+//               child: Icon(
+//                 applied
+//                     ? Icons.check_circle_rounded
+//                     : Icons.local_offer_rounded,
+//                 size: 20,
+//                 color: applied ? tabecartcolour.green : tabecartcolour.brand,
+//               ),
+//             ),
+//             const SizedBox(width: 12),
+//             Expanded(
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text(
+//                     applied ? 'Coupon Applied' : 'Apply Coupon',
+//                     style: TextStyle(
+//                       fontSize: 14,
+//                       fontWeight: FontWeight.w700,
+//                       color: applied ? tabecartcolour.green : tabecartcolour.textPrimary,
+//                     ),
+//                   ),
+//                   if (applied)
+//                     Text(
+//                       appliedCouponCode ?? '',
+//                       style: const TextStyle(
+//                         fontSize: 12,
+//                         color: tabecartcolour.textSecondary,
+//                       ),
+//                     ),
+//                   if (!applied)
+//                     const Text(
+//                       'Save more on your order',
+//                       style: TextStyle(fontSize: 12, color: tabecartcolour.textSecondary),
+//                     ),
+//                 ],
+//               ),
+//             ),
+//             if (applied)
+//               GestureDetector(
+//                 onTap: () async {
+//                   if (tableCartData?.cartId == null) return;
+//                   final result = await food_Authservice.updateCartSettings(
+//                     cartId: tableCartData!.cartId,
+//                     couponId: tableCartData!.couponId,
+//                     applyCoupon: "NOT_APPLIED",
+//                   );
+//                   if (!result.success) {
+//                     AppAlert.error(context, "Failed to remove coupon");
+//                     return;
+//                   }
+//                   setState(() {
+//                     appliedCouponCode = null;
+//                     appliedCouponId = null;
+//                   });
+//                   AppAlert.success(context, "Coupon removed");
+//                 },
+//                 child: Container(
+//                   padding: const EdgeInsets.symmetric(
+//                     horizontal: 12,
+//                     vertical: 6,
+//                   ),
+//                   decoration: BoxDecoration(
+//                     color: tabecartcolour.redLight,
+//                     borderRadius: BorderRadius.circular(20),
+//                   ),
+//                   child: const Text(
+//                     'Remove',
+//                     style: TextStyle(
+//                       fontSize: 12,
+//                       color: tabecartcolour.red,
+//                       fontWeight: FontWeight.w700,
+//                     ),
+//                   ),
+//                 ),
+//               )
+//             else
+//               const Icon(Icons.chevron_right_rounded, color: tabecartcolour.textMuted),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   // ── Summary Card ──────────────────────────────────────────────────────────
+//   Widget _buildSummaryCard() {
+//     final cart = tableCartData;
+//     if (cart == null) return const SizedBox.shrink();
+//
+//     final subtotal = cart.subtotal;
+//     final gstTotal = (cart.cgst) + (cart.sgst);
+//     final grandTotal = cart.grandTotal;
+//     final discountAmount = cart.discountAmount ?? 0;
+//     final platformCharges = cart.platformCharges;
+//     final serviceCharges = cart.serviceCharges;
+//
+//     return Column(
+//       children: [
+//         _surfaceCard(
+//           padding: EdgeInsets.all(16.w),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Row(
+//                 children: [
+//                   Container(
+//                     width: 32,
+//                     height: 32,
+//                     decoration: const BoxDecoration(
+//                       color: tabecartcolour.brandLight,
+//                       shape: BoxShape.circle,
+//                     ),
+//                     child: const Icon(
+//                       Icons.receipt_long_rounded,
+//                       size: 16,
+//                       color: tabecartcolour.brand,
+//                     ),
+//                   ),
+//                   const SizedBox(width: 10),
+//                   const Text(
+//                     'Bill Summary',
+//                     style: TextStyle(
+//                       fontSize: 16,
+//                       fontWeight: FontWeight.w700,
+//                       color: tabecartcolour.textPrimary,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//               const SizedBox(height: 16),
+//               _billRow('Subtotal', subtotal),
+//               if (discountAmount > 0)
+//                 _billRow('Discount', discountAmount, isDiscount: true),
+//               _billRow('Smart DineIn Fee', platformCharges),
+//               if (gstTotal > 0)
+//                 _billRow('GST', gstTotal, onInfo: () => _showGstDialog('GST')),
+//               if (serviceCharges > 0) _buildServiceChargeRow(serviceCharges),
+//               Padding(
+//                 padding: const EdgeInsets.symmetric(vertical: 12),
+//                 child: Divider(thickness: 1, color: tabecartcolour.border),
+//               ),
+//               _billRow('Grand Total', grandTotal, isBold: true, isGrand: true),
+//             ],
+//           ),
+//         ),
+//         const SizedBox(height: 12),
+//         _buildCheckoutDetails(),
+//       ],
+//     );
+//   }
+//
+//   Widget _billRow(
+//     String label,
+//     num value, {
+//     bool isBold = false,
+//     bool isDiscount = false,
+//     bool isGrand = false,
+//     VoidCallback? onInfo,
+//   }) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 5),
+//       child: Row(
+//         children: [
+//           Expanded(
+//             child: Row(
+//               children: [
+//                 Text(
+//                   label,
+//                   style: TextStyle(
+//                     fontSize: isGrand ? 15 : 14,
+//                     fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
+//                     color: isBold ? tabecartcolour.textPrimary : tabecartcolour.textSecondary,
+//                   ),
+//                 ),
+//                 if (onInfo != null) ...[
+//                   const SizedBox(width: 4),
+//                   GestureDetector(
+//                     onTap: onInfo,
+//                     child: const Icon(
+//                       Icons.info_outline_rounded,
+//                       size: 15,
+//                       color: tabecartcolour.textMuted,
+//                     ),
+//                   ),
+//                 ],
+//               ],
+//             ),
+//           ),
+//           Text(
+//             isDiscount
+//                 ? '-₹${value.toStringAsFixed(2)}'
+//                 : '₹${value.toStringAsFixed(2)}',
+//             style: TextStyle(
+//               fontSize: isGrand ? 16 : 14,
+//               fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
+//               color: isDiscount
+//                   ? tabecartcolour.green
+//                   : (isGrand ? tabecartcolour.brand : tabecartcolour.textSecondary),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildServiceChargeRow(num serviceCharges) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 5),
+//       child: Row(
+//         children: [
+//           const Expanded(
+//             child: Text(
+//               'Service Charges',
+//               style: TextStyle(fontSize: 14, color: tabecartcolour.textSecondary),
+//             ),
+//           ),
+//           if (serviceCharges > 0 && isServiceChargeApplied)
+//             GestureDetector(
+//               onTap: () async {
+//                 if (tableCartData?.cartId == null) return;
+//                 await food_Authservice.updateServiceCharges(
+//                   cartId: tableCartData!.cartId,
+//                   serviceCharge: "NOT_APPLICABLE",
+//                 );
+//                 await _initializeData();
+//                 setState(() => isServiceChargeApplied = false);
+//               },
+//               child: Container(
+//                 margin: const EdgeInsets.only(right: 10),
+//                 padding: const EdgeInsets.symmetric(
+//                   horizontal: 10,
+//                   vertical: 4,
+//                 ),
+//                 decoration: BoxDecoration(
+//                   color: tabecartcolour.redLight,
+//                   borderRadius: BorderRadius.circular(20),
+//                 ),
+//                 child: const Text(
+//                   'Remove',
+//                   style: TextStyle(
+//                     fontSize: 11,
+//                     color: tabecartcolour.red,
+//                     fontWeight: FontWeight.w700,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           Text(
+//             serviceCharges > 0
+//                 ? (isServiceChargeApplied
+//                       ? '₹${serviceCharges.toStringAsFixed(2)}'
+//                       : '-₹${serviceCharges.toStringAsFixed(2)}')
+//                 : '₹0.00',
+//             style: TextStyle(
+//               fontSize: 14,
+//               color: isServiceChargeApplied ? tabecartcolour.textSecondary : tabecartcolour.red,
+//               fontWeight: isServiceChargeApplied
+//                   ? FontWeight.normal
+//                   : FontWeight.w600,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   // ── Checkout section ──────────────────────────────────────────────────────
+//   Widget _buildCheckoutDetails() {
+//     return Column(
+//       children: [
+//         tablecartwallet(
+//           wallet: wallet,
+//           onSelectionChanged: (method, subWallets) {
+//             setState(() {
+//               selectedPaymentMethod = method;
+//               selectedSubWallets = subWallets;
+//             });
+//             scrollToBottom();
+//           },
+//         ),
+//         SizedBox(height: 16.h),
+//         _buildPlaceOrderButton(),
+//       ],
+//     );
+//   }
+//
+//   Widget _buildPlaceOrderButton() {
+//     return SizedBox(
+//       width: double.infinity,
+//       child: ElevatedButton(
+//         onPressed: isPlacingOrder ? null : placeOrder,
+//         style: ElevatedButton.styleFrom(
+//           backgroundColor: tabecartcolour.brand,
+//           foregroundColor: Colors.white,
+//           disabledBackgroundColor: tabecartcolour.textMuted,
+//           padding: EdgeInsets.symmetric(vertical: 16.h),
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(14.r),
+//           ),
+//           elevation: 0,
+//         ),
+//         child: isPlacingOrder
+//             ? SizedBox(
+//                 width: 22,
+//                 height: 22,
+//                 child: const CircularProgressIndicator(
+//                   color: Colors.white,
+//                   strokeWidth: 2.5,
+//                 ),
+//               )
+//             : Row(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   const Icon(Icons.bolt_rounded, size: 20),
+//                   const SizedBox(width: 8),
+//                   Text(
+//                     'Place Order',
+//                     style: TextStyle(
+//                       fontSize: 16.sp,
+//                       fontWeight: FontWeight.w700,
+//                     ),
+//                   ),
+//                   const SizedBox(width: 10),
+//                   Container(
+//                     padding: const EdgeInsets.symmetric(
+//                       horizontal: 10,
+//                       vertical: 4,
+//                     ),
+//                     decoration: BoxDecoration(
+//                       color: Colors.white.withOpacity(0.2),
+//                       borderRadius: BorderRadius.circular(20),
+//                     ),
+//                     child: Text(
+//                       '₹${(tableCartData?.grandTotal ?? 0).toStringAsFixed(2)}',
+//                       style: TextStyle(
+//                         fontSize: 14.sp,
+//                         fontWeight: FontWeight.w700,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//       ),
+//     );
+//   }
+//
+//   // ── GST Dialog ────────────────────────────────────────────────────────────
+//   void _showGstDialog(String type) {
+//     showDialog(
+//       context: context,
+//       builder: (_) => AlertDialog(
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(16.r),
+//         ),
+//         titlePadding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
+//         title: Row(
+//           children: [
+//             const Expanded(
+//               child: Text(
+//                 'GST Breakdown',
+//                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+//               ),
+//             ),
+//             GestureDetector(
+//               onTap: () => Navigator.pop(context),
+//               child: const Icon(
+//                 Icons.close_rounded,
+//                 size: 20,
+//                 color: tabecartcolour.textSecondary,
+//               ),
+//             ),
+//           ],
+//         ),
+//         content: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             if ((tableCartData?.platformChargeGst ?? 0) > 0)
+//               _dialogRow('Platform GST', tableCartData?.platformChargeGst ?? 0),
+//             if ((tableCartData?.packingChargeGst ?? 0) > 0)
+//               _dialogRow('Packing GST', tableCartData?.packingChargeGst ?? 0),
+//             if ((tableCartData?.serviceChargeGst ?? 0) > 0)
+//               _dialogRow('Service GST', tableCartData?.serviceChargeGst ?? 0),
+//             const Divider(height: 20),
+//             _dialogRow('Total GST', tableCartData?.gstTotal ?? 0, isBold: true),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _dialogRow(String label, num value, {bool isBold = false}) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 5),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//         children: [
+//           Text(
+//             label,
+//             style: TextStyle(
+//               color: tabecartcolour.textSecondary,
+//               fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
+//             ),
+//           ),
+//           Text(
+//             '₹${_fmt(value)}',
+//             style: TextStyle(
+//               fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
+//               color: isBold ? tabecartcolour.textPrimary : tabecartcolour.textSecondary,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   String _fmt(num? v) => (v ?? 0).toStringAsFixed(2);
+//
+//   // ── Coupon Bottom Sheet ───────────────────────────────────────────────────
+//   void _showCouponBottomSheet() async {
+//     setState(() => isCouponLoading = true);
+//
+//     final coupons = await food_Authservice.fetchCoupons();
+//     final cartVendor = tableCartData?.vendorId;
+//
+//     setState(() => isCouponLoading = false);
+//
+//     coupons.sort((a, b) {
+//       final aE = a.isExpired, bE = b.isExpired;
+//       final aM = !a.isApplicableForVendor(cartVendor);
+//       final bM = !b.isApplicableForVendor(cartVendor);
+//
+//       if (aE != bE) return aE ? 1 : -1;
+//       if (aM != bM) return aM ? 1 : -1;
+//
+//       return 0;
+//     });
+//
+//     showModalBottomSheet(
+//       context: context,
+//       isScrollControlled: true,
+//       useSafeArea: true,
+//       backgroundColor: Colors.transparent,
+//       constraints: BoxConstraints(
+//         minWidth: MediaQuery.of(context).size.width,
+//         maxWidth: MediaQuery.of(context).size.width,
+//       ),
+//       builder: (sheetCtx) {
+//         if (coupons.isEmpty) {
+//           return SizedBox(width: double.infinity, child: _emptyCouponView());
+//         }
+//
+//         return Container(
+//           width: double.infinity,
+//           height: MediaQuery.of(sheetCtx).size.height * 0.95,
+//           decoration: const BoxDecoration(
+//             color: Colors.white,
+//             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+//           ),
+//           child: Column(
+//             children: [
+//               // drag handle
+//               Container(
+//                 margin: const EdgeInsets.only(top: 12, bottom: 8),
+//                 width: 40,
+//                 height: 5,
+//                 decoration: BoxDecoration(
+//                   color: tabecartcolour.border,
+//                   borderRadius: BorderRadius.circular(10),
+//                 ),
+//               ),
+//
+//               _couponHeader(),
+//
+//               Expanded(
+//                 child: isCouponLoading
+//                     ? _couponSkeletonList()
+//                     : ListView.builder(
+//                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+//                         itemCount: coupons.length,
+//                         itemBuilder: (_, index) {
+//                           final coupon = coupons[index];
+//
+//                           final isExpired = coupon.isExpired;
+//
+//                           final isMismatch = !coupon.isApplicableForVendor(
+//                             cartVendor,
+//                           );
+//
+//                           return _couponTile(
+//                             coupon: coupon,
+//                             isExpired: isExpired,
+//                             isMismatch: isMismatch,
+//                             isDisabled: isExpired || isMismatch,
+//                           );
+//                         },
+//                       ),
+//               ),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+//
+//   Widget _emptyCouponView() {
+//     return Container(
+//       height: MediaQuery.of(context).size.height * 0.35,
+//       decoration: const BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//       ),
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           Container(
+//             width: 64,
+//             height: 64,
+//             decoration: const BoxDecoration(
+//               color: tabecartcolour.bg,
+//               shape: BoxShape.circle,
+//             ),
+//             child: const Icon(
+//               Icons.confirmation_number_outlined,
+//               size: 32,
+//               color: tabecartcolour.textMuted,
+//             ),
+//           ),
+//           const SizedBox(height: 16),
+//           const Text(
+//             'No coupons available',
+//             style: TextStyle(
+//               fontSize: 16,
+//               fontWeight: FontWeight.w600,
+//               color: tabecartcolour.textPrimary,
+//             ),
+//           ),
+//           const SizedBox(height: 6),
+//           const Text(
+//             'Check back later for new offers',
+//             style: TextStyle(fontSize: 13, color: tabecartcolour.textSecondary),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _couponHeader() {
+//     return Padding(
+//       padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+//       child: Row(
+//         children: [
+//           const Text(
+//             'Available Coupons',
+//             style: TextStyle(
+//               fontSize: 18,
+//               fontWeight: FontWeight.w700,
+//               color: tabecartcolour.textPrimary,
+//             ),
+//           ),
+//           const Spacer(),
+//           IconButton(
+//             icon: const Icon(Icons.close_rounded, color: tabecartcolour.textSecondary),
+//             onPressed: () => Navigator.pop(context),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _couponTile({
+//     required CouponModel coupon,
+//     required bool isExpired,
+//     required bool isMismatch,
+//     required bool isDisabled,
+//   }) {
+//     Color accent = isExpired
+//         ? tabecartcolour.red
+//         : isMismatch
+//         ? tabecartcolour.amber
+//         : tabecartcolour.green;
+//     Color accentLight = isExpired
+//         ? tabecartcolour.redLight
+//         : isMismatch
+//         ? tabecartcolour.amberLight
+//         : tabecartcolour.greenLight;
+//
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 12),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(14),
+//         border: Border.all(color: accent.withOpacity(0.25)),
+//         boxShadow: [
+//           BoxShadow(
+//             color: tabecartcolour.shadow,
+//             blurRadius: 8,
+//             offset: const Offset(0, 2),
+//           ),
+//         ],
+//       ),
+//       child: Material(
+//         color: Colors.transparent,
+//         child: InkWell(
+//           borderRadius: BorderRadius.circular(14),
+//           onTap: isDisabled
+//               ? () => _showCouponError(isExpired)
+//               : () => _applyCoupon(coupon),
+//           child: Padding(
+//             padding: const EdgeInsets.all(14),
+//             child: Row(
+//               children: [
+//                 Container(
+//                   width: 44,
+//                   height: 44,
+//                   decoration: BoxDecoration(
+//                     color: accentLight,
+//                     borderRadius: BorderRadius.circular(10),
+//                   ),
+//                   child: Icon(
+//                     Icons.local_offer_rounded,
+//                     color: accent,
+//                     size: 22,
+//                   ),
+//                 ),
+//                 const SizedBox(width: 12),
+//                 Expanded(
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       Row(
+//                         children: [
+//                           Text(
+//                             coupon.code,
+//                             style: TextStyle(
+//                               fontSize: 15,
+//                               fontWeight: FontWeight.w700,
+//                               color: isExpired ? tabecartcolour.textMuted : tabecartcolour.textPrimary,
+//                               decoration: isExpired
+//                                   ? TextDecoration.lineThrough
+//                                   : null,
+//                             ),
+//                           ),
+//                           const SizedBox(width: 8),
+//                           Container(
+//                             padding: const EdgeInsets.symmetric(
+//                               horizontal: 6,
+//                               vertical: 2,
+//                             ),
+//                             decoration: BoxDecoration(
+//                               color: coupon.couponType == "PERCENTAGE"
+//                                   ? tabecartcolour.blueLight
+//                                   : tabecartcolour.brandLight,
+//                               borderRadius: BorderRadius.circular(6),
+//                             ),
+//                             child: Text(
+//                               coupon.couponType,
+//                               style: TextStyle(
+//                                 fontSize: 10,
+//                                 fontWeight: FontWeight.w700,
+//                                 color: coupon.couponType == "PERCENTAGE"
+//                                     ? tabecartcolour.blue
+//                                     : tabecartcolour.brand,
+//                               ),
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                       const SizedBox(height: 3),
+//                       Text(
+//                         isExpired
+//                             ? 'Expired'
+//                             : isMismatch
+//                             ? 'Not applicable for this restaurant'
+//                             : coupon.discountType == "PERCENTAGE"
+//                             ? '${coupon.discountPercentage.toStringAsFixed(0)}% off your order'
+//                             : '₹${coupon.discountPercentage.toStringAsFixed(0)} off your order',
+//                         style: TextStyle(
+//                           fontSize: 13,
+//                           color: isDisabled ? tabecartcolour.textMuted : tabecartcolour.textSecondary,
+//                         ),
+//                       ),
+//                       if (coupon.minimumOrderValue > 0)
+//                         Text(
+//                           'Min order ₹${coupon.minimumOrderValue.toInt()}',
+//                           style: const TextStyle(
+//                             fontSize: 11,
+//                             color: tabecartcolour.textMuted,
+//                           ),
+//                         ),
+//                     ],
+//                   ),
+//                 ),
+//                 Icon(
+//                   isDisabled
+//                       ? Icons.block_rounded
+//                       : Icons.chevron_right_rounded,
+//                   size: 18,
+//                   color: isDisabled ? tabecartcolour.textMuted : accent,
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   void _showCouponError(bool isExpired) {
+//     AppAlert.error(
+//       context,
+//       isExpired
+//           ? "This coupon has expired"
+//           : "This coupon is not applicable for this restaurant",
+//     );
+//   }
+//
+//   Future<void> _applyCoupon(CouponModel coupon) async {
+//     if (tableCartData?.cartId == null) {
+//       AppAlert.error(context, "Cart is empty");
+//       return;
+//     }
+//     final result = await food_Authservice.updateCartSettings(
+//       cartId: tableCartData!.cartId,
+//       couponId: coupon.id,
+//       applyCoupon: "APPLIED",
+//     );
+//     if (!result.success) {
+//       AppAlert.error(context, result.error ?? "Failed to apply coupon");
+//       return;
+//     }
+//     await _initializeData();
+//     setState(() {
+//       appliedCouponCode = coupon.code;
+//       appliedCouponId = coupon.id;
+//     });
+//     AppAlert.success(context, "🎉 ${coupon.code} applied!");
+//     Navigator.pop(context);
+//   }
+//
+//   // ── Shared card widget ────────────────────────────────────────────────────
+//   Widget _surfaceCard({required Widget child, EdgeInsets? padding}) {
+//     return Container(
+//       width: double.infinity,
+//       padding: padding ?? EdgeInsets.all(16.w),
+//       decoration: BoxDecoration(
+//         color: tabecartcolour.surface,
+//         borderRadius: BorderRadius.circular(16.r),
+//         border: Border.all(color: tabecartcolour.border),
+//         boxShadow: [
+//           BoxShadow(
+//             color: tabecartcolour.shadow,
+//             blurRadius: 10,
+//             offset: const Offset(0, 2),
+//           ),
+//         ],
+//       ),
+//       child: child,
+//     );
+//   }
+// }
+//
+// // ─── Quantity Control ─────────────────────────────────────────────────────────
+// // class QuantityControl extends StatefulWidget {
+// //   final CartItem item;
+// //   final VoidCallback onQuantityChanged;
+// //
+// //   const QuantityControl({
+// //     super.key,
+// //     required this.item,
+// //     required this.onQuantityChanged,
+// //   });
+// //
+// //   @override
+// //   State<QuantityControl> createState() => _QuantityControlState();
+// // }
+// //
+// // class _QuantityControlState extends State<QuantityControl> {
+// //   bool _isUpdating = false;
+// //
+// //   bool get _canDecrease {
+// //     if (widget.item.previousQuantity == 0) return widget.item.quantity > 0;
+// //     return widget.item.quantity > widget.item.previousQuantity;
+// //   }
+// //
+// //   void _updateQuantityUI(int newQty) {
+// //     setState(() {
+// //       widget.item.quantity = newQty;
+// //       widget.item.totalPrice = widget.item.price * newQty;
+// //     });
+// //     widget.onQuantityChanged();
+// //   }
+// //
+// //   @override
+// //   Widget build(BuildContext context) {
+// //     return Container(
+// //       decoration: BoxDecoration(
+// //         color: tabecartcolour.bg,
+// //         borderRadius: BorderRadius.circular(10.r),
+// //         border: Border.all(color: tabecartcolour.border),
+// //       ),
+// //       child: Row(
+// //         mainAxisSize: MainAxisSize.min,
+// //         children: [
+// //           _btn(
+// //             Icons.remove_rounded,
+// //             _canDecrease
+// //                 ? () {
+// //                     if (widget.item.quantity - 1 >= 0) {
+// //                       _updateQuantityUI(widget.item.quantity - 1);
+// //                     }
+// //                   }
+// //                 : null,
+// //           ),
+// //           // _btn(
+// //           //   Icons.remove_rounded,
+// //           //   _canDecrease
+// //           //       ? () async {
+// //           //           final newQty = widget.item.quantity - 1;
+// //           //
+// //           //           // Remove item when quantity becomes 0
+// //           //           if (newQty <= 0) {
+// //           //             setState(() => _isUpdating = true);
+// //           //
+// //           //             try {
+// //           //               final success = await food_Authservice.deleteCartItem(
+// //           //                 itemId: widget.item.itemId,
+// //           //               );
+// //           //
+// //           //               if (success) {
+// //           //                 widget.item.quantity = 0;
+// //           //
+// //           //                 widget.onQuantityChanged();
+// //           //
+// //           //                 if (mounted) {
+// //           //                   ScaffoldMessenger.of(context).showSnackBar(
+// //           //                     const SnackBar(
+// //           //                       content: Text('Item removed from cart'),
+// //           //                     ),
+// //           //                   );
+// //           //                 }
+// //           //               } else {
+// //           //                 if (mounted) {
+// //           //                   AppAlert.error(context, 'Failed to remove item');
+// //           //                 }
+// //           //               }
+// //           //             } catch (e) {
+// //           //               if (mounted) {
+// //           //                 AppAlert.error(context, 'Something went wrong');
+// //           //               }
+// //           //             } finally {
+// //           //               if (mounted) {
+// //           //                 setState(() => _isUpdating = false);
+// //           //               }
+// //           //             }
+// //           //
+// //           //             return;
+// //           //           }
+// //           //
+// //           //           // Normal decrease
+// //           //           _updateQuantityUI(newQty);
+// //           //         }
+// //           //       : null,
+// //           // ),
+// //           Padding(
+// //             padding: EdgeInsets.symmetric(horizontal: 10.w),
+// //             child: Text(
+// //               '${widget.item.quantity}',
+// //               style: TextStyle(
+// //                 fontSize: 14.sp,
+// //                 fontWeight: FontWeight.w700,
+// //                 color: tabecartcolour.textPrimary,
+// //               ),
+// //             ),
+// //           ),
+// //           _btn(Icons.add_rounded, () {
+// //             if (!(widget.item.available ?? true)) {
+// //               AppAlert.error(context, 'Not enough stock for this dish');
+// //               return;
+// //             }
+// //             _updateQuantityUI(widget.item.quantity + 1);
+// //           }),
+// //         ],
+// //       ),
+// //     );
+// //   }
+// //
+// //   Widget _btn(IconData icon, VoidCallback? onTap) {
+// //     final active = onTap != null;
+// //     return GestureDetector(
+// //       onTap: onTap,
+// //       child: Container(
+// //         padding: EdgeInsets.all(7.w),
+// //         child: Icon(icon, size: 14.sp, color: active ? tabecartcolour.brand : tabecartcolour.textMuted),
+// //       ),
+// //     );
+// //   }
+// // }
+// // class QuantityControl extends StatefulWidget {
+// //   final CartItem item;
+// //   final VoidCallback onQuantityChanged;
+// //
+// //   const QuantityControl({
+// //     super.key,
+// //     required this.item,
+// //     required this.onQuantityChanged,
+// //   });
+// //
+// //   @override
+// //   State<QuantityControl> createState() => _QuantityControlState();
+// // }
+// //
+// // class _QuantityControlState extends State<QuantityControl> {
+// //   bool _isUpdating = false;
+// //
+// //   // Minus is blocked at previousQuantity (what's already sent)
+// //   // If nothing sent yet, minimum is 1
+// //   int get _floor =>
+// //       widget.item.previousQuantity > 0 ? widget.item.previousQuantity : 1;
+// //   //
+// //   // bool get _canDecrease => widget.item.quantity > _floor;
+// //
+// //   bool get _canDecrease {
+// //     // Not yet sent to API
+// //     if (widget.item.previousQuantity == 0) {
+// //       return widget.item.quantity > 0;
+// //     }
+// //
+// //     // Already sent to API
+// //     return widget.item.quantity > widget.item.previousQuantity;
+// //   }
+// //
+// //   bool get _isSentItem => widget.item.orderStatus != null;
+// //
+// //   Future<void> _updateQuantity(int newQty) async {
+// //     if (_isUpdating) return;
+// //     setState(() => _isUpdating = true);
+// //
+// //     final success = await food_Authservice.updateCartItemQuantity(
+// //       itemId: widget.item.itemId,
+// //       quantity: newQty,
+// //     );
+// //
+// //     if (success) {
+// //       setState(() {
+// //         widget.item.quantity = newQty;
+// //         widget.item.totalPrice = widget.item.price * newQty;
+// //       });
+// //       widget.onQuantityChanged();
+// //     } else {
+// //       if (mounted) AppAlert.error(context, '❌ Failed to update quantity');
+// //     }
+// //
+// //     if (mounted) setState(() => _isUpdating = false);
+// //   }
+// //
+// //   Widget _qtyBtn(IconData icon, Color color, VoidCallback? onTap) {
+// //     return GestureDetector(
+// //       onTap: onTap,
+// //       child: Container(
+// //         padding: EdgeInsets.all(6.w),
+// //         decoration: BoxDecoration(
+// //           color: color.withOpacity(onTap == null ? 0.05 : 0.12),
+// //           borderRadius: BorderRadius.circular(8.r),
+// //         ),
+// //         child: Icon(
+// //           icon,
+// //           size: 14.sp,
+// //           color: onTap == null ? Colors.grey.shade300 : color,
+// //         ),
+// //       ),
+// //     );
+// //   }
+// //
+// //   @override
+// //   Widget build(BuildContext context) {
+// //     return Container(
+// //       padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+// //       decoration: BoxDecoration(
+// //         color: tabecartcolour.bg,
+// //         borderRadius: BorderRadius.circular(10.r),
+// //         border: Border.all(color: tabecartcolour.border),
+// //       ),
+// //       child: Row(
+// //         mainAxisSize: MainAxisSize.min,
+// //         children: [
+// //           // _qtyBtn(
+// //           //   Icons.remove_rounded,
+// //           //   tabecartcolour.red,
+// //           //   (_isUpdating || !_canDecrease)
+// //           //       ? null
+// //           //       : () async {
+// //           //           final newQty = widget.item.quantity - 1;
+// //           //
+// //           //           // Remove item completely if qty becomes 0
+// //           //           if (newQty == 0) {
+// //           //             final success = await food_Authservice.removeCartItem(
+// //           //               widget.item.itemId,
+// //           //             );
+// //           //
+// //           //             if (success) {
+// //           //               widget.onQuantityChanged();
+// //           //             }
+// //           //           } else {
+// //           //             _updateQuantity(newQty);
+// //           //           }
+// //           //         },
+// //           // ),
+// //           // MINUS
+// //           _qtyBtn(
+// //             Icons.remove_rounded,
+// //             tabecartcolour.red,
+// //             !_canDecrease
+// //                 ? null
+// //                 : () async {
+// //                     final newQty = widget.item.quantity - 1;
+// //
+// //                     // SHOW POPUP ONLY FOR SENT ITEMS
+// //                     if (_isSentItem) {
+// //                       final confirm = await showDialog<bool>(
+// //                         context: context,
+// //                         builder: (_) => AlertDialog(
+// //                           title: const Text("Remove Item"),
+// //                           content: const Text(
+// //                             "This item is already sent. Do you want to decrease quantity?",
+// //                           ),
+// //                           actions: [
+// //                             TextButton(
+// //                               onPressed: () => Navigator.pop(context, false),
+// //                               child: const Text("Cancel"),
+// //                             ),
+// //                             TextButton(
+// //                               onPressed: () => Navigator.pop(context, true),
+// //                               child: const Text(
+// //                                 "Yes",
+// //                                 style: TextStyle(color: Colors.red),
+// //                               ),
+// //                             ),
+// //                           ],
+// //                         ),
+// //                       );
+// //
+// //                       if (confirm != true) return;
+// //                     }
+// //
+// //                     if (newQty >= 0) {
+// //                       _updateQuantity(newQty);
+// //                     }
+// //                   },
+// //           ),
+// //
+// //           Padding(
+// //             padding: EdgeInsets.symmetric(horizontal: 10.w),
+// //             child: _isUpdating
+// //                 ? SizedBox(
+// //                     width: 14.w,
+// //                     height: 14.w,
+// //                     child: CircularProgressIndicator(
+// //                       strokeWidth: 2,
+// //                       color: tabecartcolour.green,
+// //                     ),
+// //                   )
+// //                 : Text(
+// //                     '${widget.item.quantity}',
+// //                     style: TextStyle(
+// //                       fontSize: 13.sp,
+// //                       fontWeight: FontWeight.w700,
+// //                       color: tabecartcolour.textPrimary,
+// //                     ),
+// //                   ),
+// //           ),
+// //
+// //           // _qtyBtn(
+// //           //   Icons.add_rounded,
+// //           //   tabecartcolour.green,
+// //           //   _isUpdating
+// //           //       ? null
+// //           //       : () => _updateQuantity(widget.item.quantity + 1),
+// //           // ),
+// //           _qtyBtn(
+// //             Icons.add_rounded,
+// //             tabecartcolour.green,
+// //             _isSentItem
+// //                 ? null // disable when item already sent
+// //                 : () {
+// //                     if (!(widget.item.available ?? true)) {
+// //                       AppAlert.error(context, 'Not enough stock for this dish');
+// //                       return;
+// //                     }
+// //
+// //                     _updateQuantity(widget.item.quantity + 1);
+// //                   },
+// //           ),
+// //         ],
+// //       ),
+// //     );
+// //   }
+// // }
+//
+//
+// class QuantityControl extends StatefulWidget {
+//   final CartItem item;
+//   final VoidCallback onQuantityChanged;
+//
+//   final int cartId;
+//   final String tableCode;
+//   final int userId;
+//
+//   const QuantityControl({
+//     super.key,
+//     required this.item,
+//     required this.onQuantityChanged,
+//     required this.cartId,
+//     required this.tableCode,
+//     required this.userId,
+//   });
+//
+//   @override
+//   State<QuantityControl> createState() => _QuantityControlState();
+// }
+//
+// class _QuantityControlState extends State<QuantityControl> {
+//   bool _isUpdating = false;
+//
+//   // Minus is blocked at previousQuantity (what's already sent)
+//   // If nothing sent yet, minimum is 1
+//   int get _floor =>
+//       widget.item.previousQuantity > 0 ? widget.item.previousQuantity : 1;
+//   //
+//   // bool get _canDecrease => widget.item.quantity > _floor;
+//
+//   bool get _canDecrease {
+//     // Not yet sent to API
+//     if (widget.item.previousQuantity == 0) {
+//       return widget.item.quantity > 0;
+//     }
+//
+//     // Already sent to API
+//     return widget.item.quantity > widget.item.previousQuantity;
+//   }
+//
+//   bool get _isSentItem => widget.item.orderStatus != null;
+//
+//   Future<void> _updateQuantity(int newQty) async {
+//     if (_isUpdating) return;
+//     setState(() => _isUpdating = true);
+//
+//     final success = await food_Authservice.updateCartItemQuantity(
+//       itemId: widget.item.itemId,
+//       quantity: newQty,
+//     );
+//
+//     if (success) {
+//       setState(() {
+//         widget.item.quantity = newQty;
+//         widget.item.totalPrice = widget.item.price * newQty;
+//       });
+//       widget.onQuantityChanged();
+//     } else {
+//       if (mounted) AppAlert.error(context, '❌ Failed to update quantity');
+//     }
+//
+//     if (mounted) setState(() => _isUpdating = false);
+//   }
+//
+//   Widget _qtyBtn(IconData icon, Color color, VoidCallback? onTap) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Container(
+//         padding: EdgeInsets.all(6.w),
+//         decoration: BoxDecoration(
+//           color: color.withOpacity(onTap == null ? 0.05 : 0.12),
+//           borderRadius: BorderRadius.circular(8.r),
+//         ),
+//         child: Icon(
+//           icon,
+//           size: 14.sp,
+//           color: onTap == null ? Colors.grey.shade300 : color,
+//         ),
+//       ),
+//     );
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       decoration: BoxDecoration(
+//         color: tabecartcolour.bg,
+//         borderRadius: BorderRadius.circular(10.r),
+//         border: Border.all(color: tabecartcolour.border),
+//       ),
+//       child: Row(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           _qtyBtn(Icons.remove_rounded, tabecartcolour.red, () async {
+//             // already minimum reached
+//             if (!_canDecrease) {
+//               // SENT ITEM CASE
+//               if (_isSentItem) {
+//                 final result = await showDialog<Map<String, dynamic>>(
+//                   context: context,
+//                   builder: (_) =>
+//                       _QuantityRequestDialog(quantity: widget.item.quantity),
+//                 );
+//
+//                 if (result == null) return;
+//
+//                 final success = await food_Authservice.createTableRequest(
+//                   userId: widget.userId ?? 0,
+//                   itemId: widget.item.itemId,
+//                   cartId: widget.cartId ?? 0,
+//                   tableCode: widget.tableCode ?? '',
+//                   requestType: result['requestType'],
+//                   reason: result['reason'],
+//                 );
+//
+//                 if (!success) {
+//                   AppAlert.error(context, 'Failed to send request');
+//                   return;
+//                 }
+//
+//                 AppAlert.success(context, 'Request sent successfully');
+//
+//                 return;
+//               }
+//
+//               // UNSENT ITEM CASE
+//               if (widget.item.quantity <= 0) {
+//                 AppAlert.error(context, 'Quantity cannot be less than 0');
+//                 return;
+//               }
+//             }
+//
+//             final newQty = widget.item.quantity - 1;
+//
+//             // CONFIRM ONLY FOR SENT ITEMS
+//
+//             if (newQty >= 0) {
+//               _updateQuantity(newQty);
+//             }
+//           }),
+//
+//           Padding(
+//             padding: EdgeInsets.symmetric(horizontal: 10.w),
+//             child: _isUpdating
+//                 ? SizedBox(
+//                     width: 14.w,
+//                     height: 14.w,
+//                     child: CircularProgressIndicator(
+//                       strokeWidth: 2,
+//                       color: tabecartcolour.green,
+//                     ),
+//                   )
+//                 : Text(
+//                     '${widget.item.quantity}',
+//                     style: TextStyle(
+//                       fontSize: 13.sp,
+//                       fontWeight: FontWeight.w700,
+//                       color: tabecartcolour.textPrimary,
+//                     ),
+//                   ),
+//           ),
+//
+//           _qtyBtn(
+//             Icons.add_rounded,
+//             tabecartcolour.green,
+//             _isSentItem
+//                 ? null // disable when item already sent
+//                 : () {
+//                     if (!(widget.item.available ?? true)) {
+//                       AppAlert.error(context, 'Not enough stock for this dish');
+//                       return;
+//                     }
+//
+//                     _updateQuantity(widget.item.quantity + 1);
+//                   },
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+//
+// class _QuantityRequestDialog extends StatefulWidget {
+//   final int quantity;
+//
+//   const _QuantityRequestDialog({required this.quantity});
+//
+//   @override
+//   State<_QuantityRequestDialog> createState() => _QuantityRequestDialogState();
+// }
+//
+// class _QuantityRequestDialogState extends State<_QuantityRequestDialog> {
+//   final TextEditingController _reasonCtrl = TextEditingController();
+//
+//   String _requestType = 'REMOVAL_QUANTITY';
+//
+//   final List<String> _types = ['REMOVAL_QUANTITY', 'REMOVE_ITEM', 'OTHERS'];
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Dialog(
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+//       child: Padding(
+//         padding: const EdgeInsets.all(20),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             const Text(
+//               'Send Request',
+//               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+//             ),
+//
+//             const SizedBox(height: 18),
+//
+//             DropdownButtonFormField<String>(
+//               value: _requestType,
+//               decoration: const InputDecoration(
+//                 labelText: 'Request Type',
+//                 border: OutlineInputBorder(),
+//               ),
+//               items: _types.map((e) {
+//                 return DropdownMenuItem(value: e, child: Text(e));
+//               }).toList(),
+//               onChanged: (v) {
+//                 if (v != null) {
+//                   setState(() {
+//                     _requestType = v;
+//                   });
+//                 }
+//               },
+//             ),
+//
+//             const SizedBox(height: 14),
+//
+//             TextField(
+//               controller: _reasonCtrl,
+//               maxLines: 3,
+//               decoration: const InputDecoration(
+//                 labelText: 'Reason',
+//                 hintText: 'Enter reason...',
+//                 border: OutlineInputBorder(),
+//               ),
+//             ),
+//
+//             const SizedBox(height: 20),
+//
+//             Row(
+//               children: [
+//                 Expanded(
+//                   child: OutlinedButton(
+//                     onPressed: () {
+//                       Navigator.pop(context);
+//                     },
+//                     child: const Text('Cancel'),
+//                   ),
+//                 ),
+//
+//                 const SizedBox(width: 10),
+//
+//                 Expanded(
+//                   child: ElevatedButton(
+//                     onPressed: () {
+//                       if (_reasonCtrl.text.trim().isEmpty) {
+//                         AppAlert.error(context, 'Please enter reason');
+//                         return;
+//                       }
+//
+//                       Navigator.pop(context, {
+//                         "requestType": _requestType,
+//                         "reason": _reasonCtrl.text.trim(),
+//                       });
+//                     },
+//                     child: const Text('Submit'),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+//
+// // ─── Send Button ──────────────────────────────────────────────────────────────
+// class SendButton extends StatelessWidget {
+//   final CartItem item;
+//   final bool isSending;
+//   final VoidCallback onSend;
+//
+//   const SendButton({
+//     super.key,
+//     required this.item,
+//     required this.isSending,
+//     required this.onSend,
+//   });
+//
+//   bool get _isActive => item.quantity > item.previousQuantity;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final canTap = _isActive && !isSending;
+//
+//     return GestureDetector(
+//       onTap: canTap ? onSend : null,
+//       child: AnimatedContainer(
+//         duration: const Duration(milliseconds: 200),
+//         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+//         decoration: BoxDecoration(
+//           color: canTap ? tabecartcolour.brand : tabecartcolour.textMuted,
+//           borderRadius: BorderRadius.circular(10),
+//         ),
+//         child: isSending
+//             ? const SizedBox(
+//                 width: 16,
+//                 height: 16,
+//                 child: CircularProgressIndicator(
+//                   color: Colors.white,
+//                   strokeWidth: 2,
+//                 ),
+//               )
+//             : Row(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   const Icon(Icons.send_rounded, size: 14, color: Colors.white),
+//                   const SizedBox(width: 5),
+//                   const Text(
+//                     'Send',
+//                     style: TextStyle(
+//                       fontSize: 13,
+//                       fontWeight: FontWeight.w700,
+//                       color: Colors.white,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//       ),
+//     );
+//   }
+// }
+//
+// // ─── Coupon Skeleton ──────────────────────────────────────────────────────────
+// Widget _couponSkeletonList() {
+//   return ListView.builder(
+//     padding: const EdgeInsets.all(16),
+//     itemCount: 5,
+//     itemBuilder: (_, __) => Padding(
+//       padding: const EdgeInsets.only(bottom: 12),
+//       child: Shimmer.fromColors(
+//         baseColor: Colors.grey.shade200,
+//         highlightColor: Colors.grey.shade50,
+//         child: Container(
+//           height: 80,
+//           decoration: BoxDecoration(
+//             color: Colors.white,
+//             borderRadius: BorderRadius.circular(14),
+//           ),
+//         ),
+//       ),
+//     ),
+//   );
+// }
+
+import 'package:maamaas/Models/food/orders_model.dart';
 import 'package:maamaas/screens/Food&beverages/table/tablecartpayment.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -2245,110 +4970,18 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../Mainscreen.dart';
 import '../food_invoice.dart';
+import 'TableCart_helper.dart';
 import 'table_menu.dart';
 import 'dart:async';
 
-// ─── Design Tokens ───────────────────────────────────────────────────────────
-class _C {
-  // Backgrounds
-  static const bg = Color(0xFFF7F8FA);
-  static const surface = Color(0xFFFFFFFF);
-  static const surfaceElevated = Color(0xFFFBFCFE);
+// ─── Design Tokens ────────────────────────────────────────────────────────────
 
-  // Brand
-  static const brand = Color(0xFFFF6B35); // warm orange – food-app energy
-  static const brandLight = Color(0xFFFFF0EB);
-  static const brandDark = Color(0xFFE55A27);
-
-  // Text
-  static const textPrimary = Color(0xFF1C1C1E);
-  static const textSecondary = Color(0xFF6B7280);
-  static const textMuted = Color(0xFFB0B8C8);
-
-  // Semantic
-  static const green = Color(0xFF22C55E);
-  static const greenLight = Color(0xFFDCFCE7);
-  static const red = Color(0xFFEF4444);
-  static const redLight = Color(0xFFFEE2E2);
-  static const amber = Color(0xFFF59E0B);
-  static const amberLight = Color(0xFFFEF3C7);
-  static const blue = Color(0xFF3B82F6);
-  static const blueLight = Color(0xFFEFF6FF);
-
-  // Border / shadow
-  static const border = Color(0xFFEEF0F5);
-  static const shadow = Color(0x0A000000);
-}
-
-// ─── Status Badge Helper ──────────────────────────────────────────────────────
-class _StatusBadge extends StatelessWidget {
-  final String status;
-  const _StatusBadge(this.status);
-
-  @override
-  Widget build(BuildContext context) {
-    final s = status.toUpperCase();
-    Color bg, fg;
-    IconData icon;
-
-    if (s == 'DELIVERED') {
-      bg = _C.greenLight;
-      fg = _C.green;
-      icon = Icons.check_circle_rounded;
-    } else if (s == 'CANCELLED') {
-      bg = _C.redLight;
-      fg = _C.red;
-      icon = Icons.cancel_rounded;
-    } else if (s == 'CONFIRMED' || s == 'PENDING') {
-      bg = _C.amberLight;
-      fg = _C.amber;
-      icon = Icons.schedule_rounded;
-    } else {
-      bg = _C.blueLight;
-      fg = _C.blue;
-      icon = Icons.info_rounded;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: fg),
-          const SizedBox(width: 4),
-          Text(
-            s.replaceAll('_', ' '),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: fg,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Enums ────────────────────────────────────────────────────────────────────
-enum PaymentOverlayState {
-  none,
-  placingOrder,
-  openingGateway,
-  processing,
-  success,
-}
+// ─── Status Badge ─────────────────────────────────────────────────────────────
 
 // ─── Main Widget ──────────────────────────────────────────────────────────────
 class tablecart extends StatefulWidget {
   final int seatingId;
   const tablecart({super.key, required this.seatingId});
-
   @override
   State<tablecart> createState() => _tablecartState();
 }
@@ -2357,30 +4990,26 @@ class _tablecartState extends State<tablecart>
     with SingleTickerProviderStateMixin {
   TableCartModel? tableCartData;
   String selectedPaymentMethod = "";
-  String selectedSubWallet = "";
   bool isPlacingOrder = false;
-  Map<String, dynamic>? checkoutData;
   List<CartItem> _cartItems = [];
   bool _isLoading = true;
   String? _error;
-  bool isSent = false;
   bool isExpanded = false;
   bool isServiceChargeApplied = true;
   Wallet? wallet;
   int? appliedCouponId;
   String? appliedCouponCode;
-  bool send = false;
   final Map<int, bool> _isSendingMap = {};
   late ScrollController _scrollController;
   bool isCouponLoading = false;
   final Map<int, TextEditingController> _noteControllers = {};
   Set<String> selectedSubWallets = {};
   PaymentOverlayState _overlayState = PaymentOverlayState.none;
-  int selectedQuantity = 0;
 
   final WebSocketManager _wsManager = WebSocketManager();
   int? _userId;
   Timer? _cartReloadDebounce;
+
   @override
   void initState() {
     super.initState();
@@ -2397,11 +5026,9 @@ class _tablecartState extends State<tablecart>
     _scrollController.dispose();
     for (final c in _noteControllers.values) c.dispose();
     _cartReloadDebounce?.cancel();
-
     super.dispose();
   }
 
-  // ── WebSocket / data methods (unchanged logic) ────────────────────────────
   Future<void> _initializeRealtimeCart() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
@@ -2425,59 +5052,6 @@ class _tablecartState extends State<tablecart>
       } catch (_) {}
     });
   }
-  // Future<void> _initializeRealtimeCart() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //
-  //   final userId = prefs.getInt('userId');
-  //
-  //   if (userId == null) return;
-  //
-  //   _userId = userId;
-  //
-  //   _wsManager.subscribeUserCart(userId, (data) async {
-  //     debugPrint('📦 CART WS EVENT RECEIVED');
-  //
-  //     if (!mounted) return;
-  //
-  //     // Prevent multiple rapid API calls
-  //     _cartReloadDebounce?.cancel();
-  //
-  //     _cartReloadDebounce = Timer(
-  //       const Duration(milliseconds: 500),
-  //           () async {
-  //         debugPrint('🔄 Reloading full cart from API');
-  //
-  //         await _loadCartItems();
-  //       },
-  //     );
-  //   });
-  //   // _wsManager.subscribeUserCart(userId, (data) async {
-  //   //   if (!mounted) return;
-  //   //
-  //   //   _cartReloadDebounce?.cancel();
-  //   //
-  //   //   _cartReloadDebounce = Timer(const Duration(milliseconds: 500), () async {
-  //   //     // Preserve current scroll position
-  //   //     final currentOffset = _scrollController.hasClients
-  //   //         ? _scrollController.offset
-  //   //         : 0.0;
-  //   //
-  //   //     await _loadCartItems();
-  //   //
-  //   //     // Restore scroll position
-  //   //     WidgetsBinding.instance.addPostFrameCallback((_) {
-  //   //       if (_scrollController.hasClients) {
-  //   //         _scrollController.jumpTo(
-  //   //           currentOffset.clamp(
-  //   //             0,
-  //   //             _scrollController.position.maxScrollExtent,
-  //   //           ),
-  //   //         );
-  //   //       }
-  //   //     });
-  //   //   });
-  //   // });
-  // }
 
   void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2515,12 +5089,12 @@ class _tablecartState extends State<tablecart>
       if (!mounted) return;
       setState(() {
         if (updatedCarts.isNotEmpty) {
-          final freshCart = updatedCarts.first;
-          tableCartData = freshCart;
-          _cartItems = List<CartItem>.from(freshCart.cartItems);
+          final fresh = updatedCarts.first;
+          tableCartData = fresh;
+          _cartItems = List<CartItem>.from(fresh.cartItems);
           final delivered =
-              freshCart.cartItems.isNotEmpty &&
-              freshCart.cartItems
+              fresh.cartItems.isNotEmpty &&
+              fresh.cartItems
                   .where((i) => i.orderStatus != "CANCELLED")
                   .every((i) => i.orderStatus == "DELIVERED");
           if (!delivered) isExpanded = false;
@@ -2536,8 +5110,7 @@ class _tablecartState extends State<tablecart>
   Future<void> _initializeData() async {
     try {
       final data = await food_Authservice.fetchTableCart();
-      if (data.isEmpty) return;
-      if (!mounted) return;
+      if (data.isEmpty || !mounted) return;
       setState(() => tableCartData = data.first);
     } catch (_) {}
   }
@@ -2608,17 +5181,13 @@ class _tablecartState extends State<tablecart>
           setState(() => _overlayState = PaymentOverlayState.openingGateway);
         }
         final orderId = await food_Authservice.createOrder(amount);
-        if (mounted) {
-          setState(() => _overlayState = PaymentOverlayState.openingGateway);
-        }
         if (orderId == null) {
           AppAlert.error(context, "Failed to create payment order");
           return;
         }
         final rp = RazorpayService();
         rp.onSuccess = (res) async {
-          final pid = res.paymentId!;
-          final oid = res.orderId!;
+          final pid = res.paymentId!, oid = res.orderId!;
           if (mounted) {
             setState(() => _overlayState = PaymentOverlayState.processing);
           }
@@ -2653,19 +5222,20 @@ class _tablecartState extends State<tablecart>
         );
         return;
       }
-      final amt = tableCartData!.grandTotal.toDouble();
       await _callOrderApi(
         paymentMethod: selectedPaymentMethod,
         razorpayPaymentId: "",
         razorpayOrderId: "",
-        amount: amt,
+        amount: tableCartData!.grandTotal.toDouble(),
       );
     } catch (e) {
-      String message = e.toString().contains("Exception:")
-          ? e.toString().replaceFirst("Exception: ", "")
-          : e.toString();
       if (mounted) setState(() => _overlayState = PaymentOverlayState.none);
-      AppAlert.error(context, message);
+      AppAlert.error(
+        context,
+        e.toString().contains("Exception:")
+            ? e.toString().replaceFirst("Exception: ", "")
+            : e.toString(),
+      );
     } finally {
       if (mounted) setState(() => isPlacingOrder = false);
     }
@@ -2679,30 +5249,34 @@ class _tablecartState extends State<tablecart>
             .every((i) => i.orderStatus == "DELIVERED");
   }
 
-  bool get canDeleteCart {
-    if (tableCartData == null) return false;
-    return tableCartData!.cartItems.isNotEmpty &&
-        tableCartData!.cartItems.every((item) => item.orderStatus == null);
+  bool _showQuantityControl(String? status) {
+    if (status == null) return true; // unsent — always show
+    const allowed = {
+      'PENDING',
+      'CONFIRMED',
+      'BEING_PREPARED',
+      'PREPARING',
+      'PROCESSING',
+    };
+    return allowed.contains(status.toUpperCase().trim());
   }
 
-  List<String> mapWalletsToEnum(List<String> selected) {
-    return selected.map((w) {
-      switch (w) {
-        case "Cashbacks":
-          return "CASHBACK";
-        case "Self Loaded":
-          return "SELF_LOADED";
-        case "Postpaid used amount":
-          return "POST_PAID";
-        case "Company Loaded":
-          return "COMPANY_LOADED";
-        case "Earned Amount":
-          return "EARNED_AMOUNT";
-        default:
-          return w.toUpperCase().replaceAll(' ', '_');
-      }
-    }).toList();
-  }
+  List<String> mapWalletsToEnum(List<String> selected) => selected.map((w) {
+    switch (w) {
+      case "Cashbacks":
+        return "CASHBACK";
+      case "Self Loaded":
+        return "SELF_LOADED";
+      case "Postpaid used amount":
+        return "POST_PAID";
+      case "Company Loaded":
+        return "COMPANY_LOADED";
+      case "Earned Amount":
+        return "EARNED_AMOUNT";
+      default:
+        return w.toUpperCase().replaceAll(' ', '_');
+    }
+  }).toList();
 
   Future<void> _callOrderApi({
     required String paymentMethod,
@@ -2744,31 +5318,31 @@ class _tablecartState extends State<tablecart>
     try {
       final result = await food_Authservice.fetchTableCart();
       if (result.isNotEmpty) {
-        final freshCart = result.first;
-        final fetchedItems = freshCart.cartItems;
+        final fresh = result.first;
+        final fetched = fresh.cartItems;
         setState(() {
-          tableCartData = freshCart;
+          tableCartData = fresh;
           final delivered =
-              freshCart.cartItems.isNotEmpty &&
-              freshCart.cartItems
+              fresh.cartItems.isNotEmpty &&
+              fresh.cartItems
                   .where((i) => i.orderStatus != "CANCELLED")
                   .every((i) => i.orderStatus == "DELIVERED");
           if (!delivered) isExpanded = false;
           if (updatedItemId != null) {
-            final updatedItem = fetchedItems.firstWhere(
-              (item) => item.itemId == updatedItemId,
+            final updatedItem = fetched.firstWhere(
+              (i) => i.itemId == updatedItemId,
               orElse: () => CartItem.empty(),
             );
             final index = _cartItems.indexWhere(
-              (item) => item.itemId == updatedItemId,
+              (i) => i.itemId == updatedItemId,
             );
             if (index != -1 && updatedItem.itemId != 0) {
               _cartItems[index] = updatedItem;
             } else {
-              _cartItems = fetchedItems;
+              _cartItems = fetched;
             }
           } else {
-            _cartItems = fetchedItems;
+            _cartItems = fetched;
           }
           _isLoading = false;
         });
@@ -2791,23 +5365,22 @@ class _tablecartState extends State<tablecart>
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context);
-
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: _C.bg,
+          backgroundColor: tabecartcolour.bg,
           appBar: _buildAppBar(),
           body: SafeArea(
             child: RefreshIndicator(
               onRefresh: _onRefresh,
-              color: _C.brand,
+              color: tabecartcolour.brand,
               backgroundColor: Colors.white,
               displacement: 40,
               strokeWidth: 2.5,
               child: SingleChildScrollView(
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 32.h),
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 40.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2817,7 +5390,7 @@ class _tablecartState extends State<tablecart>
                       _buildEmptyCart()
                     else ...[
                       _buildCartItems(context),
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 10.h),
                       _buildAddMoreRow(context),
                       SizedBox(height: 16.h),
                       if (tableCartData != null &&
@@ -2857,7 +5430,9 @@ class _tablecartState extends State<tablecart>
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(bottom: BorderSide(color: _C.border, width: 1)),
+          border: Border(
+            bottom: BorderSide(color: tabecartcolour.border, width: 1),
+          ),
         ),
         child: SafeArea(
           child: Row(
@@ -2867,7 +5442,7 @@ class _tablecartState extends State<tablecart>
                 icon: const Icon(
                   Icons.arrow_back_ios_new_rounded,
                   size: 18,
-                  color: _C.textPrimary,
+                  color: tabecartcolour.textPrimary,
                 ),
                 onPressed: () {
                   if (Navigator.canPop(context)) {
@@ -2880,22 +5455,29 @@ class _tablecartState extends State<tablecart>
                   }
                 },
               ),
-              const Expanded(
-                child: Text(
-                  'Your Cart',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: _C.textPrimary,
-                    letterSpacing: -0.3,
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        tableCartData?.tableCode != null
+                            ? 'Table ${tableCartData!.tableCode}'
+                            : 'Your Cart',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: tabecartcolour.brand,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               IconButton(
                 icon: const Icon(
                   Icons.delete_outline_rounded,
-                  color: _C.red,
+                  color: tabecartcolour.red,
                   size: 22,
                 ),
                 onPressed: _confirmDeleteCart,
@@ -2919,29 +5501,32 @@ class _tablecartState extends State<tablecart>
         ),
         content: const Text(
           'All items will be removed from your cart.',
-          style: TextStyle(color: _C.textSecondary),
+          style: TextStyle(color: tabecartcolour.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text(
               'Cancel',
-              style: TextStyle(color: _C.textSecondary),
+              style: TextStyle(color: tabecartcolour.textSecondary),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text(
               'Clear',
-              style: TextStyle(color: _C.red, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: tabecartcolour.red,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
       ),
     );
     if (confirm == true) {
-      final vendorId = tableCartData?.vendorId;
-      final seatingId = tableCartData?.seatingId;
+      final vendorId = tableCartData?.vendorId,
+          seatingId = tableCartData?.seatingId;
       final deleted = await _deleteCart();
       if (!mounted) return;
       if (deleted && vendorId != null && seatingId != null) {
@@ -2980,7 +5565,8 @@ class _tablecartState extends State<tablecart>
     return Material(
       color: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+        margin: const EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -2994,13 +5580,13 @@ class _tablecartState extends State<tablecart>
             Container(
               width: 56,
               height: 56,
-              decoration: BoxDecoration(
-                color: _C.brandLight,
+              decoration: const BoxDecoration(
+                color: tabecartcolour.brandLight,
                 shape: BoxShape.circle,
               ),
               child: const Center(
                 child: CircularProgressIndicator(
-                  color: _C.brand,
+                  color: tabecartcolour.brand,
                   strokeWidth: 2.5,
                 ),
               ),
@@ -3010,19 +5596,22 @@ class _tablecartState extends State<tablecart>
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: _C.textPrimary,
+                color: tabecartcolour.textPrimary,
                 decoration: TextDecoration.none,
               ),
-              child: Text(text),
+              child: Text(text, textAlign: TextAlign.center),
             ),
             const SizedBox(height: 4),
             const DefaultTextStyle(
               style: TextStyle(
                 fontSize: 12,
-                color: _C.textSecondary,
+                color: tabecartcolour.textSecondary,
                 decoration: TextDecoration.none,
               ),
-              child: Text('Please don\'t close this screen'),
+              child: Text(
+                "Please don't close this screen",
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),
@@ -3032,53 +5621,47 @@ class _tablecartState extends State<tablecart>
 
   // ── Empty State ───────────────────────────────────────────────────────────
   Widget _buildEmptyCart() {
-    return Center(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: const BoxDecoration(
-                color: _C.brandLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.shopping_cart_outlined,
-                size: 44,
-                color: _C.brand,
-              ),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.6,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 96,
+            height: 96,
+            decoration: const BoxDecoration(
+              color: tabecartcolour.brandLight,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Your cart is empty',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: _C.textPrimary,
-              ),
+            child: const Icon(
+              Icons.shopping_cart_outlined,
+              size: 44,
+              color: tabecartcolour.brand,
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Browse the menu and add something delicious',
-              style: TextStyle(fontSize: 14, color: _C.textSecondary),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Your cart is empty',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: tabecartcolour.textPrimary,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Browse the menu and add something delicious',
+            style: TextStyle(fontSize: 14, color: tabecartcolour.textSecondary),
+          ),
+        ],
       ),
     );
   }
 
-  // ── Cart Items Card ───────────────────────────────────────────────────────
+  // ── Cart Items ─────────────────────────────────────────────────────────────
   Widget _buildCartItems(BuildContext context) {
-    if (_isLoading) {
-      return _buildCartSkeleton();
-    }
-    if (_error != null) {
-      return _buildErrorState();
-    }
+    if (_isLoading) return _buildCartSkeleton();
+    if (_error != null) return _buildErrorState();
     if (_cartItems.isEmpty) return _buildEmptyCart();
 
     final orderedItems = _cartItems
@@ -3094,66 +5677,30 @@ class _tablecartState extends State<tablecart>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Table header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: _C.brandLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.table_restaurant_rounded,
-                      size: 14,
-                      color: _C.brand,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      'Table ${tableCartData?.tableCode ?? ''}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _C.brand,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // const Spacer(),
-              // Text(
-              //   '${_cartItems.length} ${_cartItems.length == 1 ? 'item' : 'items'}',
-              //   style: const TextStyle(fontSize: 13, color: _C.textSecondary),
-              // ),
-            ],
-          ),
-          const SizedBox(height: 16),
           ...displayItems.asMap().entries.map((entry) {
-            final idx = entry.key;
-            final item = entry.value;
-            final isLast = idx == displayItems.length - 1;
-            return _buildCartItemRow(item, isLast);
+            final isLast = entry.key == displayItems.length - 1;
+            return _buildCartItemRow(entry.value, isLast);
           }),
         ],
       ),
     );
   }
 
+  // ── Single Cart Item Row (REDESIGNED — overflow-safe) ─────────────────────
   Widget _buildCartItemRow(CartItem item, bool isLast) {
+    final isCancelled = (item.orderStatus ?? '').toUpperCase() == 'CANCELLED';
+    final isSent = item.orderStatus != null;
+
     return Column(
       key: ValueKey('${item.itemId}_${item.orderStatus}_${item.quantity}'),
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: EdgeInsets.symmetric(vertical: 12.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Row 1: dish name + price ──────────────────────────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -3161,91 +5708,122 @@ class _tablecartState extends State<tablecart>
                     child: Text(
                       item.dishName,
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: item.orderStatus == "CANCELLED"
-                            ? _C.textMuted
-                            : _C.textPrimary,
-                        decoration: item.orderStatus == "CANCELLED"
+                        color: isCancelled
+                            ? tabecartcolour.textMuted
+                            : tabecartcolour.textPrimary,
+                        decoration: isCancelled
                             ? TextDecoration.lineThrough
                             : null,
+                        height: 1.3,
                       ),
                     ),
                   ),
-
-                  if (item.orderStatus != null) ...[
+                  const SizedBox(width: 8),
+                  if (isSent)
                     Text(
-                      "Qty: ${item.quantity}",
-                      style: const TextStyle(
-                        fontSize: 15,
+                      '₹${item.totalPrice.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
-                        color: _C.textPrimary,
+                        color: tabecartcolour.textPrimary,
+                      ),
+                    ),
+                ],
+              ),
+
+              SizedBox(height: 6.h),
+
+              // ── Row 2: unit price + controls ──────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // const SizedBox(width: 18),
+                  Text(
+                    '₹${item.price} each',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: tabecartcolour.textSecondary,
+                    ),
+                  ),
+
+                  if (tableCartData != null &&
+                      _showQuantityControl(item.orderStatus)) ...[
+                    QuantityControl(
+                      item: item,
+                      onQuantityChanged: () => setState(() {}),
+                      cartId: tableCartData!.cartId,
+                      tableCode: tableCartData!.tableCode,
+                      userId: tableCartData!.userId,
+                    ),
+                    const SizedBox(width: 8),
+                  ] else ...[
+                    Text(
+                      'Qty : ${item.quantity}',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        color: tabecartcolour.textPrimary,
                       ),
                     ),
                   ],
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const SizedBox(width: 22), // align under name
-                  Text(
-                    '₹${item.price} each',
-                    style: const TextStyle(fontSize: 12, color: _C.textMuted),
-                  ),
-                  const Spacer(),
-
-                  QuantityControl(
-                    item: item,
-                    onQuantityChanged: () => setState(() {}),
-                  ),
-                  const SizedBox(width: 8),
-                  if (item.orderStatus == null) ...[
+                  // Send button OR status badge
+                  if (!isSent)
                     SendButton(
                       item: item,
                       isSending: _isSendingMap[item.itemId] == true,
                       onSend: () => _sendItem(item),
-                    ),
-                  ] else
-                    _StatusBadge(item.orderStatus ?? ''),
+                    )
+                  else
+                    StatusBadge(item.orderStatus),
                 ],
               ),
-              // Note field
-              if (item.orderStatus == null) ...[
-                const SizedBox(height: 10),
+
+              // ── Note field (only for unsent items) ────────────────────────
+              if (!isSent) ...[
+                SizedBox(height: 10.h),
                 TextField(
                   controller: _getNoteController(item),
                   maxLines: 1,
                   textInputAction: TextInputAction.done,
-                  style: const TextStyle(fontSize: 13),
+                  style: TextStyle(fontSize: 13.sp),
                   decoration: InputDecoration(
-                    hintText: 'Cooking instructions or special request...',
+                    hintText: 'Special instructions...',
                     hintStyle: const TextStyle(
-                      fontSize: 13,
-                      color: _C.textMuted,
+                      fontSize: 12,
+                      color: tabecartcolour.textMuted,
                     ),
                     prefixIcon: const Icon(
                       Icons.edit_note_rounded,
-                      size: 18,
-                      color: _C.textMuted,
+                      size: 16,
+                      color: tabecartcolour.textMuted,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 10,
                     ),
                     filled: true,
-                    fillColor: _C.bg,
+                    fillColor: tabecartcolour.bg,
+                    isDense: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: _C.border),
+                      borderSide: const BorderSide(
+                        color: tabecartcolour.border,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: _C.border),
+                      borderSide: const BorderSide(
+                        color: tabecartcolour.border,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: _C.brand, width: 1.5),
+                      borderSide: const BorderSide(
+                        color: tabecartcolour.brand,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   onChanged: (v) => item.note = v,
@@ -3254,69 +5832,50 @@ class _tablecartState extends State<tablecart>
             ],
           ),
         ),
-        if (!isLast) Divider(height: 1, thickness: 1, color: _C.border),
+        if (!isLast)
+          Divider(height: 1, thickness: 1, color: tabecartcolour.border),
       ],
     );
   }
 
   Future<void> _sendItem(CartItem item) async {
     if (_isSendingMap[item.itemId] == true) return;
-
     final note = _getNoteController(item).text.trim();
-
     setState(() => _isSendingMap[item.itemId] = true);
-
     try {
-      // 🔹 Get dynamic status from API
       final billingData = await food_Authservice.getBillingSettings(
         tableCartData!.vendorId,
       );
-      print('billingData = $billingData');
-
       final initialStatus =
           (billingData['userInitialOrderStatus']?.toString() ?? 'PENDING')
               .trim();
-      print('initialStatus = $initialStatus');
-
       final success = await food_Authservice.updateCartItemStatus(
         itemId: item.itemId,
         quantity: item.quantity,
-        // status: 'PENDING',
         status: initialStatus,
         note: note.isNotEmpty ? note : null,
       );
-
       if (success) {
         setState(() {
           item.previousQuantity = item.quantity;
-
-          // 🔹 Dynamic status
           item.orderStatus = initialStatus;
         });
-
-        // scrollToBottom();
-
         if (!mounted) return;
-
         AppAlert.success(context, 'Order placed for ${item.dishName}');
       } else {
         if (!mounted) return;
-
         AppAlert.error(context, 'Failed to send order for ${item.dishName}');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSendingMap[item.itemId] = false);
-      }
+      if (mounted) setState(() => _isSendingMap[item.itemId] = false);
     }
   }
 
-  TextEditingController _getNoteController(CartItem item) {
-    return _noteControllers.putIfAbsent(
-      item.itemId,
-      () => TextEditingController(text: item.note ?? ''),
-    );
-  }
+  TextEditingController _getNoteController(CartItem item) =>
+      _noteControllers.putIfAbsent(
+        item.itemId,
+        () => TextEditingController(text: item.note ?? ''),
+      );
 
   Widget _buildCartSkeleton() {
     return _surfaceCard(
@@ -3351,12 +5910,12 @@ class _tablecartState extends State<tablecart>
             width: 56,
             height: 56,
             decoration: const BoxDecoration(
-              color: _C.redLight,
+              color: tabecartcolour.redLight,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.error_outline_rounded,
-              color: _C.red,
+              color: tabecartcolour.red,
               size: 28,
             ),
           ),
@@ -3369,7 +5928,10 @@ class _tablecartState extends State<tablecart>
           Text(
             _error!,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: _C.textSecondary),
+            style: const TextStyle(
+              fontSize: 13,
+              color: tabecartcolour.textSecondary,
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
@@ -3377,7 +5939,7 @@ class _tablecartState extends State<tablecart>
             icon: const Icon(Icons.refresh_rounded, size: 18),
             label: const Text('Try Again'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _C.brand,
+              backgroundColor: tabecartcolour.brand,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -3390,7 +5952,7 @@ class _tablecartState extends State<tablecart>
     );
   }
 
-  // ── "Add more" row ────────────────────────────────────────────────────────
+  // ── Add More ──────────────────────────────────────────────────────────────
   Widget _buildAddMoreRow(BuildContext context) {
     return GestureDetector(
       onTap: () async {
@@ -3412,24 +5974,31 @@ class _tablecartState extends State<tablecart>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _C.brand.withOpacity(0.3)),
+          border: Border.all(color: tabecartcolour.brand.withOpacity(0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_circle_outline_rounded, size: 18, color: _C.brand),
+            Icon(
+              Icons.add_circle_outline_rounded,
+              size: 18,
+              color: tabecartcolour.brand,
+            ),
             const SizedBox(width: 8),
             RichText(
-              text: TextSpan(
+              text: const TextSpan(
                 text: 'Missed something? ',
-                style: const TextStyle(fontSize: 14, color: _C.textSecondary),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: tabecartcolour.textSecondary,
+                ),
                 children: [
                   TextSpan(
                     text: 'Add more items',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: _C.brand,
+                      color: tabecartcolour.brand,
                     ),
                   ),
                 ],
@@ -3449,10 +6018,11 @@ class _tablecartState extends State<tablecart>
         onPressed: () {
           _initializeData();
           setState(() => isExpanded = !isExpanded);
-          if (!isExpanded)
+          if (!isExpanded) {
             scrollToTop();
-          else
+          } else {
             scrollToBottom();
+          }
         },
         icon: Icon(
           isExpanded ? Icons.receipt_long_rounded : Icons.receipt_rounded,
@@ -3463,7 +6033,7 @@ class _tablecartState extends State<tablecart>
           style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: _C.brand,
+          backgroundColor: tabecartcolour.brand,
           foregroundColor: Colors.white,
           padding: EdgeInsets.symmetric(vertical: 14.h),
           shape: RoundedRectangleBorder(
@@ -3478,7 +6048,6 @@ class _tablecartState extends State<tablecart>
   // ── Coupon Row ────────────────────────────────────────────────────────────
   Widget _buildCouponRow() {
     final applied = (tableCartData?.couponCode ?? '').isNotEmpty;
-
     return GestureDetector(
       onTap: applied ? null : _showCouponBottomSheet,
       child: _surfaceCard(
@@ -3489,7 +6058,9 @@ class _tablecartState extends State<tablecart>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: applied ? _C.greenLight : _C.brandLight,
+                color: applied
+                    ? tabecartcolour.greenLight
+                    : tabecartcolour.brandLight,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -3497,7 +6068,7 @@ class _tablecartState extends State<tablecart>
                     ? Icons.check_circle_rounded
                     : Icons.local_offer_rounded,
                 size: 20,
-                color: applied ? _C.green : _C.brand,
+                color: applied ? tabecartcolour.green : tabecartcolour.brand,
               ),
             ),
             const SizedBox(width: 12),
@@ -3510,22 +6081,20 @@ class _tablecartState extends State<tablecart>
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: applied ? _C.green : _C.textPrimary,
+                      color: applied
+                          ? tabecartcolour.green
+                          : tabecartcolour.textPrimary,
                     ),
                   ),
-                  if (applied)
-                    Text(
-                      appliedCouponCode ?? '',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: _C.textSecondary,
-                      ),
+                  Text(
+                    applied
+                        ? (appliedCouponCode ?? '')
+                        : 'Save more on your order',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: tabecartcolour.textSecondary,
                     ),
-                  if (!applied)
-                    const Text(
-                      'Save more on your order',
-                      style: TextStyle(fontSize: 12, color: _C.textSecondary),
-                    ),
+                  ),
                 ],
               ),
             ),
@@ -3554,21 +6123,24 @@ class _tablecartState extends State<tablecart>
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: _C.redLight,
+                    color: tabecartcolour.redLight,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
                     'Remove',
                     style: TextStyle(
                       fontSize: 12,
-                      color: _C.red,
+                      color: tabecartcolour.red,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               )
             else
-              const Icon(Icons.chevron_right_rounded, color: _C.textMuted),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: tabecartcolour.textMuted,
+              ),
           ],
         ),
       ),
@@ -3579,13 +6151,6 @@ class _tablecartState extends State<tablecart>
   Widget _buildSummaryCard() {
     final cart = tableCartData;
     if (cart == null) return const SizedBox.shrink();
-
-    final subtotal = cart.subtotal;
-    final gstTotal = (cart.cgst) + (cart.sgst);
-    final grandTotal = cart.grandTotal;
-    final discountAmount = cart.discountAmount ?? 0;
-    final platformCharges = cart.platformCharges;
-    final serviceCharges = cart.serviceCharges;
 
     return Column(
       children: [
@@ -3600,13 +6165,13 @@ class _tablecartState extends State<tablecart>
                     width: 32,
                     height: 32,
                     decoration: const BoxDecoration(
-                      color: _C.brandLight,
+                      color: tabecartcolour.brandLight,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.receipt_long_rounded,
                       size: 16,
-                      color: _C.brand,
+                      color: tabecartcolour.brand,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -3615,24 +6180,34 @@ class _tablecartState extends State<tablecart>
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: _C.textPrimary,
+                      color: tabecartcolour.textPrimary,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              _billRow('Subtotal', subtotal),
-              if (discountAmount > 0)
-                _billRow('Discount', discountAmount, isDiscount: true),
-              _billRow('Smart DineIn Fee', platformCharges),
-              if (gstTotal > 0)
-                _billRow('GST', gstTotal, onInfo: () => _showGstDialog('GST')),
-              if (serviceCharges > 0) _buildServiceChargeRow(serviceCharges),
+              _billRow('Subtotal', cart.subtotal),
+              if ((cart.discountAmount ?? 0) > 0)
+                _billRow('Discount', cart.discountAmount!, isDiscount: true),
+              _billRow('Smart DineIn Fee', cart.platformCharges),
+              if ((cart.cgst + cart.sgst) > 0)
+                _billRow(
+                  'GST',
+                  cart.cgst + cart.sgst,
+                  onInfo: () => _showGstDialog('GST'),
+                ),
+              if (cart.serviceCharges > 0)
+                _buildServiceChargeRow(cart.serviceCharges),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Divider(thickness: 1, color: _C.border),
+                child: Divider(thickness: 1, color: tabecartcolour.border),
               ),
-              _billRow('Grand Total', grandTotal, isBold: true, isGrand: true),
+              _billRow(
+                'Grand Total',
+                cart.grandTotal,
+                isBold: true,
+                isGrand: true,
+              ),
             ],
           ),
         ),
@@ -3662,7 +6237,9 @@ class _tablecartState extends State<tablecart>
                   style: TextStyle(
                     fontSize: isGrand ? 15 : 14,
                     fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
-                    color: isBold ? _C.textPrimary : _C.textSecondary,
+                    color: isBold
+                        ? tabecartcolour.textPrimary
+                        : tabecartcolour.textSecondary,
                   ),
                 ),
                 if (onInfo != null) ...[
@@ -3672,7 +6249,7 @@ class _tablecartState extends State<tablecart>
                     child: const Icon(
                       Icons.info_outline_rounded,
                       size: 15,
-                      color: _C.textMuted,
+                      color: tabecartcolour.textMuted,
                     ),
                   ),
                 ],
@@ -3687,8 +6264,10 @@ class _tablecartState extends State<tablecart>
               fontSize: isGrand ? 16 : 14,
               fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
               color: isDiscount
-                  ? _C.green
-                  : (isGrand ? _C.brand : _C.textSecondary),
+                  ? tabecartcolour.green
+                  : (isGrand
+                        ? tabecartcolour.brand
+                        : tabecartcolour.textSecondary),
             ),
           ),
         ],
@@ -3704,7 +6283,10 @@ class _tablecartState extends State<tablecart>
           const Expanded(
             child: Text(
               'Service Charges',
-              style: TextStyle(fontSize: 14, color: _C.textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                color: tabecartcolour.textSecondary,
+              ),
             ),
           ),
           if (serviceCharges > 0 && isServiceChargeApplied)
@@ -3725,14 +6307,14 @@ class _tablecartState extends State<tablecart>
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: _C.redLight,
+                  color: tabecartcolour.redLight,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   'Remove',
                   style: TextStyle(
                     fontSize: 11,
-                    color: _C.red,
+                    color: tabecartcolour.red,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -3746,7 +6328,9 @@ class _tablecartState extends State<tablecart>
                 : '₹0.00',
             style: TextStyle(
               fontSize: 14,
-              color: isServiceChargeApplied ? _C.textSecondary : _C.red,
+              color: isServiceChargeApplied
+                  ? tabecartcolour.textSecondary
+                  : tabecartcolour.red,
               fontWeight: isServiceChargeApplied
                   ? FontWeight.normal
                   : FontWeight.w600,
@@ -3757,7 +6341,7 @@ class _tablecartState extends State<tablecart>
     );
   }
 
-  // ── Checkout section ──────────────────────────────────────────────────────
+  // ── Checkout ──────────────────────────────────────────────────────────────
   Widget _buildCheckoutDetails() {
     return Column(
       children: [
@@ -3783,9 +6367,9 @@ class _tablecartState extends State<tablecart>
       child: ElevatedButton(
         onPressed: isPlacingOrder ? null : placeOrder,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _C.brand,
+          backgroundColor: tabecartcolour.brand,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: _C.textMuted,
+          disabledBackgroundColor: tabecartcolour.textMuted,
           padding: EdgeInsets.symmetric(vertical: 16.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14.r),
@@ -3793,10 +6377,10 @@ class _tablecartState extends State<tablecart>
           elevation: 0,
         ),
         child: isPlacingOrder
-            ? SizedBox(
+            ? const SizedBox(
                 width: 22,
                 height: 22,
-                child: const CircularProgressIndicator(
+                child: CircularProgressIndicator(
                   color: Colors.white,
                   strokeWidth: 2.5,
                 ),
@@ -3859,7 +6443,7 @@ class _tablecartState extends State<tablecart>
               child: const Icon(
                 Icons.close_rounded,
                 size: 20,
-                color: _C.textSecondary,
+                color: tabecartcolour.textSecondary,
               ),
             ),
           ],
@@ -3890,7 +6474,7 @@ class _tablecartState extends State<tablecart>
           Text(
             label,
             style: TextStyle(
-              color: _C.textSecondary,
+              color: tabecartcolour.textSecondary,
               fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
             ),
           ),
@@ -3898,7 +6482,9 @@ class _tablecartState extends State<tablecart>
             '₹${_fmt(value)}',
             style: TextStyle(
               fontWeight: isBold ? FontWeight.w700 : FontWeight.normal,
-              color: isBold ? _C.textPrimary : _C.textSecondary,
+              color: isBold
+                  ? tabecartcolour.textPrimary
+                  : tabecartcolour.textSecondary,
             ),
           ),
         ],
@@ -3908,26 +6494,20 @@ class _tablecartState extends State<tablecart>
 
   String _fmt(num? v) => (v ?? 0).toStringAsFixed(2);
 
-  // ── Coupon Bottom Sheet ───────────────────────────────────────────────────
+  // ── Coupon Sheet ──────────────────────────────────────────────────────────
   void _showCouponBottomSheet() async {
     setState(() => isCouponLoading = true);
-
     final coupons = await food_Authservice.fetchCoupons();
     final cartVendor = tableCartData?.vendorId;
-
     setState(() => isCouponLoading = false);
-
     coupons.sort((a, b) {
       final aE = a.isExpired, bE = b.isExpired;
-      final aM = !a.isApplicableForVendor(cartVendor);
-      final bM = !b.isApplicableForVendor(cartVendor);
-
+      final aM = !a.isApplicableForVendor(cartVendor),
+          bM = !b.isApplicableForVendor(cartVendor);
       if (aE != bE) return aE ? 1 : -1;
       if (aM != bM) return aM ? 1 : -1;
-
       return 0;
     });
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -3938,10 +6518,8 @@ class _tablecartState extends State<tablecart>
         maxWidth: MediaQuery.of(context).size.width,
       ),
       builder: (sheetCtx) {
-        if (coupons.isEmpty) {
+        if (coupons.isEmpty)
           return SizedBox(width: double.infinity, child: _emptyCouponView());
-        }
-
         return Container(
           width: double.infinity,
           height: MediaQuery.of(sheetCtx).size.height * 0.95,
@@ -3951,19 +6529,16 @@ class _tablecartState extends State<tablecart>
           ),
           child: Column(
             children: [
-              // drag handle
               Container(
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
                 width: 40,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: _C.border,
+                  color: tabecartcolour.border,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-
               _couponHeader(),
-
               Expanded(
                 child: isCouponLoading
                     ? _couponSkeletonList()
@@ -3972,13 +6547,10 @@ class _tablecartState extends State<tablecart>
                         itemCount: coupons.length,
                         itemBuilder: (_, index) {
                           final coupon = coupons[index];
-
                           final isExpired = coupon.isExpired;
-
                           final isMismatch = !coupon.isApplicableForVendor(
                             cartVendor,
                           );
-
                           return _couponTile(
                             coupon: coupon,
                             isExpired: isExpired,
@@ -4009,13 +6581,13 @@ class _tablecartState extends State<tablecart>
             width: 64,
             height: 64,
             decoration: const BoxDecoration(
-              color: _C.bg,
+              color: tabecartcolour.bg,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.confirmation_number_outlined,
               size: 32,
-              color: _C.textMuted,
+              color: tabecartcolour.textMuted,
             ),
           ),
           const SizedBox(height: 16),
@@ -4024,13 +6596,13 @@ class _tablecartState extends State<tablecart>
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: _C.textPrimary,
+              color: tabecartcolour.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
           const Text(
             'Check back later for new offers',
-            style: TextStyle(fontSize: 13, color: _C.textSecondary),
+            style: TextStyle(fontSize: 13, color: tabecartcolour.textSecondary),
           ),
         ],
       ),
@@ -4047,12 +6619,15 @@ class _tablecartState extends State<tablecart>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: _C.textPrimary,
+              color: tabecartcolour.textPrimary,
             ),
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.close_rounded, color: _C.textSecondary),
+            icon: const Icon(
+              Icons.close_rounded,
+              color: tabecartcolour.textSecondary,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -4067,16 +6642,15 @@ class _tablecartState extends State<tablecart>
     required bool isDisabled,
   }) {
     Color accent = isExpired
-        ? _C.red
+        ? tabecartcolour.red
         : isMismatch
-        ? _C.amber
-        : _C.green;
+        ? tabecartcolour.amber
+        : tabecartcolour.green;
     Color accentLight = isExpired
-        ? _C.redLight
+        ? tabecartcolour.redLight
         : isMismatch
-        ? _C.amberLight
-        : _C.greenLight;
-
+        ? tabecartcolour.amberLight
+        : tabecartcolour.greenLight;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -4085,7 +6659,7 @@ class _tablecartState extends State<tablecart>
         border: Border.all(color: accent.withOpacity(0.25)),
         boxShadow: [
           BoxShadow(
-            color: _C.shadow,
+            color: tabecartcolour.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -4122,15 +6696,19 @@ class _tablecartState extends State<tablecart>
                     children: [
                       Row(
                         children: [
-                          Text(
-                            coupon.code,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: isExpired ? _C.textMuted : _C.textPrimary,
-                              decoration: isExpired
-                                  ? TextDecoration.lineThrough
-                                  : null,
+                          Flexible(
+                            child: Text(
+                              coupon.code,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: isExpired
+                                    ? tabecartcolour.textMuted
+                                    : tabecartcolour.textPrimary,
+                                decoration: isExpired
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -4141,8 +6719,8 @@ class _tablecartState extends State<tablecart>
                             ),
                             decoration: BoxDecoration(
                               color: coupon.couponType == "PERCENTAGE"
-                                  ? _C.blueLight
-                                  : _C.brandLight,
+                                  ? tabecartcolour.blueLight
+                                  : tabecartcolour.brandLight,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -4151,8 +6729,8 @@ class _tablecartState extends State<tablecart>
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: coupon.couponType == "PERCENTAGE"
-                                    ? _C.blue
-                                    : _C.brand,
+                                    ? tabecartcolour.blue
+                                    : tabecartcolour.brand,
                               ),
                             ),
                           ),
@@ -4169,7 +6747,9 @@ class _tablecartState extends State<tablecart>
                             : '₹${coupon.discountPercentage.toStringAsFixed(0)} off your order',
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDisabled ? _C.textMuted : _C.textSecondary,
+                          color: isDisabled
+                              ? tabecartcolour.textMuted
+                              : tabecartcolour.textSecondary,
                         ),
                       ),
                       if (coupon.minimumOrderValue > 0)
@@ -4177,7 +6757,7 @@ class _tablecartState extends State<tablecart>
                           'Min order ₹${coupon.minimumOrderValue.toInt()}',
                           style: const TextStyle(
                             fontSize: 11,
-                            color: _C.textMuted,
+                            color: tabecartcolour.textMuted,
                           ),
                         ),
                     ],
@@ -4188,7 +6768,7 @@ class _tablecartState extends State<tablecart>
                       ? Icons.block_rounded
                       : Icons.chevron_right_rounded,
                   size: 18,
-                  color: isDisabled ? _C.textMuted : accent,
+                  color: isDisabled ? tabecartcolour.textMuted : accent,
                 ),
               ],
             ),
@@ -4230,18 +6810,18 @@ class _tablecartState extends State<tablecart>
     Navigator.pop(context);
   }
 
-  // ── Shared card widget ────────────────────────────────────────────────────
+  // ── Surface Card ──────────────────────────────────────────────────────────
   Widget _surfaceCard({required Widget child, EdgeInsets? padding}) {
     return Container(
       width: double.infinity,
       padding: padding ?? EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: _C.surface,
+        color: tabecartcolour.surface,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _C.border),
+        border: Border.all(color: tabecartcolour.border),
         boxShadow: [
           BoxShadow(
-            color: _C.shadow,
+            color: tabecartcolour.shadow,
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -4252,150 +6832,21 @@ class _tablecartState extends State<tablecart>
   }
 }
 
-// ─── Quantity Control ─────────────────────────────────────────────────────────
-// class QuantityControl extends StatefulWidget {
-//   final CartItem item;
-//   final VoidCallback onQuantityChanged;
-//
-//   const QuantityControl({
-//     super.key,
-//     required this.item,
-//     required this.onQuantityChanged,
-//   });
-//
-//   @override
-//   State<QuantityControl> createState() => _QuantityControlState();
-// }
-//
-// class _QuantityControlState extends State<QuantityControl> {
-//   bool _isUpdating = false;
-//
-//   bool get _canDecrease {
-//     if (widget.item.previousQuantity == 0) return widget.item.quantity > 0;
-//     return widget.item.quantity > widget.item.previousQuantity;
-//   }
-//
-//   void _updateQuantityUI(int newQty) {
-//     setState(() {
-//       widget.item.quantity = newQty;
-//       widget.item.totalPrice = widget.item.price * newQty;
-//     });
-//     widget.onQuantityChanged();
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       decoration: BoxDecoration(
-//         color: _C.bg,
-//         borderRadius: BorderRadius.circular(10.r),
-//         border: Border.all(color: _C.border),
-//       ),
-//       child: Row(
-//         mainAxisSize: MainAxisSize.min,
-//         children: [
-//           _btn(
-//             Icons.remove_rounded,
-//             _canDecrease
-//                 ? () {
-//                     if (widget.item.quantity - 1 >= 0) {
-//                       _updateQuantityUI(widget.item.quantity - 1);
-//                     }
-//                   }
-//                 : null,
-//           ),
-//           // _btn(
-//           //   Icons.remove_rounded,
-//           //   _canDecrease
-//           //       ? () async {
-//           //           final newQty = widget.item.quantity - 1;
-//           //
-//           //           // Remove item when quantity becomes 0
-//           //           if (newQty <= 0) {
-//           //             setState(() => _isUpdating = true);
-//           //
-//           //             try {
-//           //               final success = await food_Authservice.deleteCartItem(
-//           //                 itemId: widget.item.itemId,
-//           //               );
-//           //
-//           //               if (success) {
-//           //                 widget.item.quantity = 0;
-//           //
-//           //                 widget.onQuantityChanged();
-//           //
-//           //                 if (mounted) {
-//           //                   ScaffoldMessenger.of(context).showSnackBar(
-//           //                     const SnackBar(
-//           //                       content: Text('Item removed from cart'),
-//           //                     ),
-//           //                   );
-//           //                 }
-//           //               } else {
-//           //                 if (mounted) {
-//           //                   AppAlert.error(context, 'Failed to remove item');
-//           //                 }
-//           //               }
-//           //             } catch (e) {
-//           //               if (mounted) {
-//           //                 AppAlert.error(context, 'Something went wrong');
-//           //               }
-//           //             } finally {
-//           //               if (mounted) {
-//           //                 setState(() => _isUpdating = false);
-//           //               }
-//           //             }
-//           //
-//           //             return;
-//           //           }
-//           //
-//           //           // Normal decrease
-//           //           _updateQuantityUI(newQty);
-//           //         }
-//           //       : null,
-//           // ),
-//           Padding(
-//             padding: EdgeInsets.symmetric(horizontal: 10.w),
-//             child: Text(
-//               '${widget.item.quantity}',
-//               style: TextStyle(
-//                 fontSize: 14.sp,
-//                 fontWeight: FontWeight.w700,
-//                 color: _C.textPrimary,
-//               ),
-//             ),
-//           ),
-//           _btn(Icons.add_rounded, () {
-//             if (!(widget.item.available ?? true)) {
-//               AppAlert.error(context, 'Not enough stock for this dish');
-//               return;
-//             }
-//             _updateQuantityUI(widget.item.quantity + 1);
-//           }),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _btn(IconData icon, VoidCallback? onTap) {
-//     final active = onTap != null;
-//     return GestureDetector(
-//       onTap: onTap,
-//       child: Container(
-//         padding: EdgeInsets.all(7.w),
-//         child: Icon(icon, size: 14.sp, color: active ? _C.brand : _C.textMuted),
-//       ),
-//     );
-//   }
-// }
+// ─── Quantity Control (overflow-safe, compact) ────────────────────────────────
 class QuantityControl extends StatefulWidget {
   final CartItem item;
   final VoidCallback onQuantityChanged;
+  final int cartId;
+  final String tableCode;
+  final int userId;
 
   const QuantityControl({
     super.key,
     required this.item,
     required this.onQuantityChanged,
+    required this.cartId,
+    required this.tableCode,
+    required this.userId,
   });
 
   @override
@@ -4405,20 +6856,8 @@ class QuantityControl extends StatefulWidget {
 class _QuantityControlState extends State<QuantityControl> {
   bool _isUpdating = false;
 
-  // Minus is blocked at previousQuantity (what's already sent)
-  // If nothing sent yet, minimum is 1
-  int get _floor =>
-      widget.item.previousQuantity > 0 ? widget.item.previousQuantity : 1;
-  //
-  // bool get _canDecrease => widget.item.quantity > _floor;
-
   bool get _canDecrease {
-    // Not yet sent to API
-    if (widget.item.previousQuantity == 0) {
-      return widget.item.quantity > 0;
-    }
-
-    // Already sent to API
+    if (widget.item.previousQuantity == 0) return widget.item.quantity > 0;
     return widget.item.quantity > widget.item.previousQuantity;
   }
 
@@ -4427,12 +6866,10 @@ class _QuantityControlState extends State<QuantityControl> {
   Future<void> _updateQuantity(int newQty) async {
     if (_isUpdating) return;
     setState(() => _isUpdating = true);
-
     final success = await food_Authservice.updateCartItemQuantity(
       itemId: widget.item.itemId,
       quantity: newQty,
     );
-
     if (success) {
       setState(() {
         widget.item.quantity = newQty;
@@ -4440,25 +6877,26 @@ class _QuantityControlState extends State<QuantityControl> {
       });
       widget.onQuantityChanged();
     } else {
-      if (mounted) AppAlert.error(context, '❌ Failed to update quantity');
+      if (mounted) AppAlert.error(context, 'Failed to update quantity');
     }
-
     if (mounted) setState(() => _isUpdating = false);
   }
 
   Widget _qtyBtn(IconData icon, Color color, VoidCallback? onTap) {
+    final active = onTap != null;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(6.w),
+        width: 28,
+        height: 28,
         decoration: BoxDecoration(
-          color: color.withOpacity(onTap == null ? 0.05 : 0.12),
-          borderRadius: BorderRadius.circular(8.r),
+          color: color.withOpacity(active ? 0.12 : 0.05),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           icon,
-          size: 14.sp,
-          color: onTap == null ? Colors.grey.shade300 : color,
+          size: 14,
+          color: active ? color : Colors.grey.shade300,
         ),
       ),
     );
@@ -4467,119 +6905,120 @@ class _QuantityControlState extends State<QuantityControl> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      // padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-        color: _C.bg,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: _C.border),
+        color: tabecartcolour.bg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: tabecartcolour.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // _qtyBtn(
-          //   Icons.remove_rounded,
-          //   _C.red,
-          //   (_isUpdating || !_canDecrease)
-          //       ? null
-          //       : () async {
-          //           final newQty = widget.item.quantity - 1;
-          //
-          //           // Remove item completely if qty becomes 0
-          //           if (newQty == 0) {
-          //             final success = await food_Authservice.removeCartItem(
-          //               widget.item.itemId,
-          //             );
-          //
-          //             if (success) {
-          //               widget.onQuantityChanged();
-          //             }
-          //           } else {
-          //             _updateQuantity(newQty);
-          //           }
-          //         },
-          // ),
-          // MINUS
-          _qtyBtn(
-            Icons.remove_rounded,
-            _C.red,
-            !_canDecrease
-                ? null
-                : () async {
-                    final newQty = widget.item.quantity - 1;
+          // _qtyBtn(Icons.remove_rounded, tabecartcolour.red, () async {
+          //   if (!_canDecrease) {
+          //     if (_isSentItem) {
+          //       final result = await showDialog<Map<String, dynamic>>(
+          //         context: context,
+          //         builder: (_) =>
+          //             _QuantityRequestDialog(quantity: widget.item.quantity),
+          //       );
+          //       if (result == null) return;
+          //       final success = await food_Authservice.createTableRequest(
+          //         userId: widget.userId,
+          //         itemId: widget.item.itemId,
+          //         cartId: widget.cartId,
+          //         tableCode: widget.tableCode,
+          //         requestType: result['requestType'],
+          //         reason: result['reason'],
+          //       );
+          //       if (!success) {
+          //         AppAlert.error(context, 'Failed to send request');
+          //         return;
+          //       }
+          //       AppAlert.success(context, 'Request sent successfully');
+          //       return;
+          //     }
+          //     if (widget.item.quantity <= 0) {
+          //       AppAlert.error(context, 'Quantity cannot be less than 0');
+          //       return;
+          //     }
+          //   }
+          //   final newQty = widget.item.quantity - 1;
+          //   if (newQty >= 0) _updateQuantity(newQty);
+          // }),
+          _qtyBtn(Icons.remove_rounded, tabecartcolour.red, () async {
 
-                    // SHOW POPUP ONLY FOR SENT ITEMS
-                    if (_isSentItem) {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text("Remove Item"),
-                          content: const Text(
-                            "This item is already sent. Do you want to decrease quantity?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancel"),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text(
-                                "Yes",
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
+            // Prevent below 0
+            if (widget.item.quantity <= 0) {
+              AppAlert.error(context, 'Quantity cannot be less than 0');
+              return;
+            }
 
-                      if (confirm != true) return;
-                    }
+            // ✅ SENT ITEM → SEND REQUEST ONLY
+            if (_isSentItem) {
+              final result = await showDialog<Map<String, dynamic>>(
+                context: context,
+                builder: (_) =>
+                    _QuantityRequestDialog(quantity: widget.item.quantity),
+              );
 
-                    if (newQty >= 0) {
-                      _updateQuantity(newQty);
-                    }
-                  },
-          ),
+              if (result == null) return;
 
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w),
-            child: _isUpdating
-                ? SizedBox(
-                    width: 14.w,
-                    height: 14.w,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: _C.green,
+              final success = await food_Authservice.createTableRequest(
+                userId: widget.userId,
+                itemId: widget.item.itemId,
+                cartId: widget.cartId,
+                tableCode: widget.tableCode,
+                requestType: result['requestType'],
+                reason: result['reason'],
+              );
+
+              if (!success) {
+                AppAlert.error(context, 'Failed to send request');
+                return;
+              }
+
+              AppAlert.success(context, 'Request sent successfully');
+              return;
+            }
+
+            // ✅ NORMAL ITEM → DIRECT UPDATE
+            final newQty = widget.item.quantity - 1;
+
+            _updateQuantity(newQty);
+          }),
+          SizedBox(
+            width: 32,
+            child: Center(
+              child: _isUpdating
+                  ? SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: tabecartcolour.green,
+                      ),
+                    )
+                  : Text(
+                      '${widget.item.quantity}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: tabecartcolour.textPrimary,
+                      ),
                     ),
-                  )
-                : Text(
-                    '${widget.item.quantity}',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w700,
-                      color: _C.textPrimary,
-                    ),
-                  ),
+            ),
           ),
-
-          // _qtyBtn(
-          //   Icons.add_rounded,
-          //   _C.green,
-          //   _isUpdating
-          //       ? null
-          //       : () => _updateQuantity(widget.item.quantity + 1),
-          // ),
           _qtyBtn(
             Icons.add_rounded,
-            _C.green,
+            tabecartcolour.green,
             _isSentItem
-                ? null // disable when item already sent
+                ? null
                 : () {
                     if (!(widget.item.available ?? true)) {
                       AppAlert.error(context, 'Not enough stock for this dish');
                       return;
                     }
-
                     _updateQuantity(widget.item.quantity + 1);
                   },
           ),
@@ -4587,6 +7026,133 @@ class _QuantityControlState extends State<QuantityControl> {
       ),
     );
   }
+}
+
+// ─── Quantity Request Dialog ──────────────────────────────────────────────────
+class _QuantityRequestDialog extends StatefulWidget {
+  final int quantity;
+  const _QuantityRequestDialog({required this.quantity});
+  @override
+  State<_QuantityRequestDialog> createState() => _QuantityRequestDialogState();
+}
+
+class _QuantityRequestDialogState extends State<_QuantityRequestDialog> {
+  final TextEditingController _reasonCtrl = TextEditingController();
+  String _requestType = 'REMOVAL_QUANTITY';
+  final List<String> _types = ['REMOVAL_QUANTITY', 'REMOVE_ITEM', 'OTHERS'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Send Request',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 18),
+            DropdownButtonFormField<String>(
+              value: _requestType,
+              decoration: InputDecoration(
+                labelText: 'Request Type',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+              ),
+              items: _types
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(
+                        _humanize(e),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) setState(() => _requestType = v);
+              },
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _reasonCtrl,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: 'Reason',
+                hintText: 'Enter reason...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_reasonCtrl.text.trim().isEmpty) {
+                        AppAlert.error(context, 'Please enter reason');
+                        return;
+                      }
+                      Navigator.pop(context, {
+                        "requestType": _requestType,
+                        "reason": _reasonCtrl.text.trim(),
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: tabecartcolour.brand,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text('Submit'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _humanize(String s) => s
+      .replaceAll('_', ' ')
+      .toLowerCase()
+      .split(' ')
+      .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
 }
 
 // ─── Send Button ──────────────────────────────────────────────────────────────
@@ -4607,34 +7173,33 @@ class SendButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canTap = _isActive && !isSending;
-
     return GestureDetector(
       onTap: canTap ? onSend : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: canTap ? _C.brand : _C.textMuted,
+          color: canTap ? tabecartcolour.brand : tabecartcolour.textMuted,
           borderRadius: BorderRadius.circular(10),
         ),
         child: isSending
             ? const SizedBox(
-                width: 16,
-                height: 16,
+                width: 14,
+                height: 14,
                 child: CircularProgressIndicator(
                   color: Colors.white,
                   strokeWidth: 2,
                 ),
               )
-            : Row(
+            : const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.send_rounded, size: 14, color: Colors.white),
-                  const SizedBox(width: 5),
-                  const Text(
+                  Icon(Icons.send_rounded, size: 13, color: Colors.white),
+                  SizedBox(width: 4),
+                  Text(
                     'Send',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),

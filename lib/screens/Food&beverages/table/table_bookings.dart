@@ -1408,6 +1408,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/widgets/datetimehelper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
 import '../../../Models/food/tablecartmodel.dart';
@@ -1445,6 +1446,8 @@ class _T {
   static const dangerLight = Color(0xFFFEF2F2);
   static const completed = Color(0xFF78716C);
   static const completedLight = Color(0xFFF5F4F0);
+
+  static const double arrivalRadiusMeters = 200;
 
   // Radii
   static const r = 16.0;
@@ -1890,20 +1893,58 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
     }
   }
 
+  // Future<void> _handleArrivalTap() async {
+  //   setState(() => _loading = true);
+  //   final distance = await _getDistanceFromRestaurant();
+  //   setState(() => _loading = false);
+  //   if (distance == null) {
+  //     if (mounted) AppAlert.error(context, 'Failed to fetch your location');
+  //     return;
+  //   }
+  //   final isNear = distance <= 200;
+  //   final confirm = await showDialog<bool>(
+  //     context: context,
+  //     builder: (_) => _ArrivalDialog(isNear: isNear, distance: distance),
+  //   );
+  //   if (confirm == true) await _markArrived();
+  // }
   Future<void> _handleArrivalTap() async {
     setState(() => _loading = true);
+
     final distance = await _getDistanceFromRestaurant();
+
     setState(() => _loading = false);
+
     if (distance == null) {
-      if (mounted) AppAlert.error(context, 'Failed to fetch your location');
+      if (mounted) {
+        AppAlert.error(context, 'Failed to fetch your location');
+      }
       return;
     }
-    final isNear = distance <= 200;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ArrivalDialog(isNear: isNear, distance: distance),
-    );
-    if (confirm == true) await _markArrived();
+
+    final isNear = distance <= _T.arrivalRadiusMeters;
+
+    // ✅ USER IS NEAR → DIRECTLY ARRIVE
+    if (isNear) {
+      await _markArrived();
+
+      if (mounted) {
+        AppAlert.success(context, 'Arrival confirmed successfully');
+      }
+
+      return;
+    }
+
+    // ❌ USER IS FAR → SHOW ERROR DIALOG ONLY
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (_) => _ArrivalDialog(
+          // isNear: false,
+          distance: distance,
+        ),
+      );
+    }
   }
 
   Future<void> _handleCancelTap() async {
@@ -2006,37 +2047,79 @@ class _ConfirmedListCardState extends State<ConfirmedListCard> {
     }
   }
 
+  // Future<double?> _getDistanceFromRestaurant() async {
+  //   try {
+  //     LocationPermission perm = await Geolocator.checkPermission();
+  //     if (perm == LocationPermission.denied) {
+  //       perm = await Geolocator.requestPermission();
+  //     }
+  //     if (perm == LocationPermission.denied ||
+  //         perm == LocationPermission.deniedForever) {
+  //       if (mounted) AppAlert.error(context, 'Location permission denied');
+  //       return null;
+  //     }
+  //     final pos = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.high,
+  //     );
+  //     final banner = await Authservice().fetchVendorBanner(
+  //       widget.item.vendorId,
+  //     );
+  //
+  //     // final double mockLatitude = 78.3915;
+  //     // final double mockLongitude =   17.4937;
+  //
+  //     final prefs = await SharedPreferences.getInstance();
+  //
+  //     final lat = prefs.getDouble('latitude');
+  //     final lng = prefs.getDouble('longitude');
+  //
+  //     return Geolocator.distanceBetween(
+  //       // pos.latitude,
+  //       // pos.longitude,
+  //       // mockLongitude,
+  //       // mockLatitude,
+  //       lat,
+  //       lng,
+  //       banner.latitude.toDouble(),
+  //       banner.longitude.toDouble(),
+  //     );
+  //   } catch (_) {
+  //     if (mounted) AppAlert.error(context, 'Failed to verify location');
+  //     return null;
+  //   }
+  // }
+
   Future<double?> _getDistanceFromRestaurant() async {
     try {
-      LocationPermission perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        perm = await Geolocator.requestPermission();
-      }
-      if (perm == LocationPermission.denied ||
-          perm == LocationPermission.deniedForever) {
-        if (mounted) AppAlert.error(context, 'Location permission denied');
+      final prefs = await SharedPreferences.getInstance();
+
+      // Get saved user location from SharedPreferences
+      final double? lat = prefs.getDouble('latitude');
+      final double? lng = prefs.getDouble('longitude');
+
+      if (lat == null || lng == null) {
+        if (mounted) {
+          AppAlert.error(context, 'User location not available');
+        }
         return null;
       }
-      final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+
+      // Fetch restaurant/vendor location
       final banner = await Authservice().fetchVendorBanner(
         widget.item.vendorId,
       );
 
-      // final double mockLatitude = 17.4937;
-      // final double mockLongitude = 78.3915;
-
+      // Calculate distance
       return Geolocator.distanceBetween(
-        pos.latitude,
-        pos.longitude,
-        // mockLongitude,
-        // mockLatitude,
+        lat,
+        lng,
         banner.latitude.toDouble(),
         banner.longitude.toDouble(),
       );
-    } catch (_) {
-      if (mounted) AppAlert.error(context, 'Failed to verify location');
+    } catch (e) {
+      if (mounted) {
+        AppAlert.error(context, 'Failed to verify location');
+      }
       return null;
     }
   }
@@ -2455,7 +2538,7 @@ class _ActionButtons extends StatelessWidget {
           const SizedBox(width: 8),
 
           _ActionButton(
-            label: 'Leave Table',
+            label: 'Cancel Table',
             icon: Icons.logout_rounded,
             color: Colors.white,
             bg: Colors.orange,
@@ -2571,132 +2654,209 @@ class _ActionButton extends StatelessWidget {
 }
 
 // ─── Dialogs ──────────────────────────────────────────────────────────────────
+// class _ArrivalDialog extends StatelessWidget {
+//   final bool isNear;
+//   final double distance;
+//   const _ArrivalDialog({required this.isNear, required this.distance});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final color = isNear ? _T.confirmed : _T.danger;
+//     final bg = isNear ? _T.confirmedLight : _T.dangerLight;
+//
+//     return Dialog(
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//       child: Padding(
+//         padding: const EdgeInsets.all(20),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Row(
+//               children: [
+//                 Container(
+//                   width: 40,
+//                   height: 40,
+//                   decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+//                   child: Icon(
+//                     isNear
+//                         ? Icons.where_to_vote_rounded
+//                         : Icons.location_off_rounded,
+//                     color: color,
+//                     size: 20,
+//                   ),
+//                 ),
+//                 const SizedBox(width: 12),
+//                 Expanded(
+//                   child: Text(
+//                     isNear ? "You're Nearby!" : 'Too Far Away',
+//                     style: _T.titleLg,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             const SizedBox(height: 16),
+//             Container(
+//               padding: const EdgeInsets.all(14),
+//               decoration: BoxDecoration(
+//                 color: bg,
+//                 borderRadius: BorderRadius.circular(_T.rSm),
+//                 border: Border.all(color: color.withOpacity(0.15)),
+//               ),
+//               child: Row(
+//                 children: [
+//                   Icon(
+//                     isNear
+//                         ? Icons.check_circle_rounded
+//                         : Icons.warning_amber_rounded,
+//                     color: color,
+//                     size: 18,
+//                   ),
+//                   const SizedBox(width: 10),
+//                   Expanded(
+//                     child: Text(
+//                       isNear
+//                           ? 'You are ${distance.toStringAsFixed(0)} m from the restaurant'
+//                           : 'Current distance: ${distance.toStringAsFixed(0)} m\nMust be within 200 m',
+//                       style: TextStyle(
+//                         fontSize: 13,
+//                         fontWeight: FontWeight.w600,
+//                         color: color,
+//                         height: 1.4,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//             const SizedBox(height: 8),
+//             Text(
+//               isNear
+//                   ? 'You can now mark yourself as arrived.'
+//                   : 'Please head to the restaurant before marking your arrival.',
+//               style: _T.bodyMd,
+//             ),
+//             const SizedBox(height: 20),
+//             Row(
+//               children: [
+//                 Expanded(
+//                   child: TextButton(
+//                     onPressed: () => Navigator.pop(context, false),
+//                     style: TextButton.styleFrom(
+//                       padding: const EdgeInsets.symmetric(vertical: 12),
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(_T.rSm),
+//                         side: const BorderSide(color: _T.border),
+//                       ),
+//                     ),
+//                     child: Text(
+//                       'Close',
+//                       style: TextStyle(
+//                         color: _T.inkSecondary,
+//                         fontWeight: FontWeight.w600,
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//                 if (isNear) ...[
+//                   const SizedBox(width: 10),
+//                   Expanded(
+//                     child: ElevatedButton(
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: _T.confirmed,
+//                         foregroundColor: Colors.white,
+//                         padding: const EdgeInsets.symmetric(vertical: 12),
+//                         elevation: 0,
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(_T.rSm),
+//                         ),
+//                       ),
+//                       onPressed: () => Navigator.pop(context, true),
+//                       child: const Text(
+//                         'Mark Arrived',
+//                         style: TextStyle(fontWeight: FontWeight.w600),
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+String _formatDistance(double meters) {
+  if (meters < 1000) {
+    return '${meters.toStringAsFixed(0)} m';
+  }
+
+  final km = meters / 1000;
+
+  return '${km.toStringAsFixed(1)} km';
+}
+
 class _ArrivalDialog extends StatelessWidget {
-  final bool isNear;
   final double distance;
-  const _ArrivalDialog({required this.isNear, required this.distance});
+
+  const _ArrivalDialog({required this.distance});
 
   @override
   Widget build(BuildContext context) {
-    final color = isNear ? _T.confirmed : _T.danger;
-    final bg = isNear ? _T.confirmedLight : _T.dangerLight;
-
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-                  child: Icon(
-                    isNear
-                        ? Icons.where_to_vote_rounded
-                        : Icons.location_off_rounded,
-                    color: color,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isNear ? "You're Nearby!" : 'Too Far Away',
-                    style: _T.titleLg,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(_T.rSm),
-                border: Border.all(color: color.withOpacity(0.15)),
+              width: 50,
+              height: 50,
+              decoration: const BoxDecoration(
+                color: _T.dangerLight,
+                shape: BoxShape.circle,
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    isNear
-                        ? Icons.check_circle_rounded
-                        : Icons.warning_amber_rounded,
-                    color: color,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      isNear
-                          ? 'You are ${distance.toStringAsFixed(0)} m from the restaurant'
-                          : 'Current distance: ${distance.toStringAsFixed(0)} m\nMust be within 200 m',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
+              child: const Icon(
+                Icons.location_off_rounded,
+                color: _T.danger,
+                size: 24,
               ),
             ),
-            const SizedBox(height: 8),
+
+            const SizedBox(height: 16),
+
+            const Text('Too Far Away', style: _T.titleLg),
+
+            const SizedBox(height: 12),
+
             Text(
-              isNear
-                  ? 'You can now mark yourself as arrived.'
-                  : 'Please head to the restaurant before marking your arrival.',
+              'You are ${_formatDistance(distance)} meters away from the restaurant.\n\n'
+              'Please come within  ${_T.arrivalRadiusMeters.toInt()}  meters to mark yourself as arrived.',
+              textAlign: TextAlign.center,
               style: _T.bodyMd,
             ),
+
             const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(_T.rSm),
-                        side: const BorderSide(color: _T.border),
-                      ),
-                    ),
-                    child: Text(
-                      'Close',
-                      style: TextStyle(
-                        color: _T.inkSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _T.danger,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(_T.rSm),
                   ),
                 ),
-                if (isNear) ...[
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _T.confirmed,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(_T.rSm),
-                        ),
-                      ),
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text(
-                        'Mark Arrived',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Close'),
+              ),
             ),
           ],
         ),

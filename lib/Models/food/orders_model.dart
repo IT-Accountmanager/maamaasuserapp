@@ -14,6 +14,7 @@ enum OrderStatus {
   orderIsReady,
   hold,
   ontheway,
+  delivered,
   unknown;
 
   static OrderStatus fromString(dynamic status) {

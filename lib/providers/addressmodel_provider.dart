@@ -95,61 +95,61 @@ class AddressNotifier extends StateNotifier<AddressState> {
   // -----------------------------
   // Update state from GPS position
   // -----------------------------
-  Future<bool> updateLocationFromPosition(
-    Position pos, {
-    String? category, // ✅ ADD PARAM
-  }) async {
-    try {
-      String city = '';
-      String stateName = '';
-      String pincode = '';
-      String fullAddress = "${pos.latitude}, ${pos.longitude}";
-
-      try {
-        List<Placemark> placemarks = await placemarkFromCoordinates(
-          pos.latitude,
-          pos.longitude,
-        );
-
-        if (placemarks.isNotEmpty) {
-          final place = placemarks.first;
-
-          final subLocality = place.subLocality ?? '';
-          final locality = place.locality ?? '';
-          final street = place.street ?? '';
-          final name = place.name ?? '';
-          final stateName = place.administrativeArea ?? '';
-          final pincode = place.postalCode ?? '';
-
-          fullAddress = [
-            name,
-            street,
-            subLocality,
-            locality,
-            stateName,
-            pincode,
-          ].where((e) => e.isNotEmpty).join(', ');
-        }
-      } catch (_) {}
-
-      // ✅ PRESERVE / SET CATEGORY
-      state = state.copyWith(
-        city: city,
-        stateName: stateName,
-        pincode: pincode,
-        latitude: pos.latitude,
-        longitude: pos.longitude,
-        fullAddress: fullAddress,
-        category:
-            category ??
-            (state.category.isEmpty ? "Current Location" : state.category),
-      );
-
-      return await sendCurrentLocationToBackend();
-    } catch (e) {
-      return false;
-    }
-  }
+  // Future<bool> updateLocationFromPosition(
+  //   Position pos, {
+  //   String? category, // ✅ ADD PARAM
+  // }) async {
+  //   try {
+  //     String city = '';
+  //     String stateName = '';
+  //     String pincode = '';
+  //     String fullAddress = "${pos.latitude}, ${pos.longitude}";
+  //
+  //     try {
+  //       List<Placemark> placemarks = await placemarkFromCoordinates(
+  //         pos.latitude,
+  //         pos.longitude,
+  //       );
+  //
+  //       if (placemarks.isNotEmpty) {
+  //         final place = placemarks.first;
+  //
+  //         final subLocality = place.subLocality ?? '';
+  //         final locality = place.locality ?? '';
+  //         final street = place.street ?? '';
+  //         final name = place.name ?? '';
+  //         final stateName = place.administrativeArea ?? '';
+  //         final pincode = place.postalCode ?? '';
+  //
+  //         fullAddress = [
+  //           name,
+  //           street,
+  //           subLocality,
+  //           locality,
+  //           stateName,
+  //           pincode,
+  //         ].where((e) => e.isNotEmpty).join(', ');
+  //       }
+  //     } catch (_) {}
+  //
+  //     // ✅ PRESERVE / SET CATEGORY
+  //     state = state.copyWith(
+  //       city: city,
+  //       stateName: stateName,
+  //       pincode: pincode,
+  //       latitude: pos.latitude,
+  //       longitude: pos.longitude,
+  //       fullAddress: fullAddress,
+  //       category:
+  //           category ??
+  //           (state.category.isEmpty ? "Current Location" : state.category),
+  //     );
+  //
+  //     return await sendCurrentLocationToBackend();
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // }
 
   // -----------------------------
   // Send to backend
