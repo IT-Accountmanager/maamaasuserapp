@@ -3,7 +3,7 @@ import '../../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../table/tablecart.dart';
+import 'tablecart.dart';
 import '../../../main.dart';
 
 // ignore: camel_case_types

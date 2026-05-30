@@ -1,6 +1,6 @@
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:maamaas/screens/Food&beverages/Menu/tablecartfooterbutton.dart';
+import 'package:maamaas/screens/Food&beverages/table/tablecartfooterbutton.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/aboutus_model.dart';
 import '../../../Models/food/team_model.dart';
@@ -8,7 +8,7 @@ import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../widgets/widgets/food/favorite_button.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
-import '../../../widgets/widgets/food/table_cartbutton.dart';
+import 'table_cartbutton.dart';
 import '../Menu/Menuhelper.dart';
 import '../Menu/Top_banner.dart';
 import '../Menu/cart_button.dart';

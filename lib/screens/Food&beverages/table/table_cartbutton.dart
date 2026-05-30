@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/tablecartmodel.dart';
 import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
-import 'cartmode.dart';
-import 'currentcart_notifier.dart';
+import '../../../widgets/widgets/food/cartmode.dart';
+import '../../../widgets/widgets/food/currentcart_notifier.dart';
 
 class TableCartButton extends StatefulWidget {
   final int dishId;

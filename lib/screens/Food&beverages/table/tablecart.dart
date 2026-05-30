@@ -6947,7 +6947,6 @@ class _QuantityControlState extends State<QuantityControl> {
           //   if (newQty >= 0) _updateQuantity(newQty);
           // }),
           _qtyBtn(Icons.remove_rounded, tabecartcolour.red, () async {
-
             // Prevent below 0
             if (widget.item.quantity <= 0) {
               AppAlert.error(context, 'Quantity cannot be less than 0');
@@ -6967,11 +6966,14 @@ class _QuantityControlState extends State<QuantityControl> {
               final success = await food_Authservice.createTableRequest(
                 userId: widget.userId,
                 itemId: widget.item.itemId,
+
                 cartId: widget.cartId,
                 tableCode: widget.tableCode,
                 requestType: result['requestType'],
                 reason: result['reason'],
+                removalQuantity: result['removalQuantity'],
               );
+              print("REMOVAL QTY => ${result['removalQuantity']}");
 
               if (!success) {
                 AppAlert.error(context, 'Failed to send request');
@@ -7038,8 +7040,10 @@ class _QuantityRequestDialog extends StatefulWidget {
 
 class _QuantityRequestDialogState extends State<_QuantityRequestDialog> {
   final TextEditingController _reasonCtrl = TextEditingController();
-  String _requestType = 'REMOVAL_QUANTITY';
-  final List<String> _types = ['REMOVAL_QUANTITY', 'REMOVE_ITEM', 'OTHERS'];
+  final TextEditingController _qtyCtrl = TextEditingController();
+
+  String _requestType = 'REMOVE_ITEM';
+  final List<String> _types = ['REMOVE_ITEM', 'REMOVAL_QUANTITY', 'OTHERS'];
 
   @override
   Widget build(BuildContext context) {
@@ -7084,6 +7088,25 @@ class _QuantityRequestDialogState extends State<_QuantityRequestDialog> {
               },
             ),
             const SizedBox(height: 14),
+            if (_requestType == 'REMOVAL_QUANTITY') ...[
+              const SizedBox(height: 14),
+              TextField(
+                controller: _qtyCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Quantity',
+                  hintText: 'Enter quantity',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 14),
             TextField(
               controller: _reasonCtrl,
               maxLines: 3,
@@ -7122,9 +7145,35 @@ class _QuantityRequestDialogState extends State<_QuantityRequestDialog> {
                         AppAlert.error(context, 'Please enter reason');
                         return;
                       }
+
+                      int removalQty = 0;
+
+                      if (_requestType == 'REMOVAL_QUANTITY') {
+                        if (_qtyCtrl.text.trim().isEmpty) {
+                          AppAlert.error(context, 'Please enter quantity');
+                          return;
+                        }
+
+                        removalQty = int.tryParse(_qtyCtrl.text.trim()) ?? 0;
+
+                        if (removalQty <= 0) {
+                          AppAlert.error(context, 'Enter valid quantity');
+                          return;
+                        }
+
+                        if (removalQty > widget.quantity) {
+                          AppAlert.error(
+                            context,
+                            'Quantity cannot exceed ${widget.quantity}',
+                          );
+                          return;
+                        }
+                      }
+
                       Navigator.pop(context, {
                         "requestType": _requestType,
                         "reason": _reasonCtrl.text.trim(),
+                        "removalQuantity": removalQty,
                       });
                     },
                     style: ElevatedButton.styleFrom(

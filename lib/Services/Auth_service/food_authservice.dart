@@ -653,6 +653,7 @@ class food_Authservice {
     required String tableCode,
     required String requestType,
     required String reason,
+    required int removalQuantity,
   }) async {
     try {
       print("========== CREATE TABLE REQUEST ==========");
@@ -675,6 +676,7 @@ class food_Authservice {
         "tableCode": tableCode,
         "requestType": requestType,
         "reason": reason,
+        "removalQuantity": removalQuantity,
       };
 
       print("REQUEST BODY => $body");
