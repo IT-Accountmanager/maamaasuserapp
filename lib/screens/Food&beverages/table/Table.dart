@@ -1,6 +1,6 @@
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/screens/Food&beverages/table/seating_details.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/Restaurentscdhule.dart';
 import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
@@ -20,6 +20,7 @@ class _TableTabContentState extends State<TableTabContent> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
   final TextEditingController timeController = TextEditingController();
+  final TextEditingController noofpeople = TextEditingController();
   TimeOfDay? selectedTime;
   bool _isLoading = false;
 
@@ -41,6 +42,7 @@ class _TableTabContentState extends State<TableTabContent> {
     phoneController.addListener(() => setState(() {}));
     dateController.addListener(() => setState(() {}));
     timeController.addListener(() => setState(() {}));
+    noofpeople.addListener(() => setState(() {}));
   }
 
   @override
@@ -283,6 +285,13 @@ class _TableTabContentState extends State<TableTabContent> {
                             bottomSheetContext,
                             bottomSheetSetState,
                           ),
+                          const SizedBox(height: 12),
+                          _buildTextField(
+                            noofpeople,
+                            "Number of People",
+                            Icons.people,
+                            TextInputType.number,
+                          ),
 
                           const SizedBox(height: 20),
                           _buildSubmitButton(bottomSheetContext),
@@ -468,81 +477,150 @@ class _TableTabContentState extends State<TableTabContent> {
     );
   }
 
+  // Widget _buildSubmitButton(BuildContext context) {
+  //   return SizedBox(
+  //     width: double.infinity,
+  //     child: ElevatedButton(
+  //       onPressed: isFormValid
+  //           ? () {
+  //               if (nameController.text.trim().isEmpty) {
+  //                 AppAlert.error(context, "Please enter name");
+  //                 return;
+  //               }
+  //
+  //               if (phoneController.text.trim().isEmpty) {
+  //                 AppAlert.error(context, "Please enter phone number");
+  //                 return;
+  //               }
+  //
+  //               if (dateController.text.trim().isEmpty) {
+  //                 AppAlert.error(context, "Please select booking date");
+  //                 return;
+  //               }
+  //
+  //               if (timeController.text.trim().isEmpty ||
+  //                   selectedTime == null) {
+  //                 AppAlert.error(context, "Please select booking time");
+  //                 return;
+  //               }
+  //
+  //               if (context.mounted) {
+  //                 Navigator.push(
+  //                   context,
+  //                   MaterialPageRoute(
+  //                     builder: (_) => SeatingScreen(
+  //                       vendorId: widget.vendorId,
+  //                       guestName: nameController.text.trim(),
+  //                       phoneNumber: phoneController.text.trim(),
+  //                       bookingDate: dateController.text.trim(),
+  //                       startTime:
+  //                           "${selectedTime!.hour.toString().padLeft(2, '0')}:"
+  //                           "${selectedTime!.minute.toString().padLeft(2, '0')}:00",
+  //                       capacity: selectedCapacity ?? 0,
+  //                     ),
+  //                   ),
+  //                 );
+  //               }
+  //             }
+  //           : null, // ✅ Button disabled when form invalid
+  //
+  //       style: ElevatedButton.styleFrom(
+  //         backgroundColor: AppColors.of(context).primary,
+  //         disabledBackgroundColor: Colors.grey.shade400,
+  //         foregroundColor: Colors.white,
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(12),
+  //         ),
+  //         padding: const EdgeInsets.symmetric(vertical: 16),
+  //       ),
+  //
+  //       child: _isLoading
+  //           ? const SizedBox(
+  //               width: 20,
+  //               height: 20,
+  //               child: CircularProgressIndicator(
+  //                 color: Colors.white,
+  //                 strokeWidth: 2,
+  //               ),
+  //             )
+  //           : const Text(
+  //               "Select Table",
+  //               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  //             ),
+  //     ),
+  //   );
+  // }
+
   Widget _buildSubmitButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: isFormValid
-            ? () {
-          if (nameController.text.trim().isEmpty) {
-            AppAlert.error(context, "Please enter name");
-            return;
-          }
-
-          if (phoneController.text.trim().isEmpty) {
-            AppAlert.error(context, "Please enter phone number");
-            return;
-          }
-
-          if (dateController.text.trim().isEmpty) {
-            AppAlert.error(context, "Please select booking date");
-            return;
-          }
-
-          if (timeController.text.trim().isEmpty ||
-              selectedTime == null) {
-            AppAlert.error(context, "Please select booking time");
-            return;
-          }
-
-          if (context.mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => SeatingScreen(
-                  vendorId: widget.vendorId,
-                  guestName: nameController.text.trim(),
-                  phoneNumber: phoneController.text.trim(),
-                  bookingDate: dateController.text.trim(),
-                  startTime:
-                  "${selectedTime!.hour.toString().padLeft(2, '0')}:"
-                      "${selectedTime!.minute.toString().padLeft(2, '0')}:00",
-                  capacity: selectedCapacity ?? 0,
-                ),
-              ),
-            );
-          }
-        }
-            : null, // ✅ Button disabled when form invalid
-
+        onPressed: _isLoading
+            ? null
+            : () async {
+                setState(() => _isLoading = true);
+                await _submitBooking(context);
+                setState(() => _isLoading = false);
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.of(context).primary,
-          disabledBackgroundColor: Colors.grey.shade400,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
-
         child: _isLoading
             ? const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            color: Colors.white,
-            strokeWidth: 2,
-          ),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
             : const Text(
-          "Select Table",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+                "Schedule Booking",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
       ),
     );
+  }
+
+  bool _areFieldsValid() {
+    return nameController.text.trim().isNotEmpty &&
+        phoneController.text.trim().isNotEmpty &&
+        dateController.text.trim().isNotEmpty &&
+        timeController.text.trim().isNotEmpty &&
+        noofpeople.text.trim().isNotEmpty &&
+        selectedTime != null;
+  }
+
+  Future<void> _submitBooking(BuildContext context) async {
+    final vendorId = widget.vendorId;
+
+    if (!_areFieldsValid()) {
+      _showErrorDialog('Please fill all fields');
+      return;
+    }
+
+    final response = await food_Authservice.submitBooking(
+      vendorId: vendorId,
+      guestName: nameController.text.trim(),
+      phoneNumber: phoneController.text.trim(),
+      bookingDate: dateController.text.trim(),
+      startTime:
+          "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}:00",
+      capacity: int.tryParse(noofpeople.text.trim()) ?? 0,
+    );
+
+    if (response != null && response['statusCode'] == 200) {
+      Navigator.pop(context);
+
+      AppAlert.success(context, "Booking scheduled successfully");
+    } else {
+      AppAlert.error(context, "Failed to schedule booking");
+    }
   }
 
   void _showErrorDialog(String message) {

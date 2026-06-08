@@ -1,10 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Services/Auth_service/Apiclient.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -92,64 +90,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
     );
   }
 
-  // -----------------------------
-  // Update state from GPS position
-  // -----------------------------
-  // Future<bool> updateLocationFromPosition(
-  //   Position pos, {
-  //   String? category, // ✅ ADD PARAM
-  // }) async {
-  //   try {
-  //     String city = '';
-  //     String stateName = '';
-  //     String pincode = '';
-  //     String fullAddress = "${pos.latitude}, ${pos.longitude}";
-  //
-  //     try {
-  //       List<Placemark> placemarks = await placemarkFromCoordinates(
-  //         pos.latitude,
-  //         pos.longitude,
-  //       );
-  //
-  //       if (placemarks.isNotEmpty) {
-  //         final place = placemarks.first;
-  //
-  //         final subLocality = place.subLocality ?? '';
-  //         final locality = place.locality ?? '';
-  //         final street = place.street ?? '';
-  //         final name = place.name ?? '';
-  //         final stateName = place.administrativeArea ?? '';
-  //         final pincode = place.postalCode ?? '';
-  //
-  //         fullAddress = [
-  //           name,
-  //           street,
-  //           subLocality,
-  //           locality,
-  //           stateName,
-  //           pincode,
-  //         ].where((e) => e.isNotEmpty).join(', ');
-  //       }
-  //     } catch (_) {}
-  //
-  //     // ✅ PRESERVE / SET CATEGORY
-  //     state = state.copyWith(
-  //       city: city,
-  //       stateName: stateName,
-  //       pincode: pincode,
-  //       latitude: pos.latitude,
-  //       longitude: pos.longitude,
-  //       fullAddress: fullAddress,
-  //       category:
-  //           category ??
-  //           (state.category.isEmpty ? "Current Location" : state.category),
-  //     );
-  //
-  //     return await sendCurrentLocationToBackend();
-  //   } catch (e) {
-  //     return false;
-  //   }
-  // }
+
 
   // -----------------------------
   // Send to backend
@@ -183,6 +124,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
       );
 
       debugPrint("location response: ${resp.body}");
+
 
       return resp.statusCode >= 200 && resp.statusCode < 300;
     } catch (e) {

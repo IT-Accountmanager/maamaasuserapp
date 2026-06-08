@@ -205,7 +205,10 @@ class _SupportteamState extends State<Supportteam> {
           ),
         ),
         SizedBox(width: 8.w),
-        Text(text.toUpperCase(), style: sptteamcolour.label.copyWith(color: sptteamcolour.ink)),
+        Text(
+          text.toUpperCase(),
+          style: sptteamcolour.label.copyWith(color: sptteamcolour.ink),
+        ),
       ],
     );
   }
@@ -274,7 +277,9 @@ class _SupportteamState extends State<Supportteam> {
         color: sptteamcolour.surface,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isOpen ? sptteamcolour.accent.withOpacity(0.3) : sptteamcolour.border,
+          color: isOpen
+              ? sptteamcolour.accent.withOpacity(0.3)
+              : sptteamcolour.border,
           width: isOpen ? 1.5 : 1,
         ),
         boxShadow: [
@@ -300,13 +305,17 @@ class _SupportteamState extends State<Supportteam> {
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: isOpen ? sptteamcolour.accentLight : const Color(0xFFF3F4F6),
+                      color: isOpen
+                          ? sptteamcolour.accentLight
+                          : const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Icon(
                       icon,
                       size: 16,
-                      color: isOpen ? sptteamcolour.accent : sptteamcolour.muted,
+                      color: isOpen
+                          ? sptteamcolour.accent
+                          : sptteamcolour.muted,
                     ),
                   ),
                   SizedBox(width: 12.w),
@@ -346,7 +355,9 @@ class _SupportteamState extends State<Supportteam> {
                             Expanded(
                               child: Text(
                                 q,
-                                style: sptteamcolour.body.copyWith(fontSize: 13),
+                                style: sptteamcolour.body.copyWith(
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ],

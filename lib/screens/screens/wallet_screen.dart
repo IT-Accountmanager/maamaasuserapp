@@ -306,6 +306,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 SizedBox(height: 16.h),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
                       '₹${_balance.toStringAsFixed(2)}',
@@ -317,7 +318,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       ),
                     ),
                     // SizedBox(width: 20.h),
-                    Spacer(),
+                    // Spacer(),
                     // Load money button
                     GestureDetector(
                       onTap: () => _showAmountBottomSheet(context),
@@ -415,17 +416,18 @@ class _WalletScreenState extends State<WalletScreen> {
         Walletcolour.violet,
       ),
       _BreakdownItem(
-        'Company',
-        _companyCreditedAmount,
-        Icons.business_rounded,
-        const Color(0xFF3B82F6),
-      ),
-      _BreakdownItem(
         'Cashback',
         _cashbackAmount,
         Icons.wallet_giftcard_rounded,
         Walletcolour.cashback,
       ),
+      _BreakdownItem(
+        'Company',
+        _companyCreditedAmount,
+        Icons.business_rounded,
+        const Color(0xFF3B82F6),
+      ),
+
       if (_postPaid) ...[
         _BreakdownItem(
           'Postpaid Usage',

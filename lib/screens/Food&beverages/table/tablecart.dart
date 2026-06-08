@@ -4953,7 +4953,6 @@
 //   );
 // }
 
-import 'package:maamaas/Models/food/orders_model.dart';
 import 'package:maamaas/screens/Food&beverages/table/tablecartpayment.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -5621,39 +5620,44 @@ class _tablecartState extends State<tablecart>
 
   // ── Empty State ───────────────────────────────────────────────────────────
   Widget _buildEmptyCart() {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.6,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: const BoxDecoration(
-              color: tabecartcolour.brandLight,
-              shape: BoxShape.circle,
+    return Center(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.6,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: const BoxDecoration(
+                color: tabecartcolour.brandLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.shopping_cart_outlined,
+                size: 44,
+                color: tabecartcolour.brand,
+              ),
             ),
-            child: const Icon(
-              Icons.shopping_cart_outlined,
-              size: 44,
-              color: tabecartcolour.brand,
+            const SizedBox(height: 20),
+            const Text(
+              'Your cart is empty',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: tabecartcolour.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Your cart is empty',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: tabecartcolour.textPrimary,
+            const SizedBox(height: 8),
+            const Text(
+              'Browse the menu and add something delicious',
+              style: TextStyle(
+                fontSize: 14,
+                color: tabecartcolour.textSecondary,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Browse the menu and add something delicious',
-            style: TextStyle(fontSize: 14, color: tabecartcolour.textSecondary),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -5756,6 +5760,8 @@ class _tablecartState extends State<tablecart>
                       cartId: tableCartData!.cartId,
                       tableCode: tableCartData!.tableCode,
                       userId: tableCartData!.userId,
+                      vendorId: tableCartData!.vendorId,
+                      seatingId: tableCartData!.seatingId,
                     ),
                     const SizedBox(width: 8),
                   ] else ...[
@@ -6839,6 +6845,8 @@ class QuantityControl extends StatefulWidget {
   final int cartId;
   final String tableCode;
   final int userId;
+  final int vendorId;
+  final int seatingId;
 
   const QuantityControl({
     super.key,
@@ -6847,6 +6855,8 @@ class QuantityControl extends StatefulWidget {
     required this.cartId,
     required this.tableCode,
     required this.userId,
+    required this.vendorId,
+    required this.seatingId,
   });
 
   @override
@@ -6966,7 +6976,8 @@ class _QuantityControlState extends State<QuantityControl> {
               final success = await food_Authservice.createTableRequest(
                 userId: widget.userId,
                 itemId: widget.item.itemId,
-
+                vendorId: widget.vendorId,
+                seatingId: widget.seatingId,
                 cartId: widget.cartId,
                 tableCode: widget.tableCode,
                 requestType: result['requestType'],
@@ -7043,7 +7054,7 @@ class _QuantityRequestDialogState extends State<_QuantityRequestDialog> {
   final TextEditingController _qtyCtrl = TextEditingController();
 
   String _requestType = 'REMOVE_ITEM';
-  final List<String> _types = ['REMOVE_ITEM', 'REMOVAL_QUANTITY', 'OTHERS'];
+  final List<String> _types = ['REMOVE_ITEM', 'REMOVAL_QUANTITY'];
 
   @override
   Widget build(BuildContext context) {
@@ -7060,32 +7071,71 @@ class _QuantityRequestDialogState extends State<_QuantityRequestDialog> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 18),
-            DropdownButtonFormField<String>(
-              value: _requestType,
-              decoration: InputDecoration(
-                labelText: 'Request Type',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-              ),
-              items: _types
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(
-                        _humanize(e),
-                        style: const TextStyle(fontSize: 14),
+            // DropdownButtonFormField<String>(
+            //   value: _requestType,
+            //   decoration: InputDecoration(
+            //     labelText: 'Request Type',
+            //     border: OutlineInputBorder(
+            //       borderRadius: BorderRadius.circular(10),
+            //     ),
+            //     contentPadding: const EdgeInsets.symmetric(
+            //       horizontal: 12,
+            //       vertical: 12,
+            //     ),
+            //   ),
+            //   items: _types
+            //       .map(
+            //         (e) => DropdownMenuItem(
+            //           value: e,
+            //           child: Text(
+            //             _humanize(e),
+            //             style: const TextStyle(fontSize: 14),
+            //           ),
+            //         ),
+            //       )
+            //       .toList(),
+            //   onChanged: (v) {
+            //     if (v != null) setState(() => _requestType = v);
+            //   },
+            // ),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: _types.map((type) {
+                final selected = _requestType == type;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _requestType = type;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: selected
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey.shade400,
                       ),
                     ),
-                  )
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) setState(() => _requestType = v);
-              },
+                    child: Text(
+                      _humanize(type),
+                      style: TextStyle(
+                        color: selected ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 14),
             if (_requestType == 'REMOVAL_QUANTITY') ...[

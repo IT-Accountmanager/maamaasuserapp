@@ -52,12 +52,6 @@ class WebSocketManager {
     _foodClient!.activate();
   }
 
-  /// Subscribe [listenerId] to status updates for [orderId].
-  ///
-  /// - If no STOMP channel exists for this [orderId] yet, one is created.
-  /// - If a channel already exists, [onMessage] is simply added as an extra
-  ///   listener — the existing channel is **not** recreated.
-  /// - Use a unique [listenerId] per screen/widget (e.g. `'list'`, `'details'`).
   void subscribeOrderStatus(
     int orderId,
     Function(Map<String, dynamic>) onMessage, {

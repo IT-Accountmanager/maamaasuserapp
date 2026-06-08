@@ -1,11 +1,14 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../Services/Auth_service/promotion_services_Authservice.dart';
 import '../../../Models/promotions_model/promotions_model.dart';
 import '../../../Services/App_color_service/app_colours.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
+import '../../Food&beverages/Menu/menu_screen.dart';
 import '../../Mainscreen.dart';
 import 'enquiryscreen.dart';
 import '../../../main.dart';
@@ -494,6 +497,8 @@ class ReelsScreenState extends State<ReelsScreen>
         return "Watch More";
       case CallToAction.LEARN_MORE:
         return "Learn More";
+      case CallToAction.ORDER_NOW:
+        return "Order Now";
       default:
         return "Get Quote";
     }
@@ -504,6 +509,7 @@ class ReelsScreenState extends State<ReelsScreen>
     debugPrint("👉 Goal: ${campaign.goal}");
     debugPrint("👉 SubGoal: ${campaign.subGoal}");
     debugPrint("👉 CTA: ${campaign.callToAction}");
+    // debugPrint("CTA Enum Value = $cta");
 
     final cta = campaign.callToAction;
 
@@ -549,6 +555,48 @@ class ReelsScreenState extends State<ReelsScreen>
       } else {
         debugPrint("❌ Could not launch Dialer");
       }
+      return;
+    }
+
+    // if (cta == CallToAction.ORDER_NOW) {
+    //   debugPrint("✅ Branch: ORDER_NOW");
+    //
+    //   Navigator.push(
+    //     context,
+    //     MaterialPageRoute(
+    //       builder: (_) => MenuScreen(vendorId: campaign.vendorId ?? 0),
+    //     ),
+    //   );
+    //
+    //   return;
+    // }
+    if (cta == CallToAction.ORDER_NOW) {
+      debugPrint("✅ Branch: ORDER_NOW");
+      final ordertype = "DINE_IN";
+
+      try {
+        final result = await food_Authservice.createCart(ordertype);
+
+        debugPrint("✅ Cart created: $result");
+
+        if (!context.mounted) return;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MenuScreen(vendorId: campaign.vendorId ?? 0),
+          ),
+        );
+      } catch (e) {
+        debugPrint("❌ Create cart failed: $e");
+
+        if (!context.mounted) return;
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Unable to create cart")));
+      }
+
       return;
     }
 

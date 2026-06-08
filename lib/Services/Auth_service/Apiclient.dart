@@ -15,22 +15,28 @@ class ApiClient {
   static const String subscription =
       "http://staging.maamaas.com:8080/subscription";
   // "https://backend.maamaas.com/subscription";
-  static const String food_beverages = "http://staging.maamaas.com:8080/food";
+  static const String food_beverages =
+      "http://staging.maamaas.com:8080/food";
   // "https://backend.maamaas.com/food";
 
-  static const String notification = "http://staging.maamaas.com:8080/notify";
+  static const String notification =
+      "http://staging.maamaas.com:8080/notify";
   // "https://backend.maamaas.com/notify";
 
-  static const String catering = "http://staging.maamaas.com:8080/catering";
+  static const String catering =
+      "http://staging.maamaas.com:8080/catering";
   // "https://backend.maamaas.com/catering";
 
-  static const String delivery = "http://staging.maamaas.com:8080/delivery";
+  static const String delivery =
+      "http://staging.maamaas.com:8080/delivery";
   // "https://backend.maamaas.com/delivery";
 
-  static const String promotions = "http://staging.maamaas.com:8080/promotions";
+  static const String promotions =
+      "http://staging.maamaas.com:8080/promotions";
   // "https://backend.maamaas.com/promotions";
 
-  static const String payments = "http://staging.maamaas.com:8989/payments";
+  static const String payments =
+      "http://staging.maamaas.com:8989/payments";
   // "https://backend.maamaas.com/payments";
 
   static SessionExpiredHandler? onSessionExpired;

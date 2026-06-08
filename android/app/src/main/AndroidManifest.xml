@@ -79,7 +79,7 @@
             android:value="2" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCf7bYn7iDIs2T6-sDnmr7qWy9oFZOPOuc" />
+            android:value="AIzaSyANNtk6CTXPYwNc_8mj1La5bhaWmtvaAhc" />
 
 
         <!-- Firebase Notification Channel -->

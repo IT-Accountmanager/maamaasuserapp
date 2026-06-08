@@ -19,8 +19,8 @@ class subscription_AuthService {
   static const _secureStorage = FlutterSecureStorage();
 
   static final String baseUrlgateway =
-      // "https://backend.maamaas.com/subscription";
       "http://staging.maamaas.com:8080/subscription";
+      // "https://backend.maamaas.com/subscription";
 
   Future<String> registerUser({
     required String userName,
@@ -328,40 +328,6 @@ class subscription_AuthService {
     }
   }
 
-  // ✅ Add new address
-  // static Future<bool> addAddress(Map<String, dynamic> body) async {
-  //   final endpoint = "api/user/location/add";
-  //
-  //   try {
-  //     print("📤 ADD ADDRESS REQUEST");
-  //     print("➡️ Endpoint: $endpoint");
-  //     print("➡️ Body: $body");
-  //
-  //     final response = await ApiClient.post(
-  //       endpoint,
-  //       body,
-  //       service: "subscription",
-  //     );
-  //
-  //     print("📥 RESPONSE:");
-  //     print("➡️ Status Code: ${response.statusCode}");
-  //     print("➡️ Data: ${response.body}");
-  //
-  //     if (response.statusCode != null &&
-  //         response.statusCode! >= 200 &&
-  //         response.statusCode! < 300) {
-  //       return true;
-  //     } else {
-  //       print("❌ API ERROR: ${response.body}");
-  //       return false;
-  //     }
-  //   } catch (e, stackTrace) {
-  //     print("🚨 EXCEPTION in addAddress:");
-  //     print(e);
-  //     print(stackTrace);
-  //     return false;
-  //   }
-  // }
   static Future<Map<String, dynamic>> addAddress(
     Map<String, dynamic> body,
   ) async {
@@ -383,41 +349,6 @@ class subscription_AuthService {
       return {"success": false, "message": e.toString()};
     }
   }
-
-  // static Future<bool> updateAddress(
-  //     int addressId,
-  //     Map<String, dynamic> body,
-  //     ) async {
-  //   try {
-  //     final endpoint = "api/user/update/$addressId";
-  //
-  //     print("📤 UPDATE ADDRESS REQUEST");
-  //     print("➡️ Endpoint: $endpoint");
-  //     print("➡️ Body: $body");
-  //
-  //     final response = await ApiClient.put(
-  //       endpoint,
-  //       body,
-  //       service: "subscription",
-  //     );
-  //
-  //     print("📥 RESPONSE:");
-  //     print("➡️ Status Code: ${response.statusCode}");
-  //     print("➡️ Body: ${response.body}");
-  //
-  //     if (response.statusCode >= 200 && response.statusCode < 300) {
-  //       return true;
-  //     } else {
-  //       print("❌ API Error: ${response.body}");
-  //       return false;
-  //     }
-  //   } catch (e, stackTrace) {
-  //     print("🚨 EXCEPTION in updateAddress:");
-  //     print(e);
-  //     print(stackTrace);
-  //     return false;
-  //   }
-  // }
 
   static Future<Map<String, dynamic>> updateAddress(
     int addressId,
@@ -539,30 +470,6 @@ class subscription_AuthService {
     }
   }
 
-  // 3️⃣ ADD CASH TO WALLET
-  // static Future<bool> addCashToWallet({
-  //   required String paymentId,
-  //   String? orderId,
-  //   required double amount,
-  // }) async {
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final userId = prefs.getInt('userId') ?? 0;
-  //
-  //     if (userId == 0) {
-  //       return false;
-  //     }
-  //
-  //     final endpoint =
-  //         "api/user/addCash/self-loaded?userId=$userId&amount=$amount&paymentId=$paymentId&orderId=${orderId ?? 'NA'}";
-  //
-  //     final res = await ApiClient.post(endpoint, {}, service: "subscription");
-  //
-  //     return res.statusCode == 200;
-  //   } catch (e) {
-  //     return false;
-  //   }
-  // }
   static Future<Map<String, dynamic>> addCashToWallet({
     required String paymentId,
     String? orderId,

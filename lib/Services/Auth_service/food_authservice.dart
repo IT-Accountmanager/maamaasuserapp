@@ -1,6 +1,7 @@
 import '../../Models/food/Restaurentscdhule.dart';
 import '../../Models/food/aboutus_model.dart';
 import '../../Models/food/seatingdetails.dart';
+import '../../Models/food/tablebooking.dart';
 import '../../Models/food/team_model.dart';
 import '../../Models/subscrptions/advertisement_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -468,8 +469,8 @@ class food_Authservice {
         for (final item in items) {
           // ✅ Actually print something
           final map = item as Map<String, dynamic>;
-          debugPrint('dish: ${map['dishName']}, shedule: ${map['shedule']}');
-          debugPrint("prinitingcartdata : ${response.body}");
+          // debugPrint('dish: ${map['dishName']}, shedule: ${map['shedule']}');
+          // debugPrint("prinitingcartdata : ${response.body}");
         }
 
         return CartModel.fromJson(cartJson);
@@ -647,8 +648,10 @@ class food_Authservice {
   }
 
   static Future<bool> createTableRequest({
+    required int vendorId,
     required int userId,
     required int itemId,
+    required int seatingId,
     required int cartId,
     required String tableCode,
     required String requestType,
@@ -670,8 +673,10 @@ class food_Authservice {
       print("PREF USER ID => $storedUserId");
 
       final body = {
+        "vendorId": vendorId,
         "userId": storedUserId ?? userId,
         "itemId": itemId,
+        "tableBookingId": seatingId,
         "cartId": cartId,
         "tableCode": tableCode,
         "requestType": requestType,
@@ -681,18 +686,12 @@ class food_Authservice {
 
       print("REQUEST BODY => $body");
 
-      final response = await ApiClient.post(
-        endpoint,
-        body,
-        service: 'food',
-      );
+      final response = await ApiClient.post(endpoint, body, service: 'food');
 
       print("STATUS CODE => ${response.statusCode}");
       print("RESPONSE BODY => ${response.body}");
 
-      final success =
-          response.statusCode == 200 ||
-              response.statusCode == 201;
+      final success = response.statusCode == 200 || response.statusCode == 201;
 
       print("REQUEST SUCCESS => $success");
 
@@ -807,7 +806,7 @@ class food_Authservice {
     required String bookingDate,
     required String startTime,
     required int capacity,
-    required int seatingId,
+    // required int seatingId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
@@ -827,7 +826,7 @@ class food_Authservice {
       "startTime": startTime,
       "capacity": capacity,
       "paymentEnable": false,
-      "tableId": seatingId,
+      // "tableId": seatingId,
     };
 
     try {
@@ -912,6 +911,42 @@ class food_Authservice {
           return [WaitingItem.fromJson(body)];
         } else if (body is List) {
           return body.map((e) => WaitingItem.fromJson(e)).toList();
+        }
+      }
+
+      // debugPrint("❌ Failed to fetch waiting list: ${response.body}");
+      return [];
+    } catch (e) {
+      // debugPrint("⚠️ Error fetching waiting list: $e");
+      return [];
+    }
+  }
+
+  static Future<List<BookingModel>> getTableBookings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final int userId = prefs.getInt('userId') ?? 0;
+    final String customerId = prefs.getString("customerId") ?? '';
+
+    if (userId == 0) {
+      return [];
+    }
+
+    final endpoint =
+        "api/seatingdetails/get/by/tabledetails?userId=$userId&customerId=$customerId";
+
+    try {
+      final response = await ApiClient.get(
+        endpoint,
+        service: "food",
+      ); // Using Services helper
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+
+        if (body is Map<String, dynamic>) {
+          return [BookingModel.fromJson(body)];
+        } else if (body is List) {
+          return body.map((e) => BookingModel.fromJson(e)).toList();
         }
       }
 

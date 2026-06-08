@@ -950,7 +950,6 @@ import 'package:maamaas/screens/screens/supportteam/support_team.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
-import 'package:maamaas/screens/screens/referrznd%20earn.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:maamaas/screens/screens/saved_address.dart';
 import 'package:maamaas/screens/screens/wallet_screen.dart';
@@ -1475,13 +1474,13 @@ class _MenuListState extends State<_MenuList> {
     },
     {
       'icon': Icons.card_giftcard_outlined,
-      'label': 'Rewards & Coupons',
+      'label': 'Coupons',
       'color': Color(0xFF0EA5E9),
       'key': 'rewards',
     },
     {
       'icon': Icons.room_preferences,
-      'label': 'Refer',
+      'label': 'Refer & Earn',
       'color': Color(0xFFF59E0B),
       'key': 'Refer',
     },
@@ -1509,12 +1508,12 @@ class _MenuListState extends State<_MenuList> {
     //   'color': Color(0xFF8B5CF6),
     //   'key': 'logitics',
     // },
-    {
-      'icon': Icons.manage_accounts_outlined,
-      'label': 'Logistics',
-      'color': Color(0xFF8B5CF6),
-      'key': 'logitics',
-    },
+    // {
+    //   'icon': Icons.manage_accounts_outlined,
+    //   'label': 'Logistics',
+    //   'color': Color(0xFF8B5CF6),
+    //   'key': 'logitics',
+    // },
   ];
 
   Widget? _pageForKey(String key, BuildContext context) {
@@ -1543,8 +1542,8 @@ class _MenuListState extends State<_MenuList> {
         return AccountScreen();
       // case 'logitics':
       //   return TravelHomeScreen();
-      case 'logitics':
-        return ReferEarnScreen();
+      // case 'logitics':
+      //   return ReferEarnScreen();
       default:
         return null;
     }

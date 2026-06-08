@@ -1127,7 +1127,7 @@ class _SeatingScreenState extends State<SeatingScreen> {
         bookingDate: widget.bookingDate,
         startTime: widget.startTime,
         capacity: widget.capacity,
-        seatingId: selectedTable!.id,
+        // seatingId: selectedTable!.id,
       );
       if (response != null && response['statusCode'] == 200) {
         ScaffoldMessenger.of(context).showSnackBar(

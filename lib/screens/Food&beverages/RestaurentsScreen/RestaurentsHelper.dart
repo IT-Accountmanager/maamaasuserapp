@@ -27,7 +27,7 @@ class RestaurentsHelper {
       'type': 'delivery',
     },
     {'label': 'Dine-out', 'icon': Icons.table_restaurant, 'type': 'dineout'},
-    {'label': 'Catering', 'icon': Icons.restaurant, 'type': 'catering'},
+    // {'label': 'Catering', 'icon': Icons.restaurant, 'type': 'catering'},
   ];
 
   static final Map<String, String> typeMapping = {
@@ -35,7 +35,7 @@ class RestaurentsHelper {
     'takeaway': 'TAKEAWAY',
     'delivery': 'DELIVERY',
     'dineout': 'TABLE_DINE_IN', // ✅ FIXED
-    'catering': 'CATERING', // ✅ FIXED (removed space)
+    // 'catering': 'CATERING', // ✅ FIXED (removed space)
   };
 
   static const filters = [

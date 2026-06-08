@@ -322,6 +322,7 @@ enum CallToAction {
   LISTEN_NOW,
   BUY_TICKETS,
   CALL_NOW,
+  ORDER_NOW,
 }
 
 // enum TimeCategory {
@@ -448,6 +449,7 @@ final callToActionValues = EnumValues({
   "LISTEN_NOW": CallToAction.LISTEN_NOW,
   "BUY_TICKETS": CallToAction.BUY_TICKETS,
   "CALL_NOW": CallToAction.CALL_NOW,
+  "ORDER_NOW":CallToAction.ORDER_NOW,
 });
 
 // final timeCategoryValues = EnumValues({

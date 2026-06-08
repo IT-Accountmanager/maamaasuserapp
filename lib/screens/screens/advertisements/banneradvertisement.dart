@@ -3,6 +3,9 @@ import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import '../../../Services/Auth_service/food_authservice.dart';
+import '../../Food&beverages/Menu/menu_screen.dart';
+
 class BannerAdvertisement extends StatefulWidget {
   final List<Campaign> ads;
   final double height;
@@ -140,9 +143,33 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
     }
 
     final ad = widget.ads[currentIndex];
+    debugPrint(
+      "Ad ${ad.campaignId} CTA: ${ad.callToAction} Raw: ${callToActionValues.reverse[ad.callToAction]}",
+    );
 
     return GestureDetector(
-      onTap: () {},
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        if (ad.callToAction != CallToAction.ORDER_NOW) {
+          return;
+        }
+        final ordertype = "DINE_IN";
+
+        debugPrint("✅ ORDER_NOW matched");
+
+        final result = await food_Authservice.createCart(ordertype);
+        debugPrint("✅ Cart created: $result");
+
+        if (!mounted) return;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MenuScreen(vendorId: ad.vendorId ?? 0),
+          ),
+        );
+      },
+
       child: SizedBox(
         // ✅ ADD THIS BACK
         height: widget.height,
@@ -163,7 +190,8 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
             );
           },
 
-          child: _buildAdContent(ad), // uses ValueKey inside
+          child: _buildAdContent(ad),
+          // uses ValueKey inside
         ),
       ),
     );

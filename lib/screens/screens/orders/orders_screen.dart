@@ -8,7 +8,7 @@ import 'food orders/food_orders.dart';
 
 enum OrderVertical {
   food,
-  catering,
+  // catering,
   // groceries,
   table,
 }
@@ -140,8 +140,8 @@ class _OrdersScreenState extends State<OrdersScreen>
         return "Food";
       case OrderVertical.table:
         return "Table";
-      case OrderVertical.catering:
-        return "Catering";
+      // case OrderVertical.catering:
+      //   return "Catering";
       // case OrderVertical.groceries:
       //   return "Grocery";
     }
@@ -153,8 +153,8 @@ class _OrdersScreenState extends State<OrdersScreen>
         return Icons.fastfood;
       case OrderVertical.table:
         return Icons.event_seat;
-      case OrderVertical.catering:
-        return Icons.restaurant;
+      // case OrderVertical.catering:
+      //   return Icons.restaurant;
       // case OrderVertical.groceries:
       //   return Icons.local_grocery_store;
     }
@@ -166,8 +166,8 @@ class _OrdersScreenState extends State<OrdersScreen>
         return food_orders();
       case OrderVertical.table:
         return TableBookings();
-      case OrderVertical.catering:
-        return CateringOrdersScreen();
+      // case OrderVertical.catering:
+      //   return CateringOrdersScreen();
       //   case OrderVertical.groceries:
       //     return _buildGroceryOrderList();
     }

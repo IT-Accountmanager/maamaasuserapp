@@ -1,4 +1,6 @@
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
+import 'package:marquee/marquee.dart';
+import '../../../Models/subscrptions/coupon_model.dart';
 import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -68,6 +70,8 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   List<vendorteam> _team = [];
   Map<int, int> favoriteMap = {};
 
+  DishFilterType selectedFilter = DishFilterType.none;
+
   late Future<void> _screenFuture;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnim;
@@ -78,6 +82,34 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   bool get showMenuTab =>
       ["DINE_IN", "TAKEAWAY", "DELIVERY"].contains(normalizedOrderType);
   bool get showTableTab => normalizedOrderType == "TABLE_DINE_IN";
+
+  List<CouponModel> coupons = [];
+
+  final ScrollController _couponController = ScrollController();
+  Timer? _couponTimer;
+
+  void _startCouponScroll() {
+    _couponTimer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if (!_couponController.hasClients) return;
+
+      final max = _couponController.position.maxScrollExtent;
+      final current = _couponController.offset + 1;
+
+      if (current >= max) {
+        _couponController.jumpTo(0);
+      } else {
+        _couponController.jumpTo(current);
+      }
+    });
+  }
+
+  List<CouponModel> get vendorCoupons {
+    return coupons.where((c) {
+      return c.vendorId == widget.vendorId &&
+          c.isCurrentlyAvailable &&
+          c.active;
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -99,6 +131,23 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
         setState(() => _isCollapsed = collapsed);
       }
     });
+    _startCouponScroll();
+  }
+
+  List<CouponModel> get visibleCoupons {
+    return vendorCoupons.where((coupon) {
+      return coupon.isCurrentlyAvailable;
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    _scrollTimer?.cancel();
+    _scrollController.dispose();
+    _fadeController.dispose();
+    _couponTimer?.cancel();
+    _couponController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeScreen() async {
@@ -109,8 +158,19 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
       _loadaboutus(),
       _loadteam(),
       _loadFavorites(),
+      _loadCoupons(),
     ]);
     if (mounted) _fadeController.forward();
+  }
+
+  Future<void> _loadCoupons() async {
+    final data = await food_Authservice.fetchCoupons();
+
+    if (!mounted) return;
+
+    setState(() {
+      coupons = data;
+    });
   }
 
   Future<void> _loadFavorites() async {
@@ -198,12 +258,12 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     });
   }
 
-  @override
-  void dispose() {
-    _scrollTimer?.cancel();
-    _scrollController.dispose();
-    _fadeController.dispose();
-    super.dispose();
+  String formatTime(String time) {
+    final parts = time.split(':');
+
+    final dt = DateTime(2026, 1, 1, int.parse(parts[0]), int.parse(parts[1]));
+
+    return TimeOfDay.fromDateTime(dt).format(context);
   }
 
   @override
@@ -356,10 +416,167 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
           ),
 
           // ── Dish grid ───────────────────────────────────────────────
+          // SliverToBoxAdapter(
+          //   child: _DiscountFilterBar(
+          //     selectedFilter: selectedFilter,
+          //     onFilterChanged: (filter) {
+          //       setState(() {
+          //         selectedFilter = filter;
+          //       });
+          //     },
+          //   ),
+          // ),
+
+          // SliverToBoxAdapter(
+          //   child: vendorCoupons.isEmpty
+          //       ? const SizedBox()
+          //       : Container(
+          //     height: 38,
+          //     margin: const EdgeInsets.symmetric(
+          //       horizontal: 12,
+          //       vertical: 6,
+          //     ),
+          //     padding: const EdgeInsets.symmetric(horizontal: 8),
+          //     decoration: BoxDecoration(
+          //       color: Colors.orange.shade50,
+          //       // borderRadius: BorderRadius.circular(100),
+          //       border: Border.all(color: Colors.orange.shade200),
+          //     ),
+          //       child: Marquee(
+          //         text: vendorCoupons.map((coupon) {
+          //           final discountText =
+          //           coupon.discountType.toUpperCase() == "PERCENTAGE"
+          //               ? "${coupon.discountPercentage.toInt()}% OFF"
+          //               : "₹${coupon.discountPercentage.toInt()} OFF";
+          //
+          //           return "🎉 ${coupon.code} | ${coupon.couponType} $discountText"
+          //               "${coupon.minimumOrderValue > 0 ? " above ₹${coupon.minimumOrderValue.toInt()}" : ""}";
+          //         }).join("     ◆     "),
+          //         velocity: 35,
+          //         blankSpace: 100,
+          //       )
+          //   ),
+          // ),
+          // SliverToBoxAdapter(
+          //   child: vendorCoupons.isEmpty
+          //       ? const SizedBox()
+          //       : Container(
+          //           margin: const EdgeInsets.symmetric(
+          //             horizontal: 12,
+          //             vertical: 6,
+          //           ),
+          //           height: 42,
+          //           decoration: BoxDecoration(
+          //             gradient: LinearGradient(
+          //               colors: [
+          //                 const Color(0xFFFF6B00),
+          //                 const Color(0xFFFF9A3C),
+          //                 const Color(0xFFFF6B00),
+          //               ],
+          //               stops: const [0.0, 0.5, 1.0],
+          //             ),
+          //             borderRadius: BorderRadius.circular(8),
+          //             boxShadow: [
+          //               BoxShadow(
+          //                 color: const Color(0xFFFF6B00).withOpacity(0.30),
+          //                 blurRadius: 8,
+          //                 offset: const Offset(0, 3),
+          //               ),
+          //             ],
+          //           ),
+          //           child: Row(
+          //             children: [
+          //               // Left badge label
+          //               Container(
+          //                 padding: const EdgeInsets.symmetric(horizontal: 10),
+          //                 decoration: const BoxDecoration(
+          //                   color: Color(0xFFCC5500),
+          //                   borderRadius: BorderRadius.only(
+          //                     topLeft: Radius.circular(8),
+          //                     bottomLeft: Radius.circular(8),
+          //                   ),
+          //                 ),
+          //                 child: Row(
+          //                   mainAxisSize: MainAxisSize.min,
+          //                   children: const [
+          //                     Text("🏷️", style: TextStyle(fontSize: 14)),
+          //                     SizedBox(width: 4),
+          //                     Text(
+          //                       "OFFERS",
+          //                       style: TextStyle(
+          //                         color: Colors.white,
+          //                         fontSize: 11,
+          //                         fontWeight: FontWeight.w800,
+          //                         letterSpacing: 1.2,
+          //                       ),
+          //                     ),
+          //                   ],
+          //                 ),
+          //               ),
+          //
+          //               // Divider
+          //               Container(
+          //                 width: 1,
+          //                 height: double.infinity,
+          //                 color: Colors.white.withOpacity(0.3),
+          //               ),
+          //
+          //               // Scrolling marquee text
+          //               Expanded(
+          //                 child: Padding(
+          //                   padding: const EdgeInsets.symmetric(horizontal: 8),
+          //                   child: Marquee(
+          //                     text: visibleCoupons
+          //                         .map((coupon) {
+          //                           final discountText =
+          //                               coupon.discountType.toUpperCase() ==
+          //                                   "PERCENTAGE"
+          //                               ? "${coupon.discountPercentage.toInt()}% OFF"
+          //                               : "₹${coupon.discountPercentage.toInt()} OFF";
+          //
+          //                           final isHappyHour =
+          //                               coupon.startTime != null &&
+          //                               coupon.endTime != null;
+          //
+          //                           if (isHappyHour) {
+          //                             return "🔥 HAPPY HOURS • Use ${coupon.code}"
+          //                                 " • Get $discountText"
+          //                                 "${coupon.minimumOrderValue > 0 ? ' on orders above ₹${coupon.minimumOrderValue.toInt()}' : ''}"
+          //                                 " • Offer ends at ${formatTime(coupon.endTime!)}";
+          //                           }
+          //
+          //                           return "✦ Use ${coupon.code}"
+          //                               " • Get $discountText"
+          //                               "${coupon.minimumOrderValue > 0 ? ' on orders above ₹${coupon.minimumOrderValue.toInt()}' : ''}";
+          //                         })
+          //                         .join("          "),
+          //                     velocity: 38,
+          //                     blankSpace: 80,
+          //                     style: const TextStyle(
+          //                       color: Colors.white,
+          //                       fontSize: 12.5,
+          //                       fontWeight: FontWeight.w600,
+          //                       letterSpacing: 0.3,
+          //                     ),
+          //                     fadingEdgeEndFraction: 0.1,
+          //                     fadingEdgeStartFraction: 0.1,
+          //                   ),
+          //                 ),
+          //               ),
+          //             ],
+          //           ),
+          //         ),
+          // ),
+          SliverToBoxAdapter(
+            child: visibleCoupons.isEmpty
+                ? const SizedBox()
+                : OfferTicker(coupons: visibleCoupons, formatTime: formatTime),
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.only(bottom: 100.h),
               child: MenuTabContent(
+                selectedFilter: selectedFilter,
                 isVeg: isVeg,
                 vendorId: widget.vendorId,
                 selectedVendorId: widget.vendorId,
@@ -818,11 +1035,49 @@ class _CategoryTabStrip extends StatelessWidget {
   });
 
   @override
+  // Widget build(BuildContext context) {
+  //   return ListView.builder(
+  //     scrollDirection: Axis.horizontal,
+  //     padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+  //     itemCount: categories.length + 1,
+  //     itemBuilder: (context, index) {
+  //       if (index == 0) {
+  //         return _CategoryChip(
+  //           title: 'All',
+  //           image: const AssetImage('assets/allitems.jpg'),
+  //           isSelected: selectedCategoryId == null,
+  //           onTap: () => onCategorySelected(null),
+  //         );
+  //       }
+  //       final cat = categories[index - 1];
+  //       return _CategoryChip(
+  //         title: cat.dishName ?? '',
+  //         image: (cat.dishImage != null && cat.dishImage!.isNotEmpty)
+  //             ? NetworkImage(cat.dishImage!)
+  //             : null,
+  //         isSelected: selectedCategoryId == cat.dishId,
+  //         onTap: () => onCategorySelected(cat.dishId),
+  //       );
+  //     },
+  //   );
+  // }
+  @override
   Widget build(BuildContext context) {
+    final sortedCategories = List<Dish>.from(categories);
+
+    sortedCategories.sort((a, b) {
+      final aIsCombo = (a.dishName ?? '').toLowerCase() == 'offers';
+      final bIsCombo = (b.dishName ?? '').toLowerCase() == 'offers';
+
+      if (aIsCombo && !bIsCombo) return -1;
+      if (!aIsCombo && bIsCombo) return 1;
+      return 0;
+    });
+
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-      itemCount: categories.length + 1,
+      itemCount: sortedCategories.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return _CategoryChip(
@@ -832,7 +1087,9 @@ class _CategoryTabStrip extends StatelessWidget {
             onTap: () => onCategorySelected(null),
           );
         }
-        final cat = categories[index - 1];
+
+        final cat = sortedCategories[index - 1];
+
         return _CategoryChip(
           title: cat.dishName ?? '',
           image: (cat.dishImage != null && cat.dishImage!.isNotEmpty)
@@ -1106,6 +1363,126 @@ class VegToggle extends StatelessWidget {
   }
 }
 
+// class _DiscountFilterBar extends StatelessWidget {
+//   final DishFilterType selectedFilter;
+//   final ValueChanged<DishFilterType> onFilterChanged;
+//
+//   const _DiscountFilterBar({
+//     required this.selectedFilter,
+//     required this.onFilterChanged,
+//   });
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final filters = [
+//       (DishFilterType.none, 'All'),
+//       (DishFilterType.discount20, '20%+ OFF'),
+//       (DishFilterType.discount50, '50%+ OFF'),
+//       (DishFilterType.under150, 'Under ₹150'),
+//       (DishFilterType.under300, 'Under ₹300'),
+//     ];
+//
+//     return SizedBox(
+//       height: 50,
+//       child: ListView.separated(
+//         padding: const EdgeInsets.symmetric(horizontal: 12),
+//         scrollDirection: Axis.horizontal,
+//         itemCount: filters.length,
+//         separatorBuilder: (_, __) => const SizedBox(width: 8),
+//         itemBuilder: (_, index) {
+//           final filter = filters[index].$1;
+//           final label = filters[index].$2;
+//
+//           final selected = selectedFilter == filter;
+//
+//           return ChoiceChip(
+//             label: Text(label),
+//             selected: selected,
+//             onSelected: (_) => onFilterChanged(filter),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
+
+class _DiscountFilterBar extends StatelessWidget {
+  final DishFilterType selectedFilter;
+  final ValueChanged<DishFilterType> onFilterChanged;
+
+  const _DiscountFilterBar({
+    required this.selectedFilter,
+    required this.onFilterChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final filters = [
+      (DishFilterType.none, 'All', Icons.grid_view_rounded),
+      (DishFilterType.discount50, 'upto 50% OFF', Icons.sell_outlined),
+      (DishFilterType.discount20, 'upto 20% OFF', Icons.local_offer_outlined),
+      (DishFilterType.discount10, 'upto 10% OFF', Icons.local_offer_outlined),
+      (DishFilterType.under150, 'Under ₹150', Icons.currency_rupee_rounded),
+      (DishFilterType.under300, 'Under ₹300', Icons.currency_rupee_rounded),
+    ];
+
+    return SizedBox(
+      height: 52,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        scrollDirection: Axis.horizontal,
+        itemCount: filters.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final (filter, label, icon) = filters[i];
+          final active = selectedFilter == filter;
+
+          return GestureDetector(
+            onTap: () => onFilterChanged(filter),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: active ? const Color(0xFFFAEEDA) : Colors.white,
+                borderRadius: BorderRadius.circular(34),
+                border: Border.all(
+                  color: active
+                      ? const Color(0xFFEF9F27)
+                      : const Color(0xFFE0DDD8),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: active
+                        ? const Color(0xFF854F0B)
+                        : const Color(0xFF9C9890),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: active
+                          ? const Color(0xFF633806)
+                          : const Color(0xFF6B6760),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MenuTabContent
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1120,12 +1497,14 @@ class MenuTabContent extends StatefulWidget {
   final String searchQuery;
   final bool showCartButton;
   final Map<int, int> favoriteMap;
+  final DishFilterType selectedFilter;
 
   const MenuTabContent({
     super.key,
     required this.isVeg,
     required this.cartButton,
     required this.isOutOfStock,
+    required this.selectedFilter,
     // required this.favoriteButton,
     required this.selectedVendorId,
     required this.vendorId,
@@ -1143,6 +1522,7 @@ class _MenuTabContentState extends State<MenuTabContent> {
   @override
   Widget build(BuildContext context) {
     return DishGridTab(
+      selectedFilter: widget.selectedFilter,
       parentId: widget.selectedCategoryId,
       vendorId: widget.vendorId,
       filterTag: widget.isVeg == null
@@ -1173,6 +1553,7 @@ class DishGridTab extends StatefulWidget {
   final String searchQuery;
   final bool showCartButton;
   final Map<int, int> favoriteMap;
+  final DishFilterType selectedFilter;
 
   const DishGridTab({
     super.key,
@@ -1183,6 +1564,7 @@ class DishGridTab extends StatefulWidget {
     required this.searchQuery,
     required this.showCartButton,
     required this.favoriteMap,
+    required this.selectedFilter,
   });
 
   @override
@@ -1248,6 +1630,33 @@ class _DishGridTabState extends State<DishGridTab> {
     if (_errorMessage != null) return _buildError();
 
     final filtered = _allDishes.where((dish) {
+      bool discountMatch = true;
+
+      switch (widget.selectedFilter) {
+        case DishFilterType.discount10:
+          discountMatch = dish.discount <= 10;
+          break;
+        case DishFilterType.discount20:
+          discountMatch = dish.discount <= 20;
+          break;
+
+        case DishFilterType.discount50:
+          discountMatch = dish.discount <= 50;
+          break;
+
+        case DishFilterType.under150:
+          discountMatch = (dish.effectivePrice ?? 0) <= 150;
+          break;
+
+        case DishFilterType.under300:
+          discountMatch = (dish.effectivePrice ?? 0) <= 300;
+          break;
+
+        case DishFilterType.none:
+          discountMatch = true;
+          break;
+      }
+
       final ok = dish.menuStatus == 'Enable';
       final veg =
           widget.filterTag == null ||
@@ -1257,7 +1666,8 @@ class _DishGridTabState extends State<DishGridTab> {
           dish.dishName!.toLowerCase().contains(
             widget.searchQuery.toLowerCase(),
           );
-      return ok && veg && q;
+      // return ok && veg && q;
+      return ok && veg && q && discountMatch;
     }).toList();
 
     filtered.sort((a, b) {
@@ -1340,10 +1750,15 @@ class _DishGridTabState extends State<DishGridTab> {
 
   Widget _buildDishImage(String? url) {
     if (url != null && url.isNotEmpty) {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _imagePlaceholder(),
+      return Container(
+        color: Colors.white,
+        width: double.infinity,
+        height: double.infinity,
+        child: Image.network(
+          url,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _imagePlaceholder(),
+        ),
       );
     }
     return _imagePlaceholder();
@@ -1356,7 +1771,8 @@ class _DishGridTabState extends State<DishGridTab> {
         child: Icon(
           Icons.fastfood_rounded,
           size: 32.sp,
-          color: Menucolours.textM,
+          // color: Menucolours.textM,
+          color: Colors.white,
         ),
       ),
     );
@@ -1562,8 +1978,8 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPhone = Radiusc.isPhone(context);
-    final imgH = isPhone ? 115.0 : 140.0;
-
+    // final imgH = isPhone ? 115.0 : 140.0;
+    final imgH = 100.0;
     return Container(
       decoration: BoxDecoration(
         color: Menucolours.surface,
@@ -1749,9 +2165,9 @@ class ProductCard extends StatelessWidget {
                           price,
                           style: TextStyle(
                             decoration: TextDecoration.lineThrough,
-                            decorationColor: Menucolours.textM,
-                            fontSize: 10.sp,
-                            color: Menucolours.textM,
+                            decorationColor: Colors.black,
+                            fontSize: 15.sp,
+                            color: Colors.black,
                           ),
                         ),
                         SizedBox(width: 4.w),
@@ -1856,4 +2272,740 @@ void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
       );
     },
   );
+}
+
+// class OfferTicker extends StatefulWidget {
+//   final List<CouponModel> coupons;
+//   final String Function(String) formatTime;
+//
+//   const OfferTicker({
+//     super.key,
+//     required this.coupons,
+//     required this.formatTime,
+//   });
+//
+//   @override
+//   State<OfferTicker> createState() => _OfferTickerState();
+// }
+//
+// class _OfferTickerState extends State<OfferTicker> {
+//   int currentIndex = 0;
+//   Timer? _timer;
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//
+//     _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+//       if (!mounted || widget.coupons.isEmpty) return;
+//
+//       setState(() {
+//         currentIndex = (currentIndex + 1) % widget.coupons.length;
+//       });
+//     });
+//   }
+//
+//   @override
+//   void dispose() {
+//     _timer?.cancel();
+//     super.dispose();
+//   }
+//
+//   String _offerText(CouponModel coupon) {
+//     final discountText = coupon.discountType.toUpperCase() == "PERCENTAGE"
+//         ? "${coupon.discountPercentage.toInt()}% OFF"
+//         : "₹${coupon.discountPercentage.toInt()} OFF";
+//
+//     final isHappyHour = coupon.startTime != null && coupon.endTime != null;
+//
+//     if (isHappyHour) {
+//       return "${coupon.code} • $discountText • Ends ${widget.formatTime(coupon.endTime!)}";
+//     }
+//
+//     return "Use ${coupon.code} • Get$discountText";
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final coupon = widget.coupons[currentIndex];
+//
+//     return GestureDetector(
+//       onTap: () => _showOffersBottomSheet(context),
+//       child: Container(
+//         height: 46,
+//         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//         padding: const EdgeInsets.symmetric(horizontal: 12),
+//         decoration: BoxDecoration(
+//           gradient: const LinearGradient(
+//             colors: [Color(0xFFFF6B00), Color(0xFFFF9A3C)],
+//           ),
+//           borderRadius: BorderRadius.circular(10),
+//         ),
+//         child: Row(
+//           children: [
+//             const Icon(
+//               Icons.local_offer_rounded,
+//               color: Colors.white,
+//               size: 18,
+//             ),
+//
+//             const SizedBox(width: 8),
+//
+//             Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+//               decoration: BoxDecoration(
+//                 color: Colors.white.withOpacity(.18),
+//                 borderRadius: BorderRadius.circular(20),
+//               ),
+//               child: Text(
+//                 "${widget.coupons.length} Offers",
+//                 style: const TextStyle(
+//                   color: Colors.white,
+//                   fontWeight: FontWeight.w700,
+//                   fontSize: 10,
+//                 ),
+//               ),
+//             ),
+//
+//             const SizedBox(width: 10),
+//
+//             Expanded(
+//               child: AnimatedSwitcher(
+//                 duration: const Duration(milliseconds: 500),
+//                 transitionBuilder: (child, animation) {
+//                   return SlideTransition(
+//                     position: Tween<Offset>(
+//                       begin: const Offset(0, 1),
+//                       end: Offset.zero,
+//                     ).animate(animation),
+//                     child: child,
+//                   );
+//                 },
+//                 child: Text(
+//                   _offerText(coupon),
+//                   key: ValueKey(currentIndex),
+//                   maxLines: 1,
+//                   overflow: TextOverflow.ellipsis,
+//                   style: const TextStyle(
+//                     color: Colors.white,
+//                     fontWeight: FontWeight.w600,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//
+//             const Icon(Icons.keyboard_arrow_up_rounded, color: Colors.white),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   void _showOffersBottomSheet(BuildContext context) {
+//     showModalBottomSheet(
+//       context: context,
+//       isScrollControlled: true,
+//       backgroundColor: Colors.white,
+//       shape: const RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//       ),
+//       builder: (_) {
+//         return DraggableScrollableSheet(
+//           expand: false,
+//           initialChildSize: .65,
+//           maxChildSize: .9,
+//           minChildSize: .4,
+//           builder: (_, controller) {
+//             return ListView.builder(
+//               controller: controller,
+//               padding: const EdgeInsets.all(16),
+//               itemCount: widget.coupons.length,
+//               itemBuilder: (_, index) {
+//                 final coupon = widget.coupons[index];
+//
+//                 final discountText =
+//                     coupon.discountType.toUpperCase() == "PERCENTAGE"
+//                     ? "${coupon.discountPercentage.toInt()}% OFF"
+//                     : "₹${coupon.discountPercentage.toInt()} OFF";
+//
+//                 final isHappyHour =
+//                     coupon.startTime != null && coupon.endTime != null;
+//
+//                 return Container(
+//                   margin: const EdgeInsets.only(bottom: 12),
+//                   padding: const EdgeInsets.all(14),
+//                   decoration: BoxDecoration(
+//                     border: Border.all(color: Colors.orange.shade200),
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       Row(
+//                         children: [
+//                           Expanded(
+//                             child: Text(
+//                               coupon.code,
+//                               style: const TextStyle(
+//                                 fontSize: 16,
+//                                 fontWeight: FontWeight.bold,
+//                               ),
+//                             ),
+//                           ),
+//                           Text(
+//                             discountText,
+//                             style: const TextStyle(
+//                               color: Colors.orange,
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//
+//                       const SizedBox(height: 6),
+//
+//                       if (coupon.minimumOrderValue > 0)
+//                         Text(
+//                           "Minimum Order: ₹${coupon.minimumOrderValue.toInt()}",
+//                         ),
+//
+//                       if (isHappyHour)
+//                         Padding(
+//                           padding: const EdgeInsets.only(top: 4),
+//                           child: Text(
+//                             "Happy Hours: ${widget.formatTime(coupon.startTime!)} - ${widget.formatTime(coupon.endTime!)}",
+//                             style: const TextStyle(
+//                               color: Colors.red,
+//                               fontWeight: FontWeight.w600,
+//                             ),
+//                           ),
+//                         ),
+//                     ],
+//                   ),
+//                 );
+//               },
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+// }
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+// ─── Ticker ──────────────────────────────────────────────────────────────────
+
+class OfferTicker extends StatefulWidget {
+  final List<CouponModel> coupons;
+  final String Function(String) formatTime;
+
+  const OfferTicker({
+    super.key,
+    required this.coupons,
+    required this.formatTime,
+  });
+
+  @override
+  State<OfferTicker> createState() => _OfferTickerState();
+}
+
+class _OfferTickerState extends State<OfferTicker> {
+  int _currentIndex = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted || widget.coupons.isEmpty) return;
+      setState(() {
+        _currentIndex = (_currentIndex + 1) % widget.coupons.length;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _tickerText(CouponModel c) {
+    final disc = _discountText(c);
+    if (c.startTime != null && c.endTime != null) {
+      return '${c.code} • $disc • Happy Hours ${c.startTime}–${c.endTime}';
+    }
+    return 'Use ${c.code} • Get $disc';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.coupons.isEmpty) return const SizedBox.shrink();
+    final coupon = widget.coupons[_currentIndex];
+
+    return GestureDetector(
+      onTap: () => _openSheet(context),
+      child: Container(
+        height: 48,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Menucolours.kOrange, Menucolours.kOrangeLight],
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Stack(
+          children: [
+            // Diagonal stripe texture
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: CustomPaint(painter: _StripePainter()),
+              ),
+            ),
+            Row(
+              children: [
+                const Icon(
+                  Icons.local_offer_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 10),
+                // Count badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(.22),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${widget.coupons.length} Offers',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                      letterSpacing: .4,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Animated text
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 420),
+                    transitionBuilder: (child, anim) => SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(0, 1),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: anim,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: FadeTransition(opacity: anim, child: child),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _tickerText(coupon),
+                        key: ValueKey(_currentIndex),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.keyboard_arrow_up_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _OffersSheet(coupons: widget.coupons),
+    );
+  }
+}
+
+// ─── Stripe Painter ──────────────────────────────────────────────────────────
+
+class _StripePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(.04)
+      ..strokeWidth = 12
+      ..style = PaintingStyle.stroke;
+
+    for (double x = -size.height; x < size.width + size.height; x += 24) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.height, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
+}
+
+// ─── Bottom Sheet ─────────────────────────────────────────────────────────────
+
+class _OffersSheet extends StatelessWidget {
+  final List<CouponModel> coupons;
+  const _OffersSheet({required this.coupons});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: .72,
+      maxChildSize: .92,
+      minChildSize: .4,
+      builder: (_, controller) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12, bottom: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0E0E0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Available Offers',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: Menucolours.kText,
+                          ),
+                        ),
+                        Text(
+                          '${coupons.length} coupons active right now',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Menucolours.kMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFF0F0F0)),
+              // List
+              Expanded(
+                child: ListView.builder(
+                  controller: controller,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                  itemCount: coupons.length,
+                  itemBuilder: (_, i) => _CouponCard(coupon: coupons[i]),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─── Coupon Card ─────────────────────────────────────────────────────────────
+
+class _CouponCard extends StatelessWidget {
+  final CouponModel coupon;
+
+  const _CouponCard({required this.coupon});
+
+  @override
+  Widget build(BuildContext context) {
+    final isHappy =
+        coupon.startTime != null && coupon.endTime != null;
+
+    final discount = _discountText(coupon);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.grey.shade200,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            /// Discount Badge
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    coupon.code,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+
+                _DiscountPill(
+                  text: discount,
+                  isHappy: isHappy,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            /// Description
+            // if ((coupon.description ?? "").isNotEmpty)
+            //   Text(
+            //     coupon.description!,
+            //     style: TextStyle(
+            //       fontSize: 13,
+            //       color: Colors.grey.shade700,
+            //     ),
+            //   ),
+
+            const SizedBox(height: 12),
+
+            /// Details
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+
+                  _detailRow(
+                    Icons.shopping_cart_outlined,
+                    "Minimum Order",
+                    "₹${coupon.minimumOrderValue.toInt()}",
+                  ),
+
+                  // if (coupon.maximumDiscountAmount != null)
+                  //   _detailRow(
+                  //     Icons.currency_rupee,
+                  //     "Maximum Discount",
+                  //     "₹${coupon.maximumDiscountAmount!.toInt()}",
+                  //   ),
+
+                  _detailRow(
+                    Icons.local_offer_outlined,
+                    "Offer Type",
+                    coupon.couponType,
+                  ),
+
+                  if (isHappy)
+                    _detailRow(
+                      Icons.access_time,
+                      "Happy Hours",
+                      "${coupon.startTime} - ${coupon.endTime}",
+                    ),
+
+                  // if (coupon.validFrom != null)
+                  //   _detailRow(
+                  //     Icons.calendar_today,
+                  //     "Valid From",
+                  //     coupon.validFrom!,
+                  //   ),
+                  //
+                  // if (coupon.validTo != null)
+                  //   _detailRow(
+                  //     Icons.event_available,
+                  //     "Valid Till",
+                  //     coupon.validTo!,
+                  //   ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            /// Terms
+            // if ((coupon.termsAndConditions ?? "").isNotEmpty)
+            //   Container(
+            //     padding: const EdgeInsets.all(10),
+            //     decoration: BoxDecoration(
+            //       color: const Color(0xffFFF8E8),
+            //       borderRadius: BorderRadius.circular(10),
+            //     ),
+            //     child: Row(
+            //       crossAxisAlignment: CrossAxisAlignment.start,
+            //       children: [
+            //         const Icon(
+            //           Icons.info_outline,
+            //           size: 16,
+            //           color: Colors.orange,
+            //         ),
+            //         const SizedBox(width: 8),
+            //         Expanded(
+            //           child: Text(
+            //             coupon.termsAndConditions!,
+            //             style: const TextStyle(
+            //               fontSize: 12,
+            //             ),
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow(
+      IconData icon,
+      String title,
+      String value,
+      ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: Colors.orange),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.black54,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+String _discountText(CouponModel c) {
+  return c.discountType.toUpperCase() == 'FIXED_AMOUNT'
+      ? '₹${c.discountPercentage.toInt()} OFF'
+      : '${c.discountPercentage.toInt()}% OFF';
+}
+
+class _DiscountPill extends StatelessWidget {
+  final String text;
+  final bool isHappy;
+  const _DiscountPill({required this.text, required this.isHappy});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isHappy ? Menucolours.kHappyBg : Menucolours.kOrangeBg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: isHappy ? Menucolours.kHappy : Menucolours.kOrange,
+        ),
+      ),
+    );
+  }
+}
+
+class _MetaTag extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color bgColor;
+
+  const _MetaTag({
+    required this.icon,
+    required this.label,
+    this.color = Menucolours.kMuted,
+    this.bgColor = Menucolours.kSurface,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

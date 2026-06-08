@@ -83,6 +83,8 @@ class _BootstrapAppState extends State<BootstrapApp> {
 
   // A campaignId that arrived before the navigator was ready.
   int? _pendingCampaignId;
+  bool _referrerReady = false;
+  String? _pendingReferral;
 
   @override
   void initState() {
@@ -208,14 +210,25 @@ class _BootstrapAppState extends State<BootstrapApp> {
       final uri = Uri.parse("https://dummy?$referrer");
 
       // ── Referral code ─────────────────────────────────────────────────
+      // final referralCode = uri.queryParameters['referralCode'];
+      // if (referralCode != null && referralCode.isNotEmpty) {
+      //   debugPrint("🎁 Referral code from Play referrer: $referralCode");
+      //   // Save so Signup screen can read it even before navigation is ready.
+      //   final prefs = await SharedPreferences.getInstance();
+      //   await prefs.setString(kPendingReferralCodeKey, referralCode);
+      //   // We do NOT navigate here — SplashScreen will push Signup anyway for
+      //   // a new install. The referral code will be waiting in SharedPreferences.
+      //   return;
+      // }
       final referralCode = uri.queryParameters['referralCode'];
       if (referralCode != null && referralCode.isNotEmpty) {
         debugPrint("🎁 Referral code from Play referrer: $referralCode");
-        // Save so Signup screen can read it even before navigation is ready.
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(kPendingReferralCodeKey, referralCode);
-        // We do NOT navigate here — SplashScreen will push Signup anyway for
-        // a new install. The referral code will be waiting in SharedPreferences.
+
+        _pendingReferral = referralCode;
+        _referrerReady = true;
         return;
       }
 

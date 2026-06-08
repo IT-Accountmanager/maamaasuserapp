@@ -175,6 +175,8 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   }
 
   Future<void> _updateLocation(LatLng latLng) async {
+    if (!mounted) return;
+
     setState(() => isLoading = true);
 
     try {
@@ -218,8 +220,9 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
         );
       }
     } catch (_) {}
-
-    setState(() => isLoading = false);
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
   }
 
   // Future<void> _handleSearch() async {
@@ -249,8 +252,31 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   List<Prediction> _predictions = [];
 
   // 2. Search function — calls API and updates list inline
+  // Future<void> _searchPlaces(String input) async {
+  //   if (input.isEmpty) {
+  //     setState(() => _predictions = []);
+  //     return;
+  //   }
+  //
+  //   final places = GoogleMapsPlaces(
+  //     apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
+  //     apiHeaders: await const GoogleApiHeaders().getHeaders(),
+  //   );
+  //
+  //   final response = await places.autocomplete(
+  //     input,
+  //     language: 'en',
+  //     components: [Component(Component.country, 'in')],
+  //   );
+  //
+  //   if (response.isOkay) {
+  //     setState(() => _predictions = response.predictions);
+  //   }
+  // }
   Future<void> _searchPlaces(String input) async {
     if (input.isEmpty) {
+      if (!mounted) return;
+
       setState(() => _predictions = []);
       return;
     }
@@ -266,8 +292,12 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
       components: [Component(Component.country, 'in')],
     );
 
+    if (!mounted) return;
+
     if (response.isOkay) {
-      setState(() => _predictions = response.predictions);
+      setState(() {
+        _predictions = response.predictions;
+      });
     }
   }
 

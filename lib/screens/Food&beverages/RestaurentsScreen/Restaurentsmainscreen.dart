@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../widgets/widgets/couponcards.dart';
 import '../Menu/menu_screen.dart';
 import '../distancehelpermethod.dart';
 import 'package:flutter/material.dart';
@@ -480,7 +481,7 @@ class _RestaurentsState extends State<Restaurents> {
                   SliverPersistentHeader(
                     pinned: true,
                     delegate: _StickyDelegate(
-                      height: 76.h, // ✅ FIXED
+                      height: 70.h, // ✅ FIXED
                       child: Container(
                         color: restaurentsnewcolour.surface,
                         child: Column(
@@ -504,7 +505,7 @@ class _RestaurentsState extends State<Restaurents> {
                 // SliverToBoxAdapter(child: SizedBox(height: 8.h)),
 
                 // ── 3. Coupon offers ────────────────────────────────────
-                // SliverToBoxAdapter(child: CouponsOffersSection()),
+                SliverToBoxAdapter(child: CouponsOffersSection()),
 
                 // SliverToBoxAdapter(child: SizedBox(height: 8.h)),
 
@@ -517,13 +518,20 @@ class _RestaurentsState extends State<Restaurents> {
                     pinned: true,
                     delegate: _StickyDelegate(
                       height: 120.h,
+                      // height: 95.h,
                       child: Container(
                         color: restaurentsnewcolour.surface,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: EdgeInsets.fromLTRB(16.w, 10.h, 0, 6.h),
+                              // padding: EdgeInsets.fromLTRB(16.w, 10.h, 0, 6.h),
+                              padding: EdgeInsets.fromLTRB(
+                                16.w,
+                                4.h, // reduced from 10.h
+                                0,
+                                4.h, // reduced from 6.h
+                              ),
                               child: Text(
                                 "What's on your mind?",
                                 style: TextStyle(
@@ -547,8 +555,9 @@ class _RestaurentsState extends State<Restaurents> {
                   key: _orderTypeKey,
                   pinned: false,
                   delegate: _StickyDelegate(
-                    // height: _showOrderTypeHint ? 88.h : 62.h,
-                    height: _showOrderTypeHint ? 165.h : 115.h,
+                    height: _showOrderTypeHint ? 88.h : 58.h,
+
+                    // height: _showOrderTypeHint ? 165.h : 115.h,
                     child: Container(
                       color: restaurentsnewcolour.surface,
                       child: Column(
@@ -557,6 +566,7 @@ class _RestaurentsState extends State<Restaurents> {
                           Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: 16.w,
+                              // vertical: 10.h,
                               vertical: 10.h,
                             ),
                             child: _buildOrderTypeTabs(),
@@ -621,7 +631,7 @@ class _RestaurentsState extends State<Restaurents> {
                       ),
                     ),
                   ),
-                SliverToBoxAdapter(child: SizedBox(height: 4.h)),
+                SliverToBoxAdapter(child: SizedBox(height: 1.h)),
 
                 // ── 10. Restaurant cards ────────────────────────────────
                 SliverToBoxAdapter(child: _buildRestaurantList()),
@@ -660,76 +670,89 @@ class _RestaurentsState extends State<Restaurents> {
               : const VideoPreviewContainer(),
 
           /// 🔹 Gradient overlay
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x99000000), // slightly stronger for readability
-                  Color(0x33000000),
-                  Colors.transparent,
-                ],
+          // const DecoratedBox(
+          //   decoration: BoxDecoration(
+          //     gradient: LinearGradient(
+          //       begin: Alignment.topCenter,
+          //       end: Alignment.bottomCenter,
+          //       colors: [
+          //         Color(0x99000000), // slightly stronger for readability
+          //         Color(0x33000000),
+          //         Colors.transparent,
+          //       ],
+          //     ),
+          //   ),
+          // ),
+          IgnorePointer(
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x99000000),
+                    Color(0x33000000),
+                    Colors.transparent,
+                  ],
+                ),
               ),
             ),
           ),
 
           /// 🔹 Top Content (SafeArea prevents notch overlap)
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 10),
+          // IgnorePointer(
+          //   child:
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 10),
 
-                  /// 📍 Location + Notification Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildLocationContent(
-                          isDark: false, // white text
-                          isExpanded: true, // bigger UI
+                    /// 📍 Location + Notification Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildLocationContent(
+                            isDark: false, // white text
+                            isExpanded: true, // bigger UI
+                          ),
                         ),
-                      ),
 
-                      /// 🔔 Notification Icon
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => NotificationScreen(),
+                        /// 🔔 Notification Icon
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => NotificationScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 36.w,
+                            height: 36.w,
+                            decoration: BoxDecoration(
+                              // ignore: deprecated_member_use
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
                             ),
-                          );
-                        },
-                        child: Container(
-                          width: 36.w,
-                          height: 36.w,
-                          decoration: BoxDecoration(
-                            // ignore: deprecated_member_use
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.notifications_none_rounded,
-                            color: Colors.white,
-                            size: 20,
+                            child: const Icon(
+                              Icons.notifications_none_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-
-                  // SizedBox(height: 14.h),
-                  //
-                  // /// 🔍 Search Bar
-                  // _BannerSearchBar(onChanged: _onSearchChanged),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          // ),
         ],
       ),
     );
@@ -931,6 +954,21 @@ class _RestaurentsState extends State<Restaurents> {
   // FOOD CATEGORIES
   // ══════════════════════════════════════════════════════════════════════════
 
+  List<FoodCategory> get displayCategories {
+    final list = List<FoodCategory>.from(categories);
+
+    final comboIndex = list.indexWhere(
+          (e) => e.name.toLowerCase().contains('offers'),
+    );
+
+    if (comboIndex > 0) {
+      final comboItem = list.removeAt(comboIndex);
+      list.insert(0, comboItem);
+    }
+
+    return list;
+  }
+
   Widget _buildFoodCategories() {
     if (isCategoriesLoading) return const CategorySkeleton();
     if (categories.isEmpty) {
@@ -944,9 +982,11 @@ class _RestaurentsState extends State<Restaurents> {
         ),
       );
     }
-
-    final bool hasMore = categories.length > 10;
-    final int visibleCount = hasMore ? 10 : categories.length;
+    //
+    // final bool hasMore = categories.length > 10;
+    // final int visibleCount = hasMore ? 10 : categories.length;
+    final bool hasMore = displayCategories.length > 10;
+    final int visibleCount = hasMore ? 10 : displayCategories.length;
     const double dia = 48.0;
 
     return ListView.separated(
@@ -959,6 +999,8 @@ class _RestaurentsState extends State<Restaurents> {
         final isViewAll = hasMore && index == visibleCount + 1;
         final isSelected = selectedCategoryIndex == index;
 
+        // final item = isAll ? null : categories[index -
+        final item = isAll ? null : displayCategories[index - 1];
         if (isViewAll) {
           return _CategoryItem(
             dia: dia,
@@ -973,7 +1015,6 @@ class _RestaurentsState extends State<Restaurents> {
           );
         }
 
-        final item = isAll ? null : categories[index - 1];
         return _CategoryItem(
           dia: dia,
           isSelected: isSelected,
@@ -1013,7 +1054,8 @@ class _RestaurentsState extends State<Restaurents> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       builder: (ctx) {
-        final remaining = categories.skip(10).toList();
+        // final remaining = categories.skip(10).toList();
+        final remaining = displayCategories.skip(10).toList();
         final sheetH = MediaQuery.of(ctx).size.height * 0.6;
         return SafeArea(
           child: Container(
@@ -1067,8 +1109,10 @@ class _RestaurentsState extends State<Restaurents> {
                         onTap: () {
                           Navigator.pop(ctx);
                           setState(() {
+                            // selectedCategoryIndex =
+                            //     categories.indexOf(item) + 1;
                             selectedCategoryIndex =
-                                categories.indexOf(item) + 1;
+                                displayCategories.indexOf(item) + 1;
                             selectedCategoryVendorIds = item.vendorIds;
                             selectedCategoryName = item.name;
                           });
@@ -1122,146 +1166,146 @@ class _RestaurentsState extends State<Restaurents> {
   // ORDER TYPE TABS
   // ══════════════════════════════════════════════════════════════════════════
 
-  // Widget _buildOrderTypeTabs() {
-  //   return ValueListenableBuilder<String?>(
-  //     valueListenable: selectedOrderTypeNotifier,
-  //     builder: (_, selected, __) {
-  //       return AnimatedContainer(
-  //         duration: const Duration(milliseconds: 200),
-  //
-  //         child: SingleChildScrollView(
-  //           scrollDirection: Axis.horizontal,
-  //           child: Row(
-  //             children: RestaurentsHelper.orderTabs.map((tab) {
-  //               final type = tab['type'] as String;
-  //               final isSelected = selected == type;
-  //
-  //               return GestureDetector(
-  //                 onTap: () => _handleOrderTypeSelection(type),
-  //                 child: AnimatedContainer(
-  //                   duration: const Duration(milliseconds: 220),
-  //                   curve: Curves.easeInOut,
-  //                   margin: EdgeInsets.only(right: 8.w),
-  //                   padding: EdgeInsets.symmetric(
-  //                     horizontal: 14.w, // 👈 important for scroll look
-  //                     vertical: 10.h,
-  //                   ),
-  //                   decoration: BoxDecoration(
-  //                     // color: isSelected ? AppColors.primary : restaurentsnewcolour.surface,
-  //                     color: isSelected ? Colors.green : AppColors.primary,
-  //
-  //                     borderRadius: BorderRadius.circular(10.r),
-  //                     // border: Border.all(
-  //                     //   color: isSelected ? AppColors.primary : Colors.black,
-  //                     //   width: isSelected ? 0 : 1.5,
-  //                     // ),
-  //                     boxShadow: isSelected
-  //                         ? [
-  //                             BoxShadow(
-  //                               color: restaurentsnewcolour.green.withOpacity(
-  //                                 0.28,
-  //                               ),
-  //                               blurRadius: 12,
-  //                               offset: const Offset(0, 4),
-  //                             ),
-  //                           ]
-  //                         : [],
-  //                   ),
-  //                   child: Row(
-  //                     mainAxisSize: MainAxisSize.min, // 👈 important
-  //                     children: [
-  //                       Icon(
-  //                         tab['icon'] as IconData,
-  //                         size: 16.sp,
-  //                         color: isSelected ? Colors.white : Colors.white,
-  //                       ),
-  //                       SizedBox(width: 6.w),
-  //                       Text(
-  //                         tab['label'] as String,
-  //                         style: TextStyle(
-  //                           fontSize: 13.sp,
-  //                           fontWeight: FontWeight.bold,
-  //                           color: isSelected ? Colors.white : Colors.white,
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
   Widget _buildOrderTypeTabs() {
     return ValueListenableBuilder<String?>(
       valueListenable: selectedOrderTypeNotifier,
       builder: (_, selected, __) {
-        final itemWidth = (MediaQuery.of(context).size.width - 48.w) / 3;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
 
-        return Wrap(
-          alignment: WrapAlignment.center, // 👈 add this
-          spacing: 8.w,
-          runSpacing: 10.h,
-          children: RestaurentsHelper.orderTabs.map((tab) {
-            final type = tab['type'] as String;
-            final isSelected = selected == type;
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: RestaurentsHelper.orderTabs.map((tab) {
+                final type = tab['type'] as String;
+                final isSelected = selected == type;
 
-            return GestureDetector(
-              onTap: () => _handleOrderTypeSelection(type),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeInOut,
-                width: itemWidth,
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: isSelected ? Colors.green : AppColors.primary,
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: restaurentsnewcolour.green.withOpacity(0.25),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      tab['icon'] as IconData,
-                      size: 18.sp,
-                      color: Colors.white,
+                return GestureDetector(
+                  onTap: () => _handleOrderTypeSelection(type),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeInOut,
+                    margin: EdgeInsets.only(right: 8.w),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 14.w, // 👈 important for scroll look
+                      vertical: 10.h,
                     ),
+                    decoration: BoxDecoration(
+                      // color: isSelected ? AppColors.primary : restaurentsnewcolour.surface,
+                      color: isSelected ? Colors.green : AppColors.primary,
 
-                    SizedBox(width: 6.w),
-
-                    Flexible(
-                      child: Text(
-                        tab['label'] as String,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      borderRadius: BorderRadius.circular(10.r),
+                      // border: Border.all(
+                      //   color: isSelected ? AppColors.primary : Colors.black,
+                      //   width: isSelected ? 0 : 1.5,
+                      // ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: restaurentsnewcolour.green.withOpacity(
+                                  0.28,
+                                ),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min, // 👈 important
+                      children: [
+                        Icon(
+                          tab['icon'] as IconData,
+                          size: 16.sp,
+                          color: isSelected ? Colors.white : Colors.white,
                         ),
-                      ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          tab['label'] as String,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? Colors.white : Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
         );
       },
     );
   }
+
+  // Widget _buildOrderTypeTabs() {
+  //   return ValueListenableBuilder<String?>(
+  //     valueListenable: selectedOrderTypeNotifier,
+  //     builder: (_, selected, __) {
+  //       final itemWidth = (MediaQuery.of(context).size.width - 48.w) / 3;
+  //
+  //       return Wrap(
+  //         alignment: WrapAlignment.center, // 👈 add this
+  //         spacing: 8.w,
+  //         runSpacing: 10.h,
+  //         children: RestaurentsHelper.orderTabs.map((tab) {
+  //           final type = tab['type'] as String;
+  //           final isSelected = selected == type;
+  //
+  //           return GestureDetector(
+  //             onTap: () => _handleOrderTypeSelection(type),
+  //             child: AnimatedContainer(
+  //               duration: const Duration(milliseconds: 220),
+  //               curve: Curves.easeInOut,
+  //               width: itemWidth,
+  //               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 12.h),
+  //               decoration: BoxDecoration(
+  //                 color: isSelected ? Colors.green : AppColors.primary,
+  //                 borderRadius: BorderRadius.circular(12.r),
+  //                 boxShadow: isSelected
+  //                     ? [
+  //                         BoxShadow(
+  //                           color: restaurentsnewcolour.green.withOpacity(0.25),
+  //                           blurRadius: 10,
+  //                           offset: const Offset(0, 4),
+  //                         ),
+  //                       ]
+  //                     : [],
+  //               ),
+  //               child: Row(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   Icon(
+  //                     tab['icon'] as IconData,
+  //                     size: 18.sp,
+  //                     color: Colors.white,
+  //                   ),
+  //
+  //                   SizedBox(width: 6.w),
+  //
+  //                   Flexible(
+  //                     child: Text(
+  //                       tab['label'] as String,
+  //                       overflow: TextOverflow.ellipsis,
+  //                       textAlign: TextAlign.center,
+  //                       style: TextStyle(
+  //                         fontSize: 12.sp,
+  //                         fontWeight: FontWeight.bold,
+  //                         color: Colors.white,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           );
+  //         }).toList(),
+  //       );
+  //     },
+  //   );
+  // }
 
   // ═══════════════════════════════════_handleOrderTypeSelection═══════════════════════════════════════
   // FILTER CHIPS

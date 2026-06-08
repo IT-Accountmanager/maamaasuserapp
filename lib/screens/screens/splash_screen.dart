@@ -3,17 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:maamaas/screens/screens/signup_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Services/App_color_service/app_colours.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
+import '../../Services/appconfigurations/app_configurtion_service.dart';
 import '../../Services/fcmservice/fcm_services.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import '../Mainscreen.dart';
 import 'login_page.dart';
 
 class SplashScreen extends StatefulWidget {
-  final int? pendingCampaignId;   // ✅ ADD THIS
+  final int? pendingCampaignId; // ✅ ADD THIS
   const SplashScreen({super.key, this.pendingCampaignId});
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -28,6 +30,8 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _dotsCtrl;
   late final Animation<Offset> _textSlide;
   late final Animation<double> _textOpacity;
+
+  String kPendingReferralCodeKey = 'pending_referral_code';
 
   @override
   void initState() {
@@ -157,22 +161,46 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  void _navigate() {
-    if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  // void _navigate() {
+  //   if (!mounted) return;
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       PageRouteBuilder(
+  //         pageBuilder: (_, __, ___) =>
+  //             // isLoggedIn ? const MainScreenfood() : const LoginPage(),
+  //             // isLoggedIn ? MainScreenfood() : const LoginPage(),
+  //             isLoggedIn ? MainScreenfood(showPromotion: true,) : const LoginScreen(),
+  //         transitionsBuilder: (_, anim, __, child) =>
+  //             FadeTransition(opacity: anim, child: child),
+  //         transitionDuration: const Duration(milliseconds: 500),
+  //       ),
+  //     );
+  //   });
+  // }
+  Future<void> _navigate() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final referralCode = prefs.getString(kPendingReferralCodeKey);
+
+    if (!isLoggedIn && referralCode != null && referralCode.isNotEmpty) {
       Navigator.pushReplacement(
         context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) =>
-              // isLoggedIn ? const MainScreenfood() : const LoginPage(),
-              // isLoggedIn ? MainScreenfood() : const LoginPage(),
-              isLoggedIn ? MainScreenfood(showPromotion: true,) : const LoginScreen(),
-          transitionsBuilder: (_, anim, __, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 500),
-        ),
+        MaterialPageRoute(builder: (_) => const Signup()),
       );
-    });
+      return;
+    }
+    // await AppConfigService.loadConfigs();
+
+    // Existing flow
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => isLoggedIn
+            ? MainScreenfood(showPromotion: true)
+            : const LoginScreen(),
+      ),
+    );
   }
 
   @override

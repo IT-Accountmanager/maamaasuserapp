@@ -212,9 +212,23 @@ class _Content extends StatelessWidget {
   final int totalReferals;
   final double totalCashBack;
 
+  // void _copy(BuildContext context) {
+  //   Clipboard.setData(ClipboardData(text: referralCode));
+  //   AppAlert.success(context, '✅ Referral code copied!');
+  // }
   void _copy(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: referralCode));
-    AppAlert.success(context, '✅ Referral code copied!');
+    final encoded = Uri.encodeComponent(referralCode);
+    final link =
+        'https://applink.maamaas.com/referral?referralCode=$encoded';
+
+    final text =
+        '🎉 Join Maamaas using my referral code: $referralCode\n\n'
+        '📲 Tap to download & sign up — your code is applied automatically:\n'
+        '$link';
+
+    Clipboard.setData(ClipboardData(text: text));
+
+    AppAlert.success(context, '✅ Referral invitation copied!');
   }
 
   void _share() {
