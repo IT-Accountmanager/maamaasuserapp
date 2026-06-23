@@ -95,14 +95,6 @@ class cateringorders_helper {
     }
   }
 
-  // static String formatDate(DateTime dateTime) {
-  //   return DateFormat('dd MMM yyyy').format(dateTime);
-  // }
-  //
-  // static String formatTime(DateTime dateTime) {
-  //   return DateFormat('hh:mm a').format(dateTime);
-  // }
-
   static Color getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.confirmed:

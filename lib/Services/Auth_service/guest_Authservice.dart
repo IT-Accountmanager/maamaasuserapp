@@ -1,7 +1,4 @@
-// ignore_for_file: file_names
-
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Models/food/dish.dart';
 import '../../Models/food/food_categries_model.dart';
@@ -15,29 +12,29 @@ Future<String> _buildUserContextQuery() async {
   final userId = prefs.getInt('userId');
   final lat = prefs.getDouble('latitude');
   final lng = prefs.getDouble('longitude');
-
-  debugPrint("🔍 UserContext Debug:");
-  debugPrint("➡️ userId: $userId");
-  debugPrint("➡️ isGuestUser: ${ApiClient.isGuestUser}");
-  debugPrint("➡️ latitude: $lat");
-  debugPrint("➡️ longitude: $lng");
+  //
+  //   debugPrint("🔍 UserContext Debug:");
+  //   debugPrint("➡️ userId: $userId");
+  //   debugPrint("➡️ isGuestUser: ${ApiClient.isGuestUser}");
+  //   debugPrint("➡️ latitude: $lat");
+  //   debugPrint("➡️ longitude: $lng");
 
   // ✅ Logged-in user
   if (userId != null && userId > 0 && !ApiClient.isGuestUser) {
     final query = "userId=$userId";
-    debugPrint("✅ Using Logged-in user query: $query");
+    //     debugPrint("✅ Using Logged-in user query: $query");
     return query;
   }
 
   // ✅ Guest user with location
   if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
     final query = "latitude=$lat&longitude=$lng";
-    debugPrint("✅ Using Guest location query: $query");
+    //     debugPrint("✅ Using Guest location query: $query");
     return query;
   }
 
   // ❌ No valid context
-  debugPrint("❌ No valid user context found. Returning empty query.");
+  //   debugPrint("❌ No valid user context found. Returning empty query.");
   return "";
 }
 
@@ -94,9 +91,9 @@ class Authservice {
     final endpoint = 'api/banner/$vendorId';
 
     try {
-      print("════════ FETCH VENDOR BANNER START ════════");
-      print("📤 Endpoint: $endpoint");
-      print("🏪 Vendor ID: $vendorId");
+      // print("════════ FETCH VENDOR BANNER START ════════");
+      // print("📤 Endpoint: $endpoint");
+      // print("🏪 Vendor ID: $vendorId");
 
       final response = await ApiClient.get(
         endpoint,
@@ -104,37 +101,37 @@ class Authservice {
         requiresAuth: false,
       );
 
-      print("📥 Status Code: ${response.statusCode}");
-      print("📦 Raw Response Body: ${response.body}");
+      // print("📥 Status Code: ${response.statusCode}");
+      // print("📦 Raw Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
 
-        print("✅ JSON Decoded Successfully");
-        print("📍 Latitude: ${jsonData['latitude']}");
-        print("📍 Longitude: ${jsonData['longitude']}");
-        print("🏢 Company: ${jsonData['companyName']}");
+        // print("✅ JSON Decoded Successfully");
+        // print("📍 Latitude: ${jsonData['latitude']}");
+        // print("📍 Longitude: ${jsonData['longitude']}");
+        // print("🏢 Company: ${jsonData['companyName']}");
 
         final banner = Restaurent_Banner.fromJson(jsonData);
 
-        print("✅ Banner Model Parsed");
-        print("📍 Parsed Latitude: ${banner.latitude}");
-        print("📍 Parsed Longitude: ${banner.longitude}");
-        print("════════ FETCH VENDOR BANNER END ════════");
+        // print("✅ Banner Model Parsed");
+        // print("📍 Parsed Latitude: ${banner.latitude}");
+        // print("📍 Parsed Longitude: ${banner.longitude}");
+        // print("════════ FETCH VENDOR BANNER END ════════");
 
         return banner;
       } else {
-        print("❌ API FAILED");
-        print("❌ Status Code: ${response.statusCode}");
-        print("❌ Body: ${response.body}");
+        // print("❌ API FAILED");
+        // print("❌ Status Code: ${response.statusCode}");
+        // print("❌ Body: ${response.body}");
 
         throw Exception('Failed to load banner data: ${response.statusCode}');
       }
     } catch (e, stackTrace) {
-      print("════════ FETCH VENDOR BANNER ERROR ════════");
-      print("❌ Exception: $e");
-      print("📌 StackTrace: $stackTrace");
-      print("═══════════════════════════════════════════");
+      // print("════════ FETCH VENDOR BANNER ERROR ════════");
+      // print("❌ Exception: $e");
+      // print("📌 StackTrace: $stackTrace");
+      // print("═══════════════════════════════════════════");
 
       throw Exception('Failed to load banner data');
     }
@@ -154,10 +151,10 @@ class Authservice {
       endpoint = "api/dish/getby/vendor/user/dishes?vendorId=$vendorId";
     }
 
-    print("🍽️ [Menu API] -----------------------------");
-    print("📤 Endpoint: $endpoint");
-    print("👤 userId: $userId");
-    print("🏪 vendorId: $vendorId");
+    // print("🍽️ [Menu API] -----------------------------");
+    // // print("📤 Endpoint: $endpoint");
+    // print("👤 userId: $userId");
+    // print("🏪 vendorId: $vendorId");
 
     try {
       final response = await ApiClient.get(
@@ -165,14 +162,14 @@ class Authservice {
         service: "food",
         requiresAuth: false,
       );
-
-      print("📥 STATUS CODE: ${response.statusCode}");
-      print("📥 RAW BODY: ${response.body}");
+      //
+      // print("📥 STATUS CODE: ${response.statusCode}");
+      // print("📥 RAW BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
 
-        print("📊 Total items received: ${data.length}");
+        // print("📊 Total items received: ${data.length}");
 
         final List<Dish> categories = [];
         final List<Dish> dishes = [];
@@ -190,17 +187,17 @@ class Authservice {
           }
         }
 
-        print("📂 Categories count: ${categories.length}");
-        print("🍛 Dishes count: ${dishes.length}");
+        // print("📂 Categories count: ${categories.length}");
+        // print("🍛 Dishes count: ${dishes.length}");
 
         return MenuResponse(categories: categories, dishes: dishes);
       }
 
       // ❌ API returned error
-      print("❌ API ERROR RESPONSE");
+      // print("❌ API ERROR RESPONSE");
 
       final errorJson = jsonDecode(response.body);
-      print("❌ ERROR MESSAGE: ${errorJson['message']}");
+      // print("❌ ERROR MESSAGE: ${errorJson['message']}");
 
       return MenuResponse(
         categories: [],
@@ -209,9 +206,9 @@ class Authservice {
         errorMessage: errorJson['message'] ?? 'Something went wrong',
       );
     } catch (e, stackTrace) {
-      print("💥 EXCEPTION OCCURRED");
-      print("❌ ERROR: $e");
-      print("📍 STACKTRACE: $stackTrace");
+      // print("💥 EXCEPTION OCCURRED");
+      // print("❌ ERROR: $e");
+      // print("📍 STACKTRACE: $stackTrace");
 
       return MenuResponse(
         categories: [],
@@ -220,7 +217,7 @@ class Authservice {
         errorMessage: 'Unable to load menu. Please try again.',
       );
     } finally {
-      print("🏁 [Menu API] END --------------------------");
+      // print("🏁 [Menu API] END --------------------------");
     }
   }
 }

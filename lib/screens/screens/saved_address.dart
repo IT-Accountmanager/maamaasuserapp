@@ -90,7 +90,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
   // }
 
   void _refreshTable() {
-    debugPrint("📦 Refreshing address list...");
+    //     debugPrint("📦 Refreshing address list...");
     setState(() {
       _futureAddresses = subscription_AuthService.fetchAddresses();
     });
@@ -225,54 +225,10 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
     }
   }
 
-  // Future<void> _handleSearch() async {
-  //   Prediction? p = await PlacesAutocomplete.show(
-  //     context: context,
-  //     apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
-  //     mode: Mode.overlay,
-  //     language: 'en',
-  //     components: [Component(Component.country, 'in')],
-  //     logo: const SizedBox.shrink(),
-  //   );
-  //   if (p != null) {
-  //     final places = GoogleMapsPlaces(
-  //       apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
-  //       apiHeaders: await const GoogleApiHeaders().getHeaders(),
-  //     );
-  //     final detail = await places.getDetailsByPlaceId(p.placeId!);
-  //     final loc = detail.result.geometry!.location;
-  //     _updateLocation(LatLng(loc.lat, loc.lng));
-  //     // ignore: use_build_context_synchronously
-  //     Navigator.pop(context);
-  //   }
-  // }
-
   // 1. Add these to your State class
   final TextEditingController _searchController = TextEditingController();
   List<Prediction> _predictions = [];
 
-  // 2. Search function — calls API and updates list inline
-  // Future<void> _searchPlaces(String input) async {
-  //   if (input.isEmpty) {
-  //     setState(() => _predictions = []);
-  //     return;
-  //   }
-  //
-  //   final places = GoogleMapsPlaces(
-  //     apiKey: dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '',
-  //     apiHeaders: await const GoogleApiHeaders().getHeaders(),
-  //   );
-  //
-  //   final response = await places.autocomplete(
-  //     input,
-  //     language: 'en',
-  //     components: [Component(Component.country, 'in')],
-  //   );
-  //
-  //   if (response.isOkay) {
-  //     setState(() => _predictions = response.predictions);
-  //   }
-  // }
   Future<void> _searchPlaces(String input) async {
     if (input.isEmpty) {
       if (!mounted) return;
@@ -406,80 +362,6 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
       ),
     );
   }
-
-  // ── Search bar ───────────────────────────────────────────────────────────
-  // Widget buildSearchBar() {
-  //   return GestureDetector(
-  //     onTap: _handleSearch,
-  //     child: Container(
-  //       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-  //       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(14),
-  //         boxShadow: [
-  //           BoxShadow(
-  //             // ignore: deprecated_member_use
-  //             color: Colors.black.withOpacity(0.06),
-  //             blurRadius: 10,
-  //             offset: const Offset(0, 4),
-  //           ),
-  //         ],
-  //         border: Border.all(color: Colors.grey.shade200),
-  //       ),
-  //       child: Row(
-  //         children: [
-  //           const Icon(Icons.search, color: Color(0xFFFF7043), size: 22),
-  //           const SizedBox(width: 10),
-  //           Expanded(
-  //             child: Text(
-  //               "Search for area, street name...",
-  //               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-  //             ),
-  //           ),
-  //           const Icon(Icons.my_location, size: 20, color: Colors.grey),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-  // Widget buildSearchBar() {
-  //   return GestureDetector(
-  //     onTap: _handleSearch,
-  //     child: Container(
-  //       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-  //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(14),
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.black.withOpacity(0.08),
-  //             blurRadius: 14,
-  //             offset: const Offset(0, 4),
-  //           ),
-  //         ],
-  //       ),
-  //       child: Row(
-  //         children: [
-  //           const Icon(Icons.search_rounded, color: Color(0xFFFF7043), size: 22),
-  //           const SizedBox(width: 12),
-  //           Expanded(
-  //             child: Text(
-  //               "Search for area, street name...",
-  //               style: TextStyle(
-  //                 color: Colors.grey.shade400,
-  //                 fontSize: 14,
-  //                 fontWeight: FontWeight.w400,
-  //               ),
-  //             ),
-  //           ),
-  //           const Icon(Icons.my_location_rounded, size: 20, color: Color(0xFFCCCCCC)),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget buildSearchBar() {
     return Container(
@@ -701,27 +583,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
         ),
       );
     }
-    // if (_isLoading) {
-    //   return Padding(
-    //     padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
-    //     child: Row(
-    //       children: [
-    //         ShimmerBox(height: 36.w, width: 36.w, radius: 20),
-    //         SizedBox(width: 12.w),
-    //         Expanded(
-    //           child: Column(
-    //             crossAxisAlignment: CrossAxisAlignment.start,
-    //             children: [
-    //               ShimmerBox(height: 12.h, width: 140.w),
-    //               SizedBox(height: 6.h),
-    //               ShimmerBox(height: 10.h, width: 200.w),
-    //             ],
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   );
-    // }
+
     if (_currentPosition == null || _currentAddress == null) {
       return const SizedBox.shrink();
     }
@@ -757,7 +619,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
         );
 
         if (ok == true) {
-          debugPrint("🔄 Refreshing after adding address");
+          //           debugPrint("🔄 Refreshing after adding address");
           _refreshTable();
         }
       },
@@ -1029,22 +891,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                           ],
                         ),
                         SizedBox(height: 4.h),
-                        // Text(
-                        //   '${address.doorNumber}, ${address.addressLine}',
-                        //   style: TextStyle(
-                        //     fontSize: 12.sp,
-                        //     color: savedddcolour.textSecondary,
-                        //   ),
-                        //   maxLines: 1,
-                        //   overflow: TextOverflow.ellipsis,
-                        // ),
-                        // Text(
-                        //   '${address.city}, ${address.pincode}',
-                        //   style: TextStyle(
-                        //     fontSize: 12.sp,
-                        //     color: savedddcolour.textSecondary,
-                        //   ),
-                        // ),
+
                         Text(
                           address.address,
                           style: TextStyle(
@@ -2049,47 +1896,6 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
           // Pin
           const Icon(Icons.location_pin, size: 46, color: Color(0xFFEF4444)),
 
-          // Search bar overlay
-          // Positioned(
-          //   top: 12.h,
-          //   left: 12.w,
-          //   right: 12.w,
-          //   child: GestureDetector(
-          //     onTap: _handleSearch,
-          //     child: Container(
-          //       height: 44.h,
-          //       padding: EdgeInsets.symmetric(horizontal: 14.w),
-          //       decoration: BoxDecoration(
-          //         color: Colors.white,
-          //         borderRadius: BorderRadius.circular(12.r),
-          //         boxShadow: const [
-          //           BoxShadow(
-          //             color: Colors.black26,
-          //             blurRadius: 8,
-          //             offset: Offset(0, 2),
-          //           ),
-          //         ],
-          //       ),
-          //       child: Row(
-          //         children: [
-          //           Icon(
-          //             Icons.search_rounded,
-          //             color: savedddcolour.violet,
-          //             size: 18.sp,
-          //           ),
-          //           SizedBox(width: 10.w),
-          //           Text(
-          //             "Search for area, street name...",
-          //             style: TextStyle(
-          //               color: savedddcolour.textMuted,
-          //               fontSize: 13.sp,
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //   ),
-          // ),
           Positioned(
             top: 1.h,
             left: 0.w,

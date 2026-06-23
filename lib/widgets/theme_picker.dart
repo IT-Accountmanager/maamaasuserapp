@@ -38,7 +38,7 @@ class ThemePicker extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: List.generate(AppPalettes.all.length, (i) {
-            final palette  = AppPalettes.all[i];
+            final palette = AppPalettes.all[i];
             final isActive = palette.scheme.primary == current.primary;
 
             return GestureDetector(
@@ -47,16 +47,13 @@ class ThemePicker extends ConsumerWidget {
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOut,
                 margin: EdgeInsets.only(right: 10.w),
-                width:  isActive ? 44.w : 36.w,
+                width: isActive ? 44.w : 36.w,
                 height: isActive ? 44.w : 36.w,
                 decoration: BoxDecoration(
                   color: palette.scheme.primary,
                   shape: BoxShape.circle,
                   border: isActive
-                      ? Border.all(
-                          color: palette.scheme.primary,
-                          width: 3,
-                        )
+                      ? Border.all(color: palette.scheme.primary, width: 3)
                       : null,
                   boxShadow: isActive
                       ? [
@@ -65,7 +62,7 @@ class ThemePicker extends ConsumerWidget {
                             color: palette.scheme.primary.withOpacity(0.45),
                             blurRadius: 10,
                             spreadRadius: 1,
-                          )
+                          ),
                         ]
                       : [],
                 ),

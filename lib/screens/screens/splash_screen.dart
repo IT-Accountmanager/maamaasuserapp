@@ -8,15 +8,15 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Services/App_color_service/app_colours.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
-import '../../Services/appconfigurations/app_configurtion_service.dart';
 import '../../Services/fcmservice/fcm_services.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import '../Mainscreen.dart';
 import 'login_page.dart';
 
 class SplashScreen extends StatefulWidget {
-  final int? pendingCampaignId; // ✅ ADD THIS
-  const SplashScreen({super.key, this.pendingCampaignId});
+  final int? pendingCampaignId;
+  final Future<void> Function()? waitForReferrer; // ✅ ADD THIS
+  const SplashScreen({super.key, this.pendingCampaignId, this.waitForReferrer});
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -41,6 +41,16 @@ class _SplashScreenState extends State<SplashScreen>
       _initializeApp();
       unawaited(FCMService().initFCM());
     });
+    debugPrint("SPLASH OPENED");
+  }
+
+  @override
+  void dispose() {
+    _logoCtrl.dispose();
+    _textCtrl.dispose();
+    _pulseCtrl.dispose();
+    _dotsCtrl.dispose();
+    super.dispose();
   }
 
   void _setupAnimations() {
@@ -72,19 +82,75 @@ class _SplashScreenState extends State<SplashScreen>
     _logoCtrl.forward().then((_) => _textCtrl.forward());
   }
 
+  // Future<void> _initializeApp() async {
+  //   try {
+  //     print("login check");
+  //     await _checkLogin();
+  //     unawaited(_requestPermissions());
+  //     print("request permission");
+  //     // await _requestPermissions();
+  //     // ✅ ONLY if already logged in → send location to API
+  //     if (isLoggedIn) {
+  //       await _sendLocationToApi();
+  //     }
+  //   } catch (e) {
+  //     //       debugPrint('Splash init failed: $e');
+  //   }
+  //   debugPrint("SPLASH START");
+  //
+  //   if (widget.waitForReferrer != null) {
+  //     await widget.waitForReferrer!();
+  //   }
+  //
+  //   debugPrint("SPLASH END");
+  //
+  //   await Future.delayed(const Duration(milliseconds: 1200));
+  //   _navigate();
+  // }
   Future<void> _initializeApp() async {
     try {
+      debugPrint("LOGIN CHECK START");
+
       await _checkLogin();
+
+      debugPrint("LOGIN CHECK DONE");
+
       unawaited(_requestPermissions());
-      // ✅ ONLY if already logged in → send location to API
+
+      debugPrint("PERMISSION REQUEST STARTED");
+
       if (isLoggedIn) {
-        await _sendLocationToApi();
+        unawaited(_sendLocationToApi());
       }
-    } catch (e) {
-      debugPrint('Splash init failed: $e');
+
+      debugPrint("SPLASH START");
+
+      if (widget.waitForReferrer != null) {
+        debugPrint("WAITING FOR REFERRER");
+
+        await widget.waitForReferrer!().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            debugPrint("REFERRER TIMEOUT");
+          },
+        );
+
+        debugPrint("REFERRER COMPLETED");
+      }
+
+      debugPrint("SPLASH END");
+
+      await Future.delayed(const Duration(milliseconds: 1200));
+
+      debugPrint("NAVIGATE START");
+
+      _navigate();
+    } catch (e, s) {
+      debugPrint("SPLASH ERROR = $e");
+      debugPrint("$s");
+
+      _navigate();
     }
-    await Future.delayed(const Duration(milliseconds: 2400));
-    _navigate();
   }
 
   Future<void> _checkLogin() async {
@@ -101,33 +167,62 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _requestPermissions() async {
     try {
-      await Permission.notification.request();
+      debugPrint("PERMISSION START");
+
+      debugPrint("BEFORE NOTIFICATION");
+
+      final status = await Permission.notification.request();
+
+      debugPrint("AFTER NOTIFICATION = $status");
+      debugPrint("NOTIFICATION DONE");
+
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+      debugPrint("LOCATION SERVICE = $serviceEnabled");
+
       if (!serviceEnabled) return;
+
       LocationPermission permission = await Geolocator.checkPermission();
+
+      debugPrint("CURRENT LOCATION PERMISSION = $permission");
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
+
+        debugPrint("AFTER LOCATION REQUEST = $permission");
+
         if (permission == LocationPermission.denied) return;
       }
+
       if (permission == LocationPermission.deniedForever) {
+        debugPrint("LOCATION DENIED FOREVER");
         await openAppSettings();
         return;
       }
+
+      debugPrint("GETTING POSITION");
+
       final position = await Geolocator.getCurrentPosition(
-        // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.high,
       ).timeout(const Duration(seconds: 8));
+
+      debugPrint("POSITION = ${position.latitude}, ${position.longitude}");
+
       final prefs = await SharedPreferences.getInstance();
+
       await prefs.setDouble('latitude', position.latitude);
       await prefs.setDouble('longitude', position.longitude);
-      debugPrint("latitide: ${position.latitude}");
-      debugPrint("longitude: ${position.longitude}");
-    } catch (_) {}
+
+      debugPrint("LOCATION SAVED");
+    } catch (e, s) {
+      debugPrint("PERMISSION ERROR = $e");
+      debugPrint("$s");
+    }
   }
 
   Future<void> _sendLocationToApi() async {
     try {
-      debugPrint("📡 Sending location to API (Splash)...");
+      //       debugPrint("📡 Sending location to API (Splash)...");
 
       final prefs = await SharedPreferences.getInstance();
 
@@ -135,7 +230,7 @@ class _SplashScreenState extends State<SplashScreen>
       final lng = prefs.getDouble('longitude');
 
       if (lat == null || lng == null) {
-        debugPrint("⚠️ No stored location found");
+        //         debugPrint("⚠️ No stored location found");
         return;
       }
 
@@ -149,67 +244,53 @@ class _SplashScreenState extends State<SplashScreen>
           address: location.fullAddress,
           city: location.city,
         );
-
-        debugPrint("📡 Splash Location API status: $ok");
+        //
+        // debugPrint("📡 Splash Location API status: $ok");
 
         if (ok) {
           await prefs.setBool('locationSet', true);
         }
       }
     } catch (e) {
-      debugPrint("❌ Splash location API error: $e");
+      //       debugPrint("❌ Splash location API error: $e");
     }
   }
 
-  // void _navigate() {
-  //   if (!mounted) return;
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       PageRouteBuilder(
-  //         pageBuilder: (_, __, ___) =>
-  //             // isLoggedIn ? const MainScreenfood() : const LoginPage(),
-  //             // isLoggedIn ? MainScreenfood() : const LoginPage(),
-  //             isLoggedIn ? MainScreenfood(showPromotion: true,) : const LoginScreen(),
-  //         transitionsBuilder: (_, anim, __, child) =>
-  //             FadeTransition(opacity: anim, child: child),
-  //         transitionDuration: const Duration(milliseconds: 500),
-  //       ),
-  //     );
-  //   });
-  // }
   Future<void> _navigate() async {
+    if (!mounted) return;
+
     final prefs = await SharedPreferences.getInstance();
 
     final referralCode = prefs.getString(kPendingReferralCodeKey);
 
     if (!isLoggedIn && referralCode != null && referralCode.isNotEmpty) {
+      debugPrint("GOING TO SIGNUP");
+      debugPrint("REFERRAL IN SPLASH = $referralCode");
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const Signup()),
+        MaterialPageRoute(builder: (_) => Signup(referralCode: referralCode)),
       );
       return;
     }
-    // await AppConfigService.loadConfigs();
+    debugPrint("REFERRAL IN SPLASH = $referralCode");
+    debugPrint("isLoggedIn = $isLoggedIn");
+    debugPrint("NAVIGATE => isLoggedIn=$isLoggedIn referral=$referralCode");
 
-    // Existing flow
+    debugPrint("GOING TO LOGIN");
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => isLoggedIn
-            ? MainScreenfood(showPromotion: true)
-            : const LoginScreen(),
+        pageBuilder: (_, __, ___) {
+          if (isLoggedIn) {
+            return MainScreenfood(showPromotion: true);
+          }
+
+          return const LoginScreen();
+        },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _logoCtrl.dispose();
-    _textCtrl.dispose();
-    _pulseCtrl.dispose();
-    _dotsCtrl.dispose();
-    super.dispose();
   }
 
   @override
@@ -221,48 +302,7 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             children: [
               const Spacer(flex: 2),
-              // ── Animated Logo ─────────────────────────────────────────────
-              // Center(
-              //   child: ScaleTransition(
-              //     scale: _logoScale,
-              //     child: FadeTransition(
-              //       opacity: _logoOpacity,
-              //       child: ScaleTransition(
-              //         scale: _pulse,
-              //         child: Container(
-              //           width: 130.w,
-              //           height: 130.w,
-              //           decoration: BoxDecoration(
-              //             color: Colors.white.withOpacity(0.12),
-              //             shape: BoxShape.circle,
-              //             border: Border.all(
-              //               color: Colors.white.withOpacity(0.3),
-              //               width: 2.5,
-              //             ),
-              //           ),
-              //           child: Center(
-              //             child: Container(
-              //               width: 96.w,
-              //               height: 96.w,
-              //               decoration: const BoxDecoration(
-              //                 color: Colors.white,
-              //                 shape: BoxShape.circle,
-              //               ),
-              //               child: Center(
-              //                 child: Icon(
-              //                   Icons.restaurant_rounded,
-              //                   size: 48.sp,
-              //                   color: AppColors.primary,
-              //                 ),
-              //               ),
-              //             ),
-              //           ),
-              //         ),
-              //       ),
-              //     ),
-              //   ),
-              // ),
-              // SizedBox(height: 32.h),
+
               // ── App Name ──────────────────────────────────────────────────
               SlideTransition(
                 position: _textSlide,

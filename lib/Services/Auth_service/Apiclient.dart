@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mime/mime.dart';
@@ -13,31 +12,31 @@ typedef SessionExpiredHandler = Future<void> Function();
 
 class ApiClient {
   static const String subscription =
-      "http://staging.maamaas.com:8080/subscription";
-  // "https://backend.maamaas.com/subscription";
+      // "http://staging.maamaas.com:8080/subscription";
+  "https://backend.maamaas.com/subscription";
   static const String food_beverages =
-      "http://staging.maamaas.com:8080/food";
-  // "https://backend.maamaas.com/food";
+      // "http://staging.maamaas.com:8080/food";
+  "https://backend.maamaas.com/food";
 
   static const String notification =
-      "http://staging.maamaas.com:8080/notify";
-  // "https://backend.maamaas.com/notify";
+      // "http://staging.maamaas.com:8080/notify";
+  "https://backend.maamaas.com/notify";
 
   static const String catering =
-      "http://staging.maamaas.com:8080/catering";
-  // "https://backend.maamaas.com/catering";
+      // "http://staging.maamaas.com:8080/catering";
+  "https://backend.maamaas.com/catering";
 
   static const String delivery =
-      "http://staging.maamaas.com:8080/delivery";
-  // "https://backend.maamaas.com/delivery";
+      // "http://staging.maamaas.com:8080/delivery";
+  "https://backend.maamaas.com/delivery";
 
   static const String promotions =
-      "http://staging.maamaas.com:8080/promotions";
-  // "https://backend.maamaas.com/promotions";
+      // "http://staging.maamaas.com:8080/promotions";
+  "https://backend.maamaas.com/promotions";
 
   static const String payments =
-      "http://staging.maamaas.com:8989/payments";
-  // "https://backend.maamaas.com/payments";
+      // "http://staging.maamaas.com:8989/payments";
+  "https://backend.maamaas.com/payments";
 
   static SessionExpiredHandler? onSessionExpired;
 
@@ -72,24 +71,6 @@ class ApiClient {
   static void initialize() {
     _dio.interceptors.add(
       InterceptorsWrapper(
-        // onError: (error, handler) async {
-        //   if (error.response?.statusCode == 401 &&
-        //       !error.requestOptions.path.contains("/auth/refresh") &&
-        //       !error.requestOptions.path.contains("/auth/login")) {
-        //     final newToken = await _safeRefresh();
-        //
-        //     if (newToken != null) {
-        //       final options = error.requestOptions;
-        //       options.headers["Authorization"] = "Bearer $newToken";
-        //       final retry = await _dio.fetch(options);
-        //       return handler.resolve(retry);
-        //     }
-        //
-        //     await _triggerSessionExpired();
-        //     return;
-        //   }
-        //   return handler.next(error);
-        // },
         onError: (error, handler) async {
           // ✅ SKIP SESSION HANDLING FOR GUEST
           if (ApiClient.isGuestUser) {
@@ -123,7 +104,7 @@ class ApiClient {
   static Future<String?> _safeRefresh() async {
     // If a refresh is already in progress, wait for it
     if (_refreshCompleter != null) {
-      debugPrint('⏳ Refresh already in progress, waiting...');
+      //       debugPrint('⏳ Refresh already in progress, waiting...');
       return _refreshCompleter!.future;
     }
 
@@ -146,28 +127,16 @@ class ApiClient {
   static bool _sessionHandled = false;
   static bool isGuestUser = false;
 
-  // static Future<void> _triggerSessionExpired() async {
-  //   if (_sessionHandled) return;
-  //
-  //   debugPrint("🚨 SESSION EXPIRED TRIGGERED");
-  //
-  //   _sessionHandled = true;
-  //
-  //   if (onSessionExpired != null) {
-  //     await onSessionExpired!();
-  //   }
-  // }
-
   static Future<void> _triggerSessionExpired() async {
     // 🚫 STOP for guest users
     if (isGuestUser) {
-      debugPrint("🚫 Guest user → skip session expired");
+      //       debugPrint("🚫 Guest user → skip session expired");
       return;
     }
 
     if (_sessionHandled) return;
-
-    debugPrint("🚨 SESSION EXPIRED TRIGGERED");
+    //
+    //     debugPrint("🚨 SESSION EXPIRED TRIGGERED");
 
     _sessionHandled = true;
 
@@ -189,10 +158,10 @@ class ApiClient {
   static Future<String?> refreshAccessToken() async {
     try {
       final refreshToken = await _secureStorage.read(key: 'refreshToken');
-      debugPrint('🔍 Attempting refresh...');
+      //       debugPrint('🔍 Attempting refresh...');
 
       if (refreshToken == null || refreshToken.isEmpty) {
-        debugPrint('❌ No refresh token found');
+        //         debugPrint('❌ No refresh token found');
         return null;
       }
 
@@ -206,7 +175,7 @@ class ApiClient {
       );
 
       if (response.statusCode == 401 || response.statusCode == 403) {
-        debugPrint('🔴 Refresh token invalid/expired');
+        //         debugPrint('🔴 Refresh token invalid/expired');
         return null;
       }
 
@@ -217,22 +186,22 @@ class ApiClient {
 
         if (newToken != null && newToken.isNotEmpty) {
           await _secureStorage.write(key: 'token', value: newToken);
-          debugPrint('✅ New access token stored');
+          //           debugPrint('✅ New access token stored');
         }
         if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
           await _secureStorage.write(
             key: 'refreshToken',
             value: newRefreshToken,
           );
-          debugPrint('✅ New refresh token stored');
+          //           debugPrint('✅ New refresh token stored');
         }
         return newToken;
       }
-
-      debugPrint('🔴 Refresh failed: ${response.statusCode}');
+      //
+      //       debugPrint('🔴 Refresh failed: ${response.statusCode}');
       return null;
     } catch (e) {
-      debugPrint('🔴 Refresh exception: $e');
+      //       debugPrint('🔴 Refresh exception: $e');
       return null;
     }
   }
@@ -283,26 +252,6 @@ class ApiClient {
     });
   }
 
-  // static Future<http.Response> post(
-  //   String endpoint,
-  //   Map<String, dynamic>? body, {
-  //   String service = 'subscription',
-  //   bool sendJson = true,
-  // }) async {
-  //   return _handleRequestWithRefreshRetry(() async {
-  //     final baseUrl = _resolveBaseUrl(service);
-  //     final url = Uri.parse('$baseUrl/$endpoint');
-  //     final headers = await _headers();
-  //     if (body == null || body.isEmpty || !sendJson) {
-  //       headers.remove('Content-Type');
-  //     }
-  //     return http.post(
-  //       url,
-  //       headers: headers,
-  //       body: body == null ? null : (sendJson ? jsonEncode(body) : body),
-  //     );
-  //   });
-  // }
   static Future<http.Response> post(
     String endpoint,
     dynamic body, {

@@ -19,13 +19,13 @@ class SessionOverlayController {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final navigatorState = navigatorKey.currentState;
       if (navigatorState == null) {
-        debugPrint("❌ Navigator not ready");
+        //         debugPrint("❌ Navigator not ready");
         return;
       }
 
       final overlayState = navigatorState.overlay;
       if (overlayState == null) {
-        debugPrint("❌ Overlay not available");
+        //         debugPrint("❌ Overlay not available");
         return;
       }
 
@@ -35,8 +35,8 @@ class SessionOverlayController {
 
       overlayState.insert(_overlayEntry!);
       _isShowing = true;
-
-      debugPrint("✅ Session overlay shown");
+      //
+      //       debugPrint("✅ Session overlay shown");
     });
   }
 

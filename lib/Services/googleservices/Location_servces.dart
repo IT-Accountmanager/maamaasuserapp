@@ -10,8 +10,8 @@ class LocationResult {
   final String? pincode;
 
   // ✅ ADD THESE
-  final String? area;              // subLocality
-  final String? adminArea;         // subAdministrativeArea
+  final String? area; // subLocality
+  final String? adminArea; // subAdministrativeArea
 
   final String fullAddress;
 

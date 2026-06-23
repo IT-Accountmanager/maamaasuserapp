@@ -18,23 +18,20 @@ class websocketCartNotifier extends StateNotifier<CartModel?> {
     state = newCart;
 
     final totalItems =
-        newCart.cartItems?.fold<int>(
-          0,
-          (sum, item) => sum + (item.quantity),
-        ) ??
+        newCart.cartItems?.fold<int>(0, (sum, item) => sum + (item.quantity)) ??
         0;
 
     CartNotifier.update(totalItems);
-
-    debugPrint("🛒 CART UPDATED: $totalItems");
+    //
+    //     debugPrint("🛒 CART UPDATED: $totalItems");
   }
 
   void clearCart() {
     state = null;
 
     CartNotifier.update(0);
-
-    debugPrint("🛒 CART CLEARED");
+    //
+    //     debugPrint("🛒 CART CLEARED");
   }
 }
 

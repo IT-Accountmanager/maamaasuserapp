@@ -44,7 +44,7 @@ class _VideoPreviewContainerState extends State<VideoPreviewContainer> {
         _initializeMedia(0);
       }
     } catch (e) {
-      debugPrint("Error loading ads: $e");
+      //       debugPrint("Error loading ads: $e");
     }
 
     if (mounted) {

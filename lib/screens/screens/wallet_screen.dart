@@ -7,6 +7,7 @@ import '../../Models/subscrptions/transaction_model.dart';
 import '../../Models/subscrptions/wallet_model.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/paymentservice/razorpayservice.dart';
+import '../../widgets/signinrequired.dart';
 import '../skeleton/walletSkelton.dart';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -145,69 +146,71 @@ class _WalletScreenState extends State<WalletScreen> {
     return Scaffold(
       backgroundColor: Walletcolour.bg,
       appBar: _buildAppBar(),
-      body: RefreshIndicator(
-        key: _refreshKey,
-        onRefresh: _refreshData,
-        color: Walletcolour.violet,
-        backgroundColor: Walletcolour.surface,
-        child: CustomScrollView(
-          slivers: [
-            // ── Hero balance card ───────────────────────────────────────
-            SliverToBoxAdapter(child: _buildHeroCard()),
+      body: AuthGuard(
+        child: RefreshIndicator(
+          key: _refreshKey,
+          onRefresh: _refreshData,
+          color: Walletcolour.violet,
+          backgroundColor: Walletcolour.surface,
+          child: CustomScrollView(
+            slivers: [
+              // ── Hero balance card ───────────────────────────────────────
+              SliverToBoxAdapter(child: _buildHeroCard()),
 
-            // ── Wallet breakdown ────────────────────────────────────────
-            SliverToBoxAdapter(child: _buildBreakdownGrid()),
+              // ── Wallet breakdown ────────────────────────────────────────
+              SliverToBoxAdapter(child: _buildBreakdownGrid()),
 
-            // ── History header + filter bar ─────────────────────────────
-            SliverToBoxAdapter(child: _buildHistoryHeader()),
+              // ── History header + filter bar ─────────────────────────────
+              SliverToBoxAdapter(child: _buildHistoryHeader()),
 
-            // ── Transaction list ────────────────────────────────────────
-            _isLoading
-                ? SliverPadding(
-                    padding: EdgeInsets.all(16.w),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (_, __) => txnShimmer(),
-                        childCount: 6,
+              // ── Transaction list ────────────────────────────────────────
+              _isLoading
+                  ? SliverPadding(
+                      padding: EdgeInsets.all(16.w),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (_, __) => txnShimmer(),
+                          childCount: 6,
+                        ),
                       ),
-                    ),
-                  )
-                : _filteredTransactions.isEmpty
-                ? SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.receipt_long_outlined,
-                            size: 48.sp,
-                            color: Walletcolour.textMuted,
-                          ),
-                          SizedBox(height: 12.h),
-                          Text(
-                            'No transactions found',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Walletcolour.textSecondary,
+                    )
+                  : _filteredTransactions.isEmpty
+                  ? SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.receipt_long_outlined,
+                              size: 48.sp,
+                              color: Walletcolour.textMuted,
                             ),
-                          ),
-                        ],
+                            SizedBox(height: 12.h),
+                            Text(
+                              'No transactions found',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: Walletcolour.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : SliverPadding(
+                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((_, i) {
+                          final list = _filteredTransactions.reversed.toList();
+                          final show = i < list.length;
+                          if (!show) return null;
+                          return _buildTxnCard(list[i]);
+                        }, childCount: _filteredTransactions.length),
                       ),
                     ),
-                  )
-                : SliverPadding(
-                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((_, i) {
-                        final list = _filteredTransactions.reversed.toList();
-                        final show = i < list.length;
-                        if (!show) return null;
-                        return _buildTxnCard(list[i]);
-                      }, childCount: _filteredTransactions.length),
-                    ),
-                  ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -712,193 +715,201 @@ class _WalletScreenState extends State<WalletScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
-      builder: (_) => SafeArea(
-        child: Padding(
+      builder: (sheetContext) => SafeArea(
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 250),
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 24.h,
-            left: 20.w,
-            right: 20.w,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: Walletcolour.border,
-                    borderRadius: BorderRadius.circular(4.r),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 24.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: Walletcolour.border,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(height: 10.h),
+                  SizedBox(height: 10.h),
 
-              Text(
-                'Enter the amount you want to load',
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w800,
-                  color: Walletcolour.textPrimary,
-                ),
-              ),
-              SizedBox(height: 20.h),
-
-              // Amount input
-              Container(
-                decoration: BoxDecoration(
-                  color: Walletcolour.bg,
-                  borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(color: Walletcolour.border),
-                ),
-                child: TextField(
-                  controller: ctrl,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: Walletcolour.textPrimary,
+                  Text(
+                    'Enter the amount you want to load',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Walletcolour.textPrimary,
+                    ),
                   ),
-                  cursorColor: Walletcolour.violet,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    prefixIcon: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w),
-                      child: Text(
-                        '₹',
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          color: Walletcolour.textSecondary,
-                          fontWeight: FontWeight.w600,
+                  SizedBox(height: 20.h),
+
+                  // Amount input
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Walletcolour.bg,
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(color: Walletcolour.border),
+                    ),
+                    child: TextField(
+                      controller: ctrl,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: Walletcolour.textPrimary,
+                      ),
+                      cursorColor: Walletcolour.violet,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 14.w),
+                          child: Text(
+                            '₹',
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              color: Walletcolour.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 0,
+                        ),
+                        hintText: '0.00',
+                        hintStyle: TextStyle(
+                          color: Walletcolour.textMuted,
+                          fontSize: 16.sp,
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 16.h,
                         ),
                       ),
                     ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 0),
-                    hintText: '0.00',
-                    hintStyle: TextStyle(
-                      color: Walletcolour.textMuted,
-                      fontSize: 16.sp,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 16.h,
-                    ),
                   ),
-                ),
-              ),
 
-              SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-              // Quick amounts
-              Row(
-                children: [100, 200, 500, 1000]
-                    .map(
-                      (v) => Expanded(
-                        child: GestureDetector(
-                          onTap: () => ctrl.text = v.toString(),
-                          child: Container(
-                            margin: EdgeInsets.only(right: v == 1000 ? 0 : 8.w),
-                            padding: EdgeInsets.symmetric(vertical: 10.h),
-                            decoration: BoxDecoration(
-                              color: Walletcolour.violetDim,
-                              borderRadius: BorderRadius.circular(10.r),
-                              border: Border.all(
-                                color: Walletcolour.violet.withOpacity(0.2),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '₹$v',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: Walletcolour.violet,
-                                  fontWeight: FontWeight.w700,
+                  // Quick amounts
+                  Row(
+                    children: [100, 200, 500, 1000]
+                        .map(
+                          (v) => Expanded(
+                            child: GestureDetector(
+                              onTap: () => ctrl.text = v.toString(),
+                              child: Container(
+                                margin: EdgeInsets.only(
+                                  right: v == 1000 ? 0 : 8.w,
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 10.h),
+                                decoration: BoxDecoration(
+                                  color: Walletcolour.violetDim,
+                                  borderRadius: BorderRadius.circular(10.r),
+                                  border: Border.all(
+                                    color: Walletcolour.violet.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '₹$v',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: Walletcolour.violet,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
+                        )
+                        .toList(),
+                  ),
 
-              SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-              // Proceed button
-              SizedBox(
-                width: double.infinity,
-                height: 52.h,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final amount = double.tryParse(ctrl.text);
-                    if (amount == null || amount <= 0) return;
-                    Navigator.pop(context);
+                  // Proceed button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52.h,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final amount = double.tryParse(ctrl.text);
+                        if (amount == null || amount <= 0) return;
+                        Navigator.pop(context);
 
-                    final orderId = await subscription_AuthService.createOrder(
-                      amount,
-                    );
-                    if (orderId == null) {
-                      // ignore: use_build_context_synchronously
-                      AppAlert.error(context, 'Failed to create order ❌');
-                      return;
-                    }
+                        final orderId = await subscription_AuthService
+                            .createOrder(amount);
+                        if (orderId == null) {
+                          // ignore: use_build_context_synchronously
+                          AppAlert.error(context, 'Failed to create order ❌');
+                          return;
+                        }
 
-                    final razorpay = RazorpayService();
-                    razorpay.onSuccess = (res) async {
-                      final pid = res.paymentId!;
-                      final captured = await subscription_AuthService
-                          .capturePayment(paymentId: pid, amount: amount);
-                      if (captured) {
-                        await subscription_AuthService.addCashToWallet(
-                          paymentId: pid,
+                        final razorpay = RazorpayService();
+                        razorpay.onSuccess = (res) async {
+                          final pid = res.paymentId!;
+                          final captured = await subscription_AuthService
+                              .capturePayment(paymentId: pid, amount: amount);
+                          if (captured) {
+                            await subscription_AuthService.addCashToWallet(
+                              paymentId: pid,
+                              orderId: orderId,
+                              amount: amount,
+                            );
+                            // ignore: use_build_context_synchronously
+                            AppAlert.success(context, 'Wallet recharged 🎉');
+                            await loadWallet();
+                          } else {
+                            // ignore: use_build_context_synchronously
+                            AppAlert.error(context, 'Capture failed ❌');
+                          }
+                        };
+                        razorpay.onError = (res) {
+                          AppAlert.error(
+                            context,
+                            'Payment Failed: ${res.message}',
+                          );
+                        };
+                        razorpay.startPayment(
                           orderId: orderId,
                           amount: amount,
+                          description: 'Wallet recharge',
                         );
-                        // ignore: use_build_context_synchronously
-                        AppAlert.success(context, 'Wallet recharged 🎉');
-                        await loadWallet();
-                      } else {
-                        // ignore: use_build_context_synchronously
-                        AppAlert.error(context, 'Capture failed ❌');
-                      }
-                    };
-                    razorpay.onError = (res) {
-                      AppAlert.error(context, 'Payment Failed: ${res.message}');
-                    };
-                    razorpay.startPayment(
-                      orderId: orderId,
-                      amount: amount,
-                      description: 'Wallet recharge',
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Walletcolour.violet,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.lock_rounded, size: 16.sp),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Proceed to Pay',
-                        style: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w700,
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Walletcolour.violet,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.r),
                         ),
+                        elevation: 0,
                       ),
-                    ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.lock_rounded, size: 16.sp),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'Proceed to Pay',
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  SizedBox(height: 24.h),
+                ],
               ),
-              SizedBox(height: 24.h),
-            ],
+            ),
           ),
         ),
       ),

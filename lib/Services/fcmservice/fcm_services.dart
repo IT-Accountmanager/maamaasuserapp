@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class FCMService {
@@ -17,7 +16,7 @@ class FCMService {
       badge: true,
       sound: true,
     );
-    debugPrint("🔔 Permission: ${settings.authorizationStatus}");
+    //     debugPrint("🔔 Permission: ${settings.authorizationStatus}");
 
     // 2️⃣ iOS APNS token with max retry (non-blocking)
     if (Platform.isIOS) {
@@ -29,7 +28,7 @@ class FCMService {
       //   retry++;
       // }
       String? apnsToken = await _messaging.getAPNSToken();
-      debugPrint("🍏 APNS Token: $apnsToken");
+      //       debugPrint("🍏 APNS Token: $apnsToken");
 
       await _messaging.setForegroundNotificationPresentationOptions(
         alert: true,
@@ -71,7 +70,7 @@ class FCMService {
           String? token = await _messaging.getToken();
           if (token != null) return token;
         } catch (e) {
-          debugPrint("⚠️ FCM Token Error: $e");
+          //           debugPrint("⚠️ FCM Token Error: $e");
         }
 
         retryCount++;
@@ -83,11 +82,11 @@ class FCMService {
 
     // 5️⃣ Get FCM token
     String? token = await _getTokenWithRetry();
-    debugPrint("📱 FCM Token: $token");
+    //     debugPrint("📱 FCM Token: $token");
 
     // 6️⃣ Foreground message listener
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint("📩 Foreground Message Received");
+      //       debugPrint("📩 Foreground Message Received");
       if (message.notification != null) {
         _localNotifications.show(
           message.hashCode,
@@ -112,14 +111,14 @@ class FCMService {
 
     // 7️⃣ Background notification click
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint("🚀 Notification Clicked");
+      //       debugPrint("🚀 Notification Clicked");
     });
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint("🔥 FOREGROUND MESSAGE RECEIVED");
-      debugPrint("DATA: ${message.data}");
+      //       debugPrint("🔥 FOREGROUND MESSAGE RECEIVED");
+      //       debugPrint("DATA: ${message.data}");
     });
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-      debugPrint("🔄 Refreshed Token: $newToken");
+      //       debugPrint("🔄 Refreshed Token: $newToken");
 
       // TODO: send to backend
     });

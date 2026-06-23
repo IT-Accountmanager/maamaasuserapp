@@ -1,4 +1,3 @@
-
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/Auth_service/catering_authservice.dart';
@@ -91,7 +90,7 @@ class _catering_cartState extends ConsumerState<catering_cart>
       if (!mounted) return;
       setState(() => wallet = fetchedWallet);
     } catch (e) {
-      debugPrint("⚠️ _loadWallet failed: $e");
+      //       debugPrint("⚠️ _loadWallet failed: $e");
       if (!mounted) return;
       AppAlert.error(context, "❌ Failed to load wallet");
     }
@@ -117,7 +116,7 @@ class _catering_cartState extends ConsumerState<catering_cart>
         items = cart.items;
       }
     } catch (e) {
-      debugPrint("❌ Error fetching cart: $e");
+      //       debugPrint("❌ Error fetching cart: $e");
     }
     setState(() => isLoading = false);
   }
@@ -218,7 +217,6 @@ class _catering_cartState extends ConsumerState<catering_cart>
       setState(() => isPlacingOrder = false);
     }
   }
-
 
   List<String> mapWalletsToEnum(List<String> selectedWallets) {
     return selectedWallets.map((wallet) {
@@ -891,35 +889,6 @@ class _catering_cartState extends ConsumerState<catering_cart>
       ),
     );
   }
-
-  // Widget _quantityButton({
-  //   required IconData icon,
-  //   required VoidCallback onTap,
-  // }) {
-  //   return GestureDetector(
-  //     onTap: onTap,
-  //     child: Container(
-  //       width: 34.w,
-  //       height: 34.w,
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(8.r), // 🔥 square rounded corners
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.black.withOpacity(0.06),
-  //             blurRadius: 4,
-  //             offset: const Offset(0, 1),
-  //           ),
-  //         ],
-  //       ),
-  //       child: Icon(
-  //         icon,
-  //         size: 16.sp,
-  //         color: Colors.black87,
-  //       ),
-  //     ),
-  //   );
-  // }
 
   // ── ORDER SUMMARY ────────────────────────────────────────────────
   Widget _buildOrderSummaryCard(catering_Cart cart) {

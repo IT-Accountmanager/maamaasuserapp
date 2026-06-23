@@ -46,6 +46,7 @@ class CartModel {
   String deliveryAddress;
   String mobileNo;
   String name;
+  bool firstOrderFreeDelivery;
 
   final List<String>? vendorOrderType;
 
@@ -79,6 +80,7 @@ class CartModel {
     required this.mobileNo,
     required this.name,
     required this.vendorOrderType,
+    required this.firstOrderFreeDelivery,
   });
 
   factory CartModel.fromJson(Map<String, dynamic> json) {
@@ -127,6 +129,7 @@ class CartModel {
       vendorOrderType: (json['vendorOrderType'] as List?)
           ?.map((e) => e.toString())
           .toList(),
+      firstOrderFreeDelivery:  json['firstOrderFreeDelivery'] ?? false,
     );
   }
 

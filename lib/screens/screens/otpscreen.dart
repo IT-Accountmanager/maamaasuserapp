@@ -298,30 +298,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
       ),
       child: Column(
         children: [
-          // Column(
-          //   children: [
-          //     Text(
-          //       'Enter verification code has been sent to',
-          //       textAlign: TextAlign.center,
-          //       style: TextStyle(
-          //         fontSize: 15.sp,
-          //         fontWeight: FontWeight.w600,
-          //         color: _textPrimary,
-          //       ),
-          //     ),
-          //     SizedBox(height: 4.h),
-          //     Text(
-          //       _maskMobile(widget.mobileNumber),
-          //       textAlign: TextAlign.center,
-          //       style: TextStyle(
-          //         fontSize: 16.sp,
-          //         fontWeight: FontWeight.w700,
-          //         color: _brand,
-          //       ),
-          //     ),
-          //   ],
-          // ),
-          // SizedBox(height: 6.h),
           Text(
             'The code expires in a 5 minutes',
             style: TextStyle(

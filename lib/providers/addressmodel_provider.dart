@@ -6,8 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-const String baseurl = "http://staging.maamaas.com:8080//subscription";
-// const String baseurl = "https://backend.maamaas.com/subscription";
+// const String baseurl = "http://staging.maamaas.com:8080//subscription";
+const String baseurl = "https://backend.maamaas.com/subscription";
 
 class AddressState {
   final String city;
@@ -90,8 +90,6 @@ class AddressNotifier extends StateNotifier<AddressState> {
     );
   }
 
-
-
   // -----------------------------
   // Send to backend
   // -----------------------------
@@ -112,7 +110,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
             ? "Current Location"
             : state.category, // ✅ FINAL FIX
       };
-
+      //
       debugPrint("📍 CATEGORY SENT: ${body['category']}");
 
       final uri = Uri.parse("$baseurl/api/user/curret/location/update");
@@ -122,47 +120,14 @@ class AddressNotifier extends StateNotifier<AddressState> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(body),
       );
-
-      debugPrint("location response: ${resp.body}");
-
+      //
+      //       debugPrint("location response: ${resp.body}");
 
       return resp.statusCode >= 200 && resp.statusCode < 300;
     } catch (e) {
       return false;
     }
   }
-
-  // -----------------------------
-  // Send address to cart
-  // -----------------------------
-  // Update cart delivery address API
-  // static Future<bool> updateDeliveryAddress({
-  //   required int cartId,
-  //   required int addressId,
-  // }) async {
-  //   try {
-  //     final body = {"addressId": addressId, "cartId": cartId};
-  //     final endpoint = "api/cart/delivery/$cartId/address/$addressId";
-  //
-  //     debugPrint("🔹 [UpdateDeliveryAddress] Sending request to: $endpoint");
-  //     debugPrint(
-  //       "🔹 [UpdateDeliveryAddress] Request body: ${jsonEncode(body)}",
-  //     );
-  //
-  //     final response = await ApiClient.put(endpoint, body, service: "food");
-  //
-  //     debugPrint(
-  //       "🔹 [UpdateDeliveryAddress] Status code: ${response.statusCode}",
-  //     );
-  //     debugPrint("🔹 [UpdateDeliveryAddress] Response body: ${response.body}");
-  //
-  //     return response.statusCode == 200;
-  //   } catch (e, st) {
-  //     debugPrint("❌ [UpdateDeliveryAddress] Error: $e");
-  //     debugPrint("❌ [UpdateDeliveryAddress] StackTrace: $st");
-  //     return false;
-  //   }
-  // }
 
   static Future<String?> updateDeliveryAddress({
     required int cartId,
@@ -171,18 +136,18 @@ class AddressNotifier extends StateNotifier<AddressState> {
     try {
       final body = {"addressId": addressId, "cartId": cartId};
       final endpoint = "api/cart/delivery/$cartId/address/$addressId";
-
-      debugPrint("🔹 [UpdateDeliveryAddress] Sending request to: $endpoint");
-      debugPrint(
-        "🔹 [UpdateDeliveryAddress] Request body: ${jsonEncode(body)}",
-      );
+      //
+      //       debugPrint("🔹 [UpdateDeliveryAddress] Sending request to: $endpoint");
+      //       debugPrint(
+      //         "🔹 [UpdateDeliveryAddress] Request body: ${jsonEncode(body)}",
+      //       );
 
       final response = await ApiClient.put(endpoint, body, service: "food");
 
-      debugPrint(
-        "🔹 [UpdateDeliveryAddress] Status code: ${response.statusCode}",
-      );
-      debugPrint("🔹 [UpdateDeliveryAddress] Response body: ${response.body}");
+      // debugPrint(
+      //   "🔹 [UpdateDeliveryAddress] Status code: ${response.statusCode}",
+      // );
+      //       debugPrint("🔹 [UpdateDeliveryAddress] Response body: ${response.body}");
 
       final data = jsonDecode(response.body);
 
@@ -194,8 +159,8 @@ class AddressNotifier extends StateNotifier<AddressState> {
             "Failed to update cart address";
       }
     } catch (e, st) {
-      debugPrint("❌ [UpdateDeliveryAddress] Error: $e");
-      debugPrint("❌ [UpdateDeliveryAddress] StackTrace: $st");
+      //       debugPrint("❌ [UpdateDeliveryAddress] Error: $e");
+      //       debugPrint("❌ [UpdateDeliveryAddress] StackTrace: $st");
 
       return e.toString();
     }
@@ -208,24 +173,24 @@ class AddressNotifier extends StateNotifier<AddressState> {
     try {
       final body = {"addressId": addressId, "cartId": cartId};
       final endpoint = "api/user/delivery/$cartId/address/$addressId";
-
-      debugPrint("🔹 [UpdateDeliveryAddress] Sending request to: $endpoint");
-      debugPrint(
-        "🔹 [UpdateDeliveryAddress] Request body: ${jsonEncode(body)}",
-      );
+      // //
+      //       debugPrint("🔹 [UpdateDeliveryAddress] Sending request to: $endpoint");
+      //       debugPrint(
+      //         "🔹 [UpdateDeliveryAddress] Request body: ${jsonEncode(body)}",
+      //       );
 
       final response = await ApiClient.put(endpoint, body, service: "catering");
-      debugPrint("response body : ${response.body}");
+      //       debugPrint("response body : ${response.body}");
 
-      debugPrint(
-        "🔹 [UpdateDeliveryAddress] Status code: ${response.statusCode}",
-      );
-      debugPrint("🔹 [UpdateDeliveryAddress] Response body: ${response.body}");
+      // debugPrint(
+      //   "🔹 [UpdateDeliveryAddress] Status code: ${response.statusCode}",
+      // );
+      //       debugPrint("🔹 [UpdateDeliveryAddress] Response body: ${response.body}");
 
       return response.statusCode == 200;
     } catch (e, st) {
-      debugPrint("❌ [UpdateDeliveryAddress] Error: $e");
-      debugPrint("❌ [UpdateDeliveryAddress] StackTrace: $st");
+      //       debugPrint("❌ [UpdateDeliveryAddress] Error: $e");
+      //       debugPrint("❌ [UpdateDeliveryAddress] StackTrace: $st");
       return false;
     }
   }

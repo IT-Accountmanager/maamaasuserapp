@@ -268,18 +268,6 @@ class _CateringVendorScreenState extends State<CateringVendorScreen>
           // ── Expandable banner content (about / gallery) ──
           SliverToBoxAdapter(child: _buildBannerContent()),
 
-          // ── Sticky filter bar ──
-          // SliverPersistentHeader(
-          //   pinned: true,
-          //   delegate: _StickyFilterDelegate(
-          //     child: _CateringFilterBar(
-          //       isVeg: isVeg ?? false,
-          //       onToggle: (v) => setState(() => isVeg = v),
-          //       onSearch: (v) => setState(() => searchQuery = v),
-          //     ),
-          //   ),
-          // ),
-
           // ── Package list ──
           SliverToBoxAdapter(
             child: Padding(

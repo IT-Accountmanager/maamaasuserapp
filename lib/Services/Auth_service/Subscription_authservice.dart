@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,8 +17,8 @@ class subscription_AuthService {
   static const _secureStorage = FlutterSecureStorage();
 
   static final String baseUrlgateway =
-      "http://staging.maamaas.com:8080/subscription";
-      // "https://backend.maamaas.com/subscription";
+      // "http://staging.maamaas.com:8080/subscription";
+  "https://backend.maamaas.com/subscription";
 
   Future<String> registerUser({
     required String userName,
@@ -127,10 +125,10 @@ class subscription_AuthService {
         headers: {"Content-Type": "application/json"},
         body: body,
       );
-
-      debugPrint("📤 REQUEST BODY:");
-
-      debugPrint("📨 RESPONSE STATUS: ${response.statusCode}");
+      //
+      //       debugPrint("📤 REQUEST BODY:");
+      //
+      //       debugPrint("📨 RESPONSE STATUS: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -152,8 +150,8 @@ class subscription_AuthService {
         await prefs.setInt('userId', userId);
         await prefs.setString("customerId", customerId);
         await prefs.setBool('isLoggedIn', true);
-
-        debugPrint("✅ LOGIN SUCCESSFUL");
+        //
+        //         debugPrint("✅ LOGIN SUCCESSFUL");
         return "success";
       } else {
         String errorMsg = "Login failed! Please try again.";
@@ -514,7 +512,7 @@ class subscription_AuthService {
     required String city,
   }) async {
     try {
-      debugPrint("📍 [Location Update] Starting...");
+      //       debugPrint("📍 [Location Update] Starting...");
 
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt("userId");
@@ -537,30 +535,30 @@ class subscription_AuthService {
         "updatedAt": DateTime.now().toIso8601String(),
       };
 
-      debugPrint("📤 [Location Update] Endpoint: $endpoint");
-      debugPrint("📤 [Location Update] Request Body: $body");
+      // debugPrint("📤 [Location Update] Endpoint: $endpoint");
+      //       debugPrint("📤 [Location Update] Request Body: $body");
 
       final response = await http.post(
         Uri.parse(endpoint),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
-
-      debugPrint("📥 [Location Update] Status Code: ${response.statusCode}");
-      debugPrint("📥 [Location Update] Response Body: ${response.body}");
+      //
+      //       debugPrint("📥 [Location Update] Status Code: ${response.statusCode}");
+      //       debugPrint("📥 [Location Update] Response Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("✅ [Location Update] Success");
+        //         debugPrint("✅ [Location Update] Success");
         return true;
       } else {
-        debugPrint(
-          "❌ [Location Update] Failed with status ${response.statusCode}",
-        );
+        // debugPrint(
+        //   "❌ [Location Update] Failed with status ${response.statusCode}",
+        // );
         return false;
       }
-    } catch (e, stackTrace) {
-      debugPrint("🔥 [Location Update] Exception: $e");
-      debugPrint("🧵 StackTrace: $stackTrace");
+    } catch (e) {
+      //       debugPrint("🔥 [Location Update] Exception: $e");
+      //       debugPrint("🧵 StackTrace: $stackTrace");
       return false;
     }
   }
@@ -571,12 +569,12 @@ class subscription_AuthService {
       final userId = prefs.getInt("userId") ?? 0;
       final url = "$baseUrlgateway/api/user/get/current/location/$userId";
 
-      print("🌐 GET URL: $url");
+      // print("🌐 GET URL: $url");
 
       var response = await http.get(Uri.parse(url));
 
-      print("📥 STATUS: ${response.statusCode}");
-      print("📥 BODY: ${response.body}");
+      // print("📥 STATUS: ${response.statusCode}");
+      // print("📥 BODY: ${response.body}");
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         final jsonData = jsonDecode(response.body);
@@ -585,7 +583,7 @@ class subscription_AuthService {
         return null;
       }
     } catch (e) {
-      print("❌ FETCH ERROR: $e");
+      // print("❌ FETCH ERROR: $e");
       return null;
     }
   }
@@ -615,10 +613,10 @@ class subscription_AuthService {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('userId');
 
-      print("📌 User ID: $userId");
+      // print("📌 User ID: $userId");
 
       if (userId == null) {
-        print("❌ User ID is null");
+        // print("❌ User ID is null");
         return null;
       }
 
@@ -626,59 +624,62 @@ class subscription_AuthService {
         "api/user/getprofile/$userId",
         service: "subscription",
       );
-
-      print("📡 Status Code: ${response.statusCode}");
-      print("📦 Response Body: ${response.body}");
+      //
+      // print("📡 Status Code: ${response.statusCode}");
+      // print("📦 Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        print("✅ Parsed JSON: $jsonData");
+        // print("✅ Parsed JSON: $jsonData");
 
         return UserModel.fromJson(jsonData);
       } else {
-        print("❌ API Error: ${response.statusCode}");
+        // print("❌ API Error: ${response.statusCode}");
         return null;
       }
     } catch (e, stack) {
-      print("🚨 Exception: $e");
-      print(stack);
+      // print("🚨 Exception: $e");
+      // print(stack);
       return null;
     }
   }
 
-  static Future<ReferralUsageModel?> getuser1Account() async {
+  // static Future<ReferralHistoryResponse> getReferralHistory() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final userId = prefs.getInt('userId');
+  //   final endpoint = "subscription/api/user/referrals/given/$userId";
+  //
+  //   try {
+  //     final response = await ApiClient.get(
+  //       endpoint,
+  //       service: "subscription",
+  //     );
+  //
+  //     return ReferralHistoryResponse.fromJson(
+  //       response.body as Map<String, dynamic>,
+  //     );
+  //   } catch (e) {
+  //     throw Exception("Failed to load referral history: $e");
+  //   }
+  // }
+  static Future<ReferralHistoryResponse> getReferralHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userId');
+    final endpoint = "api/user/referrals/given/$userId";
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('userId');
+      final response = await ApiClient.get(endpoint, service: "subscription");
 
-      print("📌 User ID: $userId");
+      print("API RESPONSE:");
+      print(response.body);
 
-      if (userId == null) {
-        print("❌ User ID is null");
-        return null;
-      }
+      final Map<String, dynamic> jsonMap = jsonDecode(response.body);
 
-      final response = await ApiClient.get(
-        "api/user/referrals/given/$userId",
-        service: "subscription",
-      );
-
-      print("📡 Status Code: ${response.statusCode}");
-      print("📦 Response Body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        print("✅ Parsed JSON: $jsonData");
-
-        return ReferralUsageModel.fromJson(jsonData);
-      } else {
-        print("❌ API Error: ${response.statusCode}");
-        return null;
-      }
-    } catch (e, stack) {
-      print("🚨 Exception: $e");
-      print(stack);
-      return null;
+      return ReferralHistoryResponse.fromJson(jsonMap);
+    } catch (e, s) {
+      print("REFERRAL ERROR");
+      print(e);
+      print(s);
+      rethrow;
     }
   }
 
@@ -711,20 +712,20 @@ class subscription_AuthService {
   }
 
   static Future<bool> logout() async {
-    debugPrint("🚪 Logout started");
+    //     debugPrint("🚪 Logout started");
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('userId');
-
-      debugPrint("👤 User ID: $userId");
-
-      debugPrint("🔐 Calling AUTH logout Services...");
+      //
+      //       debugPrint("👤 User ID: $userId");
+      //
+      //       debugPrint("🔐 Calling AUTH logout Services...");
 
       await ApiClient.post("api/auth/logout", {}, service: "subscription");
 
       if (userId != null) {
-        debugPrint("🔔 Deleting notification token for userId=$userId");
+        //         debugPrint("🔔 Deleting notification token for userId=$userId");
 
         await ApiClient.delete(
           "api/user/delete-token/$userId",
@@ -732,16 +733,16 @@ class subscription_AuthService {
         );
       }
     } catch (e) {
-      debugPrint("❌ Logout API error: $e");
+      //       debugPrint("❌ Logout API error: $e");
     } finally {
-      debugPrint("🧹 Clearing local storage...");
+      //       debugPrint("🧹 Clearing local storage...");
 
       // 🔐 Clear secure storage
       await _secureStorage.deleteAll();
 
       // Verify secure storage
       final secureData = await _secureStorage.readAll();
-      debugPrint("🔐 Remaining SecureStorage: $secureData");
+      //       debugPrint("🔐 Remaining SecureStorage: $secureData");
 
       // 📦 Clear shared preferences
       final prefs = await SharedPreferences.getInstance();
@@ -749,7 +750,7 @@ class subscription_AuthService {
 
       // Verify shared prefs
       final newPrefs = await SharedPreferences.getInstance();
-      debugPrint("📭 Remaining SharedPrefs: ${newPrefs.getKeys()}");
+      //       debugPrint("📭 Remaining SharedPrefs: ${newPrefs.getKeys()}");
     }
 
     return true;

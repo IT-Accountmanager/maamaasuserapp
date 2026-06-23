@@ -78,8 +78,6 @@ class _AccountDeletionScreenState extends State<deleteAccountScreen> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

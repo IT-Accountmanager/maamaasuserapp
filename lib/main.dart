@@ -17,7 +17,6 @@ import 'package:maamaas/widgets/app_navigator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_in_app_messaging/firebase_in_app_messaging.dart';
 import 'package:app_links/app_links.dart';
-
 import 'Services/Auth_service/Apiclient.dart';
 import 'firebase_options.dart';
 import 'homewrapper.dart';
@@ -86,6 +85,8 @@ class _BootstrapAppState extends State<BootstrapApp> {
   bool _referrerReady = false;
   String? _pendingReferral;
 
+  final Completer<void> _referrerCompleter = Completer<void>();
+
   @override
   void initState() {
     super.initState();
@@ -102,21 +103,34 @@ class _BootstrapAppState extends State<BootstrapApp> {
 
   // ── cPanel App Links ──────────────────────────────────────────────────────
 
+  Future<void> waitForReferrer() async {
+    debugPrint("SPLASH START");
+    debugPrint("WAITING FOR REFERRER");
+
+    try {
+      await _referrerCompleter.future.timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint("REFERRER TIMEOUT: $e");
+    }
+
+    debugPrint("REFERRER COMPLETED");
+  }
+
   Future<void> _initAppLinks() async {
     // Cold-start: app was closed when the link was tapped.
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
-        debugPrint("🔗 Cold-start link: $initialUri");
+        //         debugPrint("🔗 Cold-start link: $initialUri");
         _handleDeepLink(initialUri);
       }
     } catch (e) {
-      debugPrint("❌ getInitialLink error: $e");
+      //       debugPrint("❌ getInitialLink error: $e");
     }
 
     // Warm / foreground
     _linkSub = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint("🔗 Foreground link: $uri");
+      //       debugPrint("🔗 Foreground link: $uri");
       _handleDeepLink(uri);
     }, onError: (err) => debugPrint("❌ uriLinkStream error: $err"));
   }
@@ -125,14 +139,14 @@ class _BootstrapAppState extends State<BootstrapApp> {
   ///   https://applink.maamaas.com/campaign?campaignId=123
   ///   https://applink.maamaas.com/referral?referralCode=ABC123   ← NEW
   void _handleDeepLink(Uri uri) {
-    debugPrint("🔗 Deep Link Received: $uri");
+    //     debugPrint("🔗 Deep Link Received: $uri");
 
     // ── Referral link ─────────────────────────────────────────────────────
     // Supported: /referral?referralCode=ABC123
     //            /campaign?referralCode=ABC123  (optional fallback)
     final referralCode = uri.queryParameters['referralCode'];
     if (referralCode != null && referralCode.isNotEmpty) {
-      debugPrint("🎁 Referral code from deep link: $referralCode");
+      //       debugPrint("🎁 Referral code from deep link: $referralCode");
       _saveReferralCodeAndOpenSignup(referralCode);
       return; // don't also treat as campaign
     }
@@ -151,31 +165,16 @@ class _BootstrapAppState extends State<BootstrapApp> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(kPendingReferralCodeKey, referralCode);
-      debugPrint("✅ Referral code saved: $referralCode");
+      //       debugPrint("✅ Referral code saved: $referralCode");
+      debugPrint("REFERRAL SAVED = $referralCode");
     } catch (e) {
-      debugPrint("❌ Could not save referral code: $e");
-    }
-
-    // Navigate to Signup screen.
-    // If the navigator isn't ready yet (cold-start), defer via addPostFrameCallback.
-    void navigate() {
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (_) => const Signup(), // your existing Signup widget
-        ),
-      );
-    }
-
-    if (navigatorKey.currentState != null) {
-      navigate();
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) => navigate());
+      //       debugPrint("❌ Could not save referral code: $e");
     }
   }
 
   /// Navigate to Deals tab with the given campaign.
   void _openCampaign(int campaignId) {
-    debugPrint("🚀 Opening campaign: $campaignId");
+    //     debugPrint("🚀 Opening campaign: $campaignId");
 
     if (navigatorKey.currentState != null) {
       navigatorKey.currentState!.pushAndRemoveUntil(
@@ -186,60 +185,57 @@ class _BootstrapAppState extends State<BootstrapApp> {
         (route) => false,
       );
     } else {
-      debugPrint("⏳ Navigator not ready — queuing campaign $campaignId");
+      //       debugPrint("⏳ Navigator not ready — queuing campaign $campaignId");
       _pendingCampaignId = campaignId;
     }
   }
 
-  // ── Install referrer (Google Play) ───────────────────────────────────────
-  //
-  // When the app is NOT installed and the user taps the referral share link,
-  // the redirect HTML forwards them to:
-  //   play.google.com/...?referrer=referralCode%3DABC123
-  //
-  // After install, Google Play delivers that referrer string here.
-
   Future<void> _handleInstallReferrer() async {
     try {
       final referrerDetails = await AndroidPlayInstallReferrer.installReferrer;
+
       final referrer = referrerDetails.installReferrer;
+
       debugPrint("📥 Referrer string: $referrer");
 
-      // Parse the referrer as a query string, e.g. "referralCode=ABC123"
-      // or "campaignId=42"
-      final uri = Uri.parse("https://dummy?$referrer");
+      if (referrer != null && referrer.isNotEmpty) {
+        debugPrint("RAW REFERRER = $referrer");
 
-      // ── Referral code ─────────────────────────────────────────────────
-      // final referralCode = uri.queryParameters['referralCode'];
-      // if (referralCode != null && referralCode.isNotEmpty) {
-      //   debugPrint("🎁 Referral code from Play referrer: $referralCode");
-      //   // Save so Signup screen can read it even before navigation is ready.
-      //   final prefs = await SharedPreferences.getInstance();
-      //   await prefs.setString(kPendingReferralCodeKey, referralCode);
-      //   // We do NOT navigate here — SplashScreen will push Signup anyway for
-      //   // a new install. The referral code will be waiting in SharedPreferences.
-      //   return;
-      // }
-      final referralCode = uri.queryParameters['referralCode'];
-      if (referralCode != null && referralCode.isNotEmpty) {
-        debugPrint("🎁 Referral code from Play referrer: $referralCode");
+        final uri = Uri.parse("https://dummy?$referrer");
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(kPendingReferralCodeKey, referralCode);
+        debugPrint("ALL PARAMS = ${uri.queryParameters}");
 
-        _pendingReferral = referralCode;
-        _referrerReady = true;
-        return;
-      }
+        final referralCode = uri.queryParameters['referralCode'];
 
-      // ── Campaign id (existing behaviour) ──────────────────────────────
-      final campaignIdStr = uri.queryParameters['campaignId'];
-      if (campaignIdStr != null) {
-        final campaignId = int.tryParse(campaignIdStr);
-        if (campaignId != null) _openCampaign(campaignId);
+        if (referralCode != null && referralCode.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+
+          await prefs.setString(
+            kPendingReferralCodeKey,
+            referralCode,
+            // "TEST123"
+          );
+          debugPrint("REFERRAL = ${prefs.getString(kPendingReferralCodeKey)}");
+
+          debugPrint("✅ Referral saved: $referralCode");
+        }
+
+        final campaignIdStr = uri.queryParameters['campaignId'];
+
+        if (campaignIdStr != null) {
+          final campaignId = int.tryParse(campaignIdStr);
+
+          if (campaignId != null) {
+            _pendingCampaignId = campaignId;
+          }
+        }
       }
     } catch (e) {
       debugPrint("❌ Referrer error: $e");
+    } finally {
+      if (!_referrerCompleter.isCompleted) {
+        _referrerCompleter.complete();
+      }
     }
   }
 
@@ -254,7 +250,7 @@ class _BootstrapAppState extends State<BootstrapApp> {
         _firebaseMessagingBackgroundHandler,
       );
     } catch (e, st) {
-      debugPrint('Firebase init failed/timed out: $e');
+      //       debugPrint('Firebase init failed/timed out: $e');
       debugPrintStack(stackTrace: st);
     }
 
@@ -267,7 +263,7 @@ class _BootstrapAppState extends State<BootstrapApp> {
       setState(() => _userId = userId);
       await _inAppMessaging.setAutomaticDataCollectionEnabled(true);
     } catch (e, st) {
-      debugPrint('Startup prefs init failed: $e');
+      //       debugPrint('Startup prefs init failed: $e');
       debugPrintStack(stackTrace: st);
     }
   }
@@ -276,7 +272,10 @@ class _BootstrapAppState extends State<BootstrapApp> {
   Widget build(BuildContext context) {
     return ProviderScope(
       overrides: [userIdProvider.overrideWithValue(_userId)],
-      child: MyApp(pendingCampaignId: _pendingCampaignId),
+      child: MyApp(
+        pendingCampaignId: _pendingCampaignId,
+        waitForReferrer: waitForReferrer,
+      ),
     );
   }
 }
@@ -287,7 +286,8 @@ class _BootstrapAppState extends State<BootstrapApp> {
 
 class MyApp extends ConsumerWidget {
   final int? pendingCampaignId;
-  const MyApp({super.key, this.pendingCampaignId});
+  final Future<void> Function()? waitForReferrer;
+  const MyApp({super.key, this.pendingCampaignId, this.waitForReferrer});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -305,7 +305,10 @@ class MyApp extends ConsumerWidget {
           navigatorObservers: [routeObserver],
           navigatorKey: navigatorKey,
           home: NetworkWrapper(
-            child: SplashScreen(pendingCampaignId: pendingCampaignId),
+            child: SplashScreen(
+              pendingCampaignId: pendingCampaignId,
+              waitForReferrer: waitForReferrer,
+            ),
           ),
         );
       },

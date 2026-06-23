@@ -1,8 +1,3 @@
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
-// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -16,7 +11,6 @@ import '../../../Services/paymentservice/razorpayservice.dart';
 
 // ignore: camel_case_types
 class tablecartwallet extends StatefulWidget {
-
   final Wallet? wallet; // add this
   final void Function(String paymentMethod, Set<String> subWallets)
   onSelectionChanged;
@@ -356,7 +350,7 @@ class _cartwalletState extends State<tablecartwallet> {
                       theme,
                       colorScheme,
                       onAdd: () {
-                        debugPrint("Add Self Loaded Amount");
+                        //                         debugPrint("Add Self Loaded Amount");
 
                         _showAmountBottomSheet(context);
                       },

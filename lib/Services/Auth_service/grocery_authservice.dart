@@ -11,7 +11,6 @@ class grocery_authservice {
       // Use ApiService.get to include token automatically
       final response = await ApiClient.get(endpoint, service: "grocery");
 
-
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = jsonDecode(response.body);
         return jsonData.map((item) => grocery_Banner.fromJson(item)).toList();
@@ -29,7 +28,6 @@ class grocery_authservice {
     try {
       // Use ApiService.get to include token automatically
       final response = await ApiClient.get(endpoint, service: "grocery");
-
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = jsonDecode(response.body);
@@ -49,7 +47,6 @@ class grocery_authservice {
       // Use ApiService to automatically add token
       final response = await ApiClient.get(endpoint, service: "grocery");
 
-
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         return grocery_Banner.fromJson(jsonData);
@@ -60,6 +57,4 @@ class grocery_authservice {
       throw Exception('Failed to load banner data');
     }
   }
-
-
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../Models/subscrptions/coupon_model.dart';
 import '../../screens/screens/Refer_Earn.dart';
 import '../../screens/screens/wallet_screen.dart';
@@ -34,32 +33,12 @@ class CouponsOffersSection extends StatelessWidget {
     );
   }
 
-  // void _handleCardTap(BuildContext context, String type) {
-  //   switch (type) {
-  //     case 'REFER':
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(builder: (_) => const ReferEarn()),
-  //       );
-  //       break;
-  //
-  //     case 'WALLET':
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(builder: (_) => const WalletScreen()),
-  //       );
-  //       break;
-  //
-  //     default:
-  //       break;
-  //   }
-  // }
-
   final List<Map<String, dynamic>> staticCoupons = [
     {
       "headline": "Authentic Taste. Fantastic Savings.",
       "title": "First Order",
-      "offer": "Get Flat ₹25 OFF on Your First Order!",
+      // "offer": "Get Flat ₹25 OFF on Your First Order!",
+      "offer": "Unlock a ₹25 OFF Coupon!",
       // "description": "",
       "type": "REFER",
       // "icon": Icons.group_add_outlined,
@@ -74,7 +53,7 @@ class CouponsOffersSection extends StatelessWidget {
     {
       "headline": "Invite Friends. Unlock Rewards.",
       "title": "Refer & Earn",
-      "offer": "Earn ₹25 Cashback Per Referral!",
+      "offer": "Earn More Cashbacks Per Referral!",
       // "description": "",
       "type": "REFER",
       "screen": ReferEarn(),
@@ -90,7 +69,7 @@ class CouponsOffersSection extends StatelessWidget {
     {
       "headline": "Recharge More. Earn More.",
       "title": "Wallet Recharge",
-      "offer": "Get a Flat 10% Cashback! on min ₹500",
+      "offer": "Get a Flat 10% Cashback!",
       // "description": "",
       "type": "WALLET",
       "screen": WalletScreen(),

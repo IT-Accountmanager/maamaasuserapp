@@ -516,130 +516,6 @@ class _OrderCardState extends State<OrderCard> {
     );
   }
 
-  // Widget _buildProgressBar(Order order) {
-  //   final steps = [
-  //     _ProgressStep("Confirmed", OrderStatus.confirmed),
-  //     _ProgressStep("Preparing", OrderStatus.beingPrepared),
-  //     _ProgressStep("Ready", OrderStatus.orderIsReady),
-  //     _ProgressStep("Delivered", OrderStatus.completed),
-  //   ];
-  //
-  //   final currentIndex = _stepIndex(order.status);
-  //
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         _statusLabel(order.status).toUpperCase(),
-  //         style: foodordecolour.label.copyWith(
-  //           color: foodordecolour.accent,
-  //           fontSize: 10,
-  //         ),
-  //       ),
-  //       SizedBox(height: 8.h),
-  //       Row(
-  //         children: List.generate(steps.length * 2 - 1, (i) {
-  //           if (i.isOdd) {
-  //             final filled = i ~/ 2 < currentIndex;
-  //             return Expanded(
-  //               child: Container(
-  //                 height: 2,
-  //                 color: filled ? foodordecolour.accent : foodordecolour.border,
-  //               ),
-  //             );
-  //           }
-  //           final stepI = i ~/ 2;
-  //           final done = stepI < currentIndex;
-  //           final active = stepI == currentIndex;
-  //           return _dot(done: done, active: active);
-  //         }),
-  //       ),
-  //       SizedBox(height: 6.h),
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: steps
-  //             .map(
-  //               (s) => SizedBox(
-  //                 width: 60.w,
-  //                 child: Text(
-  //                   s.label,
-  //                   textAlign: TextAlign.center,
-  //                   style: TextStyle(
-  //                     fontSize: 9.sp,
-  //                     color: foodordecolour.muted,
-  //                     fontWeight: FontWeight.w500,
-  //                   ),
-  //                 ),
-  //               ),
-  //             )
-  //             .toList(),
-  //       ),
-  //     ],
-  //   );
-  // }
-  //
-  // Widget _dot({required bool done, required bool active}) {
-  //   return Container(
-  //     width: 18,
-  //     height: 18,
-  //     decoration: BoxDecoration(
-  //       color: done
-  //           ? foodordecolour.accent
-  //           : active
-  //           ? foodordecolour.accent.withOpacity(0.15)
-  //           : foodordecolour.border,
-  //       shape: BoxShape.circle,
-  //       border: Border.all(
-  //         color: active ? foodordecolour.accent : Colors.transparent,
-  //         width: 2,
-  //       ),
-  //     ),
-  //     child: done
-  //         ? const Icon(Icons.check_rounded, size: 10, color: Colors.white)
-  //         : null,
-  //   );
-  // }
-  //
-  // int _stepIndex(OrderStatus status) {
-  //   switch (status) {
-  //     case OrderStatus.confirmed:
-  //       return 0;
-  //     case OrderStatus.beingPrepared:
-  //       return 1;
-  //     case OrderStatus.orderIsReady:
-  //     case OrderStatus.waitingForPickup:
-  //       return 2;
-  //     case OrderStatus.ontheway:
-  //     case OrderStatus.completed:
-  //       return 3;
-  //     default:
-  //       return 0;
-  //   }
-  // }
-  //
-  // String _statusLabel(OrderStatus status) {
-  //   switch (status) {
-  //     case OrderStatus.hold:
-  //       return "On hold";
-  //     case OrderStatus.pending:
-  //       return "Not accepted";
-  //     case OrderStatus.confirmed:
-  //       return "Order confirmed";
-  //     case OrderStatus.beingPrepared:
-  //       return "Preparing your food";
-  //     case OrderStatus.orderIsReady:
-  //       return "Order ready";
-  //     case OrderStatus.waitingForPickup:
-  //       return "Waiting for pickup";
-  //     case OrderStatus.ontheway:
-  //       return "On the way";
-  //     case OrderStatus.completed:
-  //       return "Delivered";
-  //     default:
-  //       return "Processing";
-  //   }
-  // }
-
   Widget _buildProgressBar(Order order) {
     // ── Not yet confirmed → show waiting banner instead of progress dots ──
     if (order.status == OrderStatus.pending ||
@@ -1384,28 +1260,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
             color: foodordecolour.ink,
           ),
         ),
-        // title: Column(
-        //   children: [
-        //     Text(
-        //       order.vendorRegisteredName.isNotEmpty
-        //           ? order.vendorRegisteredName
-        //           : "Order #${widget.orderId}",
-        //       style: const TextStyle(
-        //         fontSize: 15,
-        //         fontWeight: FontWeight.w600,
-        //         color: foodordecolour.ink,
-        //       ),
-        //     ),
-        //     Text(
-        //       "Order #${widget.orderId}",
-        //       style: const TextStyle(
-        //         fontSize: 11,
-        //         color: foodordecolour.muted,
-        //         fontWeight: FontWeight.w400,
-        //       ),
-        //     ),
-        //   ],
-        // ),
+
         centerTitle: true,
         actions: [
           Padding(
@@ -1440,22 +1295,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
               decoration: _cardDecor(),
               child: Row(
                 children: [
-                  // Expanded(
-                  //   child: Column(
-                  //     crossAxisAlignment: CrossAxisAlignment.start,
-                  //     children: [
-                  //       Text(
-                  //         "Order #${widget.order.id}",
-                  //         style: foodordecolour.h1,
-                  //       ),
-                  //       SizedBox(height: 4.h),
-                  //       Text(
-                  //         "${widget.formattedDate}  ·  ${widget.formattedTime}",
-                  //         style: foodordecolour.body,
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1834,37 +1673,138 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     );
   }
 
+  // Widget _buildCancelButton(BuildContext context) {
+  //   return SizedBox(
+  //     width: double.infinity,
+  //     height: 52.h,
+  //     child: ElevatedButton(
+  //       onPressed: () async {
+  //         final confirm = await showDialog<bool>(
+  //           context: context,
+  //           builder: (context) => AlertDialog(
+  //             title: const Text("Cancel Order"),
+  //             content: const Text(
+  //               "Are you sure you want to cancel this order?",
+  //             ),
+  //             actions: [
+  //               TextButton(
+  //                 onPressed: () => Navigator.pop(context, false),
+  //                 child: const Text("No"),
+  //               ),
+  //               TextButton(
+  //                 onPressed: () => Navigator.pop(context, true),
+  //                 child: const Text("Yes"),
+  //               ),
+  //             ],
+  //           ),
+  //         );
+  //
+  //         if (confirm != true) return;
+  //
+  //         AppAlert.info(context, "Cancelling order...");
+  //
+  //         final success = await food_Authservice.cancelOrder(widget.orderId,te);
+  //
+  //         Navigator.pop(context); // close loading dialog
+  //
+  //         if (success) {
+  //           AppAlert.success(context, "Order cancelled successfully");
+  //         } else {
+  //           AppAlert.error(context, "Failed to cancel order");
+  //         }
+  //       },
+  //       style: ElevatedButton.styleFrom(
+  //         backgroundColor: Colors.red, // cancel = red
+  //         foregroundColor: Colors.white,
+  //         elevation: 0,
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(14),
+  //         ),
+  //       ),
+  //       child: Row(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: [
+  //           const Icon(Icons.cancel_rounded, size: 20),
+  //           SizedBox(width: 8.w),
+  //           const Text(
+  //             "Cancel Order",
+  //             style: TextStyle(
+  //               fontSize: 15,
+  //               fontWeight: FontWeight.w700,
+  //               letterSpacing: 0.2,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget _buildCancelButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       height: 52.h,
       child: ElevatedButton(
         onPressed: () async {
-          final confirm = await showDialog<bool>(
+          final reasonController = TextEditingController();
+
+          final reason = await showDialog<String>(
             context: context,
             builder: (context) => AlertDialog(
               title: const Text("Cancel Order"),
-              content: const Text(
-                "Are you sure you want to cancel this order?",
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Please provide a reason for cancellation:",
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: reasonController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: "Enter cancellation reason",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context, false),
+                  onPressed: () => Navigator.pop(context),
                   child: const Text("No"),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pop(context, true),
+                  onPressed: () {
+                    if (reasonController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Please enter a cancellation reason",
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    Navigator.pop(
+                      context,
+                      reasonController.text.trim(),
+                    );
+                  },
                   child: const Text("Yes"),
                 ),
               ],
             ),
           );
 
-          if (confirm != true) return;
+          if (reason == null) return;
 
           AppAlert.info(context, "Cancelling order...");
 
-          final success = await food_Authservice.cancelOrder(widget.orderId);
+          final success = await food_Authservice.cancelOrder(
+            widget.orderId,
+            reason, // pass reason string here
+          );
 
           Navigator.pop(context); // close loading dialog
 
@@ -1875,7 +1815,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
           }
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red, // cancel = red
+          backgroundColor: Colors.red,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -1994,7 +1934,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
               subtitle: "24/7 support team",
               onTap: () {
                 Navigator.pop(context);
-                phonecall.makePhoneCall('+919063888450');
+                phonecall.makePhoneCall();
               },
             ),
             _helpTile(

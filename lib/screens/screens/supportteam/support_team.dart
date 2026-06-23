@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
+import '../../../widgets/widgets/phonecall.dart';
+
 // ── Design Tokens ─────────────────────────────────────────────────────────────
 // ignore: camel_case_types
 class sptteamcolour {
@@ -14,6 +16,7 @@ class sptteamcolour {
   static const accent = Color(0xFF2563EB);
   static const accentLight = Color(0xFFEFF6FF);
   static const green = Color(0xFF16A34A);
+  static const amber = Color(0xFFC107FF);
 
   static const h2 = TextStyle(
     fontSize: 15,
@@ -162,15 +165,17 @@ class _SupportteamState extends State<Supportteam> {
                           },
                         ),
                       ),
-                      // SizedBox(width: 10.w),
-                      // Expanded(
-                      //   child: _actionCard(
-                      //     icon: Icons.phone_outlined,
-                      //     label: "Call Us",
-                      //     color: sptteamcolour.amber,
-                      //     onTap: _makeSupportCall,
-                      //   ),
-                      // ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: _actionCard(
+                          icon: Icons.phone_outlined,
+                          label: "Call Us",
+                          color: sptteamcolour.amber,
+                          onTap: () {
+                            phonecall.makePhoneCall();
+                          },
+                        ),
+                      ),
                     ],
                   ),
 

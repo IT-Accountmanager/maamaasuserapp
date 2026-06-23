@@ -67,7 +67,7 @@ class _BannerSectionState extends State<BannerSection> {
         throw 'Could not launch $url';
       }
     } catch (e) {
-      debugPrint('URL Launch Error: $e');
+      //       debugPrint('URL Launch Error: $e');
     }
   }
 
@@ -250,15 +250,6 @@ class _BannerSectionState extends State<BannerSection> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // if (banner?.distance != null)
-                      //   Text(
-                      //     " ${Distancehelpermethod.formatDistance(banner!.distance)}",
-                      //     style: TextStyle(
-                      //       fontSize: 12.sp,
-                      //       fontWeight: FontWeight.w600,
-                      //       color: Colors.white,
-                      //     ),
-                      //   ),
                       if ((banner?.addressLine ?? '').isNotEmpty)
                         Text(
                           "📍${banner!.addressLine}, ${banner.city}",

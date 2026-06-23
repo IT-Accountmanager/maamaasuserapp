@@ -1,129 +1,3 @@
-// import '../../../main.dart';
-// import '../../../widgets/widgets/food/currentcart_notifier.dart';
-// import '../../../Services/Auth_service/food_authservice.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:flutter_screenutil/flutter_screenutil.dart';
-// import '../../Services/Auth_service/catering_authservice.dart';
-// import 'catering_cart_screen.dart';
-//
-// // ignore: camel_case_types
-// class catering_Cart_count extends StatefulWidget {
-//   final double? savedAmount;
-//
-//   const catering_Cart_count({super.key, this.savedAmount});
-//
-//   @override
-//   State<catering_Cart_count> createState() => _OrderCartFooterState();
-// }
-//
-// class _OrderCartFooterState extends State<catering_Cart_count>
-//     with RouteAware, SingleTickerProviderStateMixin {
-//   late AnimationController _bounceCtrl;
-//   late Animation<double> _scaleAnim;
-//   int _previousCount = 0;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _bounceCtrl = AnimationController(
-//       vsync: this,
-//       duration: const Duration(milliseconds: 300),
-//     );
-//     _scaleAnim = TweenSequence<double>([
-//       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.06), weight: 50),
-//       TweenSequenceItem(tween: Tween(begin: 1.06, end: 1.0), weight: 50),
-//     ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOut));
-//
-//     WidgetsBinding.instance.addPostFrameCallback((_) async {
-//       await Future.delayed(const Duration(milliseconds: 500));
-//       _loadCartData();
-//     });
-//
-//     // Animate whenever count changes
-//     CartNotifier.count.addListener(_onCountChange);
-//   }
-//
-//   void _onCountChange() {
-//     final newCount = CartNotifier.count.value;
-//
-//     debugPrint("🔵 Cart count changed → $newCount");
-//     if (newCount != _previousCount && newCount > 0) {
-//       _bounceCtrl.forward(from: 0);
-//       HapticFeedback.lightImpact();
-//     }
-//     _previousCount = newCount;
-//   }
-//
-//   @override
-//   void didChangeDependencies() {
-//     super.didChangeDependencies();
-//     routeObserver.subscribe(this, ModalRoute.of(context)!);
-//   }
-//
-//   Future<void> _loadCartData() async {
-//     try {
-//       final count = await catering_authservice.fetchCartCount();
-//       final safeCount = count < 0 ? 0 : count;
-//
-//       debugPrint("🟣 API Cart Count → $count");
-//
-//       // ✅ Only update if server count is HIGHER than current optimistic count
-//       // This prevents server lag from wiping out the optimistic UI update
-//       if (safeCount > CartNotifier.count.value) {
-//         CartNotifier.count.value = safeCount;
-//       }
-//     } catch (e) {
-//       debugPrint('❌ Cart load error: $e');
-//     }
-//   }
-//
-//   @override
-//   void dispose() {
-//     routeObserver.unsubscribe(this);
-//     CartNotifier.count.removeListener(_onCountChange);
-//     _bounceCtrl.dispose();
-//     super.dispose();
-//   }
-//
-//   @override
-//   void didPopNext() => _loadCartData();
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return SafeArea(
-//       child: ValueListenableBuilder<int>(
-//         valueListenable: CartNotifier.count,
-//         builder: (context, count, _) {
-//           debugPrint("🟢 Cart widget rebuild → count: $count");
-//
-//           final safeCount = count < 0 ? 0 : count;
-//           if (safeCount == 0) return const SizedBox.shrink();
-//
-//           return ScaleTransition(
-//             scale: _scaleAnim,
-//             child: _CartBar(
-//               count: safeCount,
-//               savedAmount: widget.savedAmount ?? 0.0,
-//               onTap: () async {
-//                 debugPrint("🟡 Cart tapped → count: $safeCount");
-//                 HapticFeedback.mediumImpact();
-//                 await Navigator.push(context, _slideRoute(catering_cart()));
-//                 await _loadCartData();
-//               },
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-//
-// // ── The actual cart bar widget ────────────────────────────────────────────────
-
-
-
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -144,7 +18,6 @@ class catering_Cart_count extends StatefulWidget {
 
 class _OrderCartFooterState extends State<catering_Cart_count>
     with RouteAware, SingleTickerProviderStateMixin {
-
   late AnimationController _bounceCtrl;
   late Animation<double> _scaleAnim;
 
@@ -185,20 +58,20 @@ class _OrderCartFooterState extends State<catering_Cart_count>
   Future<void> _loadCartData() async {
     try {
       final count = await catering_authservice.fetchCartCount();
-
-      debugPrint("🟣 RAW CART COUNT FROM API → $count");
+      //
+      //       debugPrint("🟣 RAW CART COUNT FROM API → $count");
 
       // ignore: unnecessary_type_check
       final safeCount = (count is int)
           ? count
           // ignore: dead_code
           : int.tryParse(count.toString()) ?? 0;
-
-      debugPrint("🟢 PARSED SAFE COUNT → $safeCount");
+      //
+      //       debugPrint("🟢 PARSED SAFE COUNT → $safeCount");
 
       CartNotifier.count.value = safeCount;
     } catch (e) {
-      debugPrint("❌ Cart load error: $e");
+      //       debugPrint("❌ Cart load error: $e");
     }
   }
 
@@ -229,10 +102,7 @@ class _OrderCartFooterState extends State<catering_Cart_count>
               savedAmount: widget.savedAmount ?? 0.0,
               onTap: () async {
                 HapticFeedback.mediumImpact();
-                await Navigator.push(
-                  context,
-                  _slideRoute(catering_cart()),
-                );
+                await Navigator.push(context, _slideRoute(catering_cart()));
                 _loadCartData();
               },
             ),

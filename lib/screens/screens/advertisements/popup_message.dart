@@ -1,3 +1,5 @@
+import 'package:maamaas/screens/Food&beverages/Menu/menu_screen.dart';
+
 import '../../../Models/promotions_model/promotions_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
@@ -41,32 +43,47 @@ class PromotionPopup {
                   flex: 9,
                   child: Stack(
                     children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        child: SizedBox.expand(
-                          child: isVideo
-                              ? _VideoPlayerWidget(url: url)
-                              : Image.network(
-                                  url,
-                                  fit: BoxFit.contain,
+                      GestureDetector(
+                        onTap: ads.callToAction == CallToAction.ORDER_NOW
+                            ? () {
+                                Navigator.pop(context);
 
-                                  /// ✅ Loader
-                                  loadingBuilder: (context, child, progress) {
-                                    if (progress == null) return child;
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  },
-
-                                  /// ✅ Error fallback
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Center(
-                                      child: Icon(Icons.broken_image, size: 40),
-                                    );
-                                  },
-                                ),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MenuScreen(
+                                      vendorId: ads.vendorId ?? 0,
+                                    ), // or your Menu Screen
+                                  ),
+                                );
+                              }
+                            : null,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          child: SizedBox.expand(
+                            child: isVideo
+                                ? _VideoPlayerWidget(url: url)
+                                : Image.network(
+                                    url,
+                                    fit: BoxFit.contain,
+                                    loadingBuilder: (context, child, progress) {
+                                      if (progress == null) return child;
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: 40,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
                         ),
                       ),
 

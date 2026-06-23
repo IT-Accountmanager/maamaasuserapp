@@ -51,7 +51,7 @@ class _FavoritesState extends State<Favorites> {
       });
     } catch (e) {
       setState(() => isLoading = false);
-      debugPrint("Error: $e");
+      //       debugPrint("Error: $e");
     }
   }
 
@@ -247,13 +247,6 @@ class ModernDishCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                // SizedBox(height: 8.h),
-                //
-                // Padding(
-                //   padding: EdgeInsets.fromLTRB(10.w, 0, 10.w, 10.h),
-                //   child: SizedBox(width: double.infinity, child: cartButton),
-                // ),
               ],
             ),
 

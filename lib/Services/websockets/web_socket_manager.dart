@@ -33,8 +33,8 @@ class WebSocketManager {
     _foodConnecting = true;
     _foodClient = StompClient(
       config: StompConfig(
-        url: 'ws://staging.maamaas.com:8080/food/ws',
-        // url: 'ws://backend.maamaas.com/food/ws',
+        // url: 'ws://staging.maamaas.com:8080/food/ws',
+        url: 'ws://backend.maamaas.com/food/ws',
         onConnect: (frame) {
           _foodConnecting = false;
           for (var callback in _pendingFoodSubscriptions) {
@@ -60,21 +60,25 @@ class WebSocketManager {
     // Register the listener regardless of whether the STOMP channel exists yet.
     _orderListeners.putIfAbsent(orderId, () => {});
     _orderListeners[orderId]![listenerId] = onMessage;
-    debugPrint('🔔 Listener "$listenerId" added for order $orderId');
+    //     debugPrint('🔔 Listener "$listenerId" added for order $orderId');
 
     // If STOMP channel already exists, nothing more to do.
     if (_foodSubscriptions.containsKey(orderId)) {
-      debugPrint('✅ STOMP channel for order $orderId already open');
+      //       debugPrint('✅ STOMP channel for order $orderId already open');
       return;
     }
 
     void subscribe() {
+      if (_foodClient == null || !_foodClient!.connected) {
+        // debugPrint('⚠️ Food socket not connected. Skipping subscription.');
+        return;
+      }
       final subscription = _foodClient?.subscribe(
         destination: '/topic/order-updates/$orderId',
         callback: (frame) {
           if (frame.body == null) return;
           final data = json.decode(frame.body!) as Map<String, dynamic>;
-          debugPrint('📩 Order update for $orderId: $data');
+          //           debugPrint('📩 Order update for $orderId: $data');
           // Fan-out to every registered listener for this orderId
           final listeners = Map.of(_orderListeners[orderId] ?? {});
           for (final cb in listeners.values) {
@@ -85,7 +89,7 @@ class WebSocketManager {
 
       if (subscription != null) {
         _foodSubscriptions[orderId] = subscription;
-        debugPrint('📡 STOMP channel opened for order $orderId');
+        //         debugPrint('📡 STOMP channel opened for order $orderId');
       }
     }
 
@@ -102,7 +106,7 @@ class WebSocketManager {
   /// The STOMP channel is only closed when **all** listeners have been removed.
   void unsubscribeOrderStatus(int orderId, {String listenerId = 'default'}) {
     _orderListeners[orderId]?.remove(listenerId);
-    debugPrint('🗑 Listener "$listenerId" removed for order $orderId');
+    //     debugPrint('🗑 Listener "$listenerId" removed for order $orderId');
 
     final remaining = _orderListeners[orderId]?.length ?? 0;
     if (remaining == 0) {
@@ -111,14 +115,14 @@ class WebSocketManager {
       if (_foodSubscriptions.containsKey(orderId)) {
         _foodSubscriptions[orderId]?.call();
         _foodSubscriptions.remove(orderId);
-        debugPrint(
-          '❌ STOMP channel closed for order $orderId (no listeners left)',
-        );
+        // debugPrint(
+        //   '❌ STOMP channel closed for order $orderId (no listeners left)',
+        // );
       }
     } else {
-      debugPrint(
-        'ℹ️ $remaining listener(s) still active for order $orderId — channel kept open',
-      );
+      // debugPrint(
+      //   'ℹ️ $remaining listener(s) still active for order $orderId — channel kept open',
+      // );
     }
   }
 
@@ -135,10 +139,10 @@ class WebSocketManager {
 
     _deliveryClient = StompClient(
       config: StompConfig(
-        // url: 'ws://backend.maamaas.com/delivery/ws/websocket',
-        url: 'ws://staging.maamaas.com:8080/delivery/ws',
+        url: 'ws://backend.maamaas.com/delivery/ws/websocket',
+        // url: 'ws://staging.maamaas.com:8080/delivery/ws',
         onConnect: (frame) {
-          debugPrint('✅ Delivery WebSocket Connected');
+          //           debugPrint('✅ Delivery WebSocket Connected');
           onConnected?.call();
         },
         onWebSocketError: (error) => debugPrint('❌ Delivery WS Error: $error'),
@@ -165,7 +169,7 @@ class WebSocketManager {
 
       if (subscription != null) {
         _deliverySubscriptions[partnerId] = subscription;
-        debugPrint('🔔 Subscribed to Delivery partner $partnerId');
+        //         debugPrint('🔔 Subscribed to Delivery partner $partnerId');
       }
     });
   }
@@ -174,9 +178,9 @@ class WebSocketManager {
     if (_deliverySubscriptions.containsKey(partnerId)) {
       _deliverySubscriptions[partnerId]?.call();
       _deliverySubscriptions.remove(partnerId);
-      debugPrint('❌ Unsubscribed from Delivery partner $partnerId location');
+      //       debugPrint('❌ Unsubscribed from Delivery partner $partnerId location');
     } else {
-      debugPrint('⚠️ No subscription found for partner $partnerId');
+      //       debugPrint('⚠️ No subscription found for partner $partnerId');
     }
   }
 
@@ -189,9 +193,9 @@ class WebSocketManager {
     _foodSubscriptions.clear();
     _orderListeners.clear();
     _deliverySubscriptions.clear();
-    debugPrint(
-      '🛑 All WebSocket connections deactivated and subscriptions cleared',
-    );
+    // debugPrint(
+    //   '🛑 All WebSocket connections deactivated and subscriptions cleared',
+    // );
   }
 
   // --------------------------
@@ -205,9 +209,9 @@ class WebSocketManager {
     if (value == null) return null;
     if (value is String) return value;
     if (value is num || value is bool) return value.toString();
-    debugPrint(
-      '⚠️ _safeString: unexpected type ${value.runtimeType} → dropping value',
-    );
+    // debugPrint(
+    //   '⚠️ _safeString: unexpected type ${value.runtimeType} → dropping value',
+    // );
     return null;
   }
 
@@ -216,7 +220,7 @@ class WebSocketManager {
     try {
       final raw = json.decode(body);
       if (raw is! Map<String, dynamic>) {
-        debugPrint('❌ Cart frame is not a JSON object: ${raw.runtimeType}');
+        //         debugPrint('❌ Cart frame is not a JSON object: ${raw.runtimeType}');
         return null;
       }
 
@@ -233,9 +237,9 @@ class WebSocketManager {
         if (raw.containsKey(field) &&
             raw[field] is! String &&
             raw[field] != null) {
-          debugPrint(
-            "⚠️ Field '$field' arrived as ${raw[field].runtimeType} → coercing to String",
-          );
+          // debugPrint(
+          //   "⚠️ Field '$field' arrived as ${raw[field].runtimeType} → coercing to String",
+          // );
           raw[field] = _safeString(raw[field]);
         }
       }
@@ -272,23 +276,23 @@ class WebSocketManager {
 
       return raw;
     } catch (e, stack) {
-      debugPrint('❌ JSON PARSE ERROR: $e');
-      debugPrint('$stack');
+      //       debugPrint('❌ JSON PARSE ERROR: $e');
+      //       debugPrint('$stack');
       return null;
     }
   }
 
   void subscribeUserCart(int userId, Function(Map<String, dynamic>) onMessage) {
-    debugPrint('🚀 Trying to subscribe cart for userId: $userId');
+    //     debugPrint('🚀 Trying to subscribe cart for userId: $userId');
     _cartCallbacks[userId] = onMessage;
 
     if (_cartSubscriptions.containsKey(userId)) {
-      debugPrint('🔄 Callback updated for existing cart subscription $userId');
+      //       debugPrint('🔄 Callback updated for existing cart subscription $userId');
       return;
     }
 
     void subscribe() {
-      debugPrint('📡 Subscribing to /topic/user-cart-updates/$userId');
+      //       debugPrint('📡 Subscribing to /topic/user-cart-updates/$userId');
 
       final subscription = _foodClient?.subscribe(
         destination: '/topic/user-cart-updates/$userId',
@@ -302,9 +306,9 @@ class WebSocketManager {
 
       if (subscription != null) {
         _cartSubscriptions[userId] = subscription;
-        debugPrint('🔔 Subscribed SUCCESS for user $userId');
+        //         debugPrint('🔔 Subscribed SUCCESS for user $userId');
       } else {
-        debugPrint('❌ Subscription FAILED for user $userId');
+        //         debugPrint('❌ Subscription FAILED for user $userId');
       }
     }
 
@@ -321,7 +325,7 @@ class WebSocketManager {
       _cartSubscriptions[userId]?.call();
       _cartSubscriptions.remove(userId);
       _cartCallbacks.remove(userId);
-      debugPrint('❌ Unsubscribed from cart $userId');
+      //       debugPrint('❌ Unsubscribed from cart $userId');
     }
   }
 }

@@ -20,14 +20,13 @@ class Menucolours {
   static const vegGreen = Color(0xFF2D6A4F);
   static const nonVegRed = Color(0xFFDC2626);
 
-
-  static  const kOrange = Color(0xFFFF6B00);
+  static const kOrange = Color(0xFFFF6B00);
   static const kOrangeLight = Color(0xFFFF9A3C);
   static const kOrangeBg = Color(0xFFFFF3EB);
   static const kHappy = Color(0xFF6C47FF);
   static const kHappyBg = Color(0xFFF0EDFF);
   static const kBorder = Color(0xFFEDEDED);
-   static const kMuted = Color(0xFF888888);
+  static const kMuted = Color(0xFF888888);
   static const kText = Color(0xFF1A1A1A);
   static const kSurface = Color(0xFFF6F6F6);
 

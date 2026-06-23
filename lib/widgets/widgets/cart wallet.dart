@@ -327,19 +327,13 @@ class _cartwalletState extends State<cartwallet> {
                 padding: EdgeInsets.only(left: 32.w),
                 child: Column(
                   children: [
-                    _buildSubWalletOption(
-                      "Company Loaded",
-                      _wallet!.companyLoadedAmount,
-                      theme,
-                      colorScheme,
-                    ),
                     _buildSubWalletselfloadedOption(
                       "Self Loaded",
                       _wallet!.selfLoadedAmount,
                       theme,
                       colorScheme,
                       onAdd: () {
-                        debugPrint("Add Self Loaded Amount");
+                        //                         debugPrint("Add Self Loaded Amount");
 
                         _showAmountBottomSheet(context);
                       },
@@ -357,6 +351,12 @@ class _cartwalletState extends State<cartwallet> {
                         theme,
                         colorScheme,
                       ),
+                    _buildSubWalletOption(
+                      "Company Loaded",
+                      _wallet!.companyLoadedAmount,
+                      theme,
+                      colorScheme,
+                    ),
                   ],
                 ),
               ),

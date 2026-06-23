@@ -57,19 +57,7 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
             onPageChanged: (index) {
               setState(() => currentIndex = index);
             },
-            // itemBuilder: (context, index) {
-            //             //   return SizedBox(
-            //             //     width: double.infinity,
-            //             //     height: double.infinity,
-            //             //     child: InteractiveViewer(
-            //             //       child: Image.network(
-            //             //         widget.images[index],
-            //             //         fit: BoxFit.contain, // keeps full image visible
-            //             //         width: double.infinity,
-            //             //       ),
-            //             //     ),
-            //             //   );
-            //             // },
+
             itemBuilder: (context, index) {
               final url = widget.images[index];
 

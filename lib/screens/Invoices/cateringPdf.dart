@@ -124,10 +124,10 @@ class cateringpdf {
       items = List.from(data['data']['orderItems']);
     }
 
-    print("FINAL ITEMS: $items");
-
-    print("FULL DATA: $data");
-    print("ORDER ITEMS: ${data['orderItems']}");
+    // print("FINAL ITEMS: $items");
+    //
+    // print("FULL DATA: $data");
+    // print("ORDER ITEMS: ${data['orderItems']}");
 
     pw.Widget keyValue(String key, dynamic value, {bool bold = false}) {
       if (value == null) return pw.SizedBox();

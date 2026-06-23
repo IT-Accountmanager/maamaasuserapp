@@ -1,6 +1,4 @@
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
-import 'package:maamaas/screens/Food&beverages/table/seating_details.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/Restaurentscdhule.dart';
 import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
@@ -55,7 +53,7 @@ class _TableTabContentState extends State<TableTabContent> {
   }
 
   Future<void> _loadSchedules() async {
-    print("🚀 _loadSchedules CALLED");
+    // print("🚀 _loadSchedules CALLED");
 
     setState(() {
       isScheduleLoading = true;
@@ -66,19 +64,19 @@ class _TableTabContentState extends State<TableTabContent> {
         widget.vendorId,
       );
 
-      print("📦 DATA RECEIVED IN UI => ${data.length}");
+      // print("📦 DATA RECEIVED IN UI => ${data.length}");
 
       for (var item in data) {
-        print("📅 ${item.day}");
+        // print("📅 ${item.day}");
       }
 
       setState(() {
         schedules = data;
       });
 
-      print("✅ schedules state updated");
+      // print("✅ schedules state updated");
     } catch (e) {
-      print("❌ ERROR LOADING SCHEDULES => $e");
+      // print("❌ ERROR LOADING SCHEDULES => $e");
     } finally {
       setState(() {
         isScheduleLoading = false;
@@ -372,8 +370,8 @@ class _TableTabContentState extends State<TableTabContent> {
 
           final selectedDay = DateFormat('EEEE').format(pickedDate);
 
-          print("📅 PICKED DATE: $pickedDate");
-          print("📅 SELECTED DAY: $selectedDay");
+          // print("📅 PICKED DATE: $pickedDate");
+          // print("📅 SELECTED DAY: $selectedDay");
 
           RestaurantSchedule? schedule;
 
@@ -384,9 +382,9 @@ class _TableTabContentState extends State<TableTabContent> {
                   selectedDay.trim().toLowerCase(),
             );
 
-            print("✅ MATCHED SCHEDULE => ${schedule.day}");
+            // print("✅ MATCHED SCHEDULE => ${schedule.day}");
           } catch (e) {
-            print("❌ NO SCHEDULE FOUND");
+            // print("❌ NO SCHEDULE FOUND");
             schedule = null;
           }
 
@@ -476,80 +474,6 @@ class _TableTabContentState extends State<TableTabContent> {
       },
     );
   }
-
-  // Widget _buildSubmitButton(BuildContext context) {
-  //   return SizedBox(
-  //     width: double.infinity,
-  //     child: ElevatedButton(
-  //       onPressed: isFormValid
-  //           ? () {
-  //               if (nameController.text.trim().isEmpty) {
-  //                 AppAlert.error(context, "Please enter name");
-  //                 return;
-  //               }
-  //
-  //               if (phoneController.text.trim().isEmpty) {
-  //                 AppAlert.error(context, "Please enter phone number");
-  //                 return;
-  //               }
-  //
-  //               if (dateController.text.trim().isEmpty) {
-  //                 AppAlert.error(context, "Please select booking date");
-  //                 return;
-  //               }
-  //
-  //               if (timeController.text.trim().isEmpty ||
-  //                   selectedTime == null) {
-  //                 AppAlert.error(context, "Please select booking time");
-  //                 return;
-  //               }
-  //
-  //               if (context.mounted) {
-  //                 Navigator.push(
-  //                   context,
-  //                   MaterialPageRoute(
-  //                     builder: (_) => SeatingScreen(
-  //                       vendorId: widget.vendorId,
-  //                       guestName: nameController.text.trim(),
-  //                       phoneNumber: phoneController.text.trim(),
-  //                       bookingDate: dateController.text.trim(),
-  //                       startTime:
-  //                           "${selectedTime!.hour.toString().padLeft(2, '0')}:"
-  //                           "${selectedTime!.minute.toString().padLeft(2, '0')}:00",
-  //                       capacity: selectedCapacity ?? 0,
-  //                     ),
-  //                   ),
-  //                 );
-  //               }
-  //             }
-  //           : null, // ✅ Button disabled when form invalid
-  //
-  //       style: ElevatedButton.styleFrom(
-  //         backgroundColor: AppColors.of(context).primary,
-  //         disabledBackgroundColor: Colors.grey.shade400,
-  //         foregroundColor: Colors.white,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(12),
-  //         ),
-  //         padding: const EdgeInsets.symmetric(vertical: 16),
-  //       ),
-  //
-  //       child: _isLoading
-  //           ? const SizedBox(
-  //               width: 20,
-  //               height: 20,
-  //               child: CircularProgressIndicator(
-  //                 color: Colors.white,
-  //                 strokeWidth: 2,
-  //               ),
-  //             )
-  //           : const Text(
-  //               "Select Table",
-  //               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-  //             ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildSubmitButton(BuildContext context) {
     return SizedBox(

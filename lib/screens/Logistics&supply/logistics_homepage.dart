@@ -121,7 +121,7 @@ class _HomePageState extends State<logistic_HomePage>
         setState(() => _currentLocation = 'Enable location');
       }
     } catch (e) {
-      debugPrint('Guest location error: $e');
+      //       debugPrint('Guest location error: $e');
       if (mounted) setState(() => _currentLocation = 'Location unavailable');
     } finally {
       if (mounted) setState(() => _isGuestLocationLoading = false);
@@ -152,7 +152,7 @@ class _HomePageState extends State<logistic_HomePage>
         _handleInvalidLocation();
       }
     } catch (e) {
-      debugPrint("❌ Location API Error: $e");
+      //       debugPrint("❌ Location API Error: $e");
       if (!mounted) return;
 
       _handleInvalidLocation();
@@ -191,7 +191,7 @@ class _HomePageState extends State<logistic_HomePage>
           .toList();
       if (mounted) setState(() => homepageAds = filtered);
     } catch (e) {
-      debugPrint('Ads error: $e');
+      //       debugPrint('Ads error: $e');
     }
   }
 
@@ -246,7 +246,7 @@ class _HomePageState extends State<logistic_HomePage>
         setState(() {});
       }
     } catch (e) {
-      debugPrint("Update check failed: $e");
+      //       debugPrint("Update check failed: $e");
     }
   }
 

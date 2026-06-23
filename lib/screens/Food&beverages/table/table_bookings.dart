@@ -98,7 +98,7 @@ class _TableBookingsState extends State<TableBookings> {
     try {
       await food_Authservice.getTableBookings();
     } catch (e) {
-      debugPrint(e.toString());
+      //       debugPrint(e.toString());
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -226,18 +226,6 @@ class _BookingCard extends StatelessWidget {
 
   const _BookingCard({required this.booking, this.onAddItems});
 
-  // Derive display status:
-  //   arrivalStatus CANCELLED/COMPLETED take priority,
-  //   then seating == null → 'BOOKED', seating != null → 'ALLOTTED'
-  // String get _status {
-  //   final arrival = booking.arrivalStatus?.toUpperCase() ?? '';
-  //
-  //   if (arrival == 'CANCELLED') return 'CANCELLED';
-  //   if (arrival == 'COMPLETED') return 'COMPLETED';
-  //   if (arrival == 'ARRIVED') return 'ARRIVED';
-  //
-  //   return booking.seating != null ? 'ALLOTTED' : 'BOOKED';
-  // }
   String get _status {
     switch (booking.arrivalStatus.toUpperCase()) {
       case 'ARRIVED':

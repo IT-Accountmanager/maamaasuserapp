@@ -133,7 +133,7 @@ class _RestaurentsState extends State<Restaurents> {
         setState(() => _currentLocation = 'Enable location');
       }
     } catch (e) {
-      debugPrint('Guest location error: $e');
+      //       debugPrint('Guest location error: $e');
       if (mounted) setState(() => _currentLocation = 'Location unavailable');
     } finally {
       if (mounted) setState(() => _isGuestLocationLoading = false);
@@ -146,9 +146,9 @@ class _RestaurentsState extends State<Restaurents> {
 
       if (!mounted) return;
 
-      print("📍 RAW LOC: $loc");
-      print("📍 ADDRESS CHECK: ${loc?.address}");
-      print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
+      // print("📍 RAW LOC: $loc");
+      // print("📍 ADDRESS CHECK: ${loc?.address}");
+      // print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
 
       // ✅ VALID LOCATION CHECK
       final isValidLocation = loc != null && loc.address.trim().isNotEmpty;
@@ -165,7 +165,7 @@ class _RestaurentsState extends State<Restaurents> {
         _handleInvalidLocation();
       }
     } catch (e) {
-      debugPrint("❌ Location API Error: $e");
+      //       debugPrint("❌ Location API Error: $e");
       if (!mounted) return;
 
       _handleInvalidLocation();
@@ -239,7 +239,7 @@ class _RestaurentsState extends State<Restaurents> {
               // _locationCategory = address.category;
               _currentLocation = address.fullAddress;
 
-              print("Category: ${address.category}");
+              // print("Category: ${address.category}");
             });
             _hasShownLocationDialog = false;
             await _refreshAll();
@@ -261,7 +261,7 @@ class _RestaurentsState extends State<Restaurents> {
         selectedCategoryVendorIds = null;
       });
     } catch (e) {
-      debugPrint('Category error: $e');
+      //       debugPrint('Category error: $e');
       if (mounted) setState(() => categories = []);
     } finally {
       if (mounted) setState(() => isCategoriesLoading = false);
@@ -280,31 +280,31 @@ class _RestaurentsState extends State<Restaurents> {
           .toList();
       if (mounted) setState(() => homepageAds = filtered);
     } catch (e) {
-      debugPrint('Ads error: $e');
+      //       debugPrint('Ads error: $e');
     }
   }
 
   Future<void> _refreshAll() async {
-    debugPrint("🔄 _refreshAll() STARTED");
+    //     debugPrint("🔄 _refreshAll() STARTED");
 
     try {
       await Future.wait([_fetchCategories(), _loadAds()]);
-
-      debugPrint("✅ APIs completed successfully");
+      //
+      //       debugPrint("✅ APIs completed successfully");
     } catch (e) {
-      debugPrint("❌ Error in _refreshAll(): $e");
+      //       debugPrint("❌ Error in _refreshAll(): $e");
     }
 
     if (mounted) {
       setState(() {
         _refreshKey++;
       });
-      debugPrint("🔁 UI refreshed, refreshKey: $_refreshKey");
+      //       debugPrint("🔁 UI refreshed, refreshKey: $_refreshKey");
     } else {
-      debugPrint("⚠️ Widget not mounted, skipping setState");
+      //       debugPrint("⚠️ Widget not mounted, skipping setState");
     }
-
-    debugPrint("🏁 _refreshAll() FINISHED");
+    //
+    //     debugPrint("🏁 _refreshAll() FINISHED");
   }
 
   // ── Update ─────────────────────────────────────────────────────────────────
@@ -318,7 +318,7 @@ class _RestaurentsState extends State<Restaurents> {
             info.updateAvailability == UpdateAvailability.updateAvailable;
       });
     } catch (e) {
-      debugPrint('Update check failed: $e');
+      //       debugPrint('Update check failed: $e');
     }
   }
 
@@ -327,7 +327,7 @@ class _RestaurentsState extends State<Restaurents> {
       try {
         await InAppUpdate.performImmediateUpdate();
       } catch (e) {
-        debugPrint('Update error: $e');
+        //         debugPrint('Update error: $e');
       }
     }
   }
@@ -341,8 +341,8 @@ class _RestaurentsState extends State<Restaurents> {
     final normalized = raw.toLowerCase().trim();
 
     final mapped = RestaurentsHelper.typeMapping[normalized];
-
-    debugPrint("📦 API Type: $mapped");
+    //
+    //     debugPrint("📦 API Type: $mapped");
 
     return mapped;
   }
@@ -360,7 +360,7 @@ class _RestaurentsState extends State<Restaurents> {
 
       selectedOrderTypeNotifier.value = cleanType;
 
-      print("🎯 Catering selected → No API call");
+      // print("🎯 Catering selected → No API call");
       return; // 🚫 STOP HERE
     }
 
@@ -368,11 +368,11 @@ class _RestaurentsState extends State<Restaurents> {
     final api = RestaurentsHelper.typeMapping[cleanType];
 
     if (api == null) {
-      debugPrint("❌ Mapping failed for: $cleanType");
+      //       debugPrint("❌ Mapping failed for: $cleanType");
       return;
     }
 
-    print("🚀 Trying to create cart for: $cleanType");
+    // print("🚀 Trying to create cart for: $cleanType");
 
     final result = await food_Authservice.createCart(api);
 
@@ -460,13 +460,7 @@ class _RestaurentsState extends State<Restaurents> {
                   systemOverlayStyle: _isBannerCollapsed
                       ? SystemUiOverlayStyle.dark
                       : SystemUiOverlayStyle.light,
-                  // leading: _isBannerCollapsed
-                  //     ? IconButton(
-                  //         icon: const Icon(Icons.arrow_back_ios),
-                  //         color: Colors.black,
-                  //         onPressed: () => Navigator.pop(context),
-                  //       )
-                  //     : null,
+
                   automaticallyImplyLeading: false,
 
                   title: _isBannerCollapsed ? _buildCollapsedBar() : null,
@@ -670,19 +664,6 @@ class _RestaurentsState extends State<Restaurents> {
               : const VideoPreviewContainer(),
 
           /// 🔹 Gradient overlay
-          // const DecoratedBox(
-          //   decoration: BoxDecoration(
-          //     gradient: LinearGradient(
-          //       begin: Alignment.topCenter,
-          //       end: Alignment.bottomCenter,
-          //       colors: [
-          //         Color(0x99000000), // slightly stronger for readability
-          //         Color(0x33000000),
-          //         Colors.transparent,
-          //       ],
-          //     ),
-          //   ),
-          // ),
           IgnorePointer(
             child: const DecoratedBox(
               decoration: BoxDecoration(
@@ -702,56 +683,56 @@ class _RestaurentsState extends State<Restaurents> {
           /// 🔹 Top Content (SafeArea prevents notch overlap)
           // IgnorePointer(
           //   child:
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 10),
 
-                    /// 📍 Location + Notification Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildLocationContent(
-                            isDark: false, // white text
-                            isExpanded: true, // bigger UI
+                  /// 📍 Location + Notification Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildLocationContent(
+                          isDark: false, // white text
+                          isExpanded: true, // bigger UI
+                        ),
+                      ),
+
+                      /// 🔔 Notification Icon
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => NotificationScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 36.w,
+                          height: 36.w,
+                          decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.notifications_none_rounded,
+                            color: Colors.white,
+                            size: 20,
                           ),
                         ),
-
-                        /// 🔔 Notification Icon
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => NotificationScreen(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            width: 36.w,
-                            height: 36.w,
-                            decoration: BoxDecoration(
-                              // ignore: deprecated_member_use
-                              color: Colors.white.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.notifications_none_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
+          ),
           // ),
         ],
       ),
@@ -958,7 +939,7 @@ class _RestaurentsState extends State<Restaurents> {
     final list = List<FoodCategory>.from(categories);
 
     final comboIndex = list.indexWhere(
-          (e) => e.name.toLowerCase().contains('offers'),
+      (e) => e.name.toLowerCase().contains('offers'),
     );
 
     if (comboIndex > 0) {
@@ -1195,10 +1176,7 @@ class _RestaurentsState extends State<Restaurents> {
                       color: isSelected ? Colors.green : AppColors.primary,
 
                       borderRadius: BorderRadius.circular(10.r),
-                      // border: Border.all(
-                      //   color: isSelected ? AppColors.primary : Colors.black,
-                      //   width: isSelected ? 0 : 1.5,
-                      // ),
+
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
@@ -1809,230 +1787,6 @@ class _RestaurantCard extends StatelessWidget {
     final double cardH = (screenH * 0.30).clamp(220.0, 280.0);
     final double imgH = cardH * 0.58;
 
-    // return GestureDetector(
-    //   onTap: () {
-    //     if (orderType == null) {
-    //       onOrderTypeRequired?.call();
-    //       return;
-    //     }
-    //     Navigator.push(
-    //       context,
-    //       MaterialPageRoute(
-    //         builder: (_) => MenuScreen(
-    //           vendorId: banner.vendorId,
-    //           initialCategoryName: selectedCategoryName,
-    //           // banner: banner,
-    //         ),
-    //       ),
-    //     );
-    //   },
-    //   child: Container(
-    //     height: cardH,
-    //     decoration: BoxDecoration(
-    //       color: restaurentsnewcolour.surface,
-    //       borderRadius: BorderRadius.circular(
-    //         restaurentsnewcolour.cardRadius.r,
-    //       ),
-    //       boxShadow: [
-    //         BoxShadow(
-    //           color: Colors.black.withOpacity(0.07),
-    //           blurRadius: 12,
-    //           offset: const Offset(0, 4),
-    //         ),
-    //       ],
-    //     ),
-    //     child: Column(
-    //       crossAxisAlignment: CrossAxisAlignment.start,
-    //       children: [
-    //         // ── Image ──────────────────────────────────────────────────
-    //         SizedBox(
-    //           height: imgH,
-    //           width: double.infinity,
-    //           child: Stack(
-    //             fit: StackFit.expand,
-    //             children: [
-    //               ClipRRect(
-    //                 borderRadius: BorderRadius.vertical(
-    //                   top: Radius.circular(restaurentsnewcolour.cardRadius.r),
-    //                 ),
-    //                 child: banner.companyBanner.isNotEmpty
-    //                     ? Image.network(
-    //                         banner.companyBanner,
-    //                         fit: BoxFit.cover,
-    //                         errorBuilder: (_, __, ___) => _placeholder(),
-    //                       )
-    //                     : _placeholder(),
-    //               ),
-    //               // Gradient overlay
-    //               Positioned(
-    //                 bottom: 0,
-    //                 left: 0,
-    //                 right: 0,
-    //                 height: imgH * 0.5,
-    //                 child: ClipRRect(
-    //                   borderRadius: BorderRadius.vertical(
-    //                     top: Radius.circular(restaurentsnewcolour.cardRadius.r),
-    //                   ),
-    //                   child: const DecoratedBox(
-    //                     decoration: BoxDecoration(
-    //                       gradient: LinearGradient(
-    //                         begin: Alignment.topCenter,
-    //                         end: Alignment.bottomCenter,
-    //                         colors: [Colors.transparent, Color(0x66000000)],
-    //                       ),
-    //                     ),
-    //                   ),
-    //                 ),
-    //               ),
-    //
-    //               if ((banner.ratings) >= 4.0)
-    //                 Positioned(
-    //                   top: 8.h,
-    //                   left: 10.w,
-    //                   child: Container(
-    //                     padding: EdgeInsets.symmetric(
-    //                       horizontal: 8.w,
-    //                       vertical: 3.h,
-    //                     ),
-    //                     decoration: BoxDecoration(
-    //                       color: Colors.white,
-    //                       borderRadius: BorderRadius.circular(6.r),
-    //                     ),
-    //                     child: Row(
-    //                       mainAxisSize: MainAxisSize.min,
-    //                       children: [
-    //                         Icon(
-    //                           Icons.star_rounded,
-    //                           color: restaurentsnewcolour.primary,
-    //                           size: 11.sp,
-    //                         ),
-    //                         SizedBox(width: 3.w),
-    //                         Text(
-    //                           'Top Rated',
-    //                           style: TextStyle(
-    //                             fontSize: 10.sp,
-    //                             fontWeight: FontWeight.w700,
-    //                             color: restaurentsnewcolour.primary,
-    //                           ),
-    //                         ),
-    //                       ],
-    //                     ),
-    //                   ),
-    //                 ),
-    //             ],
-    //           ),
-    //         ),
-    //
-    //         // ── Info ───────────────────────────────────────────────────
-    //         Expanded(
-    //           child: Padding(
-    //             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-    //             child: Column(
-    //               crossAxisAlignment: CrossAxisAlignment.start,
-    //               mainAxisAlignment: MainAxisAlignment.start,
-    //               children: [
-    //                 // Name + rating
-    //                 Row(
-    //                   crossAxisAlignment: CrossAxisAlignment.start,
-    //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //                   children: [
-    //                     Expanded(
-    //                       child: Text(
-    //                         '${banner.companyName.toUpperCase()}(${banner.type}) ',
-    //                         maxLines: 1,
-    //                         overflow: TextOverflow.ellipsis,
-    //                         style: TextStyle(
-    //                           fontSize: 14.sp,
-    //                           fontWeight: FontWeight.w700,
-    //                           color: restaurentsnewcolour.text,
-    //                         ),
-    //                       ),
-    //                     ),
-    //
-    //                     if ((banner.ratings) > 0) ...[
-    //                       SizedBox(width: 8.w),
-    //                       Container(
-    //                         padding: EdgeInsets.symmetric(
-    //                           horizontal: 6.w,
-    //                           vertical: 3.h,
-    //                         ),
-    //                         decoration: BoxDecoration(
-    //                           color: restaurentsnewcolour.green,
-    //                           borderRadius: BorderRadius.circular(6.r),
-    //                         ),
-    //                         child: Row(
-    //                           mainAxisSize: MainAxisSize.min,
-    //                           children: [
-    //                             const Icon(
-    //                               Icons.star_rounded,
-    //                               color: Colors.white,
-    //                               size: 11,
-    //                             ),
-    //                             SizedBox(width: 2.w),
-    //                             Text(
-    //                               banner.ratings.toString(),
-    //                               style: TextStyle(
-    //                                 color: Colors.white,
-    //                                 fontSize: 11.sp,
-    //                                 fontWeight: FontWeight.w700,
-    //                               ),
-    //                             ),
-    //                           ],
-    //                         ),
-    //                       ),
-    //                     ],
-    //                   ],
-    //                 ),
-    //
-    //                 if (banner.position.isNotEmpty)
-    //                   Text(
-    //                     '${banner.position[0].toUpperCase()}'
-    //                     '${banner.position.substring(1).toLowerCase()}',
-    //                     style: TextStyle(
-    //                       fontSize: 11.sp,
-    //                       color: const Color(0xFF6C63FF),
-    //                       fontWeight: FontWeight.w600,
-    //                     ),
-    //                     maxLines: 1,
-    //                     overflow: TextOverflow.ellipsis,
-    //                   ),
-    //
-    //                 // Address
-    //                 Row(
-    //                   crossAxisAlignment: CrossAxisAlignment.start,
-    //                   children: [
-    //                     Expanded(
-    //                       child: Text(
-    //                         '${banner.addressLine}, ${banner.city}',
-    //                         maxLines: 2,
-    //                         overflow: TextOverflow.ellipsis,
-    //                         style: TextStyle(
-    //                           fontSize: 11.sp,
-    //                           color: restaurentsnewcolour.textLight,
-    //                         ),
-    //                       ),
-    //                     ),
-    //
-    //                     SizedBox(width: 8),
-    //
-    //                     Text(
-    //                       Distancehelpermethod.formatDistance(banner.distance),
-    //                       style: TextStyle(
-    //                         fontSize: 12.sp,
-    //                         fontWeight: FontWeight.w600,
-    //                         color: restaurentsnewcolour.textMuted,
-    //                       ),
-    //                     ),
-    //                   ],
-    //                 ),
-    //               ],
-    //             ),
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // );
     return GestureDetector(
       onTap: () {
         if (orderType == null) {
@@ -2152,19 +1906,6 @@ class _RestaurantCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Expanded(
-                        //   child: Text(
-                        //     '${banner.companyName.toUpperCase()} (${banner.type})',
-                        //
-                        //     maxLines: 2,
-                        //     overflow: TextOverflow.ellipsis,
-                        //     style: TextStyle(
-                        //       fontSize: 14.sp,
-                        //       fontWeight: FontWeight.w700,
-                        //       color: restaurentsnewcolour.text,
-                        //     ),
-                        //   ),
-                        // ),
                         Expanded(
                           child: Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,

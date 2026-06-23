@@ -750,7 +750,7 @@ class _SeatingScreenState extends State<SeatingScreen> {
       }
       return "Available";
     } catch (e) {
-      debugPrint("STATUS ERROR: $e");
+      //       debugPrint("STATUS ERROR: $e");
       return table.seatingStatus;
     }
   }
@@ -784,7 +784,7 @@ class _SeatingScreenState extends State<SeatingScreen> {
         isLoading = false;
       });
     } catch (e) {
-      debugPrint("ERROR: $e");
+      //       debugPrint("ERROR: $e");
       setState(() => isLoading = false);
     }
   }

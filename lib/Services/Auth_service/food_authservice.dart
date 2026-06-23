@@ -62,7 +62,7 @@ class food_Authservice {
     try {
       final endpoint = 'api/timings/get/timings/$vendorId';
 
-      print("🚀 FETCHING SCHEDULES");
+      // print("🚀 FETCHING SCHEDULES");
 
       final response = await ApiClient.get(
         endpoint,
@@ -70,29 +70,29 @@ class food_Authservice {
         requiresAuth: true,
       );
 
-      print("📥 STATUS => ${response.statusCode}");
-      print("📦 BODY => ${response.body}");
+      // print("📥 STATUS => ${response.statusCode}");
+      // print("📦 BODY => ${response.body}");
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
 
-        print("📊 TOTAL ITEMS => ${data.length}");
+        // print("📊 TOTAL ITEMS => ${data.length}");
 
         final schedules = data.map((e) {
-          print("✅ PARSING => $e");
+          // print("✅ PARSING => $e");
 
           return RestaurantSchedule.fromJson(e);
         }).toList();
 
-        print("✅ FINAL SCHEDULES => ${schedules.length}");
+        // print("✅ FINAL SCHEDULES => ${schedules.length}");
 
         return schedules;
       }
 
       return [];
     } catch (e, s) {
-      print("❌ ERROR => $e");
-      print(s);
+      // print("❌ ERROR => $e");
+      // print(s);
 
       return [];
     }
@@ -245,31 +245,31 @@ class food_Authservice {
     };
 
     // 🔥 DEBUG START
-    debugPrint("🟡 SCHEDULE ORDER API CALL");
-    debugPrint("📍 Endpoint: $endpoint");
-    debugPrint("📦 Body: $body");
+    //     debugPrint("🟡 SCHEDULE ORDER API CALL");
+    // debugPrint("📍 Endpoint: $endpoint");
+    //     debugPrint("📦 Body: $body");
 
     final startTime = DateTime.now();
 
     final response = await ApiClient.post(endpoint, body, service: "food");
 
     final duration = DateTime.now().difference(startTime).inMilliseconds;
-
-    debugPrint("⏱ Response Time: ${duration}ms");
-    debugPrint("📡 Status Code: ${response.statusCode}");
-    debugPrint("📨 Raw Response: ${response.body}");
+    //
+    //     debugPrint("⏱ Response Time: ${duration}ms");
+    //     debugPrint("📡 Status Code: ${response.statusCode}");
+    //     debugPrint("📨 Raw Response: ${response.body}");
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      debugPrint("✅ Schedule Order SUCCESS");
-      debugPrint("📥 Parsed Response: $data");
+      //       debugPrint("✅ Schedule Order SUCCESS");
+      //       debugPrint("📥 Parsed Response: $data");
       return data;
     } else {
       final parsed = jsonDecode(response.body);
       final msg =
           parsed['message'] ?? parsed['error'] ?? "Failed to schedule order";
-
-      debugPrint("❌ Schedule Order FAILED: $msg");
+      //
+      //       debugPrint("❌ Schedule Order FAILED: $msg");
 
       throw Exception(msg);
     }
@@ -302,35 +302,35 @@ class food_Authservice {
     final endpoint = buffer.toString();
 
     // 🔥 DEBUG START
-    debugPrint("🟢 PLACE ORDER API CALL");
-    debugPrint("📍 Endpoint: $endpoint");
-    debugPrint("💰 Amount: $amount");
-    debugPrint("💳 Payment Method: $paymentMethod");
-    debugPrint("🪪 Razorpay Payment ID: $razorpayPaymentId");
-    debugPrint("🧾 Razorpay Order ID: $razorpayOrderId");
-    debugPrint("👛 Wallet Types: $walletTypes");
+    //     debugPrint("🟢 PLACE ORDER API CALL");
+    // debugPrint("📍 Endpoint: $endpoint");
+    //     debugPrint("💰 Amount: $amount");
+    //     debugPrint("💳 Payment Method: $paymentMethod");
+    //     debugPrint("🪪 Razorpay Payment ID: $razorpayPaymentId");
+    //     debugPrint("🧾 Razorpay Order ID: $razorpayOrderId");
+    //     debugPrint("👛 Wallet Types: $walletTypes");
 
     final startTime = DateTime.now();
 
     final response = await ApiClient.post(endpoint, {}, service: "food");
 
     final duration = DateTime.now().difference(startTime).inMilliseconds;
-
-    debugPrint("⏱ Response Time: ${duration}ms");
-    debugPrint("📡 Status Code: ${response.statusCode}");
-    debugPrint("📨 Raw Response: ${response.body}");
+    //
+    //     debugPrint("⏱ Response Time: ${duration}ms");
+    //     debugPrint("📡 Status Code: ${response.statusCode}");
+    //     debugPrint("📨 Raw Response: ${response.body}");
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      debugPrint("✅ Place Order SUCCESS");
-      debugPrint("📥 Parsed Response: $data");
+      //       debugPrint("✅ Place Order SUCCESS");
+      //       debugPrint("📥 Parsed Response: $data");
       return data;
     } else {
       final parsed = jsonDecode(response.body);
       final msg =
           parsed['message'] ?? parsed['error'] ?? "Failed to place order";
-
-      debugPrint("❌ Place Order FAILED: $msg");
+      //
+      //       debugPrint("❌ Place Order FAILED: $msg");
 
       throw Exception(msg);
     }
@@ -400,7 +400,7 @@ class food_Authservice {
 
       return true;
     } catch (e) {
-      debugPrint("❌ [AddToCart] Error: $e");
+      //       debugPrint("❌ [AddToCart] Error: $e");
       return false;
     }
   }
@@ -460,7 +460,7 @@ class food_Authservice {
     final response = await ApiClient.get(endpoint, service: "food");
 
     if (response.statusCode == 200) {
-      debugPrint("response :${response.body}");
+      //       debugPrint("response :${response.body}");
       final List<dynamic> data = jsonDecode(response.body);
       if (data.isNotEmpty) {
         final cartJson = data.first as Map<String, dynamic>;
@@ -507,9 +507,9 @@ class food_Authservice {
     final endpoint = "api/cart/delete/tabledinein/cart?userId=$userId";
     try {
       final response = await ApiClient.delete(endpoint, service: "food");
-
-      debugPrint("🗑 Delete Cart Status: ${response.statusCode}");
-      debugPrint("🗑 Delete Cart Body: ${response.body}");
+      //
+      //       debugPrint("🗑 Delete Cart Status: ${response.statusCode}");
+      //       debugPrint("🗑 Delete Cart Body: ${response.body}");
 
       if (response.statusCode == 200) {
         return true;
@@ -518,61 +518,11 @@ class food_Authservice {
         throw Exception(data["message"] ?? "Failed to delete cart");
       }
     } catch (e) {
-      debugPrint("❌ Delete Cart Error: $e");
+      //       debugPrint("❌ Delete Cart Error: $e");
       rethrow;
     }
   }
 
-  // static Future<bool> addToTableCart({
-  //   required int dishId,
-  //   required int quantity,
-  //   required int seatingId,
-  // }) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int userId = prefs.getInt('userId') ?? 0;
-  //   final String customerId = prefs.getString("customerId") ?? '';
-  //
-  //   final endpoint =
-  //       "api/cart/add/table/cart/add-item?userId=$userId&seatingId=$seatingId&customerId=$customerId";
-  //   final body = {"dishId": dishId, "quantity": quantity};
-  //
-  //   try {
-  //     print("🟡 ADD TO TABLE CART START");
-  //     print("➡️ Endpoint: $endpoint");
-  //     print("➡️ Body: $body");
-  //     print("➡️ userId: $userId, seatingId: $seatingId");
-  //
-  //     final response = await ApiClient.post(endpoint, body, service: "food");
-  //
-  //     print("📥 STATUS CODE: ${response.statusCode}");
-  //     print("📥 RESPONSE BODY: ${response.body}");
-  //
-  //     if (response.statusCode != 200 && response.statusCode != 201) {
-  //       print("❌ API FAILED (Invalid status code)");
-  //       return false;
-  //     }
-  //
-  //     final data = jsonDecode(response.body);
-  //     print("✅ DECODED RESPONSE: $data");
-  //
-  //     final int? cartId = data['cartId'];
-  //
-  //     if (cartId != null) {
-  //       await prefs.setInt('cartId', cartId);
-  //       print("🟢 CART ID SAVED: $cartId");
-  //     } else {
-  //       print("⚠️ cartId NOT FOUND in response");
-  //     }
-  //
-  //     print("🟢 ADD TO CART SUCCESS");
-  //     return true;
-  //   } catch (e, stack) {
-  //     print("🔥 ERROR IN addToTableCart");
-  //     print("❌ Error: $e");
-  //     print("📍 StackTrace: $stack");
-  //     return false;
-  //   }
-  // }
   static Future<bool> addToTableCart({
     required int dishId,
     required int quantity,
@@ -590,14 +540,14 @@ class food_Authservice {
     ];
 
     try {
-      print("🟡 ADD TO TABLE CART START");
-      print("➡️ Endpoint: $endpoint");
-      print("➡️ Body: $body");
+      // print("🟡 ADD TO TABLE CART START");
+      // print("➡️ Endpoint: $endpoint");
+      // print("➡️ Body: $body");
 
       final response = await ApiClient.post(endpoint, body, service: "food");
 
-      print("📥 STATUS CODE: ${response.statusCode}");
-      print("📥 RESPONSE BODY: ${response.body}");
+      // print("📥 STATUS CODE: ${response.statusCode}");
+      // print("📥 RESPONSE BODY: ${response.body}");
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         return false;
@@ -613,8 +563,8 @@ class food_Authservice {
 
       return true;
     } catch (e, stack) {
-      print("❌ Error: $e");
-      print("📍 StackTrace: $stack");
+      // print("❌ Error: $e");
+      // print("📍 StackTrace: $stack");
       return false;
     }
   }
@@ -624,25 +574,25 @@ class food_Authservice {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('userId');
       final endpoint = "api/cart/items/$itemId?userId=$userId";
-
-      debugPrint('🗑 DELETE CART ITEM START');
-      debugPrint('➡️ itemId: $itemId');
-      debugPrint('➡️ userId: $userId');
+      //
+      //       debugPrint('🗑 DELETE CART ITEM START');
+      //       debugPrint('➡️ itemId: $itemId');
+      //       debugPrint('➡️ userId: $userId');
 
       final response = await ApiClient.delete(endpoint, service: "food");
-
-      debugPrint('📥 DELETE STATUS: ${response.statusCode}');
-      debugPrint('📥 DELETE RESPONSE: ${response.body}');
+      //
+      //       debugPrint('📥 DELETE STATUS: ${response.statusCode}');
+      //       debugPrint('📥 DELETE RESPONSE: ${response.body}');
 
       if (response.statusCode == 200) {
-        debugPrint('✅ ITEM DELETE SUCCESS');
+        //         debugPrint('✅ ITEM DELETE SUCCESS');
         return true;
       }
-
-      debugPrint('❌ ITEM DELETE FAILED');
+      //
+      //       debugPrint('❌ ITEM DELETE FAILED');
       return false;
     } catch (e) {
-      debugPrint('❌ DELETE CART ERROR: $e');
+      //       debugPrint('❌ DELETE CART ERROR: $e');
       return false;
     }
   }
@@ -659,18 +609,18 @@ class food_Authservice {
     required int removalQuantity,
   }) async {
     try {
-      print("========== CREATE TABLE REQUEST ==========");
+      // print("========== CREATE TABLE REQUEST ==========");
 
       final endpoint = "api/table-requests/create";
 
-      print("ENDPOINT => $endpoint");
+      // print("ENDPOINT => $endpoint");
 
       final prefs = await SharedPreferences.getInstance();
 
       final storedUserId = prefs.getInt('userId');
 
-      print("ARG USER ID => $userId");
-      print("PREF USER ID => $storedUserId");
+      // print("ARG USER ID => $userId");
+      // print("PREF USER ID => $storedUserId");
 
       final body = {
         "vendorId": vendorId,
@@ -684,25 +634,25 @@ class food_Authservice {
         "removalQuantity": removalQuantity,
       };
 
-      print("REQUEST BODY => $body");
+      // print("REQUEST BODY => $body");
 
       final response = await ApiClient.post(endpoint, body, service: 'food');
 
-      print("STATUS CODE => ${response.statusCode}");
-      print("RESPONSE BODY => ${response.body}");
+      // print("STATUS CODE => ${response.statusCode}");
+      // print("RESPONSE BODY => ${response.body}");
 
       final success = response.statusCode == 200 || response.statusCode == 201;
 
-      print("REQUEST SUCCESS => $success");
-
-      print("==========================================");
+      // print("REQUEST SUCCESS => $success");
+      //
+      // print("==========================================");
 
       return success;
     } catch (e, stack) {
-      print("========== CREATE REQUEST ERROR ==========");
-      print("ERROR => $e");
-      print("STACK => $stack");
-      print("==========================================");
+      // print("========== CREATE REQUEST ERROR ==========");
+      // print("ERROR => $e");
+      // print("STACK => $stack");
+      // print("==========================================");
 
       return false;
     }
@@ -748,7 +698,7 @@ class food_Authservice {
         return [];
       }
     } catch (e) {
-      debugPrint("Fetch Capacity Error: $e");
+      //       debugPrint("Fetch Capacity Error: $e");
       return [];
     }
   }
@@ -775,7 +725,7 @@ class food_Authservice {
 
       return [];
     } catch (e) {
-      debugPrint("fetchVendorBookings Error: $e");
+      //       debugPrint("fetchVendorBookings Error: $e");
       return [];
     }
   }
@@ -794,7 +744,7 @@ class food_Authservice {
 
       return [];
     } catch (e) {
-      debugPrint("fetchVendorBookings Error: $e");
+      //       debugPrint("fetchVendorBookings Error: $e");
       return [];
     }
   }
@@ -812,7 +762,7 @@ class food_Authservice {
     final int userId = prefs.getInt('userId') ?? 0;
 
     if (userId == 0) {
-      debugPrint("❌ No userId provided");
+      //       debugPrint("❌ No userId provided");
       return null;
     }
 
@@ -831,11 +781,11 @@ class food_Authservice {
 
     try {
       final response = await ApiClient.post(endpoint, body, service: "food");
-
-      debugPrint("📤 Booking request: ${jsonEncode(body)}");
-      debugPrint(
-        "📥 Booking response: ${response.statusCode} ${response.body}",
-      );
+      //
+      //       debugPrint("📤 Booking request: ${jsonEncode(body)}");
+      //       debugPrint(
+      //         "📥 Booking response: ${response.statusCode} ${response.body}",
+      //       );
 
       dynamic responseData;
 
@@ -849,7 +799,7 @@ class food_Authservice {
 
       return {"statusCode": response.statusCode, "data": responseData};
     } catch (e) {
-      debugPrint("⚠️ Error submitting booking: $e");
+      //       debugPrint("⚠️ Error submitting booking: $e");
       return null;
     }
   }
@@ -991,8 +941,8 @@ class food_Authservice {
     }
   }
 
-  static Future<bool> cancelOrder(int orderId) async {
-    final endpoint = "api/orders/cancal/total/order/$orderId";
+  static Future<bool> cancelOrder(int orderId, String reason) async {
+    final endpoint = "api/orders/cancel/total/order/$orderId?reason=$reason";
 
     final response = await ApiClient.put(
       endpoint,
@@ -1036,8 +986,8 @@ class food_Authservice {
     final endpoint = "api/orders/feedback/$orderId";
 
     try {
-      debugPrint("===== SUBMIT RATING API =====");
-      debugPrint("Endpoint: $endpoint");
+      //       debugPrint("===== SUBMIT RATING API =====");
+      //       debugPrint("Endpoint: $endpoint");
 
       final body = {
         "ratings": rating,
@@ -1045,24 +995,24 @@ class food_Authservice {
         "ratingCategory": category,
         "ratedAt": DateTime.now().toIso8601String(),
       };
-
-      debugPrint("Request Body: $body");
+      //
+      //       debugPrint("Request Body: $body");
 
       final response = await ApiClient.put(endpoint, body, service: 'food');
-
-      debugPrint("Status Code: ${response.statusCode}");
-      debugPrint("Response Body: ${response.body}");
+      //
+      //       debugPrint("Status Code: ${response.statusCode}");
+      //       debugPrint("Response Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("Rating submitted successfully");
+        //         debugPrint("Rating submitted successfully");
         return true;
       } else {
-        debugPrint("Rating submission failed");
+        //         debugPrint("Rating submission failed");
         return false;
       }
     } catch (e, stackTrace) {
-      debugPrint("Submit Rating Error: $e");
-      debugPrint("StackTrace: $stackTrace");
+      //       debugPrint("Submit Rating Error: $e");
+      //       debugPrint("StackTrace: $stackTrace");
       return false;
     }
   }
@@ -1084,9 +1034,9 @@ class food_Authservice {
         endpoint,
         service: "food",
       ); // Using Services helper
-      debugPrint(
-        "📥 Confirmed list response: ${response.statusCode} ${response.body}",
-      );
+      // debugPrint(
+      //   "📥 Confirmed list response: ${response.statusCode} ${response.body}",
+      // );
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
@@ -1113,40 +1063,40 @@ class food_Authservice {
     final endpoint = "api/seatingdetails/seating-details/$seatingId";
 
     final body = {'arrivalStatus': arrivalStatus};
-
-    debugPrint("🚀 [sendArrivalStatus] START ----------------------");
-    debugPrint("📍 seatingId: $seatingId");
-    debugPrint("📌 arrivalStatus: $arrivalStatus");
-    debugPrint("🌐 endpoint: $endpoint");
-    debugPrint("📦 body: $body");
+    //
+    //     debugPrint("🚀 [sendArrivalStatus] START ----------------------");
+    //     debugPrint("📍 seatingId: $seatingId");
+    //     debugPrint("📌 arrivalStatus: $arrivalStatus");
+    //     debugPrint("🌐 endpoint: $endpoint");
+    //     debugPrint("📦 body: $body");
 
     try {
       final response = await ApiClient.put(endpoint, body, service: "food");
-
-      debugPrint("📡 Response Status Code: ${response.statusCode}");
-      debugPrint("📡 Response Body: ${response.body}");
+      //
+      //       debugPrint("📡 Response Status Code: ${response.statusCode}");
+      //       debugPrint("📡 Response Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("✅ API SUCCESS - Saving to local storage");
+        //         debugPrint("✅ API SUCCESS - Saving to local storage");
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('id', seatingId);
-
-        debugPrint("💾 Stored seatingId in SharedPreferences: $seatingId");
-        debugPrint("🎉 [sendArrivalStatus] SUCCESS -------------------");
+        //
+        //         debugPrint("💾 Stored seatingId in SharedPreferences: $seatingId");
+        //         debugPrint("🎉 [sendArrivalStatus] SUCCESS -------------------");
 
         return true;
       } else {
-        debugPrint("⚠️ API FAILED with status: ${response.statusCode}");
-        debugPrint("🧾 Error Response Body: ${response.body}");
-        debugPrint("❌ [sendArrivalStatus] FAILED -------------------");
+        //         debugPrint("⚠️ API FAILED with status: ${response.statusCode}");
+        //         debugPrint("🧾 Error Response Body: ${response.body}");
+        //         debugPrint("❌ [sendArrivalStatus] FAILED -------------------");
 
         return false;
       }
     } catch (e, stackTrace) {
-      debugPrint("🔥 Exception in sendArrivalStatus: $e");
-      debugPrint("🧵 StackTrace: $stackTrace");
-      debugPrint("❌ [sendArrivalStatus] ERROR --------------------");
+      //       debugPrint("🔥 Exception in sendArrivalStatus: $e");
+      //       debugPrint("🧵 StackTrace: $stackTrace");
+      //       debugPrint("❌ [sendArrivalStatus] ERROR --------------------");
 
       return false;
     }
@@ -1169,38 +1119,15 @@ class food_Authservice {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) => TableCartModel.fromJson(json)).toList();
       } else {
-        debugPrint('❌ Failed to load cart data: ${response.statusCode}');
+        //         debugPrint('❌ Failed to load cart data: ${response.statusCode}');
         return [];
       }
     } catch (e) {
-      debugPrint('⚠️ Error fetching table cart: $e');
+      //       debugPrint('⚠️ Error fetching table cart: $e');
       return [];
     }
   }
 
-  // static Future<bool> updateCartItemStatus({
-  //   required int itemId,
-  //   required String status,
-  //   String? note,
-  // }) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final cartId  = prefs.getInt('cartId');
-  //   // final endpoint = "api/cart/cartitem/status/$itemId?status=$status";
-  //   final endpoint = "api/cart/update/table/quantity/status/$cartId?itemId=$itemId&quantity=$quantity&status=CONFIRMED&note=$note";
-  //
-  //   try {
-  //     // Call PUT with just the endpoint
-  //     final response = await ApiClient.put(endpoint, {}, service: "food");
-  //
-  //     // debugPrint("🛠️ PUT Request URL: $endpoint");
-  //     // debugPrint("🔹 Response: ${response.statusCode} ${response.body}");
-  //
-  //     return response.statusCode == 200;
-  //   } catch (e) {
-  //     // debugPrint("❌ Error updating cart item status: $e");
-  //     return false;
-  //   }
-  // }
   static Future<bool> updateCartItemStatus({
     required int itemId,
     required int quantity,
@@ -1219,7 +1146,7 @@ class food_Authservice {
 
     try {
       final response = await ApiClient.put(endpoint, {}, service: "food");
-      debugPrint(" response :${response.body}");
+      //       debugPrint(" response :${response.body}");
 
       return response.statusCode == 200;
     } catch (e) {
@@ -1231,7 +1158,7 @@ class food_Authservice {
     try {
       final endpoint = "api/billing/get/$vendorId";
 
-      print("Billing endpoint = $endpoint");
+      // print("Billing endpoint = $endpoint");
 
       final response = await ApiClient.get(
         endpoint,
@@ -1239,20 +1166,20 @@ class food_Authservice {
         requiresAuth: true,
       );
 
-      print("Billing statusCode = ${response.statusCode}");
-      print("Billing body = ${response.body}");
+      // print("Billing statusCode = ${response.statusCode}");
+      // print("Billing body = ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        print("Decoded billingData = $data");
+        // print("Decoded billingData = $data");
 
         return data;
       }
 
       return {};
     } catch (e) {
-      print("Billing API Exception = $e");
+      // print("Billing API Exception = $e");
       return {};
     }
   }
@@ -1274,13 +1201,13 @@ class food_Authservice {
 
       // Use an empty body if your Services does not expect one
       final response = await ApiClient.put(endpoint, {}, service: "food");
-
-      debugPrint("🛠️ PUT Request URL: $endpoint");
-      debugPrint("🔹 Response: ${response.statusCode} ${response.body}");
+      //
+      //       debugPrint("🛠️ PUT Request URL: $endpoint");
+      //       debugPrint("🔹 Response: ${response.statusCode} ${response.body}");
 
       return response.statusCode == 200;
     } catch (e) {
-      debugPrint("❌ Exception while updating cart item quantity: $e");
+      //       debugPrint("❌ Exception while updating cart item quantity: $e");
       return false;
     }
   }
@@ -1312,19 +1239,19 @@ class food_Authservice {
     }
 
     final url = buffer.toString();
-    debugPrint("📤 Placing order with URL: $url");
+    //     debugPrint("📤 Placing order with URL: $url");
 
     try {
       final response = await ApiClient.post(url, {}, service: 'food');
-      debugPrint("📥 Response Status: ${response.statusCode}");
-      debugPrint("📥 Response Body: ${response.body}");
+      //       debugPrint("📥 Response Status: ${response.statusCode}");
+      //       debugPrint("📥 Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         final orderId = data['orderId'];
         if (orderId == null) {
-          debugPrint("⚠️ orderId missing in Services response");
+          //           debugPrint("⚠️ orderId missing in Services response");
           return {
             "success": false,
             "error": "Invalid response: orderId missing",
@@ -1340,7 +1267,7 @@ class food_Authservice {
         };
       }
     } catch (e) {
-      debugPrint("⚠️ Error placing order: $e");
+      //       debugPrint("⚠️ Error placing order: $e");
       return {"success": false, "error": e.toString()};
     }
   }
@@ -1359,14 +1286,14 @@ class food_Authservice {
       if (couponId != null) {
         body["id"] = couponId is String ? int.parse(couponId) : couponId;
       }
-
-      debugPrint("🔥 PUT $endpoint");
-      debugPrint("🔥 BODY: ${jsonEncode(body)}");
+      //
+      //       debugPrint("🔥 PUT $endpoint");
+      //       debugPrint("🔥 BODY: ${jsonEncode(body)}");
 
       final response = await ApiClient.put(endpoint, body, service: "food");
-
-      debugPrint("🔥 STATUS: ${response.statusCode}");
-      debugPrint("🔥 RESPONSE: ${response.body}");
+      //
+      //       debugPrint("🔥 STATUS: ${response.statusCode}");
+      //       debugPrint("🔥 RESPONSE: ${response.body}");
 
       if (response.statusCode == 200) {
         return CouponResult(success: true);
@@ -1379,7 +1306,7 @@ class food_Authservice {
         return CouponResult(success: false, error: errorMsg);
       }
     } catch (e) {
-      debugPrint("❌ updateCartSettings Error: $e");
+      //       debugPrint("❌ updateCartSettings Error: $e");
       return CouponResult(success: false, error: e.toString());
     }
   }
@@ -1424,10 +1351,17 @@ class food_Authservice {
     try {
       final response = await ApiClient.post(endpoint, {}, service: "food");
 
+      print("📡 STATUS: ${response.statusCode}");
+      print("📥 RAW BODY: '${response.body}'");
+      print("📏 BODY LENGTH: ${response.body.length}");
+
+      if (response.body.trim().isEmpty) {
+        return {"success": false, "message": "Server returned empty response"};
+      }
+
       final body = jsonDecode(response.body);
 
-      print("📡 STATUS: ${response.statusCode}");
-      print("📥 BODY: $body");
+      print("📦 DECODED BODY: $body");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final int? cartId = body['cartId'];
@@ -1440,13 +1374,15 @@ class food_Authservice {
         }
       }
 
-      /// ❌ Handle backend error message
       return {
         "success": false,
         "message": body['message'] ?? "Something went wrong",
       };
-    } catch (e) {
-      return {"success": false, "message": "Network error"};
+    } catch (e, stackTrace) {
+      print("❌ CREATE CART ERROR: $e");
+      print(stackTrace);
+
+      return {"success": false, "message": e.toString()};
     }
   }
 
@@ -1511,7 +1447,7 @@ class food_Authservice {
       };
 
       final res = await ApiClient.post(endpoint, body, service: "food");
-
+      print("captured :${res.body}");
       return res.statusCode == 200;
     } catch (e) {
       return false;
@@ -1561,11 +1497,11 @@ class food_Authservice {
 
         return data is int ? data : int.tryParse(data.toString()) ?? 0;
       } else {
-        debugPrint("❌ Failed to fetch cart count → ${response.statusCode}");
+        //         debugPrint("❌ Failed to fetch cart count → ${response.statusCode}");
         return 0;
       }
     } catch (e) {
-      debugPrint("💥 Error fetching cart count: $e");
+      //       debugPrint("💥 Error fetching cart count: $e");
       return 0;
     }
   }

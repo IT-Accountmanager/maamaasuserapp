@@ -94,7 +94,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   label: Text(
                     type,
                     style: TextStyle(
-                        color: isSelected ? Colors.black : Colors.black54),
+                      color: isSelected ? Colors.black : Colors.black54,
+                    ),
                   ),
                   selected: isSelected,
                   backgroundColor: Colors.white,
@@ -108,7 +109,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                        color: isSelected ? Colors.orange : Colors.grey.shade300),
+                      color: isSelected ? Colors.orange : Colors.grey.shade300,
+                    ),
                   ),
                 );
               }).toList(),
@@ -169,7 +171,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   label: Text(
                     category,
                     style: TextStyle(
-                        color: isSelected ? Colors.black : Colors.black54),
+                      color: isSelected ? Colors.black : Colors.black54,
+                    ),
                   ),
                   selected: isSelected,
                   backgroundColor: Colors.white,
@@ -182,7 +185,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                        color: isSelected ? Colors.orange : Colors.grey.shade300),
+                      color: isSelected ? Colors.orange : Colors.grey.shade300,
+                    ),
                   ),
                 );
               }).toList(),

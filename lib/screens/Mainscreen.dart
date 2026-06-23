@@ -75,7 +75,7 @@ class _MainScreenState extends State<MainScreenfood>
       if (widget.showPromotion && !isDeepLink) {
         checkPromotions();
       } else {
-        debugPrint("🚫 Skipping promotion popup due to deep link navigation");
+        //         debugPrint("🚫 Skipping promotion popup due to deep link navigation");
       }
     });
   }
@@ -83,7 +83,7 @@ class _MainScreenState extends State<MainScreenfood>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      debugPrint("🔄 App resumed");
+      //       debugPrint("🔄 App resumed");
 
       loadActiveOrder();
 
@@ -141,7 +141,7 @@ class _MainScreenState extends State<MainScreenfood>
         setState(() {});
       }
     } catch (e) {
-      debugPrint("❌ Active order error: $e");
+      //       debugPrint("❌ Active order error: $e");
     } finally {
       if (mounted) {
         setState(() => isLoadingOrder = false);
@@ -156,8 +156,8 @@ class _MainScreenState extends State<MainScreenfood>
         listenerId: 'bottom_bar',
       );
     }
-
-    debugPrint("🟢 Subscribed to order: $orderId");
+    //
+    //     debugPrint("🟢 Subscribed to order: $orderId");
 
     WebSocketManager().subscribeOrderStatus(orderId, (data) {
       if (!mounted || activeOrder == null) return;
@@ -166,13 +166,13 @@ class _MainScreenState extends State<MainScreenfood>
         final newStatus = OrderStatus.fromString(
           data['status'] as String? ?? '',
         );
-
-        debugPrint("📦 Order update received: ${newStatus.name}");
+        //
+        //         debugPrint("📦 Order update received: ${newStatus.name}");
 
         final updatedOrder = activeOrder!.copyWith(status: newStatus);
 
         if (!updatedOrder.isActive) {
-          debugPrint("✅ Order completed");
+          //           debugPrint("✅ Order completed");
 
           _unsubscribeFromOrder();
 
@@ -187,7 +187,7 @@ class _MainScreenState extends State<MainScreenfood>
           activeOrder = updatedOrder;
         });
       } catch (e) {
-        debugPrint("❌ Websocket parse error: $e");
+        //         debugPrint("❌ Websocket parse error: $e");
       }
     }, listenerId: 'bottom_bar');
 
@@ -200,8 +200,8 @@ class _MainScreenState extends State<MainScreenfood>
         activeOrder!.orderId,
         listenerId: 'bottom_bar',
       );
-
-      debugPrint("🔴 Unsubscribed from order ${activeOrder!.orderId}");
+      //
+      //       debugPrint("🔴 Unsubscribed from order ${activeOrder!.orderId}");
     }
 
     _isSubscribedToOrder = false;
@@ -230,7 +230,7 @@ class _MainScreenState extends State<MainScreenfood>
         PromotionPopup.show(context, randomAd);
       });
     } catch (e) {
-      debugPrint("Promotion error: $e");
+      //       debugPrint("Promotion error: $e");
     }
   }
 
@@ -299,70 +299,307 @@ class _MainScreenState extends State<MainScreenfood>
             ),
 
           /// BOTTOM NAV
-          SafeArea(
-            top: false,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              height: _showBottomBar ? kBottomNavigationBarHeight : 0,
-              child: Wrap(children: [_buildBottomBar()]),
-            ),
-          ),
+          // SafeArea(
+          //   top: false,
+          //   child: AnimatedContainer(
+          //     duration: const Duration(milliseconds: 250),
+          //     height: _showBottomBar ? kBottomNavigationBarHeight : 0,
+          //     child: Wrap(children: [_buildBottomBar()]),
+          //   ),
+          // ),
+          _showBottomBar
+              ? Padding(
+                  padding: EdgeInsets.only(
+                    left: 12,
+                    right: 12,
+                    bottom: MediaQuery.of(context).padding.bottom + 8,
+                  ),
+                  child: _buildModernBottomBar(),
+                  // child: _buildBottomBar(),
+                )
+              : const SizedBox.shrink(),
+
+          // SafeArea(
+          //   top: false,
+          //   minimum: const EdgeInsets.only(bottom: 4),
+          //   child: AnimatedContainer(
+          //     duration: const Duration(milliseconds: 250),
+          //     height: _showBottomBar ? 80 : 0,
+          //     child: _buildBottomBar(),
+          //   ),
+          // ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomBar() {
-    return BottomNavigationBar(
-      backgroundColor: Colors.white,
+  Widget _buildModernBottomBar() {
+    return Container(
+      height: 68,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _navItem(Icons.home_rounded, 'Home', 0),
+          _navItem(Icons.play_circle_fill_rounded, 'Deals', 1),
+          _cartNavButton(),
+          _navItem(Icons.person_rounded, 'Profile', 3),
+        ],
+      ),
+    );
+  }
 
-      currentIndex: _currentIndex,
+  Widget _navItem(IconData icon, String label, int index) {
+    final isSelected = _currentIndex == index;
 
-      type: BottomNavigationBarType.fixed,
-
-      selectedItemColor: AppColors.primary,
-
-      unselectedItemColor: Colors.grey,
-
-      onTap: (index) {
-        /// Pause reels
-        if (_currentIndex == 1 && index != 1) {
-          reelsKey.currentState?.setScreenActive(false);
-        }
-
-        /// Resume reels
-        if (index == 1) {
-          reelsKey.currentState?.setScreenActive(true);
-        }
-
-        /// Reload cart
-        if (index == 2) {
-          final cartScreen = _screens[2] as CommonCartScreen;
-
-          cartScreen.reloadCart?.call();
-        }
-
+    return InkWell(
+      borderRadius: BorderRadius.circular(15),
+      onTap: () {
         setState(() {
           _currentIndex = index;
-          _showBottomBar = true;
         });
       },
-
-      items: [
-        const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.play_circle_rounded),
-          label: 'Deals',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withOpacity(.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
         ),
-
-        _cartNavItem(),
-
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isSelected ? AppColors.primary : Colors.grey),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? AppColors.primary : Colors.grey,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _cartNavButton() {
+    return ValueListenableBuilder<int>(
+      valueListenable: CartNotifier.count,
+      builder: (context, count, _) {
+        return _navItemWithBadge(Icons.shopping_bag_rounded, 'Cart', 2, count);
+      },
+    );
+  }
+
+  Widget _navItemWithBadge(IconData icon, String label, int index, int count) {
+    final isSelected = _currentIndex == index;
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withOpacity(.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, color: isSelected ? AppColors.primary : Colors.grey),
+                if (count > 0)
+                  Positioned(
+                    right: -8,
+                    top: -5,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        count > 9 ? '9+' : '$count',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? AppColors.primary : Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget _buildBottomBar() {
+  //   return BottomNavigationBar(
+  //     backgroundColor: Colors.white,
+  //
+  //     currentIndex: _currentIndex,
+  //
+  //     type: BottomNavigationBarType.fixed,
+  //
+  //     selectedItemColor: AppColors.primary,
+  //
+  //     unselectedItemColor: Colors.grey,
+  //
+  //     onTap: (index) {
+  //       /// Pause reels
+  //       if (_currentIndex == 1 && index != 1) {
+  //         reelsKey.currentState?.setScreenActive(false);
+  //       }
+  //
+  //       /// Resume reels
+  //       if (index == 1) {
+  //         reelsKey.currentState?.setScreenActive(true);
+  //       }
+  //
+  //       /// Reload cart
+  //       if (index == 2) {
+  //         final cartScreen = _screens[2] as CommonCartScreen;
+  //
+  //         cartScreen.reloadCart?.call();
+  //       }
+  //
+  //       setState(() {
+  //         _currentIndex = index;
+  //         _showBottomBar = true;
+  //       });
+  //     },
+  //
+  //     items: [
+  //       const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+  //
+  //       const BottomNavigationBarItem(
+  //         icon: Icon(Icons.play_circle_rounded),
+  //         label: 'Deals',
+  //       ),
+  //
+  //       _cartNavItem(),
+  //
+  //       const BottomNavigationBarItem(
+  //         icon: Icon(Icons.person),
+  //         label: 'Profile',
+  //       ),
+  //     ],
+  //   );
+  // }
+  Widget _buildBottomBar() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          currentIndex: _currentIndex,
+          type: BottomNavigationBarType.fixed,
+
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: Colors.grey.shade500,
+
+          selectedFontSize: 12,
+          unselectedFontSize: 11,
+
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
+
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+
+          onTap: (index) {
+            /// Pause reels
+            if (_currentIndex == 1 && index != 1) {
+              reelsKey.currentState?.setScreenActive(false);
+            }
+
+            /// Resume reels
+            if (index == 1) {
+              reelsKey.currentState?.setScreenActive(true);
+            }
+
+            /// Reload cart
+            if (index == 2) {
+              final cartScreen = _screens[2] as CommonCartScreen;
+              cartScreen.reloadCart?.call();
+            }
+
+            setState(() {
+              _currentIndex = index;
+              _showBottomBar = true;
+            });
+          },
+
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              activeIcon: Icon(Icons.home_rounded, size: 28),
+              label: 'Home',
+            ),
+
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.play_circle_outline_rounded),
+              activeIcon: Icon(Icons.play_circle_rounded, size: 28),
+              label: 'Deals',
+            ),
+
+            _cartNavItem(),
+
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline_rounded),
+              activeIcon: Icon(Icons.person_rounded, size: 28),
+              label: 'Profile',
+            ),
+          ],
+        ),
+      ),
     );
   }
 

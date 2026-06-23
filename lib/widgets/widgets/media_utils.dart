@@ -9,12 +9,12 @@ class MediaUtils {
   // COMPRESS IMAGE FILE (SAFE & COMPATIBLE)
   // ================================================
   static Future<File?> compressImageFile(
-      File originalFile, {
-        String? purpose,
-        int quality = 80,
-        int maxWidth = 1200,
-        int maxHeight = 1200,
-      }) async {
+    File originalFile, {
+    String? purpose,
+    int quality = 80,
+    int maxWidth = 1200,
+    int maxHeight = 1200,
+  }) async {
     try {
       // print("🔄 Compressing ${purpose ?? 'image'}");
 
@@ -27,7 +27,7 @@ class MediaUtils {
         ImageCompressionConfig(
           path: originalFile.path,
           quality: quality,
-          maxWidth: maxWidth,   // ✅ int
+          maxWidth: maxWidth, // ✅ int
           maxHeight: maxHeight, // ✅ int
         ),
       );
@@ -72,7 +72,7 @@ class MediaUtils {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
         imageQuality: 90,
-        maxWidth: maxWidth.toDouble(),   // ImagePicker requires double
+        maxWidth: maxWidth.toDouble(), // ImagePicker requires double
         maxHeight: maxHeight.toDouble(),
       );
 

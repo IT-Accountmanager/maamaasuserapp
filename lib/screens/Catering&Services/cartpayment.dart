@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -349,7 +348,7 @@ class _cartwalletState extends State<cartpayment> {
                       theme,
                       colorScheme,
                       onAdd: () {
-                        debugPrint("Add Self Loaded Amount");
+                        //                         debugPrint("Add Self Loaded Amount");
 
                         _showAmountBottomSheet(context);
                       },

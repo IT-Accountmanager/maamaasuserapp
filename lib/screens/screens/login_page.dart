@@ -73,10 +73,10 @@ class _LoginPageState extends State<LoginScreen>
   }
 
   Future<void> _handleLogin() async {
-    debugPrint("🔐 Login started");
+    //     debugPrint("🔐 Login started");
 
     if (!_formKey.currentState!.validate()) {
-      debugPrint("❌ Form validation failed");
+      //       debugPrint("❌ Form validation failed");
       return;
     }
 
@@ -84,44 +84,44 @@ class _LoginPageState extends State<LoginScreen>
     setState(() => _isLoading = true);
 
     try {
-      debugPrint("📤 Sending login request...");
+      //       debugPrint("📤 Sending login request...");
       final result = await subscription_AuthService.login(
         identifier: _emailCtrl.text.trim(),
         password: _passCtrl.text.trim(),
       );
-
-      debugPrint("📥 Login response: $result");
+      //
+      //       debugPrint("📥 Login response: $result");
 
       if (!mounted) return;
 
       if (result != 'success') {
-        debugPrint("❌ Login failed: $result");
+        //         debugPrint("❌ Login failed: $result");
         AppAlert.error(context, result);
         return;
       }
-
-      debugPrint("✅ Login successful");
+      //
+      //       debugPrint("✅ Login successful");
       TextInput.finishAutofillContext(shouldSave: true);
-      debugPrint("✅ Autofill save requested");
+      //       debugPrint("✅ Autofill save requested");
 
       ApiClient.isGuestUser = false;
       ApiClient.resetSessionFlag();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
-      debugPrint("💾 Saved isLoggedIn = true");
+      //       debugPrint("💾 Saved isLoggedIn = true");
 
       // 📍 Location
       try {
-        debugPrint("📍 Fetching current location...");
+        //         debugPrint("📍 Fetching current location...");
         final location = await LocationService.getCurrentLocationWithAddress();
 
         if (location != null) {
-          debugPrint("📍 Location fetched:");
-          debugPrint("   Lat: ${location.latitude}");
-          debugPrint("   Lng: ${location.longitude}");
-          debugPrint("   Address: ${location.fullAddress}");
-          debugPrint("   City: ${location.city}");
+          //           debugPrint("📍 Location fetched:");
+          //           debugPrint("   Lat: ${location.latitude}");
+          //           debugPrint("   Lng: ${location.longitude}");
+          //           debugPrint("   Address: ${location.fullAddress}");
+          //           debugPrint("   City: ${location.city}");
 
           final success = await subscription_AuthService.updateLocation(
             latitude: location.latitude,
@@ -129,48 +129,48 @@ class _LoginPageState extends State<LoginScreen>
             address: location.fullAddress,
             city: location.city,
           );
-
-          debugPrint("📡 Location update API status: $success");
+          //
+          //           debugPrint("📡 Location update API status: $success");
 
           if (success) {
             await prefs.setBool('locationSet', true);
-            debugPrint("💾 locationSet = true");
+            //             debugPrint("💾 locationSet = true");
           }
         } else {
-          debugPrint("⚠️ Location is NULL");
+          //           debugPrint("⚠️ Location is NULL");
         }
       } catch (e) {
-        debugPrint("❌ Location error: $e");
+        //         debugPrint("❌ Location error: $e");
       }
 
       // 🔔 FCM
       try {
-        debugPrint("🔔 Fetching FCM token...");
+        //         debugPrint("🔔 Fetching FCM token...");
         final token = await _fcm.getToken();
 
         if (token != null) {
-          debugPrint("🔑 FCM Token: $token");
+          //           debugPrint("🔑 FCM Token: $token");
           await NotificationService.registerFcmToken(token);
-          debugPrint("📡 FCM token sent to server");
+          //           debugPrint("📡 FCM token sent to server");
         } else {
-          debugPrint("⚠️ FCM token is NULL");
+          //           debugPrint("⚠️ FCM token is NULL");
         }
       } catch (e) {
-        debugPrint("❌ FCM error: $e");
+        //         debugPrint("❌ FCM error: $e");
       }
 
       // 🔐 Permissions
-      debugPrint("🔐 Requesting permissions...");
+      //       debugPrint("🔐 Requesting permissions...");
       final permissions = await [
         Permission.location,
         Permission.notification,
       ].request();
-
-      debugPrint("📊 Permission results: $permissions");
+      //
+      //       debugPrint("📊 Permission results: $permissions");
 
       if (!mounted) return;
-
-      debugPrint("➡️ Navigating to MainScreenfood");
+      //
+      //       debugPrint("➡️ Navigating to MainScreenfood");
 
       // Navigator.of(context).pushAndRemoveUntil(
       //   MaterialPageRoute(builder: (_) => const MainScreenfood()),
@@ -181,8 +181,8 @@ class _LoginPageState extends State<LoginScreen>
         (r) => false,
       );
     } catch (e, st) {
-      debugPrint("❌ Login exception: $e");
-      debugPrint("📍 StackTrace: $st");
+      //       debugPrint("❌ Login exception: $e");
+      //       debugPrint("📍 StackTrace: $st");
 
       if (mounted) {
         AppAlert.error(context, 'Something went wrong');
@@ -190,7 +190,7 @@ class _LoginPageState extends State<LoginScreen>
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
-        debugPrint("🔄 Loading stopped");
+        //         debugPrint("🔄 Loading stopped");
       }
     }
   }
@@ -273,69 +273,6 @@ class _LoginPageState extends State<LoginScreen>
       ],
     );
   }
-
-  // ── Form card ──────────────────────────────────────────────────────────────
-  // Widget _buildCard() {
-  //   return Container(
-  //     decoration: BoxDecoration(
-  //       color: _C.surface,
-  //       borderRadius: BorderRadius.circular(20.r),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           // ignore: deprecated_member_use
-  //           color: Colors.black.withOpacity(0.06),
-  //           blurRadius: 20,
-  //           offset: const Offset(0, 4),
-  //         ),
-  //       ],
-  //     ),
-  //     padding: EdgeInsets.all(24.w),
-  //     child: AutofillGroup(
-  //       child: Form(
-  //         key: _formKey,
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.stretch,
-  //           children: [
-  //             _InputField(
-  //               label: 'Phone / Email',
-  //               hint: 'Enter phone or email',
-  //               icon: Icons.person_outline_rounded,
-  //               controller: _emailCtrl,
-  //               focusNode: _emailFocus,
-  //               nextFocus: _passFocus,
-  //               keyboardType: TextInputType.emailAddress,
-  //               validator: (v) {
-  //                 if (v == null || v.isEmpty) return 'This field is required';
-  //                 final email = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-  //                 final phone = RegExp(r'^[6-9]\d{9}$');
-  //                 if (!email.hasMatch(v) && !phone.hasMatch(v)) {
-  //                   return 'Enter a valid email or phone number';
-  //                 }
-  //                 return null;
-  //               },
-  //             ),
-  //             SizedBox(height: 14.h),
-  //             _PasswordField(
-  //               controller: _passCtrl,
-  //               focusNode: _passFocus,
-  //               obscure: _obscure,
-  //               onToggle: () => setState(() => _obscure = !_obscure),
-  //             ),
-  //             SizedBox(height: 10.h),
-  //             _ForgotLink(
-  //               onTap: () => Navigator.push(
-  //                 context,
-  //                 MaterialPageRoute(builder: (_) => ForgetPasswordScreen()),
-  //               ),
-  //             ),
-  //             SizedBox(height: 22.h),
-  //             _LoginButton(isLoading: _isLoading, onPressed: _handleLogin),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildCard() {
     return Container(
@@ -549,35 +486,6 @@ class _InputFieldState extends State<_InputField> {
             ),
           ),
 
-          // child: TextFormField(
-          //   controller: widget.controller,
-          //   focusNode: widget.focusNode,
-          //   keyboardType: widget.keyboardType,
-          //   textInputAction: widget.nextFocus != null
-          //       ? TextInputAction.next
-          //       : TextInputAction.done,
-          //   onFieldSubmitted: (_) {
-          //     if (widget.nextFocus != null) {
-          //       FocusScope.of(context).requestFocus(widget.nextFocus);
-          //     }
-          //   },
-          //   style: TextStyle(fontSize: 14.sp, color: _C.ink),
-          //   decoration: InputDecoration(
-          //     hintText: widget.hint,
-          //     hintStyle: TextStyle(fontSize: 14.sp, color: _C.muted),
-          //     prefixIcon: Icon(
-          //       widget.icon,
-          //       size: 18.sp,
-          //       color: _focused ? AppColors.primary : _C.muted,
-          //     ),
-          //     border: InputBorder.none,
-          //     contentPadding: EdgeInsets.symmetric(
-          //       horizontal: 16.w,
-          //       vertical: 14.h,
-          //     ),
-          //   ),
-          //   validator: widget.validator,
-          // ),
           child: TextFormField(
             controller: widget.controller,
             focusNode: widget.focusNode,
@@ -683,44 +591,7 @@ class _PasswordFieldState extends State<_PasswordField> {
               width: _focused ? 1.5 : 1,
             ),
           ),
-          // child: TextFormField(
-          //   controller: widget.controller,
-          //   focusNode: widget.focusNode,
-          //   obscureText: widget.obscure,
-          //   textInputAction: TextInputAction.done,
-          //   style: TextStyle(fontSize: 14.sp, color: _C.ink),
-          //   decoration: InputDecoration(
-          //     hintText: 'Enter your password',
-          //     hintStyle: TextStyle(fontSize: 14.sp, color: _C.muted),
-          //     prefixIcon: Icon(
-          //       Icons.lock_outline_rounded,
-          //       size: 18.sp,
-          //       color: _focused ? AppColors.primary : _C.muted,
-          //     ),
-          //     suffixIcon: GestureDetector(
-          //       onTap: widget.onToggle,
-          //       child: Padding(
-          //         padding: EdgeInsets.only(right: 4.w),
-          //         child: Icon(
-          //           widget.obscure
-          //               ? Icons.visibility_off_outlined
-          //               : Icons.visibility_outlined,
-          //           size: 18.sp,
-          //           color: _C.muted,
-          //         ),
-          //       ),
-          //     ),
-          //     border: InputBorder.none,
-          //     contentPadding: EdgeInsets.symmetric(
-          //       horizontal: 16.w,
-          //       vertical: 14.h,
-          //     ),
-          //   ),
-          //   validator: (v) {
-          //     if (v == null || v.isEmpty) return 'Password is required';
-          //     return null;
-          //   },
-          // ),
+
           child: TextFormField(
             controller: widget.controller,
             focusNode: widget.focusNode,

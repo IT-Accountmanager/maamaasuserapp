@@ -126,7 +126,7 @@ class _MenuScreenState extends State<tablemneuScreen>
         };
       });
     } catch (e) {
-      debugPrint("Fav error: $e");
+      //       debugPrint("Fav error: $e");
     }
   }
 

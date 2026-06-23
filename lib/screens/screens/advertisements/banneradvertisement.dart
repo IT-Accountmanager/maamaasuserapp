@@ -143,9 +143,9 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
     }
 
     final ad = widget.ads[currentIndex];
-    debugPrint(
-      "Ad ${ad.campaignId} CTA: ${ad.callToAction} Raw: ${callToActionValues.reverse[ad.callToAction]}",
-    );
+    // debugPrint(
+    //   "Ad ${ad.campaignId} CTA: ${ad.callToAction} Raw: ${callToActionValues.reverse[ad.callToAction]}",
+    // );
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -154,11 +154,11 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
           return;
         }
         final ordertype = "DINE_IN";
-
-        debugPrint("✅ ORDER_NOW matched");
+        //
+        //         debugPrint("✅ ORDER_NOW matched");
 
         final result = await food_Authservice.createCart(ordertype);
-        debugPrint("✅ Cart created: $result");
+        //         debugPrint("✅ Cart created: $result");
 
         if (!mounted) return;
 

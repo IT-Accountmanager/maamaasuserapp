@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 
 import '../../screens/screens/orders/food orders/food_helper.dart';
@@ -26,8 +25,8 @@ enum OrderStatus {
         .toUpperCase()
         .replaceAll(' ', '_')
         .replaceAll('-', '_');
-
-    debugPrint("📡 RAW STATUS: $raw → NORMALIZED: $normalized");
+// 
+//     debugPrint("📡 RAW STATUS: $raw → NORMALIZED: $normalized");
 
     const map = {
       'HOLD': OrderStatus.hold,
@@ -55,7 +54,7 @@ enum OrderStatus {
     final result = map[normalized];
 
     if (result == null) {
-      debugPrint("❌ UNKNOWN STATUS FROM API: $raw");
+//       debugPrint("❌ UNKNOWN STATUS FROM API: $raw");
       return OrderStatus.unknown;
     }
 
@@ -230,7 +229,7 @@ class Order {
         }
       }
     } catch (e) {
-      debugPrint("❌ Date parsing error: $e | RAW: $rawDate");
+//       debugPrint("❌ Date parsing error: $e | RAW: $rawDate");
     }
 
     // ❌ DO NOT use DateTime.now()

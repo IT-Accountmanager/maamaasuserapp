@@ -84,7 +84,7 @@ class _HomePageState extends State<HomePage> {
         setState(() => _currentLocation = 'Enable location');
       }
     } catch (e) {
-      debugPrint('Guest location error: $e');
+      //       debugPrint('Guest location error: $e');
       if (mounted) setState(() => _currentLocation = 'Location unavailable');
     } finally {
       if (mounted) setState(() => _isGuestLocationLoading = false);
@@ -97,9 +97,9 @@ class _HomePageState extends State<HomePage> {
 
       if (!mounted) return;
 
-      print("📍 RAW LOC: $loc");
-      print("📍 ADDRESS CHECK: ${loc?.address}");
-      print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
+      // print("📍 RAW LOC: $loc");
+      // print("📍 ADDRESS CHECK: ${loc?.address}");
+      // print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
 
       // ✅ VALID LOCATION CHECK
       final isValidLocation = loc != null && loc.address.trim().isNotEmpty;
@@ -116,7 +116,7 @@ class _HomePageState extends State<HomePage> {
         _handleInvalidLocation();
       }
     } catch (e) {
-      debugPrint("❌ Location API Error: $e");
+      //       debugPrint("❌ Location API Error: $e");
       if (!mounted) return;
 
       _handleInvalidLocation();
@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
           .toList();
       if (mounted) setState(() => homepageAds = filtered);
     } catch (e) {
-      debugPrint('Ads error: $e');
+      //       debugPrint('Ads error: $e');
     }
   }
 
@@ -209,7 +209,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {});
       }
     } catch (e) {
-      debugPrint("Update check failed: $e");
+      //       debugPrint("Update check failed: $e");
     }
   }
 
@@ -225,8 +225,8 @@ class _HomePageState extends State<HomePage> {
               // _locationCategory = address.category;
               _currentLocation = address.fullAddress;
 
-              print("Category: ${address.category}");
-              print("Full Address: ${address.fullAddress}");
+              // print("Category: ${address.category}");
+              // print("Full Address: ${address.fullAddress}");
             });
             _hasShownLocationDialog = false;
             // await _refreshAll();

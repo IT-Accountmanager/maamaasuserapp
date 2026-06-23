@@ -118,19 +118,6 @@ class _CateringsPageState extends State<CateringsPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // const Padding(
-                    //   padding: EdgeInsets.symmetric(
-                    //     horizontal: 7.0,
-                    //     // vertical: 5,
-                    //   ),
-                    //   child: Text(
-                    //     "Top Caterers",
-                    //     style: TextStyle(
-                    //       fontSize: 18,
-                    //       fontWeight: FontWeight.bold,
-                    //     ),
-                    //   ),
-                    // ),
                     ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -138,92 +125,6 @@ class _CateringsPageState extends State<CateringsPage> {
                       itemBuilder: (context, index) {
                         final banner = banners[index];
 
-                        // return GestureDetector(
-                        //   onTap: () {
-                        //     Navigator.push(
-                        //       context,
-                        //       MaterialPageRoute(
-                        //         builder: (_) => CateringVendorScreen(
-                        //           vendorId: banner.vendorId,
-                        //         ),
-                        //       ),
-                        //     );
-                        //   },
-                        //   child: Container(
-                        //     margin: const EdgeInsets.symmetric(
-                        //       horizontal: 10,
-                        //       vertical: 6,
-                        //     ),
-                        //     child: Card(
-                        //       color: Colors.white,
-                        //       elevation: 4,
-                        //       shape: RoundedRectangleBorder(
-                        //         borderRadius: BorderRadius.circular(12),
-                        //       ),
-                        //       child: Column(
-                        //         crossAxisAlignment: CrossAxisAlignment.start,
-                        //         children: [
-                        //           ClipRRect(
-                        //             borderRadius: const BorderRadius.vertical(
-                        //               top: Radius.circular(12),
-                        //             ),
-                        //             child: Image.network(
-                        //               banner.companyBanner,
-                        //               height: 120.h,
-                        //               width: double.infinity,
-                        //               fit: BoxFit.cover,
-                        //               errorBuilder: (_, __, ___) =>
-                        //               const Icon(Icons.broken_image),
-                        //             ),
-                        //           ),
-                        //
-                        //           Padding(
-                        //             padding: const EdgeInsets.all(10),
-                        //             child: Column(
-                        //               crossAxisAlignment: CrossAxisAlignment.start,
-                        //               children: [
-                        //                 Text(
-                        //                   banner.companyName.toUpperCase(),
-                        //                   style: const TextStyle(
-                        //                     fontSize: 16,
-                        //                     fontWeight: FontWeight.bold,
-                        //                   ),
-                        //                   maxLines: 1,
-                        //                   overflow: TextOverflow.ellipsis,
-                        //                 ),
-                        //
-                        //                 const SizedBox(height: 6),
-                        //
-                        //                 Wrap(
-                        //                   spacing: 6,
-                        //                   runSpacing: 4,
-                        //                   children: [
-                        //                     _infoChip(
-                        //                       icon: Icons.location_on_outlined,
-                        //                       label: banner.addressLine,
-                        //                     ),
-                        //                     _infoChip(
-                        //                       icon: Icons.location_city_outlined,
-                        //                       label: banner.city,
-                        //                     ),
-                        //                     _infoChip(
-                        //                       icon: Icons.near_me_outlined,
-                        //                       label:
-                        //                       Distancehelpermethod.formatDistance(
-                        //                         banner.distance,
-                        //                       ),
-                        //                       highlighted: true,
-                        //                     ),
-                        //                   ],
-                        //                 ),
-                        //               ],
-                        //             ),
-                        //           ),
-                        //         ],
-                        //       ),
-                        //     ),
-                        //   ),
-                        // );
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -331,62 +232,9 @@ class _CateringsPageState extends State<CateringsPage> {
                                                 ),
                                               ),
                                             ),
-
-                                            // if ((banner.ratings) > 0) ...[
-                                            //   SizedBox(width: 8.w),
-                                            //
-                                            //   Container(
-                                            //     padding: EdgeInsets.symmetric(
-                                            //       horizontal: 6.w,
-                                            //       vertical: 3.h,
-                                            //     ),
-                                            //     decoration: BoxDecoration(
-                                            //       color: restaurentsnewcolour
-                                            //           .green,
-                                            //       borderRadius:
-                                            //           BorderRadius.circular(
-                                            //             6.r,
-                                            //           ),
-                                            //     ),
-                                            //     child: Row(
-                                            //       mainAxisSize:
-                                            //           MainAxisSize.min,
-                                            //       children: [
-                                            //         const Icon(
-                                            //           Icons.star_rounded,
-                                            //           color: Colors.white,
-                                            //           size: 11,
-                                            //         ),
-                                            //         SizedBox(width: 2.w),
-                                            //         Text(
-                                            //           banner.ratings.toString(),
-                                            //           style: TextStyle(
-                                            //             color: Colors.white,
-                                            //             fontSize: 11.sp,
-                                            //             fontWeight:
-                                            //                 FontWeight.w700,
-                                            //           ),
-                                            //         ),
-                                            //       ],
-                                            //     ),
-                                            //   ),
-                                            // ],
                                           ],
                                         ),
 
-                                        // SizedBox(height: 4.h),
-                                        //
-                                        // if (banner.position.isNotEmpty)
-                                        //   Text(
-                                        //     '${banner.position[0].toUpperCase()}${banner.position.substring(1).toLowerCase()}',
-                                        //     maxLines: 1,
-                                        //     overflow: TextOverflow.ellipsis,
-                                        //     style: TextStyle(
-                                        //       fontSize: 11.sp,
-                                        //       color: const Color(0xFF6C63FF),
-                                        //       fontWeight: FontWeight.w600,
-                                        //     ),
-                                        //   ),
                                         SizedBox(height: 6.h),
 
                                         Row(

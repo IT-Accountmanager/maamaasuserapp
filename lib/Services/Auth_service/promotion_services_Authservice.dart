@@ -1,10 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../Models/promotions_model/promotions_model.dart';
 import '../../Models/subscrptions/ticket_model.dart';
 import 'Apiclient.dart';
@@ -120,124 +117,55 @@ class promotion_Authservice {
     }
   }
 
-  // static Future<void> sendViewAnalytics(Map<String, dynamic> payload) async {
-  //   final endpoint = "api/user/campaign/view";
-  //   final startTime = DateTime.now();
-  //
-  //   debugPrint("\n================ VIEW ANALYTICS START ================");
-  //   debugPrint("📤 Endpoint: $endpoint");
-  //   debugPrint("📦 Payload: $payload");
-  //
-  //   try {
-  //     final response = await ApiClient.post(
-  //       endpoint,
-  //       payload,
-  //       service: "promotions",
-  //     );
-  //
-  //     final duration = DateTime.now().difference(startTime).inMilliseconds;
-  //
-  //     debugPrint("\n📥 RESPONSE RECEIVED");
-  //     debugPrint("🔢 Status Code : ${response.statusCode}");
-  //
-  //     debugPrint("📑 Headers : ${response.headers}");
-  //     debugPrint("⏱ API Time : $duration ms");
-  //
-  //     if (response.statusCode == 200 || response.statusCode == 201) {
-  //       debugPrint("✅ VIEW ANALYTICS SUCCESS");
-  //     } else {
-  //       debugPrint("❌ VIEW ANALYTICS FAILED");
-  //       debugPrint("❌ Backend returned non-success status");
-  //     }
-  //   } catch (e, stackTrace) {
-  //     final duration = DateTime.now().difference(startTime).inMilliseconds;
-  //
-  //     debugPrint("\n❌ VIEW ANALYTICS ERROR");
-  //     debugPrint("💥 Error Type : ${e.runtimeType}");
-  //     debugPrint("💥 Error : $e");
-  //     debugPrint("📚 StackTrace : $stackTrace");
-  //     debugPrint("⏱ Failed After : $duration ms");
-  //
-  //     // 🔥 Dio specific logging
-  //     try {
-  //       final err = e as dynamic;
-  //
-  //       debugPrint("\n🔥 EXTRA ERROR DETAILS");
-  //       debugPrint("📛 Message : ${err.message}");
-  //
-  //       if (err.response != null) {
-  //         debugPrint("🔢 Error Status : ${err.response?.statusCode}");
-  //         debugPrint("📄 Error Body : ${err.response?.data}");
-  //         debugPrint("📑 Error Headers : ${err.response?.headers}");
-  //       }
-  //
-  //       debugPrint("📤 Request Data : ${err.requestOptions?.data}");
-  //       debugPrint("🌐 Request URL : ${err.requestOptions?.uri}");
-  //       debugPrint("📑 Request Headers : ${err.requestOptions?.headers}");
-  //       debugPrint("📡 Method : ${err.requestOptions?.method}");
-  //     } catch (_) {}
-  //   }
-  //
-  //   debugPrint("================ VIEW ANALYTICS END =================\n");
-  // }
-  static Future<void> sendViewAnalytics(
-      Map<String, dynamic> payload,
-      ) async {
-
+  static Future<void> sendViewAnalytics(Map<String, dynamic> payload) async {
     try {
-
-      debugPrint("");
-      debugPrint("=============== VIEW ANALYTICS START ================");
-      debugPrint("📤 Endpoint: api/user/campaign/view");
-      debugPrint("📦 Payload: $payload");
-      debugPrint("");
+      //
+      //       debugPrint("");
+      //       debugPrint("=============== VIEW ANALYTICS START ================");
+      //       debugPrint("📤 Endpoint: api/user/campaign/view");
+      //       debugPrint("📦 Payload: $payload");
+      //       debugPrint("");
 
       final response = await ApiClient.post(
         'api/user/campaign/view',
         payload,
         service: "promotions",
       );
-
-      debugPrint("📥 RESPONSE RECEIVED");
-      debugPrint("🔢 Status Code : ${response.statusCode}");
-      debugPrint("📑 Headers : ${response.headers}");
-      debugPrint("");
+      //
+      //       debugPrint("📥 RESPONSE RECEIVED");
+      //       debugPrint("🔢 Status Code : ${response.statusCode}");
+      //       debugPrint("📑 Headers : ${response.headers}");
+      //       debugPrint("");
 
       // ✅ THIS IS THE IMPORTANT FIX
-      if (response.statusCode != 200 &&
-          response.statusCode != 201) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        //
+        //         debugPrint("❌ VIEW ANALYTICS FAILED");
+        //         debugPrint("❌ Backend returned non-success status");
 
-        debugPrint("❌ VIEW ANALYTICS FAILED");
-        debugPrint("❌ Backend returned non-success status");
-
-        throw Exception(
-          "View analytics failed: ${response.statusCode}",
-        );
+        throw Exception("View analytics failed: ${response.statusCode}");
       }
-
-      debugPrint("✅ VIEW ANALYTICS SUCCESS");
-
+      //
+      //       debugPrint("✅ VIEW ANALYTICS SUCCESS");
     } catch (e) {
-
-      debugPrint("❌ VIEW ANALYTICS ERROR: $e");
+      //
+      //       debugPrint("❌ VIEW ANALYTICS ERROR: $e");
 
       rethrow;
-
     } finally {
-
-      debugPrint("=============== VIEW ANALYTICS END =================");
-      debugPrint("");
-
+      //
+      //       debugPrint("=============== VIEW ANALYTICS END =================");
+      //       debugPrint("");
     }
   }
 
   static Future<void> sendLikeAnalytics(Map<String, dynamic> payload) async {
     final endpoint = "api/user/campaign/like";
     final startTime = DateTime.now();
-
-    debugPrint("\n================ LIKE ANALYTICS START ================");
-    debugPrint("📤 Endpoint: $endpoint");
-    debugPrint("📦 Payload: $payload");
+    //
+    //     debugPrint("\n================ LIKE ANALYTICS START ================");
+    //     debugPrint("📤 Endpoint: $endpoint");
+    //     debugPrint("📦 Payload: $payload");
 
     try {
       final response = await ApiClient.post(
@@ -247,46 +175,46 @@ class promotion_Authservice {
       );
 
       final duration = DateTime.now().difference(startTime).inMilliseconds;
-
-      debugPrint("\n📥 RESPONSE RECEIVED");
-      debugPrint("🔢 Status Code : ${response.statusCode}");
-      debugPrint("📑 Headers : ${response.headers}");
-      debugPrint("⏱ API Time : $duration ms");
+      //
+      //       debugPrint("\n📥 RESPONSE RECEIVED");
+      //       debugPrint("🔢 Status Code : ${response.statusCode}");
+      //       debugPrint("📑 Headers : ${response.headers}");
+      //       debugPrint("⏱ API Time : $duration ms");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("✅ LIKE ANALYTICS SUCCESS");
+        //         debugPrint("✅ LIKE ANALYTICS SUCCESS");
       } else {
-        debugPrint("❌ LIKE ANALYTICS FAILED");
+        //         debugPrint("❌ LIKE ANALYTICS FAILED");
       }
     } catch (e, stackTrace) {
       final duration = DateTime.now().difference(startTime).inMilliseconds;
-
-      debugPrint("\n❌ LIKE ANALYTICS ERROR");
-      debugPrint("💥 Error Type : ${e.runtimeType}");
-      debugPrint("💥 Error : $e");
-      debugPrint("📚 StackTrace : $stackTrace");
-      debugPrint("⏱ Failed After : $duration ms");
+      //
+      //       debugPrint("\n❌ LIKE ANALYTICS ERROR");
+      //       debugPrint("💥 Error Type : ${e.runtimeType}");
+      //       debugPrint("💥 Error : $e");
+      //       debugPrint("📚 StackTrace : $stackTrace");
+      //       debugPrint("⏱ Failed After : $duration ms");
 
       try {
         final err = e as dynamic;
-
-        debugPrint("\n🔥 EXTRA ERROR DETAILS");
-        debugPrint("📛 Message : ${err.message}");
+        //
+        //         debugPrint("\n🔥 EXTRA ERROR DETAILS");
+        //         debugPrint("📛 Message : ${err.message}");
 
         if (err.response != null) {
-          debugPrint("🔢 Error Status : ${err.response?.statusCode}");
-          debugPrint("📄 Error Body : ${err.response?.data}");
-          debugPrint("📑 Error Headers : ${err.response?.headers}");
+          //           debugPrint("🔢 Error Status : ${err.response?.statusCode}");
+          //           debugPrint("📄 Error Body : ${err.response?.data}");
+          //           debugPrint("📑 Error Headers : ${err.response?.headers}");
         }
-
-        debugPrint("📤 Request Data : ${err.requestOptions?.data}");
-        debugPrint("🌐 Request URL : ${err.requestOptions?.uri}");
-        debugPrint("📑 Request Headers : ${err.requestOptions?.headers}");
-        debugPrint("📡 Method : ${err.requestOptions?.method}");
+        //
+        //         debugPrint("📤 Request Data : ${err.requestOptions?.data}");
+        //         debugPrint("🌐 Request URL : ${err.requestOptions?.uri}");
+        //         debugPrint("📑 Request Headers : ${err.requestOptions?.headers}");
+        //         debugPrint("📡 Method : ${err.requestOptions?.method}");
       } catch (_) {}
     }
-
-    debugPrint("================ LIKE ANALYTICS END =================\n");
+    //
+    //     debugPrint("================ LIKE ANALYTICS END =================\n");
   }
 
   static Future<void> sendShareAnalytics(Map<String, dynamic> payload) async {
@@ -342,9 +270,9 @@ class promotion_Authservice {
     };
 
     // 🔥 DEBUG START
-    debugPrint("🚀 ===== SUBMIT ENQUIRY API =====");
-    debugPrint("📍 Endpoint: $endpoint");
-    debugPrint("📦 Request Body: $body");
+    //     debugPrint("🚀 ===== SUBMIT ENQUIRY API =====");
+    //     debugPrint("📍 Endpoint: $endpoint");
+    //     debugPrint("📦 Request Body: $body");
 
     try {
       final response = await ApiClient.post(
@@ -352,23 +280,23 @@ class promotion_Authservice {
         body,
         service: "promotions",
       );
-
-      debugPrint("📡 Response Status: ${response.statusCode}");
-      debugPrint("📨 Response Body: ${response.body}");
+      //
+      //       debugPrint("📡 Response Status: ${response.statusCode}");
+      //       debugPrint("📨 Response Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("✅ Enquiry API SUCCESS");
+        //         debugPrint("✅ Enquiry API SUCCESS");
         return true;
       } else {
-        debugPrint("❌ Enquiry API FAILED");
+        //         debugPrint("❌ Enquiry API FAILED");
         return false;
       }
     } catch (e, stack) {
-      debugPrint("❌ Exception Occurred: $e");
-      debugPrint("📚 Stack Trace: $stack");
+      //       debugPrint("❌ Exception Occurred: $e");
+      //       debugPrint("📚 Stack Trace: $stack");
       return false;
     } finally {
-      debugPrint("🏁 ===== END ENQUIRY API =====");
+      //       debugPrint("🏁 ===== END ENQUIRY API =====");
     }
   }
 }

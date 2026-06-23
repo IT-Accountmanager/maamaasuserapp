@@ -1,4 +1,3 @@
-
 enum BannerContentType { none, about, gallery }
 
 enum DishFilterType {
@@ -9,5 +8,3 @@ enum DishFilterType {
   under150,
   under300,
 }
-
-

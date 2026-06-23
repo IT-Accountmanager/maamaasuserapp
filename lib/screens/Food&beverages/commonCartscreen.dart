@@ -39,7 +39,7 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
     try {
       return jsonDecode(body);
     } catch (e) {
-      debugPrint("❌ JSON Decode Error: $e");
+      //       debugPrint("❌ JSON Decode Error: $e");
       return null;
     }
   }
@@ -49,16 +49,16 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
     final userId = prefs.getInt('userId');
     final endpoint = 'api/cart/get/user/with-seating?userId=$userId';
     final endpoint1 = 'api/cart/get/user/without-seating?userId=$userId';
-
-    debugPrint("🔍 Detecting cart for userId: $userId");
+    //
+    //     debugPrint("🔍 Detecting cart for userId: $userId");
 
     try {
-      debugPrint("📡 Calling TABLE cart API...");
+      //       debugPrint("📡 Calling TABLE cart API...");
 
       final tableResponse = await ApiClient.get(endpoint, service: "food");
-
-      debugPrint("📊 Table Status: ${tableResponse.statusCode}");
-      debugPrint("📥 Table RAW: ${tableResponse.body}");
+      //
+      //       debugPrint("📊 Table Status: ${tableResponse.statusCode}");
+      //       debugPrint("📥 Table RAW: ${tableResponse.body}");
 
       if (tableResponse.statusCode == 200) {
         var decoded = safeDecode(tableResponse.body);
@@ -69,7 +69,7 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
         }
 
         if (decoded is List && decoded.isNotEmpty) {
-          debugPrint("✅ TABLE CART FOUND");
+          //           debugPrint("✅ TABLE CART FOUND");
 
           setState(() {
             activeCartType = "TABLE_DINE_IN";
@@ -80,19 +80,19 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
           return;
         }
       }
-
-      debugPrint("📡 Calling NORMAL cart API...");
+      //
+      //       debugPrint("📡 Calling NORMAL cart API...");
 
       final normalResponse = await ApiClient.get(endpoint1, service: "food");
-
-      debugPrint("📊 Normal Status: ${normalResponse.statusCode}");
-      debugPrint("📥 Normal RAW: ${normalResponse.body}");
+      //
+      // debugPrint("📊 Normal Status: ${normalResponse.statusCode}");
+      //       debugPrint("📥 Normal RAW: ${normalResponse.body}");
 
       if (normalResponse.statusCode == 200) {
         var normalData = safeDecode(normalResponse.body);
 
         if (normalData is List && normalData.isNotEmpty) {
-          debugPrint("✅ NORMAL CART FOUND");
+          //           debugPrint("✅ NORMAL CART FOUND");
 
           setState(() {
             activeCartType = "NORMAL";
@@ -102,15 +102,15 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
           return;
         }
       }
-
-      debugPrint("❌ NO CART FOUND");
+      //
+      //       debugPrint("❌ NO CART FOUND");
 
       setState(() {
         activeCartType = null;
         isLoading = false;
       });
     } catch (e) {
-      debugPrint("🚨 ERROR in detectCart: $e");
+      //       debugPrint("🚨 ERROR in detectCart: $e");
       if (!mounted) return;
 
       setState(() {

@@ -1,4 +1,3 @@
-
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import 'package:flutter/material.dart';
@@ -70,7 +69,7 @@ class _LocationProviderState extends State<LocationProvider> {
         setState(() => currentLocation = 'Enable location');
       }
     } catch (e) {
-      debugPrint('Guest location error: $e');
+      //       debugPrint('Guest location error: $e');
       if (mounted) setState(() => currentLocation = 'Location unavailable');
     } finally {
       if (mounted) setState(() => isGuestLocationLoading = false);
@@ -82,9 +81,7 @@ class _LocationProviderState extends State<LocationProvider> {
       final loc = await subscription_AuthService.fetchCurrentLocation();
       if (!mounted) return;
 
-      final isValid =
-          loc != null &&
-          loc.address.trim().isNotEmpty;
+      final isValid = loc != null && loc.address.trim().isNotEmpty;
 
       if (isValid) {
         setState(() {
@@ -96,7 +93,7 @@ class _LocationProviderState extends State<LocationProvider> {
         _handleInvalidLocation();
       }
     } catch (e) {
-      debugPrint('❌ Location API Error: $e');
+      //       debugPrint('❌ Location API Error: $e');
       if (mounted) _handleInvalidLocation();
     }
   }

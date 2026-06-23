@@ -78,7 +78,7 @@ class ReelsScreenState extends State<ReelsScreen>
   Future<void> _handleRefresh() async {
     if (_isRefreshing) return;
     _isRefreshing = true;
-    debugPrint("🔄 Pull-to-refresh triggered");
+    //     debugPrint("🔄 Pull-to-refresh triggered");
     await _fetchCampaigns();
     _isRefreshing = false;
   }
@@ -201,7 +201,7 @@ class ReelsScreenState extends State<ReelsScreen>
     try {
       await controller.initialize();
     } catch (e) {
-      debugPrint('❌ Video init error [$index]: $e');
+      //       debugPrint('❌ Video init error [$index]: $e');
       controller.dispose();
       return;
     }
@@ -350,7 +350,7 @@ class ReelsScreenState extends State<ReelsScreen>
 
       _startAutoScrollTimer();
     } catch (e) {
-      debugPrint('❌ Campaign API Error: $e');
+      //       debugPrint('❌ Campaign API Error: $e');
     } finally {
       if (mounted && _fetchToken == token) {
         setState(() => isLoading = false);
@@ -361,7 +361,7 @@ class ReelsScreenState extends State<ReelsScreen>
   /// Called externally (e.g. from a push-notification handler) to jump to a
   /// specific campaign after the screen is already visible.
   void openCampaign(int campaignId) {
-    debugPrint("🎯 openCampaign called: $campaignId");
+    //     debugPrint("🎯 openCampaign called: $campaignId");
 
     if (campaigns.isEmpty) {
       // Still loading — re-fetch will honour widget.campaignId instead
@@ -370,7 +370,7 @@ class ReelsScreenState extends State<ReelsScreen>
 
     final index = campaigns.indexWhere((c) => c.campaignId == campaignId);
     if (index == -1) {
-      debugPrint("⚠️ Campaign $campaignId not found in loaded list");
+      //       debugPrint("⚠️ Campaign $campaignId not found in loaded list");
       return;
     }
 
@@ -382,7 +382,7 @@ class ReelsScreenState extends State<ReelsScreen>
     _isScreenActive = active;
 
     if (!active) {
-      debugPrint("⛔ Reels paused (tab hidden)");
+      //       debugPrint("⛔ Reels paused (tab hidden)");
       _autoScrollTimer?.cancel();
       for (final controller in _videoControllers.values) {
         if (controller.value.isInitialized) {
@@ -391,7 +391,7 @@ class ReelsScreenState extends State<ReelsScreen>
         }
       }
     } else {
-      debugPrint("▶️ Reels resumed (tab visible)");
+      //       debugPrint("▶️ Reels resumed (tab visible)");
       for (final controller in _videoControllers.values) {
         if (controller.value.isInitialized) controller.setVolume(1);
       }
@@ -470,7 +470,7 @@ class ReelsScreenState extends State<ReelsScreen>
       final payload = await _buildPayload(campaign.campaignId);
       await promotion_Authservice.sendViewAnalytics(payload);
     } catch (e) {
-      debugPrint('❌ Analytics error: $e');
+      //       debugPrint('❌ Analytics error: $e');
     }
   }
 
@@ -505,20 +505,20 @@ class ReelsScreenState extends State<ReelsScreen>
   }
 
   void _handleCTA(Campaign campaign) async {
-    debugPrint("🚀 CTA Handler Triggered");
-    debugPrint("👉 Goal: ${campaign.goal}");
-    debugPrint("👉 SubGoal: ${campaign.subGoal}");
-    debugPrint("👉 CTA: ${campaign.callToAction}");
+    //     debugPrint("🚀 CTA Handler Triggered");
+    //     debugPrint("👉 Goal: ${campaign.goal}");
+    //     debugPrint("👉 SubGoal: ${campaign.subGoal}");
+    //     debugPrint("👉 CTA: ${campaign.callToAction}");
     // debugPrint("CTA Enum Value = $cta");
 
     final cta = campaign.callToAction;
 
     // 📱 WhatsApp
     if (cta == CallToAction.SEND_MESSAGE) {
-      debugPrint("✅ Branch: WhatsApp");
+      //       debugPrint("✅ Branch: WhatsApp");
 
       final phone = campaign.mobileNumber ?? '';
-      debugPrint("📞 Phone: $phone");
+      //       debugPrint("📞 Phone: $phone");
 
       final message =
           "Hi there 😊\n"
@@ -528,55 +528,43 @@ class ReelsScreenState extends State<ReelsScreen>
 
       final encodedMessage = Uri.encodeComponent(message);
       final url = "https://wa.me/$phone?text=$encodedMessage";
-
-      debugPrint("🌐 URL: $url");
+      //
+      //       debugPrint("🌐 URL: $url");
 
       if (await canLaunchUrl(Uri.parse(url))) {
-        debugPrint("🚀 Launching WhatsApp...");
+        //         debugPrint("🚀 Launching WhatsApp...");
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       } else {
-        debugPrint("❌ Could not launch WhatsApp");
+        //         debugPrint("❌ Could not launch WhatsApp");
       }
       return;
     }
 
     // 📞 Phone Call
     if (cta == CallToAction.CONTACT_US) {
-      debugPrint("✅ Branch: Phone Call");
+      //       debugPrint("✅ Branch: Phone Call");
 
       final phone = campaign.mobileNumber ?? '';
       final url = "tel:$phone";
-
+      //
       debugPrint("📞 Calling: $phone");
 
       if (await canLaunchUrl(Uri.parse(url))) {
-        debugPrint("🚀 Launching Dialer...");
+        //         debugPrint("🚀 Launching Dialer...");
         await launchUrl(Uri.parse(url));
       } else {
-        debugPrint("❌ Could not launch Dialer");
+        //         debugPrint("❌ Could not launch Dialer");
       }
       return;
     }
 
-    // if (cta == CallToAction.ORDER_NOW) {
-    //   debugPrint("✅ Branch: ORDER_NOW");
-    //
-    //   Navigator.push(
-    //     context,
-    //     MaterialPageRoute(
-    //       builder: (_) => MenuScreen(vendorId: campaign.vendorId ?? 0),
-    //     ),
-    //   );
-    //
-    //   return;
-    // }
     if (cta == CallToAction.ORDER_NOW) {
-      debugPrint("✅ Branch: ORDER_NOW");
+      //       debugPrint("✅ Branch: ORDER_NOW");
       final ordertype = "DINE_IN";
 
       try {
         final result = await food_Authservice.createCart(ordertype);
-
+        //
         debugPrint("✅ Cart created: $result");
 
         if (!context.mounted) return;
@@ -588,7 +576,7 @@ class ReelsScreenState extends State<ReelsScreen>
           ),
         );
       } catch (e) {
-        debugPrint("❌ Create cart failed: $e");
+        //         debugPrint("❌ Create cart failed: $e");
 
         if (!context.mounted) return;
 
@@ -607,23 +595,23 @@ class ReelsScreenState extends State<ReelsScreen>
       CallToAction.WATCH_MORE,
       CallToAction.LEARN_MORE,
     ].contains(cta)) {
-      debugPrint("✅ Branch: Website");
+      //       debugPrint("✅ Branch: Website");
 
       final url = campaign.mediaLink ?? '';
-      debugPrint("🌐 Website URL: $url");
+      //       debugPrint("🌐 Website URL: $url");
 
       if (url.isNotEmpty && await canLaunchUrl(Uri.parse(url))) {
-        debugPrint("🚀 Opening Website...");
+        //         debugPrint("🚀 Opening Website...");
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       } else {
-        debugPrint("❌ Invalid or empty URL");
+        //         debugPrint("❌ Invalid or empty URL");
       }
       return;
     }
 
     // 📝 Leads Form
     if (campaign.appType == AppType.FOOD_AND_BEVERAGES) {
-      debugPrint("🍔 AppType: FOOD_AND_BEVERAGES");
+      //       debugPrint("🍔 AppType: FOOD_AND_BEVERAGES");
 
       Navigator.push(
         context,
@@ -635,8 +623,8 @@ class ReelsScreenState extends State<ReelsScreen>
         ),
       );
     } else if (campaign.appType == AppType.CATERINGS_SERVICES) {
-      debugPrint("🍽️ AppType: CATERINGS_SERVICES");
-      debugPrint("📦 VendorId: ${campaign.vendorId}");
+      //       debugPrint("🍽️ AppType: CATERINGS_SERVICES");
+      //       debugPrint("📦 VendorId: ${campaign.vendorId}");
 
       Navigator.push(
         context,
@@ -645,7 +633,7 @@ class ReelsScreenState extends State<ReelsScreen>
         ),
       );
     } else {
-      debugPrint("❌ Unknown AppType: ${campaign.appType}");
+      //       debugPrint("❌ Unknown AppType: ${campaign.appType}");
     }
     return;
   }
@@ -1065,7 +1053,7 @@ class ReelsScreenState extends State<ReelsScreen>
                   );
                   try {
                     await promotion_Authservice.sendLikeAnalytics(payload);
-                    debugPrint('✅ Like sent');
+                    //                     debugPrint('✅ Like sent');
                   } catch (e) {
                     if (mounted && index < campaigns.length) {
                       setState(() {
@@ -1078,7 +1066,7 @@ class ReelsScreenState extends State<ReelsScreen>
                         _likedCampaigns.remove(campaigns[index].campaignId);
                       });
                     }
-                    debugPrint('❌ Like API error: $e');
+                    //                     debugPrint('❌ Like API error: $e');
                   }
                 },
         ),
@@ -1116,7 +1104,7 @@ class ReelsScreenState extends State<ReelsScreen>
             try {
               await promotion_Authservice.sendShareAnalytics(payload);
             } catch (e) {
-              debugPrint('❌ Share analytics error: $e');
+              //               debugPrint('❌ Share analytics error: $e');
             }
 
             if (mounted && index < campaigns.length) {

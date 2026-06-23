@@ -60,7 +60,7 @@ class _CateringCartButtonState extends State<CateringCartButton> {
         setState(() => itemCount = 0);
       }
     } catch (e) {
-      debugPrint("❌ Error fetching catering cart quantity: $e");
+      //       debugPrint("❌ Error fetching catering cart quantity: $e");
       await _loadQuantityFromCache();
     } finally {
       setState(() => _isLoading = false);
@@ -80,7 +80,7 @@ class _CateringCartButtonState extends State<CateringCartButton> {
         cartId = cachedCartId;
       });
     } catch (e) {
-      debugPrint("❌ Error loading quantity from cache: $e");
+      //       debugPrint("❌ Error loading quantity from cache: $e");
       setState(() => itemCount = 0);
     }
   }
@@ -109,7 +109,7 @@ class _CateringCartButtonState extends State<CateringCartButton> {
       }
       return false;
     } catch (e) {
-      debugPrint("❌ Error adding to cart: $e");
+      //       debugPrint("❌ Error adding to cart: $e");
       return false;
     }
   }
@@ -136,7 +136,7 @@ class _CateringCartButtonState extends State<CateringCartButton> {
         await prefs.setInt("package_${packageId}_cartId", cartId!);
       }
     } catch (e) {
-      debugPrint("❌ Error fetching cart ID: $e");
+      //       debugPrint("❌ Error fetching cart ID: $e");
     }
   }
 
@@ -152,13 +152,13 @@ class _CateringCartButtonState extends State<CateringCartButton> {
           cartId ?? prefs.getInt("package_${packageId}_cartId");
 
       if (currentCartId == null) {
-        debugPrint("❌ No cart ID found for update");
+        //         debugPrint("❌ No cart ID found for update");
         return false;
       }
 
-      debugPrint(
-        "📦 Updating cart → cartId: $currentCartId, packageId: $packageId, qty: $quantity",
-      );
+      // debugPrint(
+      //   "📦 Updating cart → cartId: $currentCartId, packageId: $packageId, qty: $quantity",
+      // );
 
       final success = await catering_authservice.updateCartQuantity(
         cartId: currentCartId,
@@ -171,14 +171,14 @@ class _CateringCartButtonState extends State<CateringCartButton> {
         await prefs.setInt("package_${packageId}_quantity", quantity);
         setState(() => itemCount = quantity);
         await _refreshGlobalCount();
-        debugPrint("✅ Cart quantity updated successfully");
+        //         debugPrint("✅ Cart quantity updated successfully");
         return true;
       } else {
-        debugPrint("❌ Backend update failed");
+        //         debugPrint("❌ Backend update failed");
         return false;
       }
     } catch (e) {
-      debugPrint("❌ Error updating cart quantity: $e");
+      //       debugPrint("❌ Error updating cart quantity: $e");
       return false;
     } finally {
       setState(() => _isLoading = false);
@@ -214,7 +214,7 @@ class _CateringCartButtonState extends State<CateringCartButton> {
         _updateGlobalItemCount(cart.items);
       }
     } catch (e) {
-      debugPrint("❌ Error refreshing global count: $e");
+      //       debugPrint("❌ Error refreshing global count: $e");
     }
   }
 

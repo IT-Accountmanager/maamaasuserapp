@@ -148,8 +148,6 @@ class CouponModel {
 
     return now.isAfter(start) && now.isBefore(end);
   }
-
-
 }
 
 class CouponResult {
