@@ -1,3 +1,4 @@
+
 String? safeString(dynamic value) {
   if (value == null) return null;
   if (value is String) return value;
@@ -129,7 +130,7 @@ class CartModel {
       vendorOrderType: (json['vendorOrderType'] as List?)
           ?.map((e) => e.toString())
           .toList(),
-      firstOrderFreeDelivery:  json['firstOrderFreeDelivery'] ?? false,
+      firstOrderFreeDelivery: json['firstOrderFreeDelivery'] ?? false,
     );
   }
 
@@ -191,6 +192,7 @@ class CartItem {
   final int balanceQuantity;
   final bool available;
   bool shedule;
+  List<CartAddon> addons;
 
   CartItem({
     required this.itemId,
@@ -207,6 +209,7 @@ class CartItem {
     required this.balanceQuantity,
     required this.available,
     required this.shedule,
+    required this.addons,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -240,6 +243,39 @@ class CartItem {
       balanceQuantity: json['balanceQuantity'] ?? 0,
       available: json['available'] == true,
       shedule: parsedShedule,
+      addons:
+          (json['addons'] as List<dynamic>?)
+              ?.map((addons) => CartAddon.fromJson(addons))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class CartAddon {
+  final int id;
+  final int addonId;
+  final String addonName;
+  final double addonPrice;
+   int quantity;
+  final double totalPrice;
+
+  CartAddon({
+    required this.id,
+    required this.addonId,
+    required this.addonName,
+    required this.addonPrice,
+    required this.quantity,
+    required this.totalPrice,
+  });
+  factory CartAddon.fromJson(Map<String, dynamic> json) {
+    return CartAddon(
+      id: json["id"] ?? 0,
+      addonId: json['addonId'] ?? 0,
+      addonName: json["addonName"] ?? '',
+      addonPrice: (json["addonPrice"] ?? 0).toDouble(),
+      quantity: json["quantity"] ?? 0,
+      totalPrice: (json["totalPrice"] ?? 0).toDouble(),
     );
   }
 }

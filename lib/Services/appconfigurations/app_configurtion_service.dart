@@ -1,34 +1,57 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:maamaas/Services/Auth_service/Apiclient.dart';
-
 import 'configuration _model.dart';
 
 class AppConfigService {
-  static final Map<String, AppConfiguration> _configs = {};
+  static final AppConfigService instance = AppConfigService._();
 
-  static Future<void> loadConfigs() async {
+  AppConfigService._();
 
-    final endpoint = "app-config/all";
-    final response = await ApiClient.get(endpoint ,service: "subscription");
+  final Map<String, AppConfiguration> _configs = {};
 
-    print(response);
-    print(response.runtimeType);
+  Future<void> loadConfigs() async {
+    final response = await ApiClient.get(
+      "api/app-config/all",
+      service: "subscription",
+    );
 
-    final configs = (jsonDecode(response.body) as List)
-        .map((e) => AppConfiguration.fromJson(e))
-        .toList();
+    debugPrint("CONFIG RESPONSE = ${response.body}");
+
+    final List<dynamic> data = jsonDecode(response.body);
 
     _configs.clear();
 
-    for (final config in configs) {
+    for (final item in data) {
+      final config = AppConfiguration.fromJson(item);
       _configs[config.configKey] = config;
     }
   }
 
-  static List<AppConfiguration> get allConfigs =>
-      _configs.values.toList();
+  AppConfiguration? getConfig(String key) {
+    return _configs[key];
+  }
 
-  static AppConfiguration? get(String key) =>
-      _configs[key];
+  List<AppConfiguration> get allConfigs => _configs.values.toList();
+
+  bool isEnabled(String key) {
+    final config = _configs[key];
+
+    debugPrint("Config Check => $key : ${config?.enable}");
+
+    return config?.enable ?? false;
+  }
+
+  String getValue(String key) {
+    return _configs[key]?.configValue ?? '';
+  }
+
+  int getIntValue(String key) {
+    return int.tryParse(_configs[key]?.configValue ?? '') ?? 0;
+  }
+
+  double getDoubleValue(String key) {
+    return double.tryParse(_configs[key]?.configValue ?? '') ?? 0;
+  }
 }

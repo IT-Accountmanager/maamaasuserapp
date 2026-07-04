@@ -11,7 +11,6 @@ import '../../../Models/food/restaurent_banner_model.dart';
 import 'table_cartbutton.dart';
 import '../Menu/Menuhelper.dart';
 import '../Menu/Top_banner.dart';
-import '../Menu/cart_button.dart';
 import '../../skeleton/menu_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -344,9 +343,10 @@ class _MenuScreenState extends State<tablemneuScreen>
                 vendorId: widget.vendorId,
                 selectedVendorId: widget.vendorId,
                 favoriteMap: favoriteMap,
-                cartButton: (dish) => CartButton(
+                cartButton: (dish) => TableCartButton(
                   dishId: dish.dishId,
                   balanceQuantity: dish.balanceQuantity,
+                  id: widget.seatingId,
                 ),
                 isOutOfStock: (dish) => dish.stock?.toLowerCase() != 'in stock',
                 selectedCategoryId: selectedCategoryId,

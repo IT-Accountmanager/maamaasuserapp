@@ -1,20 +1,6 @@
 import 'package:intl/intl.dart';
 
 class DateTimeHelper {
-  static final _istOffset = const Duration(hours: 5, minutes: 30);
-
-  /// Converts any DateTime to IST (+5:30) explicitly.
-  /// If the DateTime has no timezone info (isUtc == false), it's treated as UTC.
-
-  // static DateTime _toIST(DateTime? dateTime) {
-  //   if (dateTime == null) return DateTime.now();
-  //
-  //   // Convert everything to UTC first
-  //   final utcTime = dateTime.isUtc ? dateTime : dateTime.toUtc();
-  //
-  //   // Then add IST offset
-  //   return utcTime.add(_istOffset);
-  // }
   static DateTime _toIST(DateTime? dateTime) {
     if (dateTime == null) return DateTime.now();
 
@@ -72,5 +58,16 @@ class DateTimeHelper {
     final parsed = DateTime.tryParse(dateStr);
     if (parsed == null) return dateStr;
     return DateFormat('dd MMM yyyy').format(parsed);
+  }
+
+  static String formatTimeString(String? dateTimeStr) {
+    if (dateTimeStr == null || dateTimeStr.isEmpty) return 'N/A';
+
+    try {
+      final dateTime = DateTime.parse(dateTimeStr);
+      return DateFormat('hh:mm a').format(dateTime);
+    } catch (_) {
+      return dateTimeStr;
+    }
   }
 }

@@ -1,23 +1,20 @@
 class ReferralHistoryResponse {
   final double totalReferralAmount;
+  final String referralCode;
   final List<ReferralResponse> referrals;
 
   ReferralHistoryResponse({
     required this.totalReferralAmount,
+    required this.referralCode,
     required this.referrals,
   });
 
   factory ReferralHistoryResponse.fromJson(Map<String, dynamic> json) {
     return ReferralHistoryResponse(
-      totalReferralAmount:
-      (json['totalReferralAmount'] ?? 0).toDouble(),
-
+      totalReferralAmount: (json['totalReferralAmount'] ?? 0).toDouble(),
+      referralCode: json['referralCode'] ?? '',
       referrals: (json['referrals'] as List<dynamic>? ?? [])
-          .map(
-            (e) => ReferralResponse.fromJson(
-          e as Map<String, dynamic>,
-        ),
-      )
+          .map((e) => ReferralResponse.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -31,7 +28,7 @@ class ReferralResponse {
   final int? usedByPartnerId;
   final int? usedByVendorId;
   final int? usedByUserId;
-  final String referralCode;
+  // final String referralCode;
   final double bonusAmount;
   final double totalCashback;
   final bool rewardGiven;
@@ -48,7 +45,7 @@ class ReferralResponse {
     this.usedByPartnerId,
     this.usedByVendorId,
     this.usedByUserId,
-    required this.referralCode,
+    // required this.referralCode,
     required this.bonusAmount,
     required this.totalCashback,
     required this.rewardGiven,
@@ -67,7 +64,7 @@ class ReferralResponse {
       usedByPartnerId: json['usedByPartnerId'],
       usedByVendorId: json['usedByVendorId'],
       usedByUserId: json['usedByUserId'],
-      referralCode: json['referralCode'] ?? '',
+      // referralCode: json['referralCode'] ?? '',
       bonusAmount: (json['bonusAmount'] ?? 0).toDouble(),
       totalCashback: (json['totalcashback'] ?? 0).toDouble(),
       rewardGiven: json['rewardGiven'] ?? false,
@@ -87,7 +84,7 @@ class ReferralResponse {
       'usedByPartnerId': usedByPartnerId,
       'usedByVendorId': usedByVendorId,
       'usedByUserId': usedByUserId,
-      'referralCode': referralCode,
+      // 'referralCode': referralCode,
       'bonusAmount': bonusAmount,
       'rewardGiven': rewardGiven,
       'totalCashback': totalCashback,

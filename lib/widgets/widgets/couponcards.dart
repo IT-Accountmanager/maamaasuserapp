@@ -1,3 +1,164 @@
+// import 'package:flutter/material.dart';
+// import 'package:maamaas/Services/appconfigurations/cofigkeys.dart';
+// import '../../Services/appconfigurations/app_configurtion_service.dart';
+// import '../../Services/appconfigurations/configuration _model.dart';
+// import '../../screens/screens/Refer_Earn.dart';
+// import '../../screens/screens/wallet_screen.dart';
+//
+// class CouponsOffersSection extends StatelessWidget {
+//   CouponsOffersSection({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         SizedBox(
+//           height: 120,
+//           child: ListView.separated(
+//             padding: const EdgeInsets.symmetric(horizontal: 10),
+//             scrollDirection: Axis.horizontal,
+//             itemCount: offerConfigs.length,
+//             separatorBuilder: (_, __) => const SizedBox(width: 16),
+//             itemBuilder: (context, index) {
+//               return SizedBox(
+//                 width: 280,
+//                 child: _configCard(context, offerConfigs[index], index),
+//               );
+//             },
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+//
+//   final offerConfigs = AppConfigService.instance.allConfigs.where((config) {
+//     return config.enable &&
+//         [
+//           AppConfigKeys.firstOrder,
+//           AppConfigKeys.referralCashback,
+//           AppConfigKeys.walletTopUp,
+//           // "FIRST_ORDER",
+//           // "REFERAL_CASHBACK",
+//           // "WALLET_TOP_UP",
+//         ].contains(config.configKey);
+//   }).toList();
+//
+//   LinearGradient getGradient(String key) {
+//     switch (key) {
+//       case "FIRST_ORDER":
+//         return const LinearGradient(
+//           colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+//         );
+//
+//       case "REFERAL_CASHBACK":
+//         return const LinearGradient(
+//           colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+//         );
+//
+//       case "WALLET_TOP_UP":
+//         return const LinearGradient(
+//           colors: [Color(0xFF059669), Color(0xFF10B981)],
+//         );
+//
+//       default:
+//         return const LinearGradient(
+//           colors: [Color(0xFF64748B), Color(0xFF475569)],
+//         );
+//     }
+//   }
+//
+//   void handleCardTap(BuildContext context, AppConfiguration config) {
+//     switch (config.configKey) {
+//       case "REFERAL_CASHBACK":
+//         Navigator.push(context, MaterialPageRoute(builder: (_) => ReferEarn()));
+//         break;
+//
+//       case "WALLET_TOP_UP":
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(builder: (_) => WalletScreen()),
+//         );
+//         break;
+//
+//       case "FIRST_ORDER":
+//         // Show coupon details
+//         break;
+//     }
+//   }
+//
+//   Widget _configCard(BuildContext context, AppConfiguration config, int index) {
+//     return InkWell(
+//       borderRadius: BorderRadius.circular(20),
+//       onTap: () => handleCardTap(context, config),
+//       child: Container(
+//         decoration: BoxDecoration(
+//           gradient: getGradient(config.configKey),
+//           borderRadius: BorderRadius.circular(20),
+//         ),
+//         child: Stack(
+//           children: [
+//             Positioned(
+//               right: -30,
+//               top: -30,
+//               child: Container(
+//                 width: 100,
+//                 height: 100,
+//                 decoration: BoxDecoration(
+//                   color: Colors.white.withOpacity(0.15),
+//                   shape: BoxShape.circle,
+//                 ),
+//               ),
+//             ),
+//
+//             Padding(
+//               padding: const EdgeInsets.all(16),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text(
+//                     config.title,
+//                     maxLines: 1,
+//                     overflow: TextOverflow.ellipsis,
+//                     style: const TextStyle(
+//                       color: Colors.white,
+//                       fontSize: 14,
+//                       fontWeight: FontWeight.w600,
+//                     ),
+//                   ),
+//
+//                   const SizedBox(height: 8),
+//
+//                   Text(
+//                     config.description,
+//                     maxLines: 2,
+//                     overflow: TextOverflow.ellipsis,
+//                     style: const TextStyle(
+//                       color: Colors.white,
+//                       fontSize: 20,
+//                       fontWeight: FontWeight.w800,
+//                       height: 1.2,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
 import 'package:flutter/material.dart';
 import '../../Models/subscrptions/coupon_model.dart';
 import '../../screens/screens/Refer_Earn.dart';

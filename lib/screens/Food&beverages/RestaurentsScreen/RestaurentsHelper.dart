@@ -11,23 +11,56 @@ class restaurentsnewcolour {
   static const textLight = Color(0xFFB0B0B0);
   static const border = Color(0xFFECECEC);
   static const cardRadius = 16.0;
+
 }
 
 class RestaurentsHelper {
+  // static const orderTabs = [
+  //   {'label': 'Dine-In', 'icon': Icons.restaurant_rounded, 'type': 'dinein'},
+  //   {
+  //     'label': 'Takeaway',
+  //     'icon': Icons.takeout_dining_rounded,
+  //     'type': 'takeaway',
+  //   },
+  //   {
+  //     'label': 'Delivery',
+  //     'icon': Icons.delivery_dining_outlined,
+  //     'type': 'delivery',
+  //   },
+  //   {'label': 'Dine-out', 'icon': Icons.table_restaurant, 'type': 'dineout'},
+  //   // {'label': 'Catering', 'icon': Icons.restaurant, 'type': 'catering'},
+  // ];
   static const orderTabs = [
-    {'label': 'Dine-In', 'icon': Icons.restaurant_rounded, 'type': 'dinein'},
+    {
+      'label': 'Dine-In',
+      'icon': Icons.restaurant_rounded,
+      'type': 'dinein',
+      'configKey': 'DINE_IN',
+    },
     {
       'label': 'Takeaway',
       'icon': Icons.takeout_dining_rounded,
       'type': 'takeaway',
+      'configKey': 'TAKEAWAY',
     },
     {
       'label': 'Delivery',
       'icon': Icons.delivery_dining_outlined,
       'type': 'delivery',
+      'configKey': 'DELIVERY',
     },
-    {'label': 'Dine-out', 'icon': Icons.table_restaurant, 'type': 'dineout'},
-    // {'label': 'Catering', 'icon': Icons.restaurant, 'type': 'catering'},
+    {
+      'label': 'Dine-out',
+      'icon': Icons.table_restaurant,
+      'type': 'dineout',
+      'configKey': 'TABLE_DINE_IN',
+    },
+    // {
+    //   'label': 'catering',
+    //   'icon': Icons.table_restaurant,
+    //   'type': 'catering',
+    //   'configKey': 'catering',
+    // },
   ];
 
   static final Map<String, String> typeMapping = {
@@ -41,10 +74,57 @@ class RestaurentsHelper {
   static const filters = [
     {'icon': Icons.tune_rounded, 'label': 'Filters'},
     {'icon': Icons.star_rounded, 'label': 'Rating 4.0+'},
-    {'icon': Icons.flash_on_rounded, 'label': 'Near & Fast'},
+    {'icon': Icons.bolt_rounded, 'label': 'Near & Fast'},
     {'icon': Icons.eco_rounded, 'label': 'Pure Veg'},
     {'icon': Icons.local_offer_rounded, 'label': 'Offers'},
     {'icon': Icons.whatshot_rounded, 'label': 'Trending'},
+  ];
+
+  static const menu = ['Time', 'Rating', 'Offers', 'Dish price', 'Trust'];
+
+  static const panelData = [
+    {
+      'title': 'Delivery time',
+      'opts': [
+        {'icon': Icons.schedule_rounded, 'label': 'Under 30 min'},
+        {'icon': Icons.bolt_rounded, 'label': 'Near & fast'},
+        {'icon': Icons.calendar_today_rounded, 'label': 'Schedule order'},
+      ],
+    },
+    {
+      'title': 'Restaurant rating',
+      'opts': [
+        {'icon': Icons.star_rounded, 'label': 'Rated 3.5+'},
+        {'icon': Icons.star_rounded, 'label': 'Rated 4.0+'},
+        {'icon': Icons.star_rounded, 'label': 'Rated 4.5+'},
+      ],
+    },
+    {
+      'title': 'Offers',
+      'opts': [
+        {'icon': Icons.card_giftcard_rounded, 'label': 'Buy 1 get 1'},
+        {'icon': Icons.percent_rounded, 'label': 'Deals of the day'},
+        {
+          'icon': Icons.confirmation_number_rounded,
+          'label': 'Coupon available',
+        },
+      ],
+    },
+    {
+      'title': 'Dish price',
+      'opts': [
+        {'icon': Icons.currency_rupee_rounded, 'label': 'Under ₹150'},
+        {'icon': Icons.currency_rupee_rounded, 'label': 'Under ₹250'},
+        {'icon': Icons.currency_rupee_rounded, 'label': 'Under ₹500'},
+      ],
+    },
+    {
+      'title': 'Trust markers',
+      'opts': [
+        {'icon': Icons.verified_rounded, 'label': 'Hygiene rated'},
+        {'icon': Icons.verified_user_rounded, 'label': 'Trusted seller'},
+      ],
+    },
   ];
 
   static final offers = [
@@ -73,8 +153,6 @@ class RestaurentsHelper {
       'c2': 0xFF74B9FF,
     },
   ];
-
-  static final menu = ['Time', 'Rating', 'Offers', 'Dish Price', 'Trust'];
 }
 
 String formatCategory(String? category) {

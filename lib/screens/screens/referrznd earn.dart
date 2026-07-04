@@ -2243,9 +2243,8 @@ class _ReferEarnScreenState extends State<ReferEarnScreen> {
           final response = snapshot.data!;
           final referrals = response.referrals;
           final totalCashBack = response.totalReferralAmount;
-          final referralCode = referrals.isNotEmpty
-              ? referrals.first.referralCode
-              : '';
+          final referralCode = response.referralCode;
+
           final totalReferals = referrals.length;
 
           return Column(
@@ -3459,21 +3458,22 @@ class _HeroStatCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40.w,
-            height: 40.w,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(icon, color: iconColor, size: 20.sp),
-          ),
-          SizedBox(width: 12.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(icon, color: iconColor, size: 20.sp),
+              ),
+              SizedBox(width: 12.w),
               Text(
                 value,
                 style: TextStyle(
@@ -3483,11 +3483,14 @@ class _HeroStatCard extends StatelessWidget {
                   letterSpacing: -0.5,
                 ),
               ),
-              Text(
-                label,
-                style: TextStyle(fontSize: 11.sp, color: _K.textMid),
-              ),
             ],
+          ),
+          SizedBox(height: 10.w),
+          Center(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 11.sp, color: _K.textMid),
+            ),
           ),
         ],
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../Services/googleservices/googleapiservice.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../Services/Auth_service/delivery_service.dart';
@@ -16,8 +15,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui';
-
-enum EtaConfidence { high, medium, low }
 
 class ModernDeliveryTracking extends StatefulWidget {
   final int orderId;
@@ -100,82 +97,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
   DateTime? _lastEtaFetch;
   static const _etaDebounce = Duration(seconds: 20);
 
-  // ================= Production Tracking Constants =================
-
-  static const double _gpsNoiseThreshold = 8.0; // meters
-  static const double _routeDeviationThreshold = 30.0;
-  static const double _minCameraMoveDistance = 20.0;
-  static const double _etaRefreshDistance = 50.0;
-
-  LatLng? _previousPartnerPosition;
-  double _currentBearing = 0;
-  double _currentSpeed = 0;
-
-  DateTime? _lastLocationTime;
-
-  bool _followPartner = true;
-  bool _userMovingMap = false;
-
-  // ================= Route Engine =================
-
-  bool _isFetchingRoute = false;
-
-  DateTime? _lastRouteRefresh;
-
-  int _lastNearestIndex = 0;
-
-  static const Duration _routeRefreshCooldown = Duration(seconds: 20);
-
-  static const double _routeDeviationDistance = 35;
-
-  static const double _routeAdvanceDistance = 15.0;
-
-  //================ ETA Engine ====================
-
-  Duration? _serverEta;
-
-  Duration? _displayEta;
-
-  Duration? _rawEta;
-
-  double _averageSpeed = 0;
-
-  static const int _speedHistorySize = 5;
-
-  final List<double> _speedHistory = [];
-
-  DateTime? _lastEtaUpdate;
-
-  DateTime? _arrivalTime;
-
-  List<LatLng> _smoothRoute(List<LatLng> points) {
-    if (points.length < 3) {
-      return points;
-    }
-
-    final output = <LatLng>[];
-
-    output.add(points.first);
-
-    for (int i = 1; i < points.length - 1; i++) {
-      final prev = points[i - 1];
-
-      final current = points[i];
-
-      final next = points[i + 1];
-
-      final lat = (prev.latitude + current.latitude + next.latitude) / 3;
-
-      final lng = (prev.longitude + current.longitude + next.longitude) / 3;
-
-      output.add(LatLng(lat, lng));
-    }
-
-    output.add(points.last);
-
-    return output;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -226,19 +147,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
   // ── Animations ────────────────────────────────────────────────────────────
 
-  bool _shouldIgnoreLocation(LatLng newPosition) {
-    if (_lastPartnerPosition == null) return false;
-
-    final distance = Geolocator.distanceBetween(
-      _lastPartnerPosition!.latitude,
-      _lastPartnerPosition!.longitude,
-      newPosition.latitude,
-      newPosition.longitude,
-    );
-
-    return distance < _gpsNoiseThreshold;
-  }
-
   void _initializeAnimations() {
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -270,7 +178,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       _googleApiKey = await ApiKeyService.getApiKey();
       _delivery =
           widget.deliveryModel ??
-          await DeliveryOrderService.getOrder(widget.orderId);
+              await DeliveryOrderService.getOrder(widget.orderId);
 
       if (_delivery != null) {
         _orderStartTime = DateTime.now();
@@ -332,9 +240,9 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     try {
       final url = Uri.parse(
         'https://maps.googleapis.com/maps/api/distancematrix/json'
-        '?origins=${origin.latitude},${origin.longitude}'
-        '&destinations=${_delivery!.userLatitude},${_delivery!.userLongitude}'
-        '&mode=driving&departure_time=now&key=$_googleApiKey',
+            '?origins=${origin.latitude},${origin.longitude}'
+            '&destinations=${_delivery!.userLatitude},${_delivery!.userLongitude}'
+            '&mode=driving&departure_time=now&key=$_googleApiKey',
       );
       final response = await http.get(url).timeout(const Duration(seconds: 10));
       if (!mounted) return;
@@ -343,9 +251,9 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         final elements = data['rows']?[0]?['elements']?[0];
         if (elements != null && elements['status'] == 'OK') {
           final durationSeconds =
-              (elements['duration_in_traffic'] ??
-                      elements['duration'])?['value']
-                  as int?;
+          (elements['duration_in_traffic'] ??
+              elements['duration'])?['value']
+          as int?;
           if (durationSeconds != null) {
             setState(() {
               _remainingEta = Duration(seconds: durationSeconds);
@@ -406,15 +314,15 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       }
       final origin =
           _currentAnimatedPosition ??
-          ((_delivery?.deliveryPartnerLatitude ?? 0) != 0
-              ? LatLng(
-                  _delivery!.deliveryPartnerLatitude,
-                  _delivery!.deliveryPartnerLongitude,
-                )
-              : LatLng(
-                  _delivery?.vendorLatitude ?? 0,
-                  _delivery?.vendorLongitude ?? 0,
-                ));
+              ((_delivery?.deliveryPartnerLatitude ?? 0) != 0
+                  ? LatLng(
+                _delivery!.deliveryPartnerLatitude,
+                _delivery!.deliveryPartnerLongitude,
+              )
+                  : LatLng(
+                _delivery?.vendorLatitude ?? 0,
+                _delivery?.vendorLongitude ?? 0,
+              ));
       _fetchRealEta(origin);
     });
   }
@@ -429,7 +337,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       }
       if (_remainingEta == null || _remainingEta!.inSeconds <= 0) return;
       setState(
-        () => _remainingEta = _remainingEta! - const Duration(seconds: 1),
+            () => _remainingEta = _remainingEta! - const Duration(seconds: 1),
       );
     });
   }
@@ -464,24 +372,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     _remainingEta = null;
   }
 
-  bool _shouldRefreshEta(LatLng current) {
-    if (_lastPartnerPosition == null) {
-      return true;
-    }
-
-    final distance = Geolocator.distanceBetween(
-      _lastPartnerPosition!.latitude,
-
-      _lastPartnerPosition!.longitude,
-
-      current.latitude,
-
-      current.longitude,
-    );
-
-    return distance > 20;
-  }
-
   // ── Icons ─────────────────────────────────────────────────────────────────
 
   Future<void> _loadCustomIcons() async {
@@ -501,7 +391,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       center,
       size / 2 - 4,
       Paint()
-        // ignore: deprecated_member_use
+      // ignore: deprecated_member_use
         ..color = Colors.black.withOpacity(0.18)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
@@ -556,10 +446,10 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
   }
 
   Future<BitmapDescriptor> _createCustomMarker(
-    IconData icon,
-    Color color,
-    double size,
-  ) async {
+      IconData icon,
+      Color color,
+      double size,
+      ) async {
     final recorder = PictureRecorder();
     final canvas = Canvas(recorder);
     final textPainter = TextPainter(textDirection: ui.TextDirection.ltr);
@@ -586,7 +476,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
   void _setupStaticMarkers() {
     if (_delivery == null) return;
     _markers.removeWhere(
-      (m) => m.markerId.value == 'vendor' || m.markerId.value == 'customer',
+          (m) => m.markerId.value == 'vendor' || m.markerId.value == 'customer',
     );
 
     // Show vendor marker only before pickup
@@ -600,7 +490,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
             _delivery!.vendorLongitude,
           ),
           icon:
-              _vendorIcon ??
+          _vendorIcon ??
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
           infoWindow: const InfoWindow(title: 'Restaurant'),
         ),
@@ -612,7 +502,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         markerId: const MarkerId('customer'),
         position: LatLng(_delivery!.userLatitude, _delivery!.userLongitude),
         icon:
-            _customerIcon ??
+        _customerIcon ??
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         infoWindow: const InfoWindow(title: 'Your location'),
       ),
@@ -626,7 +516,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       markerId: const MarkerId('partner'),
       position: position,
       icon:
-          _bikeIcon ??
+      _bikeIcon ??
           BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
       rotation: bearing,
       anchor: const Offset(0.5, 0.5),
@@ -685,8 +575,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         final points = result.points
             .map((p) => LatLng(p.latitude, p.longitude))
             .toList();
-        // _fullRoutePoints = points;
-        _fullRoutePoints = _smoothRoute(points);
+        _fullRoutePoints = points;
 
         final trimFrom = _currentAnimatedPosition ?? points.first;
         _applyTrimmedPolyline(trimFrom, points);
@@ -717,112 +606,18 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     return idx;
   }
 
-  bool _isRouteDeviation(LatLng current) {
-    if (_fullRoutePoints.isEmpty) return false;
-
-    final nearest = _nearestPointIndex(_fullRoutePoints, current);
-
-    final nearestPoint = _fullRoutePoints[nearest];
-
-    final distance = Geolocator.distanceBetween(
-      current.latitude,
-      current.longitude,
-
-      nearestPoint.latitude,
-      nearestPoint.longitude,
-    );
-
-    return distance > _routeDeviationDistance;
-  }
-
-  Future<void> _refreshRoute(LatLng current) async {
-    List<LatLng>? _cachedRoute;
-
-    DateTime? _cachedRouteTime;
-
-    if (_delivery == null) return;
-
-    if (_isFetchingRoute) return;
-
-    final now = DateTime.now();
-
-    if (_lastRouteRefresh != null &&
-        now.difference(_lastRouteRefresh!) < _routeRefreshCooldown) {
-      return;
-    }
-
-    _lastRouteRefresh = now;
-
-    _isFetchingRoute = true;
-
-    try {
-      if (_cachedRoute != null &&
-          _cachedRouteTime != null &&
-          DateTime.now().difference(_cachedRouteTime!).inMinutes < 2) {
-        _fullRoutePoints = _cachedRoute!;
-
-        _applyTrimmedPolyline(current);
-
-        return;
-      }
-
-      final result = await PolylinePoints().getRouteBetweenCoordinates(
-        googleApiKey: _googleApiKey!,
-
-        request: PolylineRequest(
-          origin: PointLatLng(current.latitude, current.longitude),
-
-          destination: PointLatLng(
-            _delivery!.userLatitude,
-            _delivery!.userLongitude,
-          ),
-
-          mode: TravelMode.driving,
-        ),
-      );
-
-      if (result.points.isNotEmpty) {
-        _fullRoutePoints = result.points
-            .map((e) => LatLng(e.latitude, e.longitude))
-            .toList();
-
-        _applyTrimmedPolyline(current);
-      }
-    } finally {
-      _isFetchingRoute = false;
-    }
-  }
-
   /// Trims the polyline to show only the remaining route ahead of the partner.
   void _applyTrimmedPolyline(LatLng partnerPos, [List<LatLng>? routePoints]) {
     final points = routePoints ?? _fullRoutePoints;
     if (points.isEmpty) return;
 
     final nearestIdx = _nearestPointIndex(points, partnerPos);
-    int start = nearestIdx;
-
-    while (start < points.length) {
-      final d = Geolocator.distanceBetween(
-        partnerPos.latitude,
-        partnerPos.longitude,
-
-        points[start].latitude,
-        points[start].longitude,
-      );
-
-      if (d > _routeAdvanceDistance) {
-        break;
-      }
-
-      start++;
-    }
-
-    final trimmed = [partnerPos, ...points.sublist(start)];
+    final trimmed = <LatLng>[partnerPos, ...points.sublist(nearestIdx)];
 
     _polylines
       ..removeWhere(
-        (p) =>
-            p.polylineId.value == 'route' ||
+            (p) =>
+        p.polylineId.value == 'route' ||
             p.polylineId.value == 'route_solid' ||
             p.polylineId.value == 'route_glow',
       )
@@ -840,7 +635,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
           color: Colors.blue.shade600,
           width: 5,
           points: trimmed,
-          patterns: [PatternItem.dash(30), PatternItem.gap(12)],
+          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         ),
       )
       ..add(
@@ -857,40 +652,12 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
   void _schedulePartnerMovement(LatLng to) {
     if (_lastPartnerPosition == to) return;
-    final jump = Geolocator.distanceBetween(
-      _lastPartnerPosition!.latitude,
-      _lastPartnerPosition!.longitude,
-
-      to.latitude,
-      to.longitude,
-    );
-
-    if (jump > 1000) {
-      _lastPartnerPosition = to;
-
-      _addPartnerMarker(to, bearing: _currentBearing);
-
-      return;
-    }
 
     if (_isAnimating) {
-      _pendingPartnerPosition = to;
-
+      _pendingPartnerPosition = to; // keep only latest
       return;
     }
-
     _startPartnerAnimation(_lastPartnerPosition!, to);
-    _startPartnerAnimation(_lastPartnerPosition!, to);
-    if (_pendingPartnerPosition != null) {
-      final next = _pendingPartnerPosition!;
-
-      _pendingPartnerPosition = null;
-
-      _startPartnerAnimation(to, next);
-    }
-    if (_isRouteDeviation(to)) {
-      _refreshRoute(to);
-    }
   }
 
   void _startPartnerAnimation(LatLng from, LatLng to) {
@@ -901,14 +668,12 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     _moveController?.dispose();
     _moveController = null;
 
-    // final bearing = _delivery != null
-    //     ? _calculateBearing(
-    //         to,
-    //         LatLng(_delivery!.userLatitude, _delivery!.userLongitude),
-    //       )
-    //     : _calculateBearing(from, to);
-
-    final bearing = _calculateBearing(from, to);
+    final bearing = _delivery != null
+        ? _calculateBearing(
+      to,
+      LatLng(_delivery!.userLatitude, _delivery!.userLongitude),
+    )
+        : _calculateBearing(from, to);
 
     final controller = AnimationController(
       vsync: this,
@@ -936,7 +701,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         markerId: const MarkerId('partner'),
         position: currentPos,
         icon:
-            _bikeIcon ??
+        _bikeIcon ??
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
         rotation: bearing,
         anchor: const Offset(0.5, 0.5),
@@ -960,35 +725,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         _isAnimating = false;
 
         // Smooth pan: follow partner but don't disrupt user panning
-        // _mapController?.animateCamera(CameraUpdate.newLatLng(to));
-
-        if (_followPartner) {
-          if (_currentAnimatedPosition != null) {
-            final moved = Geolocator.distanceBetween(
-              _currentAnimatedPosition!.latitude,
-              _currentAnimatedPosition!.longitude,
-
-              to.latitude,
-              to.longitude,
-            );
-
-            if (moved > _minCameraMoveDistance) {
-              _mapController?.animateCamera(
-                CameraUpdate.newCameraPosition(
-                  CameraPosition(
-                    target: to,
-
-                    zoom: 16.5,
-
-                    tilt: 45,
-
-                    bearing: bearing,
-                  ),
-                ),
-              );
-            }
-          }
-        }
+        _mapController?.animateCamera(CameraUpdate.newLatLng(to));
 
         final pending = _pendingPartnerPosition;
         if (pending != null && mounted) {
@@ -1011,10 +748,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     final y = sin(dLon) * cos(lat2);
     final x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
     return (atan2(y, x) * 180 / pi + 360) % 360;
-  }
-
-  double _calculateMovementBearing(LatLng previous, LatLng current) {
-    return _calculateBearing(previous, current);
   }
 
   // ── Progress ──────────────────────────────────────────────────────────────
@@ -1080,18 +813,16 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       final newPos = LatLng(lat, lng);
 
       if (_lastPartnerPosition != null) {
-        if (!_shouldIgnoreLocation(newPos)) {
-          _schedulePartnerMovement(newPos);
-        }
+        _schedulePartnerMovement(newPos);
       } else {
         // First-ever position — place immediately
         _lastPartnerPosition = newPos;
         _currentAnimatedPosition = newPos;
         final bearing = _delivery != null
             ? _calculateBearing(
-                newPos,
-                LatLng(_delivery!.userLatitude, _delivery!.userLongitude),
-              )
+          newPos,
+          LatLng(_delivery!.userLatitude, _delivery!.userLongitude),
+        )
             : 0.0;
         _addPartnerMarker(newPos, bearing: bearing);
         if (_fullRoutePoints.isNotEmpty) {
@@ -1103,17 +834,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       _updateEtaIfMoved(newPos);
       _updateDeliveryProgressInternal(newPos);
       if (mounted) setState(() {});
-
-      final timestamp = DateTime.tryParse(data["timestamp"] ?? "");
-
-      if (timestamp != null) {
-        if (_lastLocationTime != null &&
-            timestamp.isBefore(_lastLocationTime!)) {
-          return;
-        }
-
-        _lastLocationTime = timestamp;
-      }
     });
   }
 
@@ -1122,7 +842,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
     final wasOnTheWay =
         _currentOrderStatus != OrderStatus.ontheway &&
-        newStatus == OrderStatus.ontheway;
+            newStatus == OrderStatus.ontheway;
 
     setState(() {
       _currentOrderStatus = newStatus;
@@ -1137,19 +857,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     } else if (newStatus == OrderStatus.cancelled) {
       _refreshDeliveryData();
     }
-  }
-
-  Duration _calculateOfflineEta(LatLng partner) {
-    final distance = Geolocator.distanceBetween(
-      partner.latitude,
-      partner.longitude,
-      _delivery!.userLatitude,
-      _delivery!.userLongitude,
-    );
-
-    final speed = _averageSpeed < 3 ? 6 : _averageSpeed;
-
-    return Duration(seconds: (distance / speed).round());
   }
 
   Future<void> _refreshDeliveryData() async {
@@ -1169,37 +876,13 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
   String get _formattedEta {
     if (_etaLoading && _remainingEta == null) return 'Calculating...';
-    if (_remainingEta == null) {
-      return 'Calculating...';
-    }
+    if (_remainingEta == null) return '--';
     if (_remainingEta!.inSeconds <= 0) return 'Arriving soon';
     final hours = _remainingEta!.inHours;
     final minutes = _remainingEta!.inMinutes.remainder(60);
     if (hours > 0) return '${hours}h ${minutes}min';
     if (_remainingEta!.inMinutes < 1) return 'Arriving soon';
     return '${_remainingEta!.inMinutes} min';
-  }
-
-  Duration _nextEtaRefresh() {
-    if (_displayEta == null) {
-      return Duration(seconds: 20);
-    }
-
-    final min = _displayEta!.inMinutes;
-
-    if (min > 30) {
-      return Duration(minutes: 5);
-    }
-
-    if (min > 10) {
-      return Duration(minutes: 2);
-    }
-
-    if (min > 5) {
-      return Duration(seconds: 60);
-    }
-
-    return Duration(seconds: 20);
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -1473,11 +1156,11 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
   Widget _buildProgressMap() {
     final initialTarget =
         _currentAnimatedPosition ??
-        _lastPartnerPosition ??
-        LatLng(
-          _delivery?.vendorLatitude ?? 17.385044,
-          _delivery?.vendorLongitude ?? 78.486671,
-        );
+            _lastPartnerPosition ??
+            LatLng(
+              _delivery?.vendorLatitude ?? 17.385044,
+              _delivery?.vendorLongitude ?? 78.486671,
+            );
 
     return GestureDetector(
       onTap: () {
@@ -1496,9 +1179,9 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                   : null,
               vendorLatLng: _delivery != null
                   ? LatLng(
-                      _delivery!.vendorLatitude,
-                      _delivery!.vendorLongitude,
-                    )
+                _delivery!.vendorLatitude,
+                _delivery!.vendorLongitude,
+              )
                   : null,
               googleApiKey: _googleApiKey,
             ),
@@ -1539,41 +1222,31 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                 },
                 gestureRecognizers: {
                   Factory<OneSequenceGestureRecognizer>(
-                    () => EagerGestureRecognizer(),
+                        () => EagerGestureRecognizer(),
                   ),
                 },
               ),
               // Gradient + stats overlay
               Positioned(
-                top: 12,
-                left: 10,
+                top: 0,
+                left: 0,
+                right: 0,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(
-                      0.65,
-                    ), // Dark semi-transparent background
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(
+                    children: [
+                      const Icon(
                         Icons.fullscreen_rounded,
                         color: Colors.white,
-                        size: 22,
+                        size: 40,
                       ),
-                      SizedBox(width: 8),
                       Text(
                         'Tap to view full map',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ],
                   ),
@@ -1611,20 +1284,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     );
   }
 
-  final phoneNumber = "7036646624";
-
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri uri = Uri(scheme: 'tel', path: phoneNumber);
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to make phone call')),
-      );
-    }
-  }
-
   Widget _buildPartnerInfo() {
     if (_delivery?.deliveryPartnerName.isEmpty ?? true) {
       return const SizedBox.shrink();
@@ -1649,26 +1308,13 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      _delivery!.deliveryPartnerName,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        _makePhoneCall(_delivery!.deliveryPartnerPhoneNumber);
-                        // _makePhoneCall(phoneNumber);
-                      },
-                      icon: const Icon(Icons.call, color: Colors.green),
-                      tooltip: 'Call Delivery Partner',
-                    ),
-                  ],
+                Text(
+                  _delivery!.deliveryPartnerName,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-
                 const SizedBox(height: 4),
                 Text(
                   'Vehicle: ${_delivery!.vehicleStatus.name.replaceAll('_', ' ')}',
@@ -1752,8 +1398,6 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
   Timer? _etaTimer;
   DateTime? _lastEtaFetch;
   static const _etaDebounce = Duration(seconds: 20);
-  static const double _routeAdvanceDistance = 15.0;
-  int _lastNearestIndex = 0;
 
   // ── Icon ─────────────────────────────────────────────────────────────────
   BitmapDescriptor? _bikeIcon;
@@ -1855,15 +1499,6 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
         _etaText = _fmtEta(_remainingEta!);
       });
     });
-    Duration _smoothEta(Duration current, Duration next) {
-      final currentSec = current.inSeconds;
-
-      final nextSec = next.inSeconds;
-
-      final result = (currentSec * 0.7) + (nextSec * 0.3);
-
-      return Duration(seconds: result.round());
-    }
   }
 
   Future<void> _refreshEtaIfMoved(LatLng newPos) async {
@@ -1890,9 +1525,9 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
     try {
       final url = Uri.parse(
         'https://maps.googleapis.com/maps/api/distancematrix/json'
-        '?origins=${newPos.latitude},${newPos.longitude}'
-        '&destinations=${widget.userLatLng!.latitude},${widget.userLatLng!.longitude}'
-        '&mode=driving&departure_time=now&key=${widget.googleApiKey}',
+            '?origins=${newPos.latitude},${newPos.longitude}'
+            '&destinations=${widget.userLatLng!.latitude},${widget.userLatLng!.longitude}'
+            '&mode=driving&departure_time=now&key=${widget.googleApiKey}',
       );
       final resp = await http.get(url).timeout(const Duration(seconds: 10));
       if (!mounted) return;
@@ -1901,7 +1536,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
         final el = d['rows']?[0]?['elements']?[0];
         if (el != null && el['status'] == 'OK') {
           final secs =
-              (el['duration_in_traffic'] ?? el['duration'])?['value'] as int?;
+          (el['duration_in_traffic'] ?? el['duration'])?['value'] as int?;
           if (secs != null) {
             setState(() {
               _remainingEta = Duration(seconds: secs);
@@ -1978,9 +1613,9 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
     final bytes = await img.toByteData(format: ImageByteFormat.png);
     if (mounted) {
       setState(
-        () =>
-            // ignore: deprecated_member_use
-            _bikeIcon = BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List()),
+            () =>
+        // ignore: deprecated_member_use
+        _bikeIcon = BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List()),
       );
     }
   }
@@ -2001,90 +1636,40 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
 
   // ── Polyline trimming ─────────────────────────────────────────────────────
 
-  // int _nearestPointIndex(List<LatLng> points, LatLng partner) {
-  //   double minDist = double.infinity;
-  //   int idx = 0;
-  //   for (int i = 0; i < points.length; i++) {
-  //     final d = Geolocator.distanceBetween(
-  //       partner.latitude,
-  //       partner.longitude,
-  //       points[i].latitude,
-  //       points[i].longitude,
-  //     );
-  //     if (d < minDist) {
-  //       minDist = d;
-  //       idx = i;
-  //     }
-  //   }
-  //   return idx;
-  // }
-  int _nearestPointIndex(List<LatLng> points, LatLng current) {
-    double minDistance = double.infinity;
-
-    int nearest = _lastNearestIndex;
-
-    for (int i = _lastNearestIndex; i < points.length; i++) {
-      final distance = Geolocator.distanceBetween(
-        current.latitude,
-        current.longitude,
-
+  int _nearestPointIndex(List<LatLng> points, LatLng partner) {
+    double minDist = double.infinity;
+    int idx = 0;
+    for (int i = 0; i < points.length; i++) {
+      final d = Geolocator.distanceBetween(
+        partner.latitude,
+        partner.longitude,
         points[i].latitude,
         points[i].longitude,
       );
-
-      if (distance < minDistance) {
-        minDistance = distance;
-
-        nearest = i;
-      }
-
-      if (distance > minDistance + 50) {
-        break;
+      if (d < minDist) {
+        minDist = d;
+        idx = i;
       }
     }
-
-    _lastNearestIndex = nearest;
-
-    return nearest;
+    return idx;
   }
 
   void _applyTrimmedPolyline(LatLng partnerPos) {
     if (_fullRoutePoints.isEmpty) return;
-
-    final points = _fullRoutePoints;
-
-    final nearest = _nearestPointIndex(points, partnerPos);
-
-    int start = nearest;
-
-    while (start < points.length) {
-      final d = Geolocator.distanceBetween(
-        partnerPos.latitude,
-        partnerPos.longitude,
-        points[start].latitude,
-        points[start].longitude,
-      );
-
-      if (d > _routeAdvanceDistance) {
-        break;
-      }
-
-      start++;
-    }
-
-    final trimmed = [partnerPos, ...points.sublist(start)];
+    final nearest = _nearestPointIndex(_fullRoutePoints, partnerPos);
+    final trimmed = <LatLng>[partnerPos, ..._fullRoutePoints.sublist(nearest)];
 
     _polylines
       ..removeWhere(
-        (p) =>
-            p.polylineId.value == 'route' ||
+            (p) =>
+        p.polylineId.value == 'route' ||
             p.polylineId.value == 'route_solid' ||
             p.polylineId.value == 'route_glow',
       )
       ..add(
         Polyline(
           polylineId: const PolylineId('route_glow'),
-          color: Colors.blue.withOpacity(.15),
+          color: Colors.blue.withOpacity(0.15),
           width: 10,
           points: trimmed,
         ),
@@ -2092,7 +1677,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
       ..add(
         Polyline(
           polylineId: const PolylineId('route'),
-          color: Colors.blue,
+          color: Colors.blue.shade600,
           width: 5,
           points: trimmed,
           patterns: [PatternItem.dash(20), PatternItem.gap(10)],
@@ -2101,7 +1686,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
       ..add(
         Polyline(
           polylineId: const PolylineId('route_solid'),
-          color: Colors.blue,
+          color: Colors.blue.withOpacity(0.35),
           width: 2,
           points: trimmed,
         ),
@@ -2131,10 +1716,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
     _moveController?.dispose();
     _moveController = null;
 
-    // _bearing = _calculateBearing(from, to);
-    double _calculateMovementBearing(LatLng previous, LatLng current) {
-      return _calculateBearing(previous, current);
-    }
+    _bearing = _calculateBearing(from, to);
 
     final controller = AnimationController(
       vsync: this,
@@ -2175,9 +1757,9 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
     final existing = _markers.where((m) => m.markerId.value == 'partner');
     final icon =
         _bikeIcon ??
-        (existing.isNotEmpty
-            ? existing.first.icon
-            : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen));
+            (existing.isNotEmpty
+                ? existing.first.icon
+                : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen));
 
     final marker = Marker(
       markerId: const MarkerId('partner'),
@@ -2214,7 +1796,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
       return widget.initialPartnerPosition!;
     }
     final partner = widget.initialMarkers.where(
-      (m) => m.markerId.value == 'partner',
+          (m) => m.markerId.value == 'partner',
     );
     if (partner.isNotEmpty) return partner.first.position;
     if (widget.initialMarkers.isNotEmpty) {

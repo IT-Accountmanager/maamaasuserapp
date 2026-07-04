@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../Models/food/orders_model.dart';
 import '../../Services/Auth_service/food_authservice.dart';
+import '../../widgets/datetimehelper.dart';
 
 class ReviewScreen extends StatefulWidget {
   const ReviewScreen({super.key});
@@ -26,12 +27,35 @@ class _ReviewScreenState extends State<ReviewScreen> {
           .map<Order>((json) => Order.fromJson(json))
           .where((order) => (order.ratings) > 0)
           .toList();
+      //
+      // orders.sort((a, b) {
+      //   final dateTimeA = DateTime.parse(
+      //     "${a.orderDateAndTime} ${a.orderDateAndTime}",
+      //   );
+      //   final dateTimeB = DateTime.parse(
+      //     "${b.orderDateAndTime} ${b.orderDateAndTime}",
+      //   );
+      //   return dateTimeB.compareTo(dateTimeA); // latest first
+      // });
+      // orders.sort((a, b) {
+      //   final dateTimeA = DateTime.parse(a.orderDateAndTime);
+      //   final dateTimeB = DateTime.parse(b.orderDateAndTime);
+      //
+      //   return dateTimeB.compareTo(dateTimeA);
+      // });
 
       orders.sort((a, b) {
-        final dateTimeA = DateTime.parse("${a.date} ${a.time}");
-        final dateTimeB = DateTime.parse("${b.date} ${b.time}");
-        return dateTimeB.compareTo(dateTimeA); // latest first
+        final dateTimeA =
+            DateTime.tryParse(a.orderDateAndTime) ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+
+        final dateTimeB =
+            DateTime.tryParse(b.orderDateAndTime) ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+
+        return dateTimeB.compareTo(dateTimeA);
       });
+
 
       return orders;
     } catch (e) {
@@ -205,7 +229,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          order.date,
+                          DateTimeHelper.formatDate(order.parsedDateTime),
                           style: const TextStyle(
                             fontSize: 11,
                             color: Color(0xFFB0ADA6),

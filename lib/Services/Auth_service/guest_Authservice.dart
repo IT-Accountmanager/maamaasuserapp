@@ -151,11 +151,6 @@ class Authservice {
       endpoint = "api/dish/getby/vendor/user/dishes?vendorId=$vendorId";
     }
 
-    // print("🍽️ [Menu API] -----------------------------");
-    // // print("📤 Endpoint: $endpoint");
-    // print("👤 userId: $userId");
-    // print("🏪 vendorId: $vendorId");
-
     try {
       final response = await ApiClient.get(
         endpoint,
@@ -163,20 +158,57 @@ class Authservice {
         requiresAuth: false,
       );
       //
-      // print("📥 STATUS CODE: ${response.statusCode}");
-      // print("📥 RAW BODY: ${response.body}");
+      print("📥 STATUS CODE: ${response.statusCode}");
+      print("📥 RAW BODY: ${response.body}");
+
+      // if (response.statusCode == 200) {
+      //   final List<dynamic> data = jsonDecode(response.body);
+      //
+      //   // print("📊 Total items received: ${data.length}");
+      //
+      //   // final List<Dish> categories = [];
+      //   // final List<Dish> dishes = [];
+      //   //
+      //   // for (final item in data) {
+      //   //   // print("🔍 ITEM: $item");
+      //   //
+      //   //   final isCategory =
+      //   //       item['isCategory'] == true || item['parentId'] == 0;
+      //   //
+      //   //   if (isCategory) {
+      //   //     categories.add(Dish.fromJson(item));
+      //   //   } else {
+      //   //     dishes.add(Dish.fromJson(item));
+      //   //   }
+      //   // }
+      //   //
+      //   // // print("📂 Categories count: ${categories.length}");
+      //   // // print("🍛 Dishes count: ${dishes.length}");
+      //   //
+      //   // return MenuResponse(categories: categories, dishes: dishes);
+      //
+      //
+      //   final allItems = data
+      //       .map((e) => Dish.fromJson(e))
+      //       .toList();
+      //
+      //   print("Total Parsed Items = ${allItems.length}");
+      //   print("DATA COUNT = ${data.length}");
+      //   return MenuResponse(
+      //     categories: [],
+      //     dishes: allItems,
+      //   );
+      // }
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
 
-        // print("📊 Total items received: ${data.length}");
+        print("DATA COUNT = ${data.length}");
 
         final List<Dish> categories = [];
         final List<Dish> dishes = [];
 
         for (final item in data) {
-          // print("🔍 ITEM: $item");
-
           final isCategory =
               item['isCategory'] == true || item['parentId'] == 0;
 
@@ -187,8 +219,8 @@ class Authservice {
           }
         }
 
-        // print("📂 Categories count: ${categories.length}");
-        // print("🍛 Dishes count: ${dishes.length}");
+        print("CATEGORIES COUNT = ${categories.length}");
+        print("DISHES COUNT = ${dishes.length}");
 
         return MenuResponse(categories: categories, dishes: dishes);
       }
@@ -206,9 +238,8 @@ class Authservice {
         errorMessage: errorJson['message'] ?? 'Something went wrong',
       );
     } catch (e, stackTrace) {
-      // print("💥 EXCEPTION OCCURRED");
-      // print("❌ ERROR: $e");
-      // print("📍 STACKTRACE: $stackTrace");
+      print("❌ EXCEPTION = $e");
+      print("❌ STACKTRACE = $stackTrace");
 
       return MenuResponse(
         categories: [],

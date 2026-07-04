@@ -281,8 +281,8 @@ class _food_ordersState extends State<food_orders> with WidgetsBindingObserver {
           ),
           items: order.items,
           isActive: order.isActive,
-          date: order.date,
-          time: order.time,
+          // date: order.date,
+          // time: order.time,
         ),
       ),
     ).then((_) {
@@ -455,23 +455,6 @@ class _OrderCardState extends State<OrderCard> {
   }
 
   Widget _buildHeader(Order order, Color statusColor) {
-    final parsed = order.parsedDateTime;
-
-    // Force treat parsed as UTC, then shift to IST +5:30
-    final utc = DateTime.utc(
-      parsed.year,
-      parsed.month,
-      parsed.day,
-      parsed.hour,
-      parsed.minute,
-      parsed.second,
-      parsed.millisecond,
-    );
-
-    final formattedDate = (utc.year == 1970)
-        ? "Invalid date"
-        : DateTimeHelper.formatDateTime(utc);
-
     final orderTypeLabel = getOrderTypeLabel(order.orderType);
 
     return Row(
@@ -483,7 +466,11 @@ class _OrderCardState extends State<OrderCard> {
             children: [
               Text("Order #${order.id}", style: foodordecolour.h2),
               SizedBox(height: 4.h),
-              Text(formattedDate, style: foodordecolour.body),
+              // Text(order.parsedDateTime, style: foodordecolour.body),
+              Text(
+                DateTimeHelper.formatDateTime(order.parsedDateTime),
+                style: foodordecolour.body,
+              ),
             ],
           ),
         ),
@@ -1139,8 +1126,6 @@ class OrderDetailsScreen extends StatefulWidget {
   final String formattedTime;
   final List<OrderItem> items;
   final bool isActive;
-  final String date;
-  final String time;
 
   const OrderDetailsScreen({
     super.key,
@@ -1150,8 +1135,6 @@ class OrderDetailsScreen extends StatefulWidget {
     required this.formattedTime,
     required this.items,
     required this.isActive,
-    required this.date,
-    required this.time,
   });
 
   @override
@@ -1360,15 +1343,16 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                     _infoRow(
                       Icons.event_outlined,
                       "Scheduled Date",
-                      DateTimeHelper.formatDateString(widget.order.date),
+                      DateTimeHelper.formatDateString(widget.order.scheduledAt),
                     ),
                     _infoRow(
                       Icons.schedule_outlined,
                       "Scheduled Time",
-                      DateTimeHelper.to12Hour(widget.order.time),
+                      DateTimeHelper.formatTimeString(widget.order.scheduledAt),
                     ),
                   ],
                   if (widget.order.orderType == OrderType.DELIVERY) ...[
+                    Divider(height: 16.h, color: foodordecolour.border),
                     _infoRow(
                       Icons.person,
                       "Name",
@@ -1379,7 +1363,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                       "Contact Details",
                       widget.order.mobileNo,
                     ),
-                    _infoRow(
+                    // _infoRow(
+                    //   Icons.location_on_rounded,
+                    //   "Delivery Address",
+                    //   widget.order.deliveryAddress,
+                    // ),
+                    _addressRow(
                       Icons.location_on_rounded,
                       "Delivery Address",
                       widget.order.deliveryAddress,
@@ -1499,6 +1488,37 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: foodordecolour.ink,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _addressRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: foodordecolour.muted),
+              SizedBox(width: 10.w),
+              Text(label, style: foodordecolour.body),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.only(left: 26.w),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: foodordecolour.ink,
+                height: 1.4,
               ),
             ),
           ),
@@ -1754,9 +1774,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    "Please provide a reason for cancellation:",
-                  ),
+                  const Text("Please provide a reason for cancellation:"),
                   const SizedBox(height: 12),
                   TextField(
                     controller: reasonController,
@@ -1778,18 +1796,13 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                     if (reasonController.text.trim().isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(
-                            "Please enter a cancellation reason",
-                          ),
+                          content: Text("Please enter a cancellation reason"),
                         ),
                       );
                       return;
                     }
 
-                    Navigator.pop(
-                      context,
-                      reasonController.text.trim(),
-                    );
+                    Navigator.pop(context, reasonController.text.trim());
                   },
                   child: const Text("Yes"),
                 ),

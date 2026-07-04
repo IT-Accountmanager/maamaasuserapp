@@ -1,7 +1,6 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 import '../../widgets/widgets/food/favoritesbutton_1.dart';
-import '../Food&beverages/Menu/cart_button.dart';
 import '../../Models/food/favorites_model.dart';
 import 'package:flutter/material.dart';
 
@@ -122,10 +121,11 @@ class _FavoritesState extends State<Favorites> {
                                 });
                               },
                             ),
-                            cartButton: CartButton(
-                              dishId: dish.dishId ?? 0,
-                              balanceQuantity: dish.balanceQuantity,
-                            ),
+                            // cartButton: CartButton(
+                            //   dish: dish,
+                            //   // dishId: dish.dishId ?? 0,
+                            //   // balanceQuantity: dish.balanceQuantity,
+                            // ),
                             isOutOfStock: false,
                           );
                         }, childCount: favoriteDishes.length),
@@ -175,7 +175,7 @@ class ModernDishCard extends StatelessWidget {
   final String price;
   final String effectivePrice;
   final Widget favoriteButton;
-  final Widget cartButton;
+  // final Widget cartButton;
   final bool isOutOfStock;
 
   const ModernDishCard({
@@ -184,7 +184,7 @@ class ModernDishCard extends StatelessWidget {
     required this.price,
     required this.effectivePrice,
     required this.favoriteButton,
-    required this.cartButton,
+    // required this.cartButton,
     required this.isOutOfStock,
     super.key,
   });

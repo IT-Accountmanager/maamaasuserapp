@@ -19,7 +19,6 @@ import 'coupons_rewards_screen.dart';
 import 'orders/orders_screen.dart';
 import 'Reviewsandratings.dart';
 import '../Mainscreen.dart';
-import 'Refer_Earn.dart';
 import 'login_page.dart';
 import 'Favorites.dart';
 import 'dart:io';

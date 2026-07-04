@@ -1591,7 +1591,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             controller: phoneNumberController,
             keyboardType: TextInputType.phone,
             maxLength: 10,
-            style: TextStyle(fontSize: 14.sp, color: AppColors.primary),
+            style: TextStyle(fontSize: 14.sp, color: savedddcolour.textSecondary),
             enabled: _isEditable,
             cursorColor: savedddcolour.violet,
             decoration: InputDecoration(
@@ -1599,7 +1599,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               prefixIcon: Icon(
                 Icons.phone_android_rounded,
                 size: 18.sp,
-                color: savedddcolour.violet,
+                color: AppColors.primary,
               ),
               prefixText: '+91  ',
               prefixStyle: TextStyle(
@@ -1609,7 +1609,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               ),
               hintText: '10-digit number',
               hintStyle: TextStyle(
-                color: savedddcolour.textMuted,
+                color: savedddcolour.textSecondary,
                 fontSize: 13.sp,
               ),
               contentPadding: EdgeInsets.symmetric(

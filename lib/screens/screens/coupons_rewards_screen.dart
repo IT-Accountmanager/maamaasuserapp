@@ -1,6 +1,7 @@
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 import '../../Models/subscrptions/coupon_model.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,7 @@ class CouponsAndRewards extends StatelessWidget {
         shadowColor: Colors.black.withOpacity(0.06),
         centerTitle: true,
         title: const Text(
-          'Coupons & Offers',
+          'Coupons',
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -526,12 +527,6 @@ class _CodePillState extends State<_CodePill> {
                 letterSpacing: 0.8,
               ),
             ),
-            // SizedBox(width: 6.w),
-            // Icon(
-            //   _copied ? Icons.check_rounded : Icons.copy_rounded,
-            //   size: 12.sp,
-            //   color: _copied ? couponscolours.green : couponscolours.muted,
-            // ),
           ],
         ),
       ),
@@ -568,31 +563,92 @@ class _Badge extends StatelessWidget {
   }
 }
 
-// ── Loading state ──────────────────────────────────────────────────────────────
 class _LoadingState extends StatelessWidget {
   const _LoadingState();
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 36.r,
-            height: 36.r,
-            child: const CircularProgressIndicator(
-              strokeWidth: 2.5,
-              color: couponscolours.brand,
-              strokeCap: StrokeCap.round,
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+      itemCount: 5,
+      itemBuilder: (_, index) => Padding(
+        padding: EdgeInsets.only(bottom: 14.h),
+        child: Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: Container(
+            height: 120.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Row(
+              children: [
+                // Left coupon strip
+                Container(
+                  width: 88.w,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16.r),
+                      bottomLeft: Radius.circular(16.r),
+                    ),
+                  ),
+                ),
+
+                SizedBox(width: 14.w),
+
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 16.h,
+                      horizontal: 8.w,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _skeletonBox(90.w, 22.h),
+                            const Spacer(),
+                            _skeletonBox(60.w, 20.h),
+                          ],
+                        ),
+
+                        SizedBox(height: 16.h),
+
+                        _skeletonBox(double.infinity, 12.h),
+
+                        SizedBox(height: 10.h),
+
+                        _skeletonBox(120.w, 10.h),
+
+                        const Spacer(),
+
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: _skeletonBox(80.w, 32.h),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 14.h),
-          Text(
-            'Fetching offers...',
-            style: TextStyle(fontSize: 13.sp, color: couponscolours.sub),
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _skeletonBox(double width, double height) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8.r),
       ),
     );
   }

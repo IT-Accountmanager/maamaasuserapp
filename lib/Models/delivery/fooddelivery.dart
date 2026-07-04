@@ -26,6 +26,7 @@ class DeliveryOrderModel {
   final double deliveryPartnerLatitude;
   final double deliveryPartnerLongitude;
   final String deliveryPartnerName;
+  final String deliveryPartnerPhoneNumber;
 
   final VehicleStatus vehicleStatus;
 
@@ -55,6 +56,7 @@ class DeliveryOrderModel {
     required this.deliveryPartnerLatitude,
     required this.deliveryPartnerLongitude,
     required this.deliveryPartnerName,
+    required this.deliveryPartnerPhoneNumber,
     required this.vehicleStatus,
     required this.createdAt,
     required this.updatedAt,
@@ -81,6 +83,7 @@ class DeliveryOrderModel {
 
       vendorFullAddress: json['vendorFullAddress']?.toString() ?? '',
       vendorRestaurantName: json['vendorRestaurentname']?.toString() ?? '',
+      deliveryPartnerPhoneNumber: json['deliveryPartnerPhoneNumber'] ?? '',
 
       items: json['items']?.toString() ?? '',
 

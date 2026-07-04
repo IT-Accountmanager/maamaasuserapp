@@ -67,8 +67,6 @@ class OrderTrackingBanner extends StatelessWidget {
                 ),
                 items: order.items,
                 isActive: order.isActive,
-                date: order.date,
-                time: order.time,
               ),
             ),
           ).then((_) {

@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import '../../../Models/food/cart_model.dart';
+import '../../../Models/food/dish.dart';
+import '../../../utils/utils.dart';
 import '../../../widgets/signinrequired.dart';
 import '../../../widgets/widgets/food/cartmode.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,16 +16,18 @@ import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/Services/Auth_service/Subscription_authservice.dart';
 
 class CartButton extends StatefulWidget {
-  final int dishId;
+  final Dish dish;
+  // final int dishId;
   final double? savedAmount;
-  final int balanceQuantity;
+  // final int balanceQuantity;
   final bool? sheduleorder;
 
   const CartButton({
     super.key,
-    required this.dishId,
+    required this.dish,
+    // required this.dishId,
     this.savedAmount,
-    required this.balanceQuantity,
+    // required this.balanceQuantity,
     this.sheduleorder,
   });
 
@@ -31,115 +38,157 @@ class CartButton extends StatefulWidget {
 
 class _CartButtonState extends State<CartButton> {
   int itemCount = 0;
-  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadQuantity();
-    // Listen to global cart count to detect external clears (e.g. "Clear Cart"
-    // button on the cart screen).
-    CartNotifier.count.addListener(_onGlobalCountReset);
   }
 
-  /// Reads this dish's quantity from SharedPreferences.
-  /// SharedPreferences are the source of truth for per-dish counts because
-  /// they are written on every add/update and cleared on remove/cart-clear.
   Future<void> _loadQuantity() async {
     try {
+      final cart = await food_Authservice.fetchCart();
+
+      CartItem? matchedItem;
+      if (cart != null) {
+        for (var item in cart.cartItems) {
+          if (item.dishId == widget.dish.dishId) {
+            matchedItem = item;
+            break;
+          }
+        }
+      }
+
       final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getInt("dish_${widget.dishId}_quantity") ?? 0;
-      if (mounted) setState(() => itemCount = saved);
+
+      if (matchedItem != null) {
+        await prefs.setInt(
+          "dish_${widget.dish.dishId}_itemId",
+          matchedItem.itemId,
+        );
+
+        await prefs.setInt(
+          "dish_${widget.dish.dishId}_quantity",
+          matchedItem.quantity,
+        );
+      }
+
+      setState(() => itemCount = matchedItem?.quantity ?? 0);
     } catch (e) {
       if (mounted) setState(() => itemCount = 0);
     }
+
+    // update global cart badge
+    Utils.refreshCartCount();
   }
 
+  // Future<void> _addToCart(int quantity, {bool sheduleorder = false}) async {
+  //   CartNotifier.count.value += quantity;
+  //
+  //   await food_Authservice.addToCart(
+  //     dishId: widget.dish.dishId,
+  //     quantity: quantity,
+  //     sheduleorder: sheduleorder,
+  //   );
+  //
+  //   debugPrint("✅ AddToCart finished");
+  //   // final itemId = await food_Authservice.getItemIdByDishId(widget.dish.dishId);
+  //   //
+  //   // if (itemId != null) {
+  //   //   final prefs = await SharedPreferences.getInstance();
+  //   //   await prefs.setInt("dish_${widget.dish.dishId}_itemId", itemId);
+  //   //   await prefs.setInt("dish_${widget.dish.dishId}_quantity", quantity);
+  //   // }
+  //   final itemId = await food_Authservice.getItemIdByDishId(widget.dish.dishId);
+  //
+  //   debugPrint("Fetched ItemId after Add: $itemId");
+  //
+  //   debugPrint("Calling getItemIdByDishId...");
+  //
+  //   final prefs = await SharedPreferences.getInstance();
+  //
+  //   if (itemId != null) {
+  //     await prefs.setInt("dish_${widget.dish.dishId}_itemId", itemId);
+  //     debugPrint("Returned ItemId = $itemId");
+  //
+  //     debugPrint(
+  //       "Saved ItemId: ${prefs.getInt("dish_${widget.dish.dishId}_itemId")}",
+  //     );
+  //   }
+  // }
   Future<void> _addToCart(int quantity, {bool sheduleorder = false}) async {
-    // Optimistic badge increment.
     CartNotifier.count.value += quantity;
 
     await food_Authservice.addToCart(
-      dishId: widget.dishId,
+      dishId: widget.dish.dishId,
       quantity: quantity,
       sheduleorder: sheduleorder,
     );
 
-    final itemId = await food_Authservice.getItemIdByDishId(widget.dishId);
-    if (itemId != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt("dish_${widget.dishId}_itemId", itemId);
-      await prefs.setInt("dish_${widget.dishId}_quantity", quantity);
-    }
+    await _loadQuantity();
   }
 
   Future<void> _removeFromCart() async {
     final prefs = await SharedPreferences.getInstance();
-    final itemId = prefs.getInt("dish_${widget.dishId}_itemId");
+    final itemId = prefs.getInt("dish_${widget.dish.dishId}_itemId");
+
     if (itemId == null) return;
+
+    // INSTANT SUBTRACT FROM CART BADGE
+    CartNotifier.count.value -= itemCount;
 
     final removed = await food_Authservice.removeCartItem(itemId);
 
     if (removed) {
-      // Only subtract AFTER confirmed removal.
-      CartNotifier.count.value = (CartNotifier.count.value - itemCount).clamp(
-        0,
-        9999,
-      );
-      await prefs.remove("dish_${widget.dishId}_quantity");
-      await prefs.remove("dish_${widget.dishId}_itemId");
-      if (mounted) setState(() => itemCount = 0);
+      prefs.remove("dish_${widget.dish.dishId}_quantity");
+      prefs.remove("dish_${widget.dish.dishId}_itemId");
+
+      setState(() => itemCount = 0);
     }
   }
 
   Future<void> _updateQuantity(int newQty) async {
+    debugPrint("========== UPDATE CART START ==========");
+
     final prefs = await SharedPreferences.getInstance();
-    final itemId = prefs.getInt("dish_${widget.dishId}_itemId");
 
-    if (itemId != null) {
-      // Instant badge update — delta only, not a full recount.
-      CartNotifier.count.value = (CartNotifier.count.value - itemCount + newQty)
-          .clamp(0, 9999);
+    final itemId = prefs.getInt("dish_${widget.dish.dishId}_itemId");
 
-      await food_Authservice.updateCartQuantity(itemId, newQty);
-      await prefs.setInt("dish_${widget.dishId}_quantity", newQty);
+    debugPrint("Dish Id      : ${widget.dish.dishId}");
+    debugPrint("Item Id      : $itemId");
+    debugPrint("Old Qty(UI)  : $itemCount");
+    debugPrint("New Qty      : $newQty");
+
+    if (itemId == null) {
+      debugPrint("❌ ItemId is NULL");
+      return;
     }
-  }
 
-  /// Fires whenever the global CartNotifier.count changes.
-  ///
-  /// When the cart is cleared externally (e.g. "Clear Cart" on the cart screen
-  /// sets CartNotifier.count = 0 after the authoritative server fetch in
-  /// cart_footer_button.dart → didPopNext), this resets the dish button back
-  /// to "Add Cart" and wipes the stale SharedPreferences entry so that the
-  /// next time MenuScreen is visited the button starts fresh.
-  void _onGlobalCountReset() {
-    if (CartNotifier.count.value == 0 && itemCount != 0) {
-      if (mounted) {
-        setState(() => itemCount = 0);
-      }
-      // Wipe prefs even if widget is no longer mounted so stale data is gone
-      // before the next _loadQuantity() call.
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.remove("dish_${widget.dishId}_quantity");
-        prefs.remove("dish_${widget.dishId}_itemId");
-      });
-    }
-  }
+    CartNotifier.count.value = CartNotifier.count.value - itemCount + newQty;
 
-  @override
-  void dispose() {
-    CartNotifier.count.removeListener(_onGlobalCountReset);
-    super.dispose();
+    debugPrint("Calling updateCartQuantity...");
+
+    final success = await food_Authservice.updateCartQuantity(itemId, newQty);
+
+    debugPrint("API Success : $success");
+
+    prefs.setInt("dish_${widget.dish.dishId}_quantity", newQty);
+
+    debugPrint(
+      "Saved Qty in Prefs : ${prefs.getInt("dish_${widget.dish.dishId}_quantity")}",
+    );
+
+    debugPrint("========== UPDATE CART END ==========");
   }
 
   Future<bool> _checkLogin(BuildContext context) async {
     final isLoggedIn = await subscription_AuthService.isLoggedIn();
+
     if (!isLoggedIn) {
-      // ignore: use_build_context_synchronously
       showAuthRequiredSheet(context);
       return false;
     }
+
     return true;
   }
 
@@ -152,6 +201,60 @@ class _CartButtonState extends State<CartButton> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => const AuthRequiredWidget(),
+    );
+  }
+
+  void _showAddonBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => AddonBottomSheet(
+        dish: widget.dish,
+        // onAdd: (addons) async {
+        //   Navigator.pop(context);
+        //
+        //   setState(() => itemCount = 1);
+        //
+        //   // await food_Authservice.addToCart(
+        //   //   dishId: widget.dish.dishId,
+        //   //   quantity: 1,
+        //   //   addons: addons,
+        //   //   sheduleorder: sheduleorder,
+        //   // );
+        //   await food_Authservice.addToCart(
+        //     dishId: widget.dish.dishId,
+        //     quantity: 1,
+        //     sheduleorder: false,
+        //     addons: addons,
+        //   );
+        // },
+        // onAdd: (addons, quantity) async {
+        //   Navigator.pop(context);
+        //
+        //   setState(() => itemCount = quantity);
+        //
+        //   await food_Authservice.addToCart(
+        //     dishId: widget.dish.dishId,
+        //     quantity: quantity,
+        //     sheduleorder: false,
+        //     addons: addons,
+        //   );
+        // },
+        onAdd: (addons, quantity) async {
+          Navigator.pop(context);
+
+          setState(() => itemCount = quantity);
+
+          await food_Authservice.addToCart(
+            dishId: widget.dish.dishId,
+            quantity: quantity,
+            sheduleorder: false,
+            addons: addons,
+          );
+
+          await _loadQuantity();
+        },
+      ),
     );
   }
 
@@ -173,45 +276,33 @@ class _CartButtonState extends State<CartButton> {
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 10.w),
               ),
-              onPressed: _isLoading
-                  ? null
-                  : () async {
-                      final allowed = await _checkLogin(context);
-                      if (!allowed) return;
 
-                      final schedule = widget.balanceQuantity <= 0;
-                      setState(() => _isLoading = true);
+              onPressed: () async {
+                final allowed = await _checkLogin(context);
+                if (!allowed) return;
 
-                      try {
-                        await _addToCart(1, sheduleorder: schedule);
-                        setState(() => itemCount = 1);
-                        CartMode.type.value = CartType.normal;
-                      } catch (e) {
-                        // Rollback optimistic increment on failure.
-                        CartNotifier.count.value =
-                            (CartNotifier.count.value - 1).clamp(0, 9999);
-                        AppAlert.error(context, "Failed to add item");
-                      } finally {
-                        if (mounted) setState(() => _isLoading = false);
-                      }
-                    },
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      widget.balanceQuantity <= 0 ? "Schedule" : "Add Cart",
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: TextColors.whiteText,
-                      ),
-                    ),
+                final schedule = widget.dish.balanceQuantity <= 0;
+
+                // setState(() => itemCount = 1);
+                // await _addToCart(1, sheduleorder: schedule);
+                if (widget.dish.addons.isEmpty) {
+                  setState(() => itemCount = 1);
+
+                  await _addToCart(1, sheduleorder: schedule);
+                } else {
+                  _showAddonBottomSheet();
+                }
+                CartMode.type.value = CartType.normal;
+              },
+
+              child: Text(
+                widget.dish.balanceQuantity <= 0 ? "Schedule" : "Add Cart",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: TextColors.whiteText, // 👈 NEVER greyed out
+                ),
+              ),
             )
           : Container(
               decoration: BoxDecoration(
@@ -227,24 +318,15 @@ class _CartButtonState extends State<CartButton> {
                   /// ➖ Minus
                   IconButton(
                     icon: Icon(Icons.remove, size: 14.sp),
-                    onPressed: _isLoading
-                        ? null
-                        : () async {
-                            setState(() => _isLoading = true);
-                            try {
-                              if (itemCount > 1) {
-                                await _updateQuantity(itemCount - 1);
-                                setState(() => itemCount--);
-                              } else {
-                                await _removeFromCart();
-                                setState(() => itemCount = 0);
-                              }
-                            } catch (e) {
-                              AppAlert.error(context, "Update failed");
-                            } finally {
-                              if (mounted) setState(() => _isLoading = false);
-                            }
-                          },
+                    onPressed: () async {
+                      if (itemCount > 1) {
+                        setState(() => itemCount--);
+                        await _updateQuantity(itemCount);
+                      } else {
+                        await _removeFromCart();
+                        setState(() => itemCount = 0);
+                      }
+                    },
                   ),
 
                   Text(
@@ -255,9 +337,9 @@ class _CartButtonState extends State<CartButton> {
                     ),
                   ),
 
-                  /// ➕ Plus
+                  /// ➕ Plus (WITH VALIDATION)
                   GestureDetector(
-                    onTap: itemCount >= widget.balanceQuantity
+                    onTap: itemCount >= widget.dish.balanceQuantity
                         ? () {
                             AppAlert.error(
                               context,
@@ -266,23 +348,23 @@ class _CartButtonState extends State<CartButton> {
                           }
                         : null,
                     child: IconButton(
-                      icon: Icon(Icons.add, size: 14.sp, color: Colors.black),
-                      onPressed: _isLoading
-                          ? null
-                          : () async {
-                              final allowed = await _checkLogin(context);
-                              if (!allowed) return;
+                      icon: Icon(
+                        Icons.add,
+                        size: 14.sp,
+                        color:
+                            // itemCount >= widget.balanceQuantity
+                            //     ? Colors.grey
+                            //     :
+                            Colors.black,
+                      ),
 
-                              setState(() => _isLoading = true);
-                              try {
-                                await _updateQuantity(itemCount + 1);
-                                setState(() => itemCount++);
-                              } catch (e) {
-                                AppAlert.error(context, "Update failed");
-                              } finally {
-                                if (mounted) setState(() => _isLoading = false);
-                              }
-                            },
+                      onPressed: () async {
+                        final allowed = await _checkLogin(context);
+                        if (!allowed) return;
+
+                        setState(() => itemCount++);
+                        await _updateQuantity(itemCount);
+                      },
                     ),
                   ),
                 ],
@@ -291,3 +373,422 @@ class _CartButtonState extends State<CartButton> {
     );
   }
 }
+
+class AddonBottomSheet extends StatefulWidget {
+  final Dish dish;
+
+  final Function(List<Map<String, dynamic>> addons, int quantity) onAdd;
+
+  const AddonBottomSheet({super.key, required this.dish, required this.onAdd});
+
+  @override
+  State<AddonBottomSheet> createState() => _AddonBottomSheetState();
+}
+
+class _AddonBottomSheetState extends State<AddonBottomSheet> {
+  final Set<int> selected = {};
+  Map<int, int> addonQty = {};
+
+  int quantity = 1;
+
+  double get dishPrice => widget.dish.effectivePrice ?? widget.dish.price ?? 0;
+
+  // double get addonTotal {
+  //   double total = 0;
+  //
+  //   for (final addon in widget.dish.addons) {
+  //     if (selected.contains(addon.addonId)) {
+  //       total += addon.addonPrice;
+  //     }
+  //   }
+  //
+  //   return total;
+  // }
+  double get addonTotal {
+    double total = 0;
+
+    addonQty.forEach((id, qty) {
+      final addon = widget.dish.addons.firstWhere((e) => e.addonId == id);
+
+      total += addon.addonPrice * qty;
+    });
+
+    return total;
+  }
+
+  double get totalPrice => ((dishPrice * quantity) + addonTotal);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * .70,
+
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade400,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(16),
+
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+                  Text(
+                    widget.dish.dishName ?? "",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Text(
+                    widget.dish.description ?? "",
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  const Text(
+                    "Select Addons",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+
+            // Expanded(
+            //   child: ListView.builder(
+            //     itemCount: widget.dish.addons.length,
+            //
+            //     itemBuilder: (_, index) {
+            //       final addon = widget.dish.addons[index];
+            //
+            //       return CheckboxListTile(
+            //         value: selected.contains(addon.addonId),
+            //
+            //         title: Text(addon.addonName),
+            //
+            //         subtitle: Text("₹${addon.addonPrice.toStringAsFixed(0)}"),
+            //
+            //         onChanged: (value) {
+            //           setState(() {
+            //             if (value == true) {
+            //               selected.add(addon.addonId);
+            //             } else {
+            //               selected.remove(addon.addonId);
+            //             }
+            //           });
+            //         },
+            //       );
+            //     },
+            //   ),
+            // ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: widget.dish.addons.length,
+                itemBuilder: (context, index) {
+                  final addon = widget.dish.addons[index];
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                addon.addonName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+
+                              Text(
+                                "₹${addon.addonPrice}",
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        _qtyButton(addon),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.all(16),
+
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [BoxShadow(blurRadius: 8, color: Colors.black12)],
+              ),
+
+              child: SafeArea(
+                top: false,
+
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove),
+
+                            onPressed: () {
+                              if (quantity > 1) {
+                                setState(() {
+                                  quantity--;
+                                });
+                              }
+                            },
+                          ),
+
+                          Text(
+                            "$quantity",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          IconButton(
+                            icon: const Icon(Icons.add),
+
+                            onPressed: () {
+                              setState(() {
+                                quantity++;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final addons = addonQty.entries.map((e) {
+                              return {"addonId": e.key, "quantity": e.value};
+                            }).toList();
+
+                            debugPrint("Addon Qty Map: $addonQty");
+                            debugPrint("Addons Payload: ${jsonEncode(addons)}");
+
+                            widget.onAdd(addons, quantity);
+                          },
+
+                          child: Text(
+                            "Add Item ₹${totalPrice.toStringAsFixed(0)}",
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _qtyButton(Addon addon) {
+    final qty = addonQty[addon.addonId] ?? 0;
+
+    if (qty == 0) {
+      return SizedBox(
+        width: 80,
+        height: 34,
+        child: OutlinedButton(
+          onPressed: () {
+            setState(() {
+              addonQty[addon.addonId] = 1;
+            });
+          },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: BorderSide(color: AppColors.primary, width: 1.2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: EdgeInsets.zero,
+          ),
+          child: const Text(
+            "ADD",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: 90,
+      height: 34,
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.primary),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  if (qty == 1) {
+                    addonQty.remove(addon.addonId);
+                  } else {
+                    addonQty[addon.addonId] = qty - 1;
+                  }
+                });
+              },
+              child: const Center(child: Icon(Icons.remove, size: 18)),
+            ),
+          ),
+
+          // Container(width: 1, color: Colors.grey.shade300),
+          Expanded(
+            child: Center(
+              child: Text(
+                "$qty",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+
+          // Container(width: 1, color: Colors.grey.shade300),
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  addonQty[addon.addonId] = qty + 1;
+                });
+              },
+              child: const Center(child: Icon(Icons.add, size: 18)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// class AddonBottomSheet extends StatefulWidget {
+//   final Dish dish;
+//
+//   // final Function(List<Map<String, dynamic>>) onAdd;
+//   final Function(List<Map<String, dynamic>> addons, int quantity) onAdd;
+//
+//   const AddonBottomSheet({super.key, required this.dish, required this.onAdd});
+//
+//   @override
+//   State<AddonBottomSheet> createState() => _AddonBottomSheetState();
+// }
+//
+// class _AddonBottomSheetState extends State<AddonBottomSheet> {
+//   final Set<int> selected = {};
+//   int quantity = 1;
+//
+//   double get totalPrice {
+//     double addonPrice = 0;
+//
+//     for (final addon in widget.dish.addons) {
+//       if (selected.contains(addon.addonId)) {
+//         addonPrice += addon.addonPrice;
+//       }
+//     }
+//
+//     return (widget.dish.effectivePrice ?? widget.dish.price ?? 0 + addonPrice) *
+//         quantity;
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.all(16),
+//
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//
+//         children: [
+//           Text(
+//             "Select Addons",
+//             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//           ),
+//
+//           Text("${widget.dish.description}", style: TextStyle(fontSize: 14)),
+//
+//           const SizedBox(height: 16),
+//
+//           ...widget.dish.addons.map((addon) {
+//             return CheckboxListTile(
+//               value: selected.contains(addon.addonId),
+//
+//               title: Text(addon.addonName),
+//
+//               subtitle: Text("₹${addon.addonPrice}"),
+//
+//               onChanged: (v) {
+//                 setState(() {
+//                   if (v == true) {
+//                     selected.add(addon.addonId);
+//                   } else {
+//                     selected.remove(addon.addonId);
+//                   }
+//                 });
+//               },
+//             );
+//           }),
+//
+//           Expanded(
+//             child: ElevatedButton(
+//               onPressed: () {
+//                 final addons = selected.map((id) {
+//                   return {"addonId": id, "quantity": 1};
+//                 }).toList();
+//
+//                 widget.onAdd(addons, quantity);
+//               },
+//
+//               child: Text("Add Item ₹${totalPrice.toStringAsFixed(0)}"),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }

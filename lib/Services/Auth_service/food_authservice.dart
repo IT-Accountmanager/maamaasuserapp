@@ -337,14 +337,13 @@ class food_Authservice {
   }
 
   static Future<bool> updateCartQuantity(
-    // int cartId,
-    int itemId,
-    int quantity,
-  ) async {
+      int itemId,
+      int quantity,
+      ) async {
+
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
 
-    // ✅ Relative endpoint only
     final uri = Uri.parse("api/cart/update/item").replace(
       queryParameters: {
         "userId": userId.toString(),
@@ -353,19 +352,32 @@ class food_Authservice {
       },
     );
 
-    final body = {"quantity": quantity};
+    debugPrint("=================================");
+    debugPrint("PUT URL : ${uri.toString()}");
+    debugPrint("UserId  : $userId");
+    debugPrint("ItemId  : $itemId");
+    debugPrint("Qty     : $quantity");
+
+    final body = {
+      "quantity": quantity,
+    };
+
+    debugPrint("BODY : $body");
 
     try {
-      // ✅ Specify the service for correct base URL
       final response = await ApiClient.put(
         uri.toString(),
         body,
         service: 'food',
       );
 
+      debugPrint("STATUS : ${response.statusCode}");
+      debugPrint("BODY   : ${response.body}");
+
       return response.statusCode == 200;
-    } catch (e) {
-      // print("⚠️ Error updating cart quantity: $e");
+    } catch (e, stackTrace) {
+      debugPrint("ERROR : $e");
+      debugPrint("$stackTrace");
       return false;
     }
   }
@@ -374,21 +386,24 @@ class food_Authservice {
     required int dishId,
     required int quantity,
     required sheduleorder,
+    List<Map<String, dynamic>> addons = const [],
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
     final endpoint =
         "api/cart/add/item?userId=$userId&sheduleorder=$sheduleorder";
-    final body = {"dishId": dishId, "quantity": quantity};
+    final body = {"dishId": dishId, "quantity": quantity, "addons": addons};
 
     try {
       final response = await ApiClient.post(endpoint, body, service: "food");
-
+      debugPrint("request body: $body");
       final data = jsonDecode(response.body);
       final int? cartId = data['cartId'];
       if (cartId == null) return false;
 
       await prefs.setInt('cartId', cartId);
+      debugPrint("Cart Status: ${response.statusCode}");
+      debugPrint(" Cart Body: ${response.body}");
 
       // ✅ Cache shedule values from HTTP response by itemId
       final items = data['cartItems'] as List<dynamic>? ?? [];
@@ -408,19 +423,30 @@ class food_Authservice {
   static Future<int?> getItemIdByDishId(int dishId) async {
     try {
       final cart = await fetchCart();
-      if (cart == null) return null;
 
-      final item = cart.cartItems
-          .cast<dynamic>()
-          .where((i) => i.dishId == dishId)
-          .toList();
-
-      if (item.isNotEmpty) {
-        return item.first.itemId;
-      } else {
+      if (cart == null) {
+        debugPrint("❌ Cart is null");
         return null;
       }
+
+      debugPrint("Cart Items Count: ${cart.cartItems.length}");
+
+      for (final item in cart.cartItems) {
+        debugPrint(
+            "DishId: ${item.dishId}, ItemId: ${item.itemId}, Qty: ${item.quantity}");
+      }
+
+      final matched = cart.cartItems.where((i) => i.dishId == dishId).toList();
+
+      if (matched.isNotEmpty) {
+        debugPrint("✅ Found ItemId: ${matched.first.itemId}");
+        return matched.first.itemId;
+      }
+
+      debugPrint("❌ No item found for DishId: $dishId");
+      return null;
     } catch (e) {
+      debugPrint("Exception: $e");
       return null;
     }
   }
@@ -460,11 +486,13 @@ class food_Authservice {
     final response = await ApiClient.get(endpoint, service: "food");
 
     if (response.statusCode == 200) {
-      //       debugPrint("response :${response.body}");
+      debugPrint("response :${response.body}");
       final List<dynamic> data = jsonDecode(response.body);
       if (data.isNotEmpty) {
         final cartJson = data.first as Map<String, dynamic>;
         final items = cartJson['cartItems'] as List<dynamic>? ?? [];
+        debugPrint("Cart parsed successfully");
+        // debugPrint("Items count: ${cart.cartItems.length}");
 
         for (final item in items) {
           // ✅ Actually print something
@@ -481,6 +509,31 @@ class food_Authservice {
       final msg = body['message'] ?? body['error'] ?? "Failed to load cart";
       throw Exception(msg);
     }
+  }
+
+  static Future<void> updateAddon(int itemId, int addonId, int quantity) async {
+    // final endpoint =
+    //     "api/cart/addon/update?itemId=$itemId&addonId=$addonId&quantity=$quantity";
+    final prefs = await SharedPreferences.getInstance();
+    final int userId = prefs.getInt('userId') ?? 0;
+    final endpoint =
+        "api/cart/addon/update?userId=$userId&itemId=$itemId&addonId=$addonId&quantity=$quantity";
+
+    debugPrint("Request: $endpoint");
+    debugPrint("addon");
+
+    final response = await ApiClient.put(endpoint, {}, service: "food");
+
+    debugPrint("Status Code: ${response.statusCode}");
+    debugPrint("Response Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      return;
+    }
+
+    throw Exception(
+      "Unable to update addon. Status: ${response.statusCode}, Body: ${response.body}",
+    );
   }
 
   static Future<bool> deleteCart() async {
@@ -1273,9 +1326,47 @@ class food_Authservice {
   }
 
   // 🔥 FIXED updateCartSettings - Handles both apply & remove correctly
+  // static Future<CouponResult> updateCartSettings({
+  //   required int cartId,
+  //   dynamic couponId, // nullable
+  //   required String applyCoupon,
+  // }) async {
+  //   try {
+  //     final endpoint = "api/cart/coupon/$cartId";
+  //
+  //     final Map<String, dynamic> body = {"applyCoupon": applyCoupon};
+  //
+  //     if (couponId != null) {
+  //       body["id"] = couponId is String ? int.parse(couponId) : couponId;
+  //     }
+  //     //
+  //     //       debugPrint("🔥 PUT $endpoint");
+  //     //       debugPrint("🔥 BODY: ${jsonEncode(body)}");
+  //
+  //     final response = await ApiClient.put(endpoint, body, service: "food");
+  //     //
+  //     debugPrint("🔥 STATUS: ${response.statusCode}");
+  //     debugPrint("🔥 RESPONSE: ${response.body}");
+  //
+  //     if (response.statusCode == 200) {
+  //       return CouponResult(success: true);
+  //     } else {
+  //       // Try to parse error message from backend
+  //       // ignore: unnecessary_null_comparison
+  //       final errorMsg =
+  //           jsonDecode(response.body)["message"] ?? "Failed to apply coupon";
+  //
+  //       return CouponResult(success: false, error: errorMsg);
+  //     }
+  //   } catch (e) {
+  //     //       debugPrint("❌ updateCartSettings Error: $e");
+  //     return CouponResult(success: false, error: e.toString());
+  //   }
+  // }
+
   static Future<CouponResult> updateCartSettings({
     required int cartId,
-    dynamic couponId, // nullable
+    dynamic couponId,
     required String applyCoupon,
   }) async {
     try {
@@ -1286,27 +1377,29 @@ class food_Authservice {
       if (couponId != null) {
         body["id"] = couponId is String ? int.parse(couponId) : couponId;
       }
-      //
-      //       debugPrint("🔥 PUT $endpoint");
-      //       debugPrint("🔥 BODY: ${jsonEncode(body)}");
 
       final response = await ApiClient.put(endpoint, body, service: "food");
-      //
-      //       debugPrint("🔥 STATUS: ${response.statusCode}");
-      //       debugPrint("🔥 RESPONSE: ${response.body}");
+
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         return CouponResult(success: true);
-      } else {
-        // Try to parse error message from backend
-        // ignore: unnecessary_null_comparison
-        final errorMsg =
-            jsonDecode(response.body)["message"] ?? "Failed to apply coupon";
-
-        return CouponResult(success: false, error: errorMsg);
       }
+
+      String error = "Failed to update coupon";
+
+      try {
+        final json = jsonDecode(response.body);
+
+        error =
+            json["message"] ?? json["error"] ?? json["msg"] ?? response.body;
+      } catch (_) {
+        error = response.body;
+      }
+
+      return CouponResult(success: false, error: error);
     } catch (e) {
-      //       debugPrint("❌ updateCartSettings Error: $e");
       return CouponResult(success: false, error: e.toString());
     }
   }
@@ -1542,9 +1635,9 @@ class food_Authservice {
 
       final response = await ApiClient.get(endpoint, service: 'food');
 
-      // debugPrint("📥 Status Code: ${response.statusCode}");
-      // debugPrint("📥 Raw Response Body:");
-      // debugPrint(response.body);
+      debugPrint("📥 Status Code: ${response.statusCode}");
+      debugPrint("📥 Raw Response Body:");
+      debugPrint(response.body);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);

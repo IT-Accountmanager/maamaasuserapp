@@ -2,7 +2,6 @@ import '../../../Models/promotions_model/promotions_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
-
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../Food&beverages/Menu/menu_screen.dart';
 

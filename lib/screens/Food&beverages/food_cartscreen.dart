@@ -152,6 +152,8 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       final freshCart = results[0] as CartModel?;
       final walletData = results[1] as Wallet;
       final ads = results[2] as List<Campaign>;
+      debugPrint("freshCart items: ${freshCart?.cartItems.length}");
+      debugPrint("current cartData items: ${cartData?.cartItems.length}");
 
       setState(() {
         if (cartData == null) {
@@ -270,6 +272,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             shedule: map.containsKey('shedule')
                 ? map['shedule'] == true
                 : old.shedule,
+            addons: old.addons,
           );
         }
         return CartItem.fromJson(map);
@@ -974,30 +977,71 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text(
-                              '₹${item.price.toStringAsFixed(0)} each',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: cartuser.textMuted,
-                              ),
+                            // Text(
+                            //   item.addons.isNotEmpty
+                            //       ? item.addons
+                            //             .map((e) => e.addonName)
+                            //             .join(', ')
+                            //       : '',
+                            //   style: const TextStyle(
+                            //     fontSize: 12,
+                            //     color: cartuser.textMuted,
+                            //   ),
+                            // ),
+                            Row(
+                              children: [
+                                if (item.addons.isNotEmpty)
+                                  GestureDetector(
+                                    onTap: () => _showAddonBottomSheet(item),
+                                    child: const Padding(
+                                      padding: EdgeInsets.only(left: 8),
+                                      child: Text(
+                                        "Edit",
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                SizedBox(width: 10,),
+                                Expanded(
+                                  child: Text(
+                                    item.addons.isNotEmpty
+                                        ? item.addons
+                                              .map((e) => e.addonName)
+                                              .join(', ')
+                                        : 'No Addons',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: cartuser.textMuted,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
                       SizedBox(width: 10.w),
-                      _buildQtyControl(item),
-                      SizedBox(width: 12.w),
-                      SizedBox(
-                        width: 72.w,
-                        child: Text(
-                          '₹${item.totalPrice.toStringAsFixed(2)}',
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: cartuser.textPrimary,
+                      Column(
+                        children: [
+                          _buildQtyControl(item),
+                          SizedBox(height: 10.w),
+                          SizedBox(
+                            width: 72.w,
+                            child: Text(
+                              '₹${item.totalPrice.toStringAsFixed(2)}',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: cartuser.textPrimary,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -1008,6 +1052,108 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
           }),
         ],
       ),
+    );
+  }
+
+  void _showAddonBottomSheet(CartItem item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    item.dishName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  ...item.addons.map((addon) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  addon.addonName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+
+                                Text(
+                                  "₹${addon.addonPrice}",
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () async {
+                              if (addon.quantity == 0) return;
+
+                              await food_Authservice.updateAddon(
+                                item.itemId,
+                                addon.addonId,
+                                addon.quantity - 1,
+                              );
+
+                              setSheetState(() {
+                                addon.quantity--;
+                              });
+
+                              setState(() {});
+                            },
+                          ),
+
+                          Text(
+                            addon.quantity.toString(),
+                            style: const TextStyle(fontSize: 16),
+                          ),
+
+                          IconButton(
+                            icon: const Icon(Icons.add_circle),
+                            onPressed: () async {
+                              await food_Authservice.updateAddon(
+                                item.itemId,
+                                addon.addonId,
+                                addon.quantity + 1,
+                              );
+
+                              setSheetState(() {
+                                addon.quantity++;
+                              });
+
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1109,98 +1255,296 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
   }
 
   // ── Coupon Row ────────────────────────────────────────────────────────────
+  // Widget _buildCouponRow() {
+  //   final applied = (cartData?.couponCode ?? '').isNotEmpty;
+  //
+  //   return GestureDetector(
+  //     onTap: applied ? null : _showCouponBottomSheet,
+  //     child: _card(
+  //       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+  //       child: Column(
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Container(
+  //                 width: 40,
+  //                 height: 40,
+  //                 decoration: BoxDecoration(
+  //                   color: applied ? cartuser.greenLight : cartuser.brandLight,
+  //                   borderRadius: BorderRadius.circular(10),
+  //                 ),
+  //                 child: Icon(
+  //                   applied
+  //                       ? Icons.check_circle_rounded
+  //                       : Icons.local_offer_rounded,
+  //                   size: 20,
+  //                   color: applied ? cartuser.green : cartuser.brand,
+  //                 ),
+  //               ),
+  //               const SizedBox(width: 12),
+  //               Expanded(
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Text(
+  //                       applied ? 'Coupon Applied' : 'Apply Coupon',
+  //                       style: TextStyle(
+  //                         fontSize: 14,
+  //                         fontWeight: FontWeight.w700,
+  //                         color: applied
+  //                             ? cartuser.green
+  //                             : cartuser.textPrimary,
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //               if (applied)
+  //                 GestureDetector(
+  //                   onTap: () async {
+  //                     if (cartData?.cartId == null) return;
+  //
+  //                     final result = await food_Authservice.updateCartSettings(
+  //                       cartId: cartData!.cartId,
+  //                       couponId: cartData!.couponId,
+  //                       applyCoupon: "NOT_APPLIED",
+  //                     );
+  //
+  //                     if (!result.success) {
+  //                       AppAlert.error(
+  //                         context,
+  //                         result.error ?? "Failed to remove coupon",
+  //                       );
+  //                       return;
+  //                     }
+  //
+  //                     setState(() {
+  //                       appliedCouponCode = null;
+  //                       appliedCouponId = null;
+  //                     });
+  //
+  //                     AppAlert.success(context, "Coupon removed");
+  //                   },
+  //                   child: Container(
+  //                     padding: const EdgeInsets.symmetric(
+  //                       horizontal: 12,
+  //                       vertical: 6,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       color: cartuser.redLight,
+  //                       borderRadius: BorderRadius.circular(20),
+  //                     ),
+  //                     child: const Text(
+  //                       'Remove',
+  //                       style: TextStyle(
+  //                         fontSize: 12,
+  //                         color: cartuser.red,
+  //                         fontWeight: FontWeight.w700,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 )
+  //               else
+  //                 const Icon(
+  //                   Icons.chevron_right_rounded,
+  //                   color: cartuser.textMuted,
+  //                 ),
+  //             ],
+  //           ),
+  //           Center(
+  //             child: Text(
+  //               applied
+  //                   ? (cartData!.couponCode ?? '')
+  //                   : 'Save more on your order',
+  //               style: const TextStyle(
+  //                 fontSize: 12,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: cartuser.textSecondary,
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Widget _buildCouponRow() {
     final applied = (cartData?.couponCode ?? '').isNotEmpty;
 
-    return GestureDetector(
-      onTap: applied ? null : _showCouponBottomSheet,
-      child: _card(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        child: Row(
+    return _card(
+      padding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: applied ? cartuser.greenLight : cartuser.brandLight,
-                borderRadius: BorderRadius.circular(10),
+            // Top accent strip when applied
+            if (applied)
+              Container(
+                height: 3,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [cartuser.green.withOpacity(0.6), cartuser.green],
+                  ),
+                ),
               ),
-              child: Icon(
-                applied
-                    ? Icons.check_circle_rounded
-                    : Icons.local_offer_rounded,
-                size: 20,
-                color: applied ? cartuser.green : cartuser.brand,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              child: Row(
                 children: [
-                  Text(
-                    applied ? 'Coupon Applied' : 'Apply Coupon',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: applied ? cartuser.green : cartuser.textPrimary,
+                  // Icon container
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: applied
+                          ? cartuser.greenLight
+                          : cartuser.brandLight,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      applied
+                          ? Icons.check_circle_rounded
+                          : Icons.local_offer_rounded,
+                      size: 22,
+                      color: applied ? cartuser.green : cartuser.brand,
                     ),
                   ),
-                  Text(
-                    applied
-                        ? (appliedCouponCode ?? '')
-                        : 'Save more on your order',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: cartuser.textSecondary,
+
+                  const SizedBox(width: 12),
+
+                  // Labels
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          applied ? 'Coupon Applied' : 'Apply Coupon',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: applied
+                                ? cartuser.green
+                                : cartuser.textPrimary,
+                            letterSpacing: -0.1,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          applied
+                              ? cartData!.couponCode ?? ''
+                              : 'Save more on your order',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: applied
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: applied
+                                ? cartuser.green.withOpacity(0.8)
+                                : cartuser.textSecondary,
+                            letterSpacing: applied ? 0.5 : 0,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+
+                  const SizedBox(width: 8),
+
+                  // Right action
+                  if (applied)
+                    GestureDetector(
+                      onTap: () async {
+                        if (cartData?.cartId == null) return;
+
+                        final result = await food_Authservice
+                            .updateCartSettings(
+                              cartId: cartData!.cartId,
+                              couponId: cartData!.couponId,
+                              applyCoupon: "NOT_APPLIED",
+                            );
+
+                        if (!result.success) {
+                          AppAlert.error(
+                            context,
+                            result.error ?? "Failed to remove coupon",
+                          );
+                          return;
+                        }
+
+                        setState(() {
+                          appliedCouponCode = null;
+                          appliedCouponId = null;
+                        });
+
+                        AppAlert.success(context, "Coupon removed");
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cartuser.redLight,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: cartuser.red.withOpacity(0.15),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.close_rounded,
+                              size: 12,
+                              color: cartuser.red,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Remove',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: cartuser.red,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    GestureDetector(
+                      onTap: _showCouponBottomSheet,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cartuser.brandLight,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: cartuser.brand.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          'Apply',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: cartuser.brand,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-            if (applied)
-              GestureDetector(
-                onTap: () async {
-                  if (cartData?.cartId == null) return;
-                  final result = await food_Authservice.updateCartSettings(
-                    cartId: cartData!.cartId,
-                    couponId: cartData!.couponId,
-                    applyCoupon: "NOT_APPLIED",
-                  );
-                  if (!result.success) {
-                    AppAlert.error(context, "Failed to remove coupon");
-                    return;
-                  }
-                  setState(() {
-                    appliedCouponCode = null;
-                    appliedCouponId = null;
-                  });
-                  AppAlert.success(context, "Coupon removed");
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cartuser.redLight,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Remove',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: cartuser.red,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              )
-            else
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: cartuser.textMuted,
-              ),
           ],
         ),
       ),
@@ -1701,7 +2045,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                 if (type == 'DELIVERY')
                   _billRow(
                     firstOrder == true
-                        ? 'Delivery Charges (FREE)'
+                        ? 'Delivery Charges (First Order FREE)'
                         : 'Delivery Charges',
                     firstOrder == true ? 0 : delivery,
                     isDiscount: firstOrder == true,

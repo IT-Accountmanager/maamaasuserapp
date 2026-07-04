@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 
 import '../../screens/screens/orders/food orders/food_helper.dart';
 
@@ -25,8 +24,8 @@ enum OrderStatus {
         .toUpperCase()
         .replaceAll(' ', '_')
         .replaceAll('-', '_');
-// 
-//     debugPrint("📡 RAW STATUS: $raw → NORMALIZED: $normalized");
+    //
+    //     debugPrint("📡 RAW STATUS: $raw → NORMALIZED: $normalized");
 
     const map = {
       'HOLD': OrderStatus.hold,
@@ -54,43 +53,11 @@ enum OrderStatus {
     final result = map[normalized];
 
     if (result == null) {
-//       debugPrint("❌ UNKNOWN STATUS FROM API: $raw");
+      //       debugPrint("❌ UNKNOWN STATUS FROM API: $raw");
       return OrderStatus.unknown;
     }
 
     return result;
-  }
-}
-
-class OrderItem {
-  final String dishName;
-  final int quantity;
-  final double price;
-  final double totalPrice;
-  final double gst;
-  final double packingCharges;
-  final String dishImage;
-
-  OrderItem({
-    required this.dishName,
-    required this.quantity,
-    required this.price,
-    required this.totalPrice,
-    required this.gst,
-    required this.packingCharges,
-    required this.dishImage,
-  });
-
-  factory OrderItem.fromJson(Map<String, dynamic> json) {
-    return OrderItem(
-      dishName: json['dishName'] ?? '',
-      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
-      gst: (json['gst'] as num?)?.toDouble() ?? 0.0,
-      packingCharges: (json['packingCharges'] as num?)?.toDouble() ?? 0.0,
-      dishImage: json['dishImage'] ?? '',
-    );
   }
 }
 
@@ -101,9 +68,8 @@ class Order {
   final int vendorId;
   final String location;
   final String pincode;
-  final String date;
-  final String time;
   final String orderDateAndTime;
+  final String scheduledAt;
   final DateTime parsedDateTime;
   final double grandTotal;
   final String couponCode;
@@ -139,9 +105,8 @@ class Order {
     required this.vendorId,
     required this.location,
     required this.pincode,
-    required this.date,
-    required this.time,
     required this.orderDateAndTime,
+    required this.scheduledAt,
     required this.parsedDateTime,
     required this.grandTotal,
     required this.couponCode,
@@ -181,9 +146,10 @@ class Order {
       vendorId: json['vendorId'] ?? 0,
       location: json['location'] ?? '',
       pincode: json['pincode'] ?? '',
-      date: json['date'] ?? '',
-      time: json['time'] ?? '',
+      // date: json['date'] ?? '',
+      // time: json['time'] ?? '',
       orderDateAndTime: json['orderDateAndTime'] ?? '',
+      scheduledAt: json['scheduledAt'] ?? '',
       parsedDateTime: _parseOrderDate(json['orderDateAndTime']),
       grandTotal: (json['grandTotal'] as num?)?.toDouble() ?? 0.0,
       couponCode: json['couponCode'] ?? '',
@@ -215,25 +181,25 @@ class Order {
 
   static DateTime _parseOrderDate(dynamic rawDate) {
     try {
-      if (rawDate is String && rawDate.trim().isNotEmpty) {
-        return DateTime.parse(rawDate);
+      if (rawDate == null || rawDate.toString().trim().isEmpty) {
+        return DateTime.fromMillisecondsSinceEpoch(0);
       }
 
-      if (rawDate is Map) {
-        final date = rawDate['date'];
-        final time = rawDate['time'];
+      final parsed = DateTime.parse(rawDate.toString());
 
-        if (date != null && time != null) {
-          final combined = "$date $time";
-          return DateFormat("yyyy-MM-dd HH:mm:ss").parse(combined);
-        }
-      }
-    } catch (e) {
-//       debugPrint("❌ Date parsing error: $e | RAW: $rawDate");
+      return DateTime.utc(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        parsed.hour,
+        parsed.minute,
+        parsed.second,
+        parsed.millisecond,
+        parsed.microsecond,
+      );
+    } catch (_) {
+      return DateTime.fromMillisecondsSinceEpoch(0);
     }
-
-    // ❌ DO NOT use DateTime.now()
-    return DateTime.fromMillisecondsSinceEpoch(0); // safe fallback
   }
 
   bool get isActive =>
@@ -252,8 +218,9 @@ class Order {
       vendorId: vendorId,
       location: location,
       pincode: pincode,
-      date: date,
-      time: time,
+      // date: date,
+      // time: time,
+      scheduledAt: scheduledAt,
       orderDateAndTime: orderDateAndTime,
       parsedDateTime: parsedDateTime,
       grandTotal: grandTotal,
@@ -286,4 +253,34 @@ class Order {
   }
 }
 
+class OrderItem {
+  final String dishName;
+  final int quantity;
+  final double price;
+  final double totalPrice;
+  final double gst;
+  final double packingCharges;
+  final String dishImage;
 
+  OrderItem({
+    required this.dishName,
+    required this.quantity,
+    required this.price,
+    required this.totalPrice,
+    required this.gst,
+    required this.packingCharges,
+    required this.dishImage,
+  });
+
+  factory OrderItem.fromJson(Map<String, dynamic> json) {
+    return OrderItem(
+      dishName: json['dishName'] ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
+      gst: (json['gst'] as num?)?.toDouble() ?? 0.0,
+      packingCharges: (json['packingCharges'] as num?)?.toDouble() ?? 0.0,
+      dishImage: json['dishImage'] ?? '',
+    );
+  }
+}

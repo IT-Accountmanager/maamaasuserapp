@@ -133,7 +133,7 @@ class _FavoriteButtonState extends State<FavoriteButton> {
           : Icon(
               isLiked ? Icons.favorite : Icons.favorite_border,
               color: isLiked ? Colors.red : Colors.grey,
-              size: 18,
+              size: 25,
             ),
     );
   }

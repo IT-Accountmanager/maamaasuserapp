@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 
 class MenuSkeletonScreen extends StatelessWidget {
@@ -60,15 +61,22 @@ class MenuSkeletonScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             // 🔹 Grid items
-            GridView.builder(
+            // list.builder(
+            //   shrinkWrap: true,
+            //   physics: const NeverScrollableScrollPhysics(),
+            //   itemCount: 6,
+            //   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            //     crossAxisCount: 2,
+            //     mainAxisExtent: 220,
+            //   ),
+            //   itemBuilder: (_, __)
+            ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 6,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisExtent: 220,
-              ),
-              itemBuilder: (_, __) => Padding(
+              separatorBuilder: (_, __) => SizedBox(height: 12.h),
+              itemBuilder: (_, i)
+              => Padding(
                 padding: const EdgeInsets.all(8),
                 child: Container(
                   decoration: BoxDecoration(

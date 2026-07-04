@@ -6,5 +6,5 @@ enum DishFilterType {
   discount20,
   discount50,
   under150,
-  under300,
+  offers,
 }
