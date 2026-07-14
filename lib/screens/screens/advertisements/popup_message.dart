@@ -1,3 +1,4 @@
+import 'package:custom_cached_image/custom_cached_image.dart';
 import 'package:maamaas/screens/Food&beverages/Menu/menu_screen.dart';
 
 import '../../../Models/promotions_model/promotions_model.dart';
@@ -64,24 +65,39 @@ class PromotionPopup {
                           child: SizedBox.expand(
                             child: isVideo
                                 ? _VideoPlayerWidget(url: url)
-                                : Image.network(
-                                    url,
-                                    fit: BoxFit.contain,
-                                    loadingBuilder: (context, child, progress) {
-                                      if (progress == null) return child;
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    },
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Center(
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          size: 40,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                :
+                            // Image.network(
+                            //         url,
+                            //         fit: BoxFit.fill,
+                            //         loadingBuilder: (context, child, progress) {
+                            //           if (progress == null) return child;
+                            //           return const Center(
+                            //             child: CircularProgressIndicator(),
+                            //           );
+                            //         },
+                            //         errorBuilder: (context, error, stackTrace) {
+                            //           return const Center(
+                            //             child: Icon(
+                            //               Icons.broken_image,
+                            //               size: 40,
+                            //             ),
+                            //           );
+                            //         },
+                            //       ),
+                            CustomCachedImage(
+                              imageUrl: url,
+                              fit: BoxFit.fill,
+                              width: double.infinity,
+                              height: double.infinity,
+                              isProfile: false,
+
+                              errorWidget: const Center(
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 40,
+                                ),
+                              ), borderRadius: 0,
+                            )
                           ),
                         ),
                       ),

@@ -1,5 +1,3 @@
-
-
 import 'package:maamaas/screens/screens/referrznd%20earn.dart';
 import 'package:maamaas/screens/screens/supportteam/support_team.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,6 +8,9 @@ import 'package:maamaas/screens/screens/saved_address.dart';
 import 'package:maamaas/screens/screens/wallet_screen.dart';
 import 'package:media_compressor/media_compressor.dart';
 import '../../Models/subscrptions/user_account.dart';
+import '../../Services/dice/dicescreen.dart';
+import '../../Services/spin/newspinner.dart';
+import '../../Services/spin/spinscreen.dart';
 import '../../widgets/widgets/profileavataor.dart';
 import 'profile screen/Profile_Account.dart';
 import '../../widgets/signinrequired.dart';
@@ -556,6 +557,18 @@ class _MenuListState extends State<_MenuList> {
       'color': Color(0xFF8B5CF6),
       'key': 'account',
     },
+    {
+      'icon': Icons.manage_accounts_outlined,
+      'label': 'spin screen',
+      'color': Color(0xFF8B5CF6),
+      'key': 'spin',
+    },
+    {
+      'icon': Icons.manage_accounts_outlined,
+      'label': 'dice screen',
+      'color': Color(0xFF8B5CF6),
+      'key': 'dice',
+    },
     // {
     //   'icon': Icons.manage_accounts_outlined,
     //   'label': 'Logistics',
@@ -579,7 +592,7 @@ class _MenuListState extends State<_MenuList> {
       case 'address':
         return SavedAddress(
           onAddressSelected: (address) {
-//             debugPrint(address.category);
+            //             debugPrint(address.category);
           },
         );
       case 'favorites':
@@ -597,8 +610,10 @@ class _MenuListState extends State<_MenuList> {
         return AccountScreen();
       // case 'logitics':
       //   return TravelHomeScreen();
-      // case 'logitics':
-      //   return ReferEarnScreen();
+      case 'spin':
+        return SpinScreen();
+      case 'dice':
+        return DiceScreen();
       default:
         return null;
     }

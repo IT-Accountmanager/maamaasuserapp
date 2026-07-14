@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_colours.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AppTheme — builds a full ThemeData from any AppColorScheme
-// Change the palette in app_colours.dart and every ThemeData property
-// (buttons, AppBar, inputs, FAB, switches, etc.) updates automatically.
-// ─────────────────────────────────────────────────────────────────────────────
+import 'color_scheme.dart';
 
 class AppTheme {
   AppTheme._();

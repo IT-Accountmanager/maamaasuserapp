@@ -5,6 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Models/food/aboutus_model.dart';
 import '../../../Models/food/team_model.dart';
 import '../../../Services/App_color_service/app_colours.dart';
+import '../../../Services/App_color_service/app_text.dart';
+import '../../../Services/App_color_service/appradius.dart';
+import '../../../Services/App_color_service/boxshadow.dart';
+import '../../../Services/App_color_service/resposnive.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../widgets/widgets/food/favorite_button.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
@@ -17,7 +21,6 @@ import 'package:flutter/services.dart';
 import '../../../Models/food/dish.dart';
 import '../../Mainscreen.dart';
 import 'dart:async';
-import '../Menu/colours.dart';
 import '../Menu/fullscreen.dart';
 
 class MenuResponse {
@@ -39,12 +42,14 @@ class tablemneuScreen extends StatefulWidget {
   final int vendorId;
   final int seatingId;
   final String? initialCategoryName;
+  final bool? restaurantStatus;
 
   const tablemneuScreen({
     super.key,
     required this.vendorId,
     required this.seatingId,
     this.initialCategoryName,
+    this.restaurantStatus,
   });
 
   @override
@@ -236,21 +241,21 @@ class _MenuScreenState extends State<tablemneuScreen>
             width: 80.r,
             height: 80.r,
             decoration: BoxDecoration(
-              color: Menucolours.surfaceAlt,
+              color: AppColors.surfaceAlt,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.wifi_off_rounded,
               size: 36.sp,
-              color: Menucolours.textM,
+              color: AppColors.textM,
             ),
           ),
           SizedBox(height: 16.h),
-          Text('Failed to load menu', style: Menucolours.h2()),
+          Text('Failed to load menu', style: AppText.h2()),
           SizedBox(height: 6.h),
           Text(
             'Pull down to try again',
-            style: Menucolours.body(color: Menucolours.textS),
+            style: AppText.menubody(color: AppColors.textS),
           ),
         ],
       ),
@@ -259,8 +264,8 @@ class _MenuScreenState extends State<tablemneuScreen>
 
   Widget _buildMainScreen() {
     return RefreshIndicator(
-      color: Menucolours.primary,
-      backgroundColor: Menucolours.surface,
+      color: AppColors.green,
+      backgroundColor: AppColors.surface,
       displacement: 80,
       strokeWidth: 2.5,
       onRefresh: _onRefresh,
@@ -273,7 +278,7 @@ class _MenuScreenState extends State<tablemneuScreen>
             pinned: true,
             expandedHeight: _expandedHeight,
             collapsedHeight: 64,
-            backgroundColor: Menucolours.surface,
+            backgroundColor: AppColors.surface,
             elevation: 0,
             scrolledUnderElevation: 1,
             // ignore: deprecated_member_use
@@ -299,6 +304,7 @@ class _MenuScreenState extends State<tablemneuScreen>
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: BannerSection(
+                restaurentstatus:widget.restaurantStatus?? true,
                 bannerItem: _bannerItem,
                 aboutus: _aboutus,
                 team: _team,
@@ -558,7 +564,7 @@ class _MenuScreenState extends State<tablemneuScreen>
                           img,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
-                            color: Menucolours.surfaceAlt,
+                            color: AppColors.surfaceAlt,
                             child: const Icon(Icons.image_not_supported),
                           ),
                         ),
@@ -695,7 +701,7 @@ class _CollapsedFilterBarState extends State<_CollapsedFilterBar> {
         Expanded(
           child: SearchField(
             onSearch: widget.onSearch,
-            fillColor: Menucolours.surfaceAlt,
+            fillColor: AppColors.surfaceAlt,
           ),
         ),
         SizedBox(width: 8.w),
@@ -756,7 +762,7 @@ class _StickyTabsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Menucolours.surface,
+      color: AppColors.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -767,7 +773,7 @@ class _StickyTabsContent extends StatelessWidget {
               onCategorySelected: onCategorySelected,
             ),
           ),
-          Divider(height: 1, thickness: 1, color: Menucolours.borderLight),
+          Divider(height: 1, thickness: 1, color: AppColors.borderLight),
         ],
       ),
     );
@@ -854,15 +860,15 @@ class _CategoryChip extends StatelessWidget {
               height: chipSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected ? AppColors.primary : Menucolours.surfaceAlt,
+                color: isSelected ? AppColors.primary : AppColors.surfaceAlt,
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : Menucolours.border,
+                  color: isSelected ? AppColors.primary : AppColors.border,
                   width: isSelected ? 2.5 : 1.5,
                 ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: Menucolours.primary.withOpacity(0.18),
+                          color: AppColors.green.withOpacity(0.18),
                           blurRadius: 12,
                           offset: const Offset(0, 3),
                         ),
@@ -876,8 +882,8 @@ class _CategoryChip extends StatelessWidget {
                         Icons.restaurant_rounded,
                         size: 18.sp,
                         color: isSelected
-                            ? Menucolours.primary
-                            : Menucolours.textM,
+                            ? AppColors.green
+                            : AppColors.textM,
                       ),
               ),
             ),
@@ -886,8 +892,8 @@ class _CategoryChip extends StatelessWidget {
               width: 58.w,
               child: AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
-                style: Menucolours.label(
-                  color: isSelected ? AppColors.primary : Menucolours.textS,
+                style: AppText.menulabel(
+                  color: isSelected ? AppColors.primary : AppColors.textS,
                   size: 10.sp,
                 ),
                 child: Text(
@@ -944,7 +950,7 @@ class _MenuFilterBarState extends State<MenuFilterBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Menucolours.surface,
+      color: AppColors.surface,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: Row(
         children: [
@@ -987,19 +993,19 @@ class SearchField extends StatelessWidget {
       constraints: BoxConstraints(minHeight: 36.h, maxHeight: 44.h),
       decoration: BoxDecoration(
         color: fillColor,
-        borderRadius: Menucolours.r12,
-        border: Border.all(color: Menucolours.border),
+        borderRadius: appradius.r12,
+        border: Border.all(color: AppColors.border),
       ),
       child: TextField(
         onChanged: onSearch,
-        style: Menucolours.body(size: 13.sp),
+        style: AppText.menubody(size: 13.sp),
         decoration: InputDecoration(
           hintText: 'Search dishes...',
-          hintStyle: Menucolours.body(color: Menucolours.textM, size: 13.sp),
+          hintStyle: AppText.menubody(color: AppColors.textM, size: 13.sp),
           prefixIcon: Icon(
             Icons.search_rounded,
             size: 17.sp,
-            color: Menucolours.textM,
+            color: AppColors.textM,
           ),
           border: InputBorder.none,
           isDense: true,
@@ -1029,7 +1035,7 @@ class VegToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isVeg ? Menucolours.vegGreen : Menucolours.nonVegRed;
+    final color = isVeg ? AppColors.vegGreen : AppColors.nonVegRed;
 
     return GestureDetector(
       onTap: () {
@@ -1043,12 +1049,12 @@ class VegToggle extends StatelessWidget {
           vertical: 6.h,
         ),
         decoration: BoxDecoration(
-          color: isVeg ? Menucolours.primaryDim : Menucolours.surfaceAlt,
-          borderRadius: Menucolours.r8,
+          color: isVeg ? AppColors.primaryDim : AppColors.surfaceAlt,
+          borderRadius: appradius.r8,
           border: Border.all(
             color: isVeg
-                ? Menucolours.primary.withOpacity(0.4)
-                : Menucolours.border,
+                ? AppColors.green.withOpacity(0.4)
+                : AppColors.border,
           ),
         ),
         child: Row(
@@ -1062,7 +1068,7 @@ class VegToggle extends StatelessWidget {
             SizedBox(width: 5.w),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
-              style: Menucolours.label(
+              style: AppText.menulabel(
                 color: color,
                 size: compact ? 11.sp : 12.sp,
               ),
@@ -1311,12 +1317,12 @@ class _DishGridTabState extends State<DishGridTab> {
 
   Widget _imagePlaceholder() {
     return Container(
-      color: Menucolours.surfaceAlt,
+      color: AppColors.surfaceAlt,
       child: Center(
         child: Icon(
           Icons.fastfood_rounded,
           size: 32.sp,
-          color: Menucolours.textM,
+          color: AppColors.textM,
         ),
       ),
     );
@@ -1333,24 +1339,24 @@ class _DishGridTabState extends State<DishGridTab> {
               width: 72.r,
               height: 72.r,
               decoration: BoxDecoration(
-                color: Menucolours.surfaceAlt,
+                color: AppColors.surfaceAlt,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.search_off_rounded,
                 size: 32.sp,
-                color: Menucolours.textM,
+                color: AppColors.textM,
               ),
             ),
             SizedBox(height: 14.h),
             Text(
               'Nothing here',
-              style: Menucolours.h2(color: Menucolours.textH),
+              style: AppText.h2(color: AppColors.textH),
             ),
             SizedBox(height: 6.h),
             Text(
               widget.emptyMessage,
-              style: Menucolours.body(color: Menucolours.textS),
+              style: AppText.menubody(color: AppColors.textS),
             ),
           ],
         ),
@@ -1366,10 +1372,10 @@ class _DishGridTabState extends State<DishGridTab> {
           constraints: const BoxConstraints(maxWidth: 360),
           padding: EdgeInsets.all(24.w),
           decoration: BoxDecoration(
-            color: Menucolours.surface,
-            borderRadius: Menucolours.r20,
-            border: Border.all(color: Menucolours.border),
-            boxShadow: Menucolours.cardShadow,
+            color: AppColors.surface,
+            borderRadius: appradius.r20,
+            border: Border.all(color: AppColors.border),
+            boxShadow: boxshadow.cardShadow,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1378,25 +1384,25 @@ class _DishGridTabState extends State<DishGridTab> {
                 width: 64.r,
                 height: 64.r,
                 decoration: BoxDecoration(
-                  color: Menucolours.nonVegRed.withOpacity(0.08),
+                  color: AppColors.nonVegRed.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.restaurant_menu_rounded,
-                  color: Menucolours.nonVegRed,
+                  color: AppColors.nonVegRed,
                   size: 28.sp,
                 ),
               ),
               SizedBox(height: 16.h),
               Text(
                 'Action Required',
-                style: Menucolours.h2(),
+                style: AppText.h2(),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 8.h),
               Text(
                 _errorMessage!,
-                style: Menucolours.body(color: Menucolours.textS),
+                style: AppText.menubody(color: AppColors.textS),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 20.h),
@@ -1420,11 +1426,11 @@ class _DishGridTabState extends State<DishGridTab> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Menucolours.primary,
+                    backgroundColor: AppColors.green,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: Menucolours.r12,
+                      borderRadius: appradius.r12,
                     ),
                   ),
                 ),
@@ -1729,10 +1735,10 @@ class ProductCard extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Menucolours.surface,
-            borderRadius: Menucolours.r16,
-            border: Border.all(color: Menucolours.borderLight),
-            boxShadow: Menucolours.cardShadow,
+            color: AppColors.surface,
+            borderRadius: appradius.r16,
+            border: Border.all(color: AppColors.borderLight),
+            boxShadow: boxshadow.cardShadow,
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -1756,8 +1762,8 @@ class ProductCard extends StatelessWidget {
                             vertical: 3.h,
                           ),
                           decoration: BoxDecoration(
-                            color: Menucolours.accent,
-                            borderRadius: Menucolours.r8,
+                            color: AppColors.warmorange,
+                            borderRadius: appradius.r8,
                           ),
                           child: Text(
                             '${discount.toStringAsFixed(0)}%',
@@ -1850,14 +1856,14 @@ class ProductCard extends StatelessWidget {
                               price,
                               style: TextStyle(
                                 decoration: TextDecoration.lineThrough,
-                                decorationColor: Menucolours.textM,
+                                decorationColor: AppColors.textM,
                                 fontSize: 10.sp,
-                                color: Menucolours.textM,
+                                color: AppColors.textM,
                               ),
                             ),
                             SizedBox(width: 4.w),
                           ],
-                          Text(effectivePrice, style: Menucolours.price()),
+                          Text(effectivePrice, style: AppText.price()),
                           const Spacer(),
                           vegNonVegIndicator(tag),
                         ],
@@ -1889,7 +1895,7 @@ class ProductCard extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.6),
-                borderRadius: Menucolours.r16,
+                borderRadius: appradius.r16,
               ),
               child: Center(
                 child: Container(
@@ -1899,14 +1905,14 @@ class ProductCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: Menucolours.r20,
+                    borderRadius: appradius.r20,
                   ),
                   child: Text(
                     'Out of Stock',
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
-                      color: Menucolours.nonVegRed,
+                      color: AppColors.nonVegRed,
                     ),
                   ),
                 ),
@@ -1921,7 +1927,7 @@ class ProductCard extends StatelessWidget {
 // ── Veg/Non-veg dot indicator ─────────────────────────────────────────────────
 Widget vegNonVegIndicator(String? tag) {
   final isVeg = tag?.toLowerCase() == 'veg';
-  final color = isVeg ? Menucolours.vegGreen : Menucolours.nonVegRed;
+  final color = isVeg ? AppColors.vegGreen : AppColors.nonVegRed;
 
   return Container(
     padding: const EdgeInsets.all(2),
@@ -1948,7 +1954,7 @@ void showDishBottomSheet(BuildContext context, Dish dish) {
       return SafeArea(
         child: Container(
           decoration: BoxDecoration(
-            color: Menucolours.surface,
+            color: AppColors.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: SafeArea(
@@ -1970,8 +1976,8 @@ void showDishBottomSheet(BuildContext context, Dish dish) {
                           width: 36,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: Menucolours.border,
-                            borderRadius: Menucolours.r4,
+                            color: AppColors.border,
+                            borderRadius: appradius.r4,
                           ),
                         ),
                       ),
@@ -1980,7 +1986,7 @@ void showDishBottomSheet(BuildContext context, Dish dish) {
                         dish.description?.trim().isNotEmpty == true
                             ? dish.description!
                             : 'No description available.',
-                        style: Menucolours.body(color: Menucolours.textS),
+                        style: AppText.menubody(color: AppColors.textS),
                       ),
                       SizedBox(height: 10.h),
                     ],

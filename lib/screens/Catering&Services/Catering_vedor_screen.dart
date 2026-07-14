@@ -36,8 +36,8 @@ class catvndscreen {
 
 class CateringVendorScreen extends StatefulWidget {
   final int vendorId;
-
-  const CateringVendorScreen({super.key, required this.vendorId});
+  final bool? restaurantStatus;
+  const CateringVendorScreen({super.key, required this.vendorId,this.restaurantStatus,});
 
   @override
   State<CateringVendorScreen> createState() => _CateringVendorScreenState();
@@ -247,6 +247,7 @@ class _CateringVendorScreenState extends State<CateringVendorScreen>
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: BannerSection(
+                restaurentstatus:widget.restaurantStatus?? true,
                 bannerItem: _bannerItem,
                 aboutus: _aboutus,
                 team: _team,

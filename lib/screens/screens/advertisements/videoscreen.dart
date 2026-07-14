@@ -1,5 +1,5 @@
+import 'package:custom_cached_image/custom_cached_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../Services/Auth_service/promotion_services_Authservice.dart';
 import '../../../Models/promotions_model/promotions_model.dart';
@@ -868,18 +868,35 @@ class ReelsScreenState extends State<ReelsScreen>
           // 1️⃣ Media
           isVideoMedia
               ? _buildVideo(index)
-              : Image.network(
-                  url,
-                  fit: BoxFit.contain,
+              :
+                // Image.network(
+                //         url,
+                //         // fit: BoxFit.contain,
+                //         fit: BoxFit.fill,
+                //         width: double.infinity,
+                //         height: double.infinity,
+                //         errorBuilder: (_, __, ___) => const Center(
+                //           child: Icon(
+                //             Icons.broken_image,
+                //             size: 50,
+                //             color: Colors.white54,
+                //           ),
+                //         ),
+                //       ),
+                CustomCachedImage(
+                  imageUrl: url,
+                  fit: BoxFit.fill,
                   width: double.infinity,
                   height: double.infinity,
-                  errorBuilder: (_, __, ___) => const Center(
+                  isProfile: false,
+                  errorWidget: const Center(
                     child: Icon(
                       Icons.broken_image,
                       size: 50,
                       color: Colors.white54,
                     ),
                   ),
+                  borderRadius: 0,
                 ),
 
           // 2️⃣ Gradient overlay

@@ -1,3 +1,5 @@
+import 'package:custom_cached_image/custom_cached_image.dart';
+
 import '../../../Models/promotions_model/promotions_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
@@ -215,7 +217,8 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
       return SizedBox.expand(
         key: ValueKey(ad.imageUrl ?? "video"),
         child: FittedBox(
-          fit: BoxFit.cover,
+          // fit: BoxFit.cover,
+          fit: BoxFit.fill,
           child: SizedBox(
             width: controller.value.size.width,
             height: controller.value.size.height,
@@ -235,20 +238,31 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
       );
     }
 
+    // return SizedBox.expand(
+    //   key: ValueKey(imageUrl),
+    //   child: Image.network(
+    //     imageUrl,
+    //     fit: BoxFit.cover,
+    //
+    //     loadingBuilder: (context, child, progress) {
+    //       if (progress == null) return child;
+    //       return const Center(child: CircularProgressIndicator());
+    //     },
+    //
+    //     errorBuilder: (context, error, stackTrace) {
+    //       return const Center(child: Icon(Icons.broken_image));
+    //     },
+    //   ),
+    // );
     return SizedBox.expand(
       key: ValueKey(imageUrl),
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return const Center(child: CircularProgressIndicator());
-        },
-
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Icon(Icons.broken_image));
-        },
+      child: CustomCachedImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.fill,
+        width: double.infinity,
+        height: double.infinity,
+        borderRadius: 0,
+        isProfile: false,
       ),
     );
   }

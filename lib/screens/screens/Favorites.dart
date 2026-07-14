@@ -1,3 +1,4 @@
+import 'package:custom_cached_image/custom_cached_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 import '../../widgets/widgets/food/favoritesbutton_1.dart';
@@ -17,24 +18,16 @@ class _FavoritesState extends State<Favorites> {
   List<FavoriteDish> favoriteDishes = [];
   bool isLoading = true;
 
+  int selectedOrderType = 0;
+
+  final List<String> orderTypes = ["Dine In", "Takeaway", "Delivery"];
+
   @override
   void initState() {
     super.initState();
     _loadFavorites();
   }
 
-  Widget _buildImage(String? imageUrl) {
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _imagePlaceholder(),
-        loadingBuilder: (_, child, progress) =>
-            progress == null ? child : _imagePlaceholder(),
-      );
-    }
-    return _imagePlaceholder();
-  }
 
   Widget _imagePlaceholder() => Container(
     color: const Color(0xFFF5F5F0),
@@ -88,60 +81,178 @@ class _FavoritesState extends State<Favorites> {
         ),
         centerTitle: true,
       ),
+      // body: isLoading
+      //     ? const Center(child: CircularProgressIndicator())
+      //     : favoriteDishes.isEmpty
+      //     ? _emptyState()
+      //     : LayoutBuilder(
+      //         builder: (context, constraints) {
+      //           return CustomScrollView(
+      //             physics: const BouncingScrollPhysics(),
+      //             slivers: [
+      //               SliverPadding(
+      //                 padding: EdgeInsets.symmetric(
+      //                   horizontal: 16.w,
+      //                   vertical: 8.h,
+      //                 ),
+      //                 sliver: SliverGrid(
+      //                   delegate: SliverChildBuilderDelegate((context, index) {
+      //                     final dish = favoriteDishes[index];
+      //                     return ModernDishCard(
+      //                       key: ValueKey(dish.favId), // ✅ ADD THIS
+      //                       // imageWidget: _buildImage(dish.dishImage),
+      //                       imageurl: dish.dishImage ?? '',
+      //                       name: dish.dishName ?? '',
+      //                       price: '₹${dish.price}',
+      //                       effectivePrice: '₹${dish.effectivePrice}',
+      //                       favoriteButton: FavoriteButton1(
+      //                         favId: dish.favId,
+      //                         onFavoriteToggled: () {
+      //                           setState(() {
+      //                             favoriteDishes.removeWhere(
+      //                               (d) => d.favId == dish.favId,
+      //                             );
+      //                           });
+      //                         },
+      //                       ),
+      //                       // cartButton: CartButton(
+      //                       //   dish: dish,
+      //                       //   // dishId: dish.dishId ?? 0,
+      //                       //   // balanceQuantity: dish.balanceQuantity,
+      //                       // ),
+      //                       isOutOfStock: false,
+      //                     );
+      //                   }, childCount: favoriteDishes.length),
+      //                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      //                     crossAxisCount: _crossAxisCount(constraints.maxWidth),
+      //                     crossAxisSpacing: 12.w,
+      //                     mainAxisSpacing: 12.h,
+      //                     childAspectRatio: 0.72,
+      //                   ),
+      //                 ),
+      //               ),
+      //               SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+      //             ],
+      //           );
+      //         },
+      //       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : favoriteDishes.isEmpty
-          ? _emptyState()
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                return CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 8.h,
-                      ),
-                      sliver: SliverGrid(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final dish = favoriteDishes[index];
-                          return ModernDishCard(
-                            key: ValueKey(dish.favId), // ✅ ADD THIS
-                            imageWidget: _buildImage(dish.dishImage),
-                            name: dish.dishName ?? '',
-                            price: '₹${dish.price}',
-                            effectivePrice: '₹${dish.effectivePrice}',
-                            favoriteButton: FavoriteButton1(
-                              favId: dish.favId,
-                              onFavoriteToggled: () {
-                                setState(() {
-                                  favoriteDishes.removeWhere(
-                                    (d) => d.favId == dish.favId,
-                                  );
-                                });
-                              },
-                            ),
-                            // cartButton: CartButton(
-                            //   dish: dish,
-                            //   // dishId: dish.dishId ?? 0,
-                            //   // balanceQuantity: dish.balanceQuantity,
-                            // ),
-                            isOutOfStock: false,
-                          );
-                        }, childCount: favoriteDishes.length),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: _crossAxisCount(constraints.maxWidth),
-                          crossAxisSpacing: 12.w,
-                          mainAxisSpacing: 12.h,
-                          childAspectRatio: 0.72,
+          : Column(
+              children: [
+                /// Order Type Buttons
+                _orderTypeSelector(),
+
+                Expanded(
+                  child: favoriteDishes.isEmpty
+                      ? _emptyState()
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            return CustomScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              slivers: [
+                                SliverPadding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 8.h,
+                                  ),
+                                  sliver: SliverGrid(
+                                    delegate: SliverChildBuilderDelegate((
+                                      context,
+                                      index,
+                                    ) {
+                                      final dish = favoriteDishes[index];
+
+                                      return ModernDishCard(
+                                        key: ValueKey(dish.favId),
+                                        imageurl: dish.dishImage ?? '',
+                                        name: dish.dishName ?? '',
+                                        price: '₹${dish.price}',
+                                        effectivePrice:
+                                            '₹${dish.effectivePrice}',
+                                        favoriteButton: FavoriteButton1(
+                                          favId: dish.favId,
+                                          onFavoriteToggled: () {
+                                            setState(() {
+                                              favoriteDishes.removeWhere(
+                                                (d) => d.favId == dish.favId,
+                                              );
+                                            });
+                                          },
+                                        ),
+                                        isOutOfStock: false,
+                                      );
+                                    }, childCount: favoriteDishes.length),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: _crossAxisCount(
+                                            constraints.maxWidth,
+                                          ),
+                                          crossAxisSpacing: 12.w,
+                                          mainAxisSpacing: 12.h,
+                                          childAspectRatio: 0.72,
+                                        ),
+                                  ),
+                                ),
+                                SliverToBoxAdapter(
+                                  child: SizedBox(height: 24.h),
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-                  ],
-                );
-              },
+                ),
+              ],
             ),
+    );
+  }
+
+  Widget _orderTypeSelector() {
+    return Container(
+      margin: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
+      padding: EdgeInsets.all(4.r),
+      decoration: BoxDecoration(
+        color: const Color(0xffF5F5F5),
+        borderRadius: BorderRadius.circular(30.r),
+      ),
+      child: Row(
+        children: List.generate(orderTypes.length, (index) {
+          final bool isSelected = selectedOrderType == index;
+
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedOrderType = index;
+
+                  /// Call API here if required
+                  /// _loadFavoritesByOrderType(index);
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xff7E3AF2)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(30.r),
+                ),
+                child: Center(
+                  child: Text(
+                    orderTypes[index],
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
     );
   }
 
@@ -170,7 +281,7 @@ class _FavoritesState extends State<Favorites> {
 }
 
 class ModernDishCard extends StatelessWidget {
-  final Widget imageWidget;
+  final String imageurl;
   final String name;
   final String price;
   final String effectivePrice;
@@ -179,7 +290,7 @@ class ModernDishCard extends StatelessWidget {
   final bool isOutOfStock;
 
   const ModernDishCard({
-    required this.imageWidget,
+    required this.imageurl,
     required this.name,
     required this.price,
     required this.effectivePrice,
@@ -213,7 +324,15 @@ class ModernDishCard extends StatelessWidget {
                       topLeft: Radius.circular(16.r),
                       topRight: Radius.circular(16.r),
                     ),
-                    child: SizedBox(width: double.infinity, child: imageWidget),
+                    // child: SizedBox(width: double.infinity, child: imageWidget),
+                    child: CustomCachedImage(
+                      imageUrl: imageurl,
+                      width: double.infinity,
+                      height: 220,
+                      borderRadius: 16,
+                      isProfile: false,
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
 

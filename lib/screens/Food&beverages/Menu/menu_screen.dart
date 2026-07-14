@@ -1,5 +1,10 @@
+import 'package:custom_cached_image/custom_cached_image.dart';
 import 'package:maamaas/Services/Auth_service/guest_Authservice.dart';
 import '../../../Services/App_color_service/app_colours.dart';
+import '../../../Services/App_color_service/app_text.dart';
+import '../../../Services/App_color_service/appradius.dart';
+import '../../../Services/App_color_service/boxshadow.dart';
+import '../../../Services/App_color_service/resposnive.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,7 +23,6 @@ import 'cart_button.dart';
 import 'fullscreen.dart';
 import 'Menuhelper.dart';
 import 'Top_banner.dart';
-import 'colours.dart';
 import 'dart:async';
 import 'menunotifier.dart';
 
@@ -39,13 +43,13 @@ class MenuResponse {
 class MenuScreen extends StatefulWidget {
   final int vendorId;
   final String? initialCategoryName;
-  // final Restaurent_Banner? banner;
+  final bool? restaurantStatus;
 
   const MenuScreen({
     super.key,
     required this.vendorId,
     this.initialCategoryName,
-    // this.banner,
+    this.restaurantStatus,
   });
 
   @override
@@ -251,15 +255,15 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
   Future<void> _loadMenu() async {
     final menu = await Authservice.fetchMenu(widget.vendorId);
-    print("MENU DISHES = ${menu.dishes.length}");
-    print("MENU CATEGORIES = ${menu.categories.length}");
+    // print("MENU DISHES = ${menu.dishes.length}");
+    // print("MENU CATEGORIES = ${menu.categories.length}");
 
     if (!mounted) return;
 
     setState(() {
       allDishes = menu.dishes;
 
-      print("ALL ITEMS = ${allDishes.length}");
+      // print("ALL ITEMS = ${allDishes.length}");
 
       // categories = allDishes.where((d) => d.parentId == 0).toList();
       categories = allDishes.where((d) {
@@ -267,16 +271,16 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             d.parentId != 0 &&
             d.menuStatus == "Enable";
       }).toList();
-      print("ALL ITEMS = ${allDishes.length}");
+      // print("ALL ITEMS = ${allDishes.length}");
 
       final subCats = allDishes.where((d) {
         return d.parentId == d.categoryId && d.parentId != 0;
       }).toList();
 
-      print("SUBCATEGORIES = ${subCats.length}");
+      // print("SUBCATEGORIES = ${subCats.length}");
 
       for (final s in subCats) {
-        print("SUBCAT => ${s.dishName} (${s.dishId})");
+        // print("SUBCAT => ${s.dishName} (${s.dishId})");
       }
 
       _menuLoaded = true;
@@ -306,36 +310,75 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        // backgroundColor: Colors.white,
-        backgroundColor: Colors.grey.shade50,
-        body: Stack(
-          children: [
-            FutureBuilder<void>(
-              future: _screenFuture,
-              builder: (context, snapshot) {
-                if (!_bannerLoaded || !_menuLoaded) {
-                  return const MenuSkeletonScreen();
-                }
-                if (snapshot.hasError) {
-                  return _buildFullError();
-                }
-                return FadeTransition(
-                  opacity: _fadeAnim,
-                  child: _buildMainScreen(),
-                );
-              },
-            ),
-
-            // Floating cart bars
-            if (showMenuTab)
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 16,
-                child: const food_Cart_count(),
+      child: ColorFiltered(
+        colorFilter: widget!.restaurantStatus ?? true
+            ? const ColorFilter.mode(Colors.transparent, BlendMode.dst)
+            : const ColorFilter.matrix(<double>[
+                // Grayscale
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0, 0, 0, 1, 0,
+              ]),
+        child: Scaffold(
+          // backgroundColor: Colors.white,
+          backgroundColor: Colors.grey.shade50,
+          body: Stack(
+            children: [
+              FutureBuilder<void>(
+                future: _screenFuture,
+                builder: (context, snapshot) {
+                  if (!_bannerLoaded || !_menuLoaded) {
+                    return const MenuSkeletonScreen();
+                  }
+                  if (snapshot.hasError) {
+                    return _buildFullError();
+                  }
+                  return FadeTransition(
+                    opacity: _fadeAnim,
+                    // child: AbsorbPointer(
+                    //   absorbing: !(widget.restaurantStatus ?? true),
+                    child: _buildMainScreen(),
+                    // ),
+                  );
+                },
               ),
-          ],
+
+              // Floating cart bars
+              if (showMenuTab)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  child: const food_Cart_count(),
+                ),
+              // if (!(widget.restaurantStatus ?? true))
+              //   Positioned.fill(
+              //     child: Container(
+              //       color: Colors.black.withOpacity(0.35),
+              //       alignment: Alignment.center,
+              //       child: Container(
+              //         padding: const EdgeInsets.symmetric(
+              //           horizontal: 24,
+              //           vertical: 12,
+              //         ),
+              //         decoration: BoxDecoration(
+              //           color: Colors.red,
+              //           borderRadius: BorderRadius.circular(30),
+              //         ),
+              //         child: const Text(
+              //           "RESTAURANT CLOSED",
+              //           style: TextStyle(
+              //             color: Colors.white,
+              //             fontWeight: FontWeight.bold,
+              //             fontSize: 18,
+              //           ),
+              //         ),
+              //       ),
+              //     ),
+              //   ),
+            ],
+          ),
         ),
       ),
     );
@@ -350,21 +393,21 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             width: 80.r,
             height: 80.r,
             decoration: BoxDecoration(
-              color: Menucolours.surfaceAlt,
+              color: AppColors.surfaceAlt,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.wifi_off_rounded,
               size: 36.sp,
-              color: Menucolours.textM,
+              color: AppColors.textM,
             ),
           ),
           SizedBox(height: 16.h),
-          Text('Failed to load menu', style: Menucolours.h2()),
+          Text('Failed to load menu', style: AppText.h2()),
           SizedBox(height: 6.h),
           Text(
             'Pull down to try again',
-            style: Menucolours.body(color: Menucolours.textS),
+            style: AppText.menubody(color: AppColors.textS),
           ),
         ],
       ),
@@ -373,8 +416,8 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
   Widget _buildMainScreen() {
     return RefreshIndicator(
-      color: Menucolours.primary,
-      backgroundColor: Menucolours.surface,
+      color: AppColors.green,
+      backgroundColor: AppColors.surface,
       displacement: 80,
       strokeWidth: 2.5,
       onRefresh: _onRefresh,
@@ -387,7 +430,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             pinned: true,
             expandedHeight: _expandedHeight,
             collapsedHeight: 64,
-            backgroundColor: Menucolours.surface,
+            backgroundColor: AppColors.surface,
             elevation: 0,
             scrolledUnderElevation: 1,
             // ignore: deprecated_member_use
@@ -413,6 +456,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: BannerSection(
+                restaurentstatus: widget.restaurantStatus ?? true,
                 bannerItem: _bannerItem,
                 aboutus: _aboutus,
                 team: _team,
@@ -445,7 +489,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 selectedCategoryId: selectedCategoryId,
 
                 onCategorySelected: (id) {
-                  print("Selected Category: $id");
+                  // print("Selected Category: $id");
                   setState(() => selectedCategoryId = id);
                 },
               ),
@@ -472,6 +516,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             child: Padding(
               padding: EdgeInsets.only(bottom: 100.h),
               child: MenuTabContent(
+                restaurentstatus: widget.restaurantStatus ?? true,
                 dishes: allDishes,
                 selectedFilter: selectedFilter,
                 isVeg: isVeg,
@@ -831,7 +876,7 @@ class _CollapsedFilterBarState extends State<_CollapsedFilterBar> {
         Expanded(
           child: SearchField(
             onSearch: widget.onSearch,
-            fillColor: Menucolours.surfaceAlt,
+            fillColor: AppColors.surfaceAlt,
           ),
         ),
         SizedBox(width: 8.w),
@@ -893,13 +938,13 @@ class _StickyTabsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Menucolours.surface,
+      color: AppColors.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (showTableTab) ...[
             TableTabContent(vendorId: vendorId),
-            Divider(height: 1, thickness: 1, color: Menucolours.borderLight),
+            Divider(height: 1, thickness: 1, color: AppColors.borderLight),
           ],
           Expanded(
             child: _CategoryTabStrip(
@@ -908,7 +953,7 @@ class _StickyTabsContent extends StatelessWidget {
               onCategorySelected: onCategorySelected,
             ),
           ),
-          Divider(height: 1, thickness: 1, color: Menucolours.borderLight),
+          Divider(height: 1, thickness: 1, color: AppColors.borderLight),
         ],
       ),
     );
@@ -931,7 +976,7 @@ class _CategoryTabStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sortedCategories = List<Dish>.from(categories);
-    print("Tabs count = ${categories.length}");
+    // print("Tabs count = ${categories.length}");
 
     sortedCategories.sort((a, b) {
       final aIsCombo = (a.dishName ?? '').toLowerCase() == 'offers';
@@ -950,7 +995,8 @@ class _CategoryTabStrip extends StatelessWidget {
         if (index == 0) {
           return _CategoryChip(
             title: 'All',
-            image: const AssetImage('assets/allitems.jpg'),
+            // image: const AssetImage('assets/allitems.jpg'),
+            assetImage: 'assets/allitems.jpg',
             isSelected: selectedCategoryId == null,
             onTap: () => onCategorySelected(null),
           );
@@ -960,9 +1006,10 @@ class _CategoryTabStrip extends StatelessWidget {
 
         return _CategoryChip(
           title: cat.dishName ?? '',
-          image: (cat.dishImage != null && cat.dishImage!.isNotEmpty)
-              ? NetworkImage(cat.dishImage!)
-              : null,
+          // imageurl: (cat.dishImage != null && cat.dishImage!.isNotEmpty)
+          //     ? NetworkImage(cat.dishImage!)
+          //     : null,
+          imageurl: cat.dishImage,
           isSelected: selectedCategoryId == cat.dishId,
           onTap: () => onCategorySelected(cat.dishId),
         );
@@ -974,15 +1021,18 @@ class _CategoryTabStrip extends StatelessWidget {
 // ── Category chip ─────────────────────────────────────────────────────────────
 class _CategoryChip extends StatelessWidget {
   final String title;
-  final ImageProvider? image;
+  // final ImageProvider? image;
+  final String? imageurl;
   final bool isSelected;
   final VoidCallback onTap;
+  final String? assetImage;
 
   const _CategoryChip({
     required this.title,
-    this.image,
+    this.imageurl,
     required this.isSelected,
     required this.onTap,
+    this.assetImage,
   });
 
   @override
@@ -1004,15 +1054,15 @@ class _CategoryChip extends StatelessWidget {
               height: isSelected ? 52.r : 48.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected ? AppColors.primary : Menucolours.surfaceAlt,
+                color: isSelected ? AppColors.primary : AppColors.surfaceAlt,
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : Menucolours.border,
+                  color: isSelected ? AppColors.primary : AppColors.border,
                   width: isSelected ? 2.5 : 1.5,
                 ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: Menucolours.primary.withOpacity(0.18),
+                          color: AppColors.green.withOpacity(0.18),
                           blurRadius: 12,
                           offset: const Offset(0, 3),
                         ),
@@ -1020,14 +1070,26 @@ class _CategoryChip extends StatelessWidget {
                     : [],
               ),
               child: ClipOval(
-                child: image != null
-                    ? Image(image: image!, fit: BoxFit.cover)
+                // child: imageurl != null
+                // ? Image(image: imageurl!, fit: BoxFit.fill)
+                // : Icon(
+                //     Icons.restaurant_rounded,
+                //     size: 20.sp,
+                //     color: isSelected ? AppColors.green : AppColors.textM,
+                //   ),
+                child: (imageurl != null && imageurl!.isNotEmpty)
+                    ? CustomCachedImage(
+                        imageUrl: imageurl!,
+                        fit: BoxFit.fill,
+                        borderRadius: 100, // makes it circular
+                        isProfile: false,
+                        height: double.infinity,
+                        width: double.infinity,
+                      )
                     : Icon(
                         Icons.restaurant_rounded,
                         size: 20.sp,
-                        color: isSelected
-                            ? Menucolours.primary
-                            : Menucolours.textM,
+                        color: isSelected ? AppColors.green : AppColors.textM,
                       ),
               ),
             ),
@@ -1036,8 +1098,8 @@ class _CategoryChip extends StatelessWidget {
               width: 60.w,
               child: AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
-                style: Menucolours.label(
-                  color: isSelected ? AppColors.primary : Menucolours.textS,
+                style: AppText.menulabel(
+                  color: isSelected ? AppColors.primary : AppColors.textS,
                   size: 10.sp,
                 ),
                 child: Text(
@@ -1096,7 +1158,7 @@ class _MenuFilterBarState extends State<MenuFilterBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Menucolours.surface,
+      color: AppColors.surface,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: Row(
         children: [
@@ -1137,20 +1199,20 @@ class SearchField extends StatelessWidget {
       height: 38.h,
       decoration: BoxDecoration(
         color: fillColor,
-        borderRadius: Menucolours.r12,
-        border: Border.all(color: Menucolours.border),
+        borderRadius: appradius.r12,
+        border: Border.all(color: AppColors.border),
       ),
       child: TextField(
         onChanged: onSearch,
-        style: Menucolours.body(size: 13.sp),
+        style: AppText.menubody(size: 13.sp),
         decoration: InputDecoration(
           hintText: 'Search dishes...',
-          hintStyle: Menucolours.body(color: Menucolours.textM, size: 13.sp),
+          hintStyle: AppText.menubody(color: AppColors.textM, size: 13.sp),
 
           prefixIcon: Icon(
             Icons.search_rounded,
             size: 17.sp,
-            color: Menucolours.textM,
+            color: AppColors.textM,
           ),
 
           border: InputBorder.none,
@@ -1185,7 +1247,7 @@ class VegToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isVeg ? Menucolours.vegGreen : Menucolours.nonVegRed;
+    final color = isVeg ? AppColors.vegGreen : AppColors.nonVegRed;
 
     return GestureDetector(
       onTap: () {
@@ -1199,12 +1261,10 @@ class VegToggle extends StatelessWidget {
           vertical: 6.h,
         ),
         decoration: BoxDecoration(
-          color: isVeg ? Menucolours.primaryDim : Menucolours.surfaceAlt,
-          borderRadius: Menucolours.r8,
+          color: isVeg ? AppColors.primaryDim : AppColors.surfaceAlt,
+          borderRadius: appradius.r8,
           border: Border.all(
-            color: isVeg
-                ? Menucolours.primary.withOpacity(0.4)
-                : Menucolours.border,
+            color: isVeg ? AppColors.green.withOpacity(0.4) : AppColors.border,
           ),
         ),
         child: Row(
@@ -1218,7 +1278,7 @@ class VegToggle extends StatelessWidget {
             SizedBox(width: 5.w),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
-              style: Menucolours.label(
+              style: AppText.menulabel(
                 color: color,
                 size: compact ? 11.sp : 12.sp,
               ),
@@ -1324,6 +1384,7 @@ class MenuTabContent extends StatefulWidget {
   final bool showCartButton;
   final Map<int, int> favoriteMap;
   final DishFilterType selectedFilter;
+  final bool restaurentstatus;
 
   const MenuTabContent({
     super.key,
@@ -1339,6 +1400,7 @@ class MenuTabContent extends StatefulWidget {
     required this.searchQuery,
     required this.showCartButton,
     required this.favoriteMap,
+    required this.restaurentstatus,
   });
 
   @override
@@ -1349,6 +1411,7 @@ class _MenuTabContentState extends State<MenuTabContent> {
   @override
   Widget build(BuildContext context) {
     return DishGridTab(
+      restaurentstatus: widget.restaurentstatus,
       dishes: widget.dishes,
       selectedFilter: widget.selectedFilter,
       parentId: widget.selectedCategoryId,
@@ -1383,6 +1446,7 @@ class DishGridTab extends StatefulWidget {
   final bool showCartButton;
   final Map<int, int> favoriteMap;
   final DishFilterType selectedFilter;
+  final bool restaurentstatus;
 
   const DishGridTab({
     super.key,
@@ -1395,6 +1459,7 @@ class DishGridTab extends StatefulWidget {
     required this.showCartButton,
     required this.favoriteMap,
     required this.selectedFilter,
+    required this.restaurentstatus,
   });
 
   @override
@@ -1419,7 +1484,7 @@ class _DishGridTabState extends State<DishGridTab> {
 
     final filtered = categoryFiltered.where((dish) {
       bool discountMatch = true;
-      print("DishGrid parentId = ${widget.parentId}");
+      // print("DishGrid parentId = ${widget.parentId}");
 
       switch (widget.selectedFilter) {
         case DishFilterType.discount10:
@@ -1491,12 +1556,17 @@ class _DishGridTabState extends State<DishGridTab> {
               dish.balanceQuantity <= 0 ||
               dish.stock?.toLowerCase() != 'in_stock';
           final isFav = widget.favoriteMap.containsKey(dish.dishId);
+
           return _AnimatedProductCard(
             index: i,
             child: ProductCard(
+              restaurentstatus: widget.restaurentstatus,
               dish: dish,
-              imageWidget: _buildDishImage(dish.dishImage),
+              // imageWidget: _buildDishImage(dish.dishImage),
+              imageUrl: dish.dishImage ?? '',
               name: dish.dishName ?? '',
+              metrics: dish.metrics,
+              metricQuantity: dish.metricQuantity,
               price: '₹${dish.price}',
               effectivePrice: '₹${dish.effectivePrice}',
               description: dish.description ?? '',
@@ -1535,16 +1605,50 @@ class _DishGridTabState extends State<DishGridTab> {
     );
   }
 
+  // Widget _buildDishImage(String? url) {
+  //   if (url != null && url.isNotEmpty) {
+  //     return Container(
+  //       color: Colors.white,
+  //       width: double.infinity,
+  //       height: double.infinity,
+  //
+  //       child: Image.network(
+  //         url,
+  //         // fit: BoxFit.contain,
+  //         fit: BoxFit.fill,
+  //         loadingBuilder: (_, child, progress) {
+  //           if (progress == null) return child;
+  //
+  //           return Container(
+  //             color: Colors.grey.shade100,
+  //             child: const Center(
+  //               child: CircularProgressIndicator(strokeWidth: 2),
+  //             ),
+  //           );
+  //         },
+  //         errorBuilder: (_, __, ___) => _imagePlaceholder(),
+  //       ),
+  //     );
+  //   }
+  //   return _imagePlaceholder();
+  // }
   Widget _buildDishImage(String? url) {
     if (url != null && url.isNotEmpty) {
       return Container(
-        color: Colors.white,
         width: double.infinity,
         height: double.infinity,
-
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+            color: Colors.grey.shade300, // Border color
+            width: 0.5,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        clipBehavior: Clip.antiAlias, // Ensures image follows border radius
         child: Image.network(
           url,
-          fit: BoxFit.contain,
+          fit: BoxFit.fill,
           loadingBuilder: (_, child, progress) {
             if (progress == null) return child;
 
@@ -1559,12 +1663,20 @@ class _DishGridTabState extends State<DishGridTab> {
         ),
       );
     }
-    return _imagePlaceholder();
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300, width: 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: _imagePlaceholder(),
+    );
   }
 
   Widget _imagePlaceholder() {
     return Container(
-      color: Menucolours.surfaceAlt,
+      color: AppColors.surfaceAlt,
       child: Center(
         child: Icon(Icons.fastfood_rounded, size: 32.sp, color: Colors.white),
       ),
@@ -1582,24 +1694,21 @@ class _DishGridTabState extends State<DishGridTab> {
               width: 72.r,
               height: 72.r,
               decoration: BoxDecoration(
-                color: Menucolours.surfaceAlt,
+                color: AppColors.surfaceAlt,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.search_off_rounded,
                 size: 32.sp,
-                color: Menucolours.textM,
+                color: AppColors.textM,
               ),
             ),
             SizedBox(height: 14.h),
-            Text(
-              'Nothing here',
-              style: Menucolours.h2(color: Menucolours.textH),
-            ),
+            Text('Nothing here', style: AppText.h2(color: AppColors.textH)),
             SizedBox(height: 6.h),
             Text(
               widget.emptyMessage,
-              style: Menucolours.body(color: Menucolours.textS),
+              style: AppText.menubody(color: AppColors.textS),
             ),
           ],
         ),
@@ -1659,7 +1768,7 @@ class _AnimatedProductCardState extends State<_AnimatedProductCard>
 // ProductCard
 // ─────────────────────────────────────────────────────────────────────────────
 class ProductCard extends StatelessWidget {
-  final Widget imageWidget;
+  final String imageUrl;
   final String name;
   final String price;
   final String description;
@@ -1674,10 +1783,13 @@ class ProductCard extends StatelessWidget {
   final Dish dish;
   final bool promotionAvailable;
   final String promotionText;
+  final String metrics;
+  final int metricQuantity;
+  final bool restaurentstatus;
 
   const ProductCard({
     super.key,
-    required this.imageWidget,
+    required this.imageUrl,
     required this.name,
     required this.price,
     required this.description,
@@ -1692,201 +1804,298 @@ class ProductCard extends StatelessWidget {
     required this.dish,
     required this.promotionAvailable,
     required this.promotionText,
+    required this.metrics,
+    required this.metricQuantity,
+    required this.restaurentstatus,
   });
 
   @override
   Widget build(BuildContext context) {
     Radiusc.isPhone(context);
 
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: Menucolours.surface,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Menucolours.borderLight, width: 0.5),
-        boxShadow: Menucolours.cardShadow,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Left content ──────────────────────────────
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name + veg/non-veg indicator
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    vegNonVegIndicator(tag),
-                  ],
-                ),
-
-                SizedBox(height: 8.h),
-
-                // Price row
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    if (discount > 0) ...[
-                      Text(
-                        price,
-                        style: TextStyle(
-                          decoration: TextDecoration.lineThrough,
-                          decorationColor: Colors.grey,
-                          fontSize: 13.sp,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(width: 5.w),
-                    ],
-                    Text(effectivePrice, style: Menucolours.price()),
-                    const Spacer(),
-                    if (discount > 0)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 3.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE85D04),
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        child: Text(
-                          '${discount.toStringAsFixed(0)}% OFF',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-
-                SizedBox(height: 6.h),
-
-                // Description
-                ExpandableText(text: description),
-
-                // Promotion chip — only shown when available
-                if (promotionAvailable && promotionText.isNotEmpty) ...[
-                  SizedBox(height: 8.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 9.w,
-                      vertical: 5.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE6F1FB),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+    return
+    // Container(
+    // padding: EdgeInsets.all(14.w),
+    // decoration: BoxDecoration(
+    //   color: AppColors.surface,
+    //   borderRadius: BorderRadius.circular(16.r),
+    //   border: Border.all(color: AppColors.borderLight, width: 0.5),
+    //   boxShadow: boxshadow.cardShadow,
+    // ),
+    // clipBehavior: Clip.antiAlias,
+    // child: Row(
+    //   crossAxisAlignment: CrossAxisAlignment.start,
+    //   children: [
+    Stack(
+      children: [
+        AbsorbPointer(
+          absorbing: !restaurentstatus,
+          child: Opacity(
+            opacity: restaurentstatus ? 1.0 : 0.65,
+            child: Container(
+              padding: EdgeInsets.all(14.w),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: AppColors.borderLight, width: 0.5),
+                boxShadow: boxshadow.cardShadow,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Left content ──────────────────────────────
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.local_offer_outlined,
-                          size: 13.sp,
-                          color: const Color(0xFF185FA5),
-                        ),
-                        SizedBox(width: 5.w),
-                        Flexible(
-                          child: Text(
-                            promotionText,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF185FA5),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          SizedBox(width: 14.w),
-
-          // ── Right: image + cart button ─────────────────
-          Column(
-            children: [
-              SizedBox(
-                width: 108.w,
-                height: 108.w,
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12.r),
-                      child: SizedBox(
-                        width: 108.w,
-                        height: 108.w,
-                        child: imageWidget,
-                      ),
-                    ),
-                    if (isOutOfStock)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12.r),
-                            color: Colors.black.withOpacity(0.42),
-                          ),
-                          child: Center(
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10.w,
-                                vertical: 4.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20.r),
-                              ),
+                        // Name + veg/non-veg indicator
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
                               child: Text(
-                                'Out of stock',
+                                name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 10.5.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.red,
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                  height: 1.35,
                                 ),
                               ),
                             ),
+                            SizedBox(width: 8.w),
+                            vegNonVegIndicator(tag),
+                          ],
+                        ),
+
+                        metrics.isNotEmpty && metricQuantity > 0
+                            ? Text(
+                                "$metricQuantity $metrics",
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF1565C0),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+
+                        // Price row
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (discount > 0) ...[
+                              Text(
+                                price,
+                                style: TextStyle(
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: Colors.grey,
+                                  fontSize: 13.sp,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              SizedBox(width: 5.w),
+                            ],
+                            Text(effectivePrice, style: AppText.price()),
+                            const Spacer(),
+                            if (discount > 0)
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 3.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE85D04),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                child: Text(
+                                  '${discount.toStringAsFixed(0)}% OFF',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+
+                        SizedBox(height: 6.h),
+
+                        // Description
+                        ExpandableText(text: description),
+
+                        // Promotion chip — only shown when available
+                        if (promotionAvailable && promotionText.isNotEmpty) ...[
+                          SizedBox(height: 8.h),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 9.w,
+                              vertical: 5.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE6F1FB),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.local_offer_outlined,
+                                  size: 13.sp,
+                                  color: const Color(0xFF185FA5),
+                                ),
+                                SizedBox(width: 5.w),
+                                Flexible(
+                                  child: Text(
+                                    promotionText,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF185FA5),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(width: 14.w),
+
+                  Column(
+                    children: [
+                      SizedBox(
+                        width: 130.w,
+                        height: 120.h, // IMPORTANT
+
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.topCenter,
+
+                          children: [
+                            /// IMAGE
+                            // ClipRRect(
+                            //   borderRadius: BorderRadius.circular(12.r),
+                            //   child: SizedBox(
+                            //     width: 130.w,
+                            //     height: 120.w,
+                            //     child: imageWidget,
+                            //   ),
+                            // ),
+                            CustomCachedImage(
+                              imageUrl: imageUrl,
+                              width: double.infinity,
+                              height: 220,
+                              borderRadius: 16,
+                              isProfile: false,
+                              fit: BoxFit.fill,
+                            ),
+
+                            /// OUT OF STOCK
+                            if (isOutOfStock)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    color: Colors.black45,
+                                  ),
+                                  child: Center(
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10.w,
+                                        vertical: 4.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(
+                                          20.r,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        "Out of stock",
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11.sp,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            /// Favourite Button
+                            Positioned(
+                              top: 6,
+                              right: 6,
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(child: favoriteButton),
+                              ),
+                            ),
+
+                            /// ADD BUTTON
+                            if (showCartButton)
+                              Positioned(
+                                left: 10,
+                                right: 10,
+
+                                top: 120 - 18, // Half inside image
+
+                                child: cartButton,
+                              ),
+                          ],
                         ),
                       ),
-                    // Favourite button — top-right corner
-                    Positioned(top: 4.h, right: 4.w, child: favoriteButton),
-                  ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        if (!restaurentstatus)
+          Positioned(
+            left: 10,
+            right: 180,
+
+            bottom: 10,
+            child: Container(
+              alignment: Alignment.center,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(24.r),
+                ),
+                child: Text(
+                  "CURRENTLY CLOSED",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ),
-
-              if (showCartButton) ...[
-                SizedBox(height: 8.h),
-                SizedBox(width: 108.w, child: cartButton),
-              ],
-            ],
+            ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
@@ -1894,7 +2103,7 @@ class ProductCard extends StatelessWidget {
 // ── Veg/Non-veg dot indicator ─────────────────────────────────────────────────
 Widget vegNonVegIndicator(String? tag) {
   final isVeg = tag?.toLowerCase() == 'veg';
-  final color = isVeg ? Menucolours.vegGreen : Menucolours.nonVegRed;
+  final color = isVeg ? AppColors.vegGreen : AppColors.nonVegRed;
 
   return Container(
     padding: const EdgeInsets.all(2),
@@ -1921,7 +2130,7 @@ void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
       return SafeArea(
         child: Container(
           decoration: BoxDecoration(
-            color: Menucolours.surface,
+            color: AppColors.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: SafeArea(
@@ -1944,8 +2153,8 @@ void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
                           width: 36,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: Menucolours.border,
-                            borderRadius: Menucolours.r4,
+                            color: AppColors.border,
+                            borderRadius: appradius.r4,
                           ),
                         ),
                       ),
@@ -1957,7 +2166,7 @@ void showDishBottomSheet(BuildContext context, Dish dish, bool showCartButton) {
                         dish.description?.trim().isNotEmpty == true
                             ? dish.description!
                             : 'No description available.',
-                        style: Menucolours.body(color: Menucolours.textS),
+                        style: AppText.menubody(color: AppColors.textS),
                       ),
 
                       SizedBox(height: 10.h),
@@ -2029,7 +2238,7 @@ class _OfferTickerState extends State<OfferTicker> {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Menucolours.kOrange, Menucolours.kOrangeLight],
+            colors: [AppColors.kOrange, AppColors.kOrangeLight],
           ),
           borderRadius: BorderRadius.circular(14),
         ),
@@ -2196,14 +2405,14 @@ class _OffersSheet extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
-                            color: Menucolours.kText,
+                            color: AppColors.kText,
                           ),
                         ),
                         Text(
                           '${coupons.length} coupons active right now',
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Menucolours.kMuted,
+                            color: AppColors.kMuted,
                           ),
                         ),
                       ],
@@ -2354,7 +2563,7 @@ class _DiscountPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isHappy ? Menucolours.kHappyBg : Menucolours.kOrangeBg,
+        color: isHappy ? AppColors.kHappyBg : AppColors.kOrangeBg,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -2362,7 +2571,7 @@ class _DiscountPill extends StatelessWidget {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: isHappy ? Menucolours.kHappy : Menucolours.kOrange,
+          color: isHappy ? AppColors.kHappy : AppColors.kOrange,
         ),
       ),
     );

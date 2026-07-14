@@ -149,19 +149,9 @@
 //     );
 //   }
 // }
-
-
-
-
-
-
-
-
-
-
 import 'package:flutter/material.dart';
 import '../../Models/subscrptions/coupon_model.dart';
-import '../../screens/screens/Refer_Earn.dart';
+import '../../screens/screens/referrznd earn.dart';
 import '../../screens/screens/wallet_screen.dart';
 
 class CouponsOffersSection extends StatelessWidget {
@@ -217,7 +207,7 @@ class CouponsOffersSection extends StatelessWidget {
       "offer": "Earn More Cashbacks Per Referral!",
       // "description": "",
       "type": "REFER",
-      "screen": ReferEarn(),
+      "screen": ReferEarnScreen(),
       // "icon": Icons.group_add_outlined,
       "gradient": const LinearGradient(
         begin: Alignment.topLeft,

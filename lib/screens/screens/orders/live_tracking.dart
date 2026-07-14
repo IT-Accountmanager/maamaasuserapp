@@ -758,8 +758,8 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     try {
       if (_cachedRoute != null &&
           _cachedRouteTime != null &&
-          DateTime.now().difference(_cachedRouteTime!).inMinutes < 2) {
-        _fullRoutePoints = _cachedRoute!;
+          DateTime.now().difference(_cachedRouteTime).inMinutes < 2) {
+        _fullRoutePoints = _cachedRoute;
 
         _applyTrimmedPolyline(current);
 

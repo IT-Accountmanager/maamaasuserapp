@@ -406,9 +406,6 @@
 //   }
 // }
 
-
-
-
 // DROP-IN replacement for: lib/screens/screens/splash_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -418,6 +415,7 @@ import 'package:maamaas/screens/screens/signup_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Services/App_color_service/app_colours.dart';
+import '../../Services/App_color_service/app_text.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/fcmservice/fcm_services.dart';
 import '../../Services/googleservices/Location_servces.dart';

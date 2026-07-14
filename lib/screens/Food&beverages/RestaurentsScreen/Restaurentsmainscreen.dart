@@ -2736,6 +2736,8 @@
 // }
 
 import 'dart:async';
+import 'package:custom_cached_image/custom_cached_image.dart';
+
 import '../../../widgets/widgets/couponcards.dart';
 import '../Menu/menu_screen.dart';
 import '../distancehelpermethod.dart';
@@ -3336,7 +3338,7 @@ class _RestaurentsState extends State<Restaurents> {
                 //     ),
                 //   ),
                 // ),
-                //
+
                 // SliverToBoxAdapter(child: SizedBox(height: 4.h)),
                 //
                 // // ── 8. Offer filter strip ───────────────────────────────
@@ -3346,7 +3348,7 @@ class _RestaurentsState extends State<Restaurents> {
                 if (selectedOrderType != 'catering')
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 4.h),
+                      padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 4.h),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -3746,11 +3748,21 @@ class _RestaurentsState extends State<Restaurents> {
                       : restaurentsnewcolour.textMuted,
                 )
               : (item!.image != null
-                    ? Image.network(
-                        item.image!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.fastfood, size: 22),
+                    // ? Image.network(
+                    //     item.image!,
+                    //     // fit: BoxFit.cover,
+                    //     fit: BoxFit.fill,
+                    //     errorBuilder: (_, __, ___) =>
+                    //         const Icon(Icons.fastfood, size: 22),
+                    //   )
+                    // : const Icon(Icons.fastfood, size: 22)),
+                    ? CustomCachedImage(
+                        imageUrl: item.image,
+                        fit: BoxFit.fill,
+                        width: double.infinity,
+                        height: double.infinity,
+                        borderRadius: 0,
+                        isProfile: false,
                       )
                     : const Icon(Icons.fastfood, size: 22)),
           onTap: () => setState(() {
@@ -4455,6 +4467,29 @@ class _NearbyRestaurentBannersWidgetState
               );
           return matchType && matchCat && matchSearch;
         }).toList();
+        filtered.sort((a, b) {
+          // Open restaurants first
+          if (a.restaurantStatus != b.restaurantStatus) {
+            return a.restaurantStatus ? -1 : 1;
+          }
+
+          // Then top-rated restaurants
+          final aRating = double.tryParse(a.ratings.toString()) ?? 0.0;
+          final bRating = double.tryParse(b.ratings.toString()) ?? 0.0;
+
+          final aTopRated = aRating >= 4.0;
+          final bTopRated = bRating >= 4.0;
+
+          if (aTopRated != bTopRated) {
+            return bTopRated ? 1 : -1;
+          }
+
+          // Finally by rating (highest first)
+          return b.ratings.compareTo(a.ratings);
+        });
+        for (final r in filtered) {
+          debugPrint("${r.companyName} -> ${r.ratings}");
+        }
 
         if (filtered.isEmpty) {
           return _state(Icons.search_off, 'No restaurants match your filter');
@@ -4525,236 +4560,290 @@ class _RestaurantCard extends StatelessWidget {
     final double imgH = cardH * 0.58;
 
     return GestureDetector(
-      onTap: () {
-        if (orderType == null) {
-          onOrderTypeRequired?.call();
-          return;
-        }
+      onTap:
+          // banner.restaurantStatus
+          //     ?
+          () {
+            if (orderType == null) {
+              onOrderTypeRequired?.call();
+              return;
+            }
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MenuScreen(
-              vendorId: banner.vendorId,
-              initialCategoryName: selectedCategoryName,
-            ),
-          ),
-        );
-      },
-      child: IntrinsicHeight(
-        child: Container(
-          decoration: BoxDecoration(
-            color: restaurentsnewcolour.surface,
-            borderRadius: BorderRadius.circular(
-              restaurentsnewcolour.cardRadius.r,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.07),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // IMAGE
-              AspectRatio(
-                aspectRatio: 10 / 4,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(restaurentsnewcolour.cardRadius.r),
-                      ),
-                      child: banner.companyBanner.isNotEmpty
-                          ? Image.network(
-                              banner.companyBanner,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _placeholder(),
-                            )
-                          : _placeholder(),
-                    ),
-
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: 60,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Color(0x66000000)],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    if ((banner.ratings) >= 4.0)
-                      Positioned(
-                        top: 8,
-                        left: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.star_rounded,
-                                color: restaurentsnewcolour.primary,
-                                size: 11,
-                              ),
-                              SizedBox(width: 3),
-                              Text(
-                                'Top Rated',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: restaurentsnewcolour.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MenuScreen(
+                  vendorId: banner.vendorId,
+                  initialCategoryName: selectedCategoryName,
+                  restaurantStatus: banner.restaurantStatus,
                 ),
               ),
+            );
+          },
+      // : null,
+      child: IntrinsicHeight(
+        child: ColorFiltered(
+          colorFilter: banner.restaurantStatus
+              ? const ColorFilter.mode(Colors.transparent, BlendMode.dst)
+              : const ColorFilter.matrix(<double>[
+                  // Grayscale matrix
+                  0.2126, 0.7152, 0.0722, 0, 0,
+                  0.2126, 0.7152, 0.0722, 0, 0,
+                  0.2126, 0.7152, 0.0722, 0, 0,
+                  0, 0, 0, 1, 0,
+                ]),
+          child: Container(
+            decoration: BoxDecoration(
+              color: restaurentsnewcolour.surface,
+              borderRadius: BorderRadius.circular(
+                restaurentsnewcolour.cardRadius.r,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
 
-              // INFO
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                banner.companyName.toUpperCase(),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: restaurentsnewcolour.text,
-                                ),
-                              ),
-
-                              _dot(),
-
-                              Text(
-                                banner.type,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: restaurentsnewcolour.text,
-                                ),
-                              ),
-                            ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // IMAGE
+                AspectRatio(
+                  aspectRatio: 10 / 4,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(
+                            restaurentsnewcolour.cardRadius.r,
+                          ),
+                        ),
+                        // child: banner.companyBanner.isNotEmpty
+                        //     ? Image.network(
+                        //         banner.companyBanner,
+                        //         // fit: BoxFit.cover,
+                        //         fit: BoxFit.fill,
+                        //
+                        //         errorBuilder: (_, __, ___) => _placeholder(),
+                        //       )
+                        //     : _placeholder(),
+                        child: banner.companyBanner.isNotEmpty
+                            ? CustomCachedImage(
+                                imageUrl: banner.companyBanner,
+                                fit: BoxFit.fill,
+                                width: double.infinity,
+                                height: double.infinity,
+                                borderRadius: 0,
+                                isProfile: false,
+                              )
+                            : _placeholder(),
+                      ),
+                      if (!banner.restaurantStatus)
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.black.withOpacity(0.35),
                           ),
                         ),
 
-                        if ((banner.ratings) > 0) ...[
-                          SizedBox(width: 8.w),
+                      if (!banner.restaurantStatus)
+                        const Center(
+                          child: Text(
+                            "Currently Closed",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
 
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 6.w,
-                              vertical: 3.h,
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 60,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.transparent, Color(0x66000000)],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      if ((banner.ratings) >= 4.0)
+                        Positioned(
+                          top: 8,
+                          left: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: restaurentsnewcolour.green,
-                              borderRadius: BorderRadius.circular(6.r),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.star_rounded,
-                                  color: Colors.white,
+                                  color: restaurentsnewcolour.primary,
                                   size: 11,
                                 ),
-                                SizedBox(width: 2.w),
+                                SizedBox(width: 3),
                                 Text(
-                                  banner.ratings.toString(),
+                                  'Top Rated',
                                   style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11.sp,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w700,
+                                    color: restaurentsnewcolour.primary,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ],
-                    ),
-
-                    SizedBox(height: 4.h),
-
-                    if (banner.position.isNotEmpty)
-                      Text(
-                        '${banner.position[0].toUpperCase()}${banner.position.substring(1).toLowerCase()}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: const Color(0xFF6C63FF),
-                          fontWeight: FontWeight.w600,
                         ),
-                      ),
+                    ],
+                  ),
+                ),
 
-                    SizedBox(height: 6.h),
+                // INFO
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 10.h,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  banner.companyName.toUpperCase(),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: restaurentsnewcolour.text,
+                                  ),
+                                ),
 
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${banner.addressLine}, ${banner.city}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: restaurentsnewcolour.textLight,
+                                _dot(),
+
+                                Text(
+                                  banner.type,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: restaurentsnewcolour.text,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
 
-                        SizedBox(width: 8.w),
+                          if ((banner.ratings) > 0) ...[
+                            SizedBox(width: 8.w),
 
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 6.w,
+                                vertical: 3.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: restaurentsnewcolour.green,
+                                borderRadius: BorderRadius.circular(6.r),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    color: Colors.white,
+                                    size: 11,
+                                  ),
+                                  SizedBox(width: 2.w),
+                                  Text(
+                                    banner.ratings.toString(),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+
+                      SizedBox(height: 4.h),
+
+                      if (banner.position.isNotEmpty)
                         Text(
-                          Distancehelpermethod.formatDistance(banner.distance),
+                          '${banner.position[0].toUpperCase()}${banner.position.substring(1).toLowerCase()}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 12.sp,
+                            fontSize: 11.sp,
+                            color: const Color(0xFF6C63FF),
                             fontWeight: FontWeight.w600,
-                            color: restaurentsnewcolour.textMuted,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+
+                      SizedBox(height: 6.h),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${banner.addressLine}, ${banner.city}',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: restaurentsnewcolour.textLight,
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(width: 8.w),
+
+                          Text(
+                            Distancehelpermethod.formatDistance(
+                              banner.distance,
+                            ),
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: restaurentsnewcolour.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

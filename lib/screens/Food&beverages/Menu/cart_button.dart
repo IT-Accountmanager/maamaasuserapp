@@ -306,6 +306,7 @@ class _CartButtonState extends State<CartButton> {
             )
           : Container(
               decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(
                   color: AppColors.of(context).primary,
@@ -317,7 +318,7 @@ class _CartButtonState extends State<CartButton> {
                 children: [
                   /// ➖ Minus
                   IconButton(
-                    icon: Icon(Icons.remove, size: 14.sp),
+                    icon: Icon(Icons.remove, size: 14.sp, color: Colors.white),
                     onPressed: () async {
                       if (itemCount > 1) {
                         setState(() => itemCount--);
@@ -334,6 +335,7 @@ class _CartButtonState extends State<CartButton> {
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white
                     ),
                   ),
 
@@ -355,7 +357,7 @@ class _CartButtonState extends State<CartButton> {
                             // itemCount >= widget.balanceQuantity
                             //     ? Colors.grey
                             //     :
-                            Colors.black,
+                            Colors.white,
                       ),
 
                       onPressed: () async {
@@ -597,6 +599,10 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
                         height: 50,
 
                         child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.primary,
+                          ),
                           onPressed: () {
                             final addons = addonQty.entries.map((e) {
                               return {"addonId": e.key, "quantity": e.value};

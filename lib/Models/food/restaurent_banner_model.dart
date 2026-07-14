@@ -24,6 +24,7 @@ class Restaurent_Banner {
   final String position;
   final num latitude;
   final num longitude;
+  final bool restaurantStatus;
 
   Restaurent_Banner({
     required this.bannerId,
@@ -50,6 +51,7 @@ class Restaurent_Banner {
     required this.position,
     required this.latitude,
     required this.longitude,
+    required this.restaurantStatus,
   });
 
   factory Restaurent_Banner.fromJson(Map<String, dynamic> json) {
@@ -85,6 +87,7 @@ class Restaurent_Banner {
       position: json["position"]?.toString() ?? "",
       latitude: json['latitude'] ?? 0,
       longitude: json['longitude'] ?? 0,
+        restaurantStatus:json['restaurantStatus'] ?? false,
     );
   }
 }

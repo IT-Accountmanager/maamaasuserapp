@@ -1,3 +1,4 @@
+import 'package:custom_cached_image/custom_cached_image.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,9 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../Models/food/aboutus_model.dart';
 import '../../../Models/food/team_model.dart';
 import 'package:flutter/material.dart';
+import '../../../Services/App_color_service/app_colours.dart';
 import 'menu_screen.dart';
 import 'Menuhelper.dart';
-import 'colours.dart';
 import 'dart:convert';
 
 class BannerSection extends StatefulWidget {
@@ -20,6 +21,7 @@ class BannerSection extends StatefulWidget {
   final AboutUsModel? aboutus;
   final List<vendorteam> team;
   final Function(BannerContentType) onContentSelected;
+  final bool restaurentstatus;
 
   const BannerSection({
     super.key,
@@ -31,6 +33,7 @@ class BannerSection extends StatefulWidget {
     required this.aboutus,
     required this.team,
     required this.onContentSelected,
+    required this.restaurentstatus,
   });
 
   @override
@@ -115,7 +118,15 @@ class _BannerSectionState extends State<BannerSection> {
             children: [
               // Background
               if (banner != null && banner.companyBanner.isNotEmpty)
-                Image(image: _getImage(banner.companyBanner), fit: BoxFit.cover)
+                // Image(image: _getImage(banner.companyBanner), fit: BoxFit.cover)
+                CustomCachedImage(
+                  imageUrl: banner.companyBanner,
+                  fit: BoxFit.fill,
+                  width: double.infinity,
+                  height: double.infinity,
+                  borderRadius: 0,
+                  isProfile: false,
+                )
               else
                 Container(
                   decoration: const BoxDecoration(
@@ -176,7 +187,7 @@ class _BannerSectionState extends State<BannerSection> {
                     ),
                     SizedBox(height: 10.h),
                     Text(
-                      banner?.companyName.toUpperCase() ?? 'TEST RESTAURANT',
+                      banner?.companyName.toUpperCase() ?? '',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'YourSerifFont',
@@ -278,53 +289,63 @@ class _BannerSectionState extends State<BannerSection> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (banner?.startTime != null &&
-                              banner!.startTime.trim().isNotEmpty)
-                            Row(
-                              children: [
-                                Text(
-                                  "Opening: ",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 13.sp,
-                                    fontWeight: FontWeight.w500,
+                          if (!(widget.restaurentstatus))
+                            Text(
+                              "Currently Closed",
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          else ...[
+                            if (banner?.startTime != null &&
+                                banner!.startTime.trim().isNotEmpty)
+                              Row(
+                                children: [
+                                  Text(
+                                    "Opening: ",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  banner.startTime,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w600,
+                                  Text(
+                                    banner.startTime,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
 
-                          SizedBox(height: 4.h),
+                            SizedBox(height: 4.h),
 
-                          if (banner?.lastTime != null &&
-                              banner!.lastTime.trim().isNotEmpty)
-                            Row(
-                              children: [
-                                Text(
-                                  "Closing: ",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 13.sp,
-                                    fontWeight: FontWeight.w500,
+                            if (banner!.lastTime.trim().isNotEmpty)
+                              Row(
+                                children: [
+                                  Text(
+                                    "Closing: ",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  banner.lastTime,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w600,
+                                  Text(
+                                    banner.lastTime,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+                          ],
                         ],
                       ),
 
@@ -358,14 +379,14 @@ class _BannerSectionState extends State<BannerSection> {
         // Filter bar (unchanged)
         Container(
           height: 60.h,
-          color: Menucolours.surface,
+          color: AppColors.surface,
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
           child: Row(
             children: [
               Expanded(
                 child: SearchField(
                   onSearch: widget.onSearch,
-                  fillColor: Menucolours.surfaceAlt,
+                  fillColor: AppColors.surfaceAlt,
                 ),
               ),
               SizedBox(width: 10.w),

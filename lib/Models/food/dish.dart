@@ -37,6 +37,8 @@ class Dish {
   final int? vendorId;
 
   final List<Addon> addons;
+  final String metrics;
+  final int metricQuantity;
 
   Dish({
     required this.dishId,
@@ -69,6 +71,8 @@ class Dish {
     this.discountEndDate,
     this.vendorId,
     required this.addons,
+    required this.metricQuantity,
+    required this.metrics,
   });
 
   factory Dish.fromJson(Map<String, dynamic> json) {
@@ -115,6 +119,8 @@ class Dish {
               ?.map((e) => Addon.fromJson(e))
               .toList() ??
           [],
+      metrics: json["metrics"] ?? '',
+      metricQuantity: json['metricQuantity'] ?? 0,
     );
   }
 }

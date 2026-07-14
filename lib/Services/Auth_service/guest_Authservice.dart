@@ -158,8 +158,8 @@ class Authservice {
         requiresAuth: false,
       );
       //
-      print("📥 STATUS CODE: ${response.statusCode}");
-      print("📥 RAW BODY: ${response.body}");
+      // print("📥 STATUS CODE: ${response.statusCode}");
+      // print("📥 RAW BODY: ${response.body}");
 
       // if (response.statusCode == 200) {
       //   final List<dynamic> data = jsonDecode(response.body);
@@ -203,7 +203,7 @@ class Authservice {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
 
-        print("DATA COUNT = ${data.length}");
+        // print("DATA COUNT = ${data.length}");
 
         final List<Dish> categories = [];
         final List<Dish> dishes = [];
@@ -219,8 +219,8 @@ class Authservice {
           }
         }
 
-        print("CATEGORIES COUNT = ${categories.length}");
-        print("DISHES COUNT = ${dishes.length}");
+        // print("CATEGORIES COUNT = ${categories.length}");
+        // print("DISHES COUNT = ${dishes.length}");
 
         return MenuResponse(categories: categories, dishes: dishes);
       }
@@ -238,8 +238,8 @@ class Authservice {
         errorMessage: errorJson['message'] ?? 'Something went wrong',
       );
     } catch (e, stackTrace) {
-      print("❌ EXCEPTION = $e");
-      print("❌ STACKTRACE = $stackTrace");
+      // print("❌ EXCEPTION = $e");
+      // print("❌ STACKTRACE = $stackTrace");
 
       return MenuResponse(
         categories: [],

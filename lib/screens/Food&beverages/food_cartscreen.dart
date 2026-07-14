@@ -977,17 +977,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            // Text(
-                            //   item.addons.isNotEmpty
-                            //       ? item.addons
-                            //             .map((e) => e.addonName)
-                            //             .join(', ')
-                            //       : '',
-                            //   style: const TextStyle(
-                            //     fontSize: 12,
-                            //     color: cartuser.textMuted,
-                            //   ),
-                            // ),
+
                             Row(
                               children: [
                                 if (item.addons.isNotEmpty)
@@ -1005,7 +995,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                                       ),
                                     ),
                                   ),
-                                SizedBox(width: 10,),
+                                SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     item.addons.isNotEmpty
@@ -1975,8 +1965,8 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     final platform = cartData?.platformCharges ?? 0;
     final discount = cartData?.discountAmount ?? 0;
     final gst = cartData?.gstTotal ?? 0;
-    final cgst = (cartData?.gstTotal ?? 0) / 2;
-    final sgst = (cartData?.gstTotal ?? 0) / 2;
+    // final cgst = (cartData?.gstTotal ?? 0) / 2;
+    // final sgst = (cartData?.gstTotal ?? 0) / 2;
     final grandTotal = cartData?.grandTotal ?? 0;
     final type = orderType.toUpperCase();
     final firstOrder = cartData?.firstOrderFreeDelivery ?? false;
@@ -2053,9 +2043,9 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                 if (discount > 0)
                   _billRow('Discount', -discount, isDiscount: true),
                 if (gst > 0)
-                  _billRow('CGST', cgst, onInfo: () => _showGstDialog('CGST')),
-                if (gst > 0)
-                  _billRow('SGST', sgst, onInfo: () => _showGstDialog('SGST')),
+                  _billRow('GST', gst, onInfo: () => _showGstDialog('GST')),
+                // if (gst > 0)
+                //   _billRow('SGST', sgst, onInfo: () => _showGstDialog('SGST')),
                 const SizedBox(height: 4),
               ],
             ),
@@ -2110,14 +2100,30 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   color: cartuser.textSecondary,
                 ),
               ),
+              // if (onInfo != null) ...[
+              //   const SizedBox(width: 4),
+              //   GestureDetector(
+              //     onTap: onInfo,
+              //     child: const Icon(
+              //       Icons.info_outline_rounded,
+              //       size: 14,
+              //       color: cartuser.textMuted,
+              //     ),
+              //   ),
+              // ],
               if (onInfo != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 GestureDetector(
                   onTap: onInfo,
-                  child: const Icon(
-                    Icons.info_outline_rounded,
-                    size: 14,
-                    color: cartuser.textMuted,
+                  child: const Text(
+                    "Know more",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Colors.blue,
+                    ),
                   ),
                 ),
               ],
@@ -2173,21 +2179,18 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (itemGst > 0) _dialogRow('Item GST', itemGst / 2),
+            if (itemGst > 0) _dialogRow('Item GST', itemGst),
             if ((cartData?.platformChargeGst ?? 0) > 0)
-              _dialogRow(
-                'Platform GST',
-                (cartData?.platformChargeGst ?? 0) / 2,
-              ),
+              _dialogRow('Platform GST', (cartData?.platformChargeGst ?? 0)),
             if ((cartData?.packingChargeGst ?? 0) > 0)
-              _dialogRow('Packing GST', (cartData?.packingChargeGst ?? 0) / 2),
+              _dialogRow('Packing GST', (cartData?.packingChargeGst ?? 0)),
             if ((cartData?.serviceChargeGst ?? 0) > 0)
-              _dialogRow('Service GST', (cartData?.serviceChargeGst ?? 0) / 2),
+              _dialogRow('Service GST', (cartData?.serviceChargeGst ?? 0)),
             const Divider(height: 20),
             // _dialogRow('Total GST', (cartData?.gstTotal ?? 0), isBold: true),
             _dialogRow(
               'Total $type',
-              ((cartData?.gstTotal ?? 0) / 2),
+              ((cartData?.gstTotal ?? 0)),
               isBold: true,
             ),
           ],

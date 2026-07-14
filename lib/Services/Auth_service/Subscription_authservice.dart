@@ -669,16 +669,16 @@ class subscription_AuthService {
     try {
       final response = await ApiClient.get(endpoint, service: "subscription");
 
-      print("API RESPONSE:");
-      print(response.body);
+      // print("API RESPONSE:");
+      // print(response.body);
 
       final Map<String, dynamic> jsonMap = jsonDecode(response.body);
 
       return ReferralHistoryResponse.fromJson(jsonMap);
     } catch (e, s) {
-      print("REFERRAL ERROR");
-      print(e);
-      print(s);
+      // print("REFERRAL ERROR");
+      // print(e);
+      // print(s);
       rethrow;
     }
   }

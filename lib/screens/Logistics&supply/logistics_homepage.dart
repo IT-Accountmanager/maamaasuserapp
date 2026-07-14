@@ -134,8 +134,8 @@ class _HomePageState extends State<logistic_HomePage>
 
       if (!mounted) return;
 
-      print("📍 RAW LOC: $loc");
-      print("📍 ADDRESS CHECK: ${loc?.address}");
+      // print("📍 RAW LOC: $loc");
+      // print("📍 ADDRESS CHECK: ${loc?.address}");
 
       // ✅ VALID LOCATION CHECK
       final isValidLocation = loc != null && loc.address.trim().isNotEmpty;

@@ -84,18 +84,14 @@ class _LoginPageState extends State<LoginScreen>
     setState(() => _isLoading = true);
 
     try {
-      //       debugPrint("📤 Sending login request...");
       final result = await subscription_AuthService.login(
         identifier: _emailCtrl.text.trim(),
         password: _passCtrl.text.trim(),
       );
-      //
-      //       debugPrint("📥 Login response: $result");
 
       if (!mounted) return;
 
       if (result != 'success') {
-        //         debugPrint("❌ Login failed: $result");
         AppAlert.error(context, result);
         return;
       }

@@ -161,6 +161,7 @@ class _cartwalletState extends State<cartpayment> {
                           _isPaymentProcessing = false;
                         });
 
+                        // ignore: use_build_context_synchronously
                         AppAlert.error(context, "Failed to create order ❌");
                         return;
                       }

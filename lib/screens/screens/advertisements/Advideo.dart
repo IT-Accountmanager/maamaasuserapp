@@ -139,7 +139,8 @@ class _VideoPreviewContainerState extends State<VideoPreviewContainer> {
               child: ad.type.toLowerCase() == "video" && _controller != null
                   ? (_controller!.value.isInitialized
                         ? FittedBox(
-                            fit: BoxFit.cover,
+                            // fit: BoxFit.cover,
+                            fit: BoxFit.fill,
                             child: SizedBox(
                               width: _controller!.value.size.width,
                               height: _controller!.value.size.height,

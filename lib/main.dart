@@ -16,12 +16,12 @@ import 'package:maamaas/widgets/app_navigator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_in_app_messaging/firebase_in_app_messaging.dart';
 import 'package:app_links/app_links.dart';
+import 'Services/App_color_service/theme_provider.dart';
 import 'Services/Auth_service/Apiclient.dart';
 import 'firebase_options.dart';
 import 'homewrapper.dart';
 
 // ── Dynamic theme imports ─────────────────────────────────────────────────────
-import 'Services/App_color_service/app_colours.dart';
 import 'Services/App_color_service/theme_colour.dart';
 
 // ─── SharedPreferences key used across the app ───────────────────────────────

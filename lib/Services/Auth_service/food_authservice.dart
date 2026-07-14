@@ -1004,10 +1004,10 @@ class food_Authservice {
     );
 
     if (response.statusCode == 200) {
-      debugPrint("response body:${response.body}");
+      // debugPrint("response body:${response.body}");
       return true;
     } else {
-      print("Cancel failed: ${response.body}");
+      // print("Cancel failed: ${response.body}");
       return false;
     }
   }
@@ -1444,9 +1444,9 @@ class food_Authservice {
     try {
       final response = await ApiClient.post(endpoint, {}, service: "food");
 
-      print("📡 STATUS: ${response.statusCode}");
-      print("📥 RAW BODY: '${response.body}'");
-      print("📏 BODY LENGTH: ${response.body.length}");
+      // print("📡 STATUS: ${response.statusCode}");
+      // print("📥 RAW BODY: '${response.body}'");
+      // print("📏 BODY LENGTH: ${response.body.length}");
 
       if (response.body.trim().isEmpty) {
         return {"success": false, "message": "Server returned empty response"};
@@ -1454,7 +1454,7 @@ class food_Authservice {
 
       final body = jsonDecode(response.body);
 
-      print("📦 DECODED BODY: $body");
+      // print("📦 DECODED BODY: $body");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final int? cartId = body['cartId'];
@@ -1472,8 +1472,8 @@ class food_Authservice {
         "message": body['message'] ?? "Something went wrong",
       };
     } catch (e, stackTrace) {
-      print("❌ CREATE CART ERROR: $e");
-      print(stackTrace);
+      // print("❌ CREATE CART ERROR: $e");
+      // print(stackTrace);
 
       return {"success": false, "message": e.toString()};
     }
@@ -1540,7 +1540,7 @@ class food_Authservice {
       };
 
       final res = await ApiClient.post(endpoint, body, service: "food");
-      print("captured :${res.body}");
+      // print("captured :${res.body}");
       return res.statusCode == 200;
     } catch (e) {
       return false;

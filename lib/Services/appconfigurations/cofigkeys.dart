@@ -6,6 +6,7 @@ class AppConfigKeys {
   static const dineIn = "DINE_IN";
   static const takeaway = "TAKEAWAY";
   static const delivery = "DELIVERY";
+  static const tabledinein = "DINE_OUT";
 
   static const payments = "PAYMENTS";
   static const coupons = "COUPONS";

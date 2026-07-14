@@ -83,7 +83,7 @@ class _AccountScreenState extends State<AccountScreen> {
     "JOBS",
     "FOOD",
     "EDUCATION",
-    "OFFERS",
+    // "OFFERS",
     "REAL_ESTATE",
     "ONLINE_COURSES",
     "BAKERY",
