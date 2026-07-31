@@ -317,13 +317,13 @@ class ReelsScreenState extends State<ReelsScreen>
 
         if (deepIndex != -1) {
           initialIndex = deepIndex;
-          debugPrint(
-            "✅ Deep link campaign found at index $deepIndex (id=${widget.campaignId})",
-          );
+          // debugPrint(
+          //   "✅ Deep link campaign found at index $deepIndex (id=${widget.campaignId})",
+          // );
         } else {
-          debugPrint(
-            "⚠️ Deep link campaign ${widget.campaignId} not in current feed",
-          );
+          // debugPrint(
+          //   "⚠️ Deep link campaign ${widget.campaignId} not in current feed",
+          // );
         }
       }
 
@@ -547,7 +547,7 @@ class ReelsScreenState extends State<ReelsScreen>
       final phone = campaign.mobileNumber ?? '';
       final url = "tel:$phone";
       //
-      debugPrint("📞 Calling: $phone");
+      // debugPrint("📞 Calling: $phone");
 
       if (await canLaunchUrl(Uri.parse(url))) {
         //         debugPrint("🚀 Launching Dialer...");
@@ -565,7 +565,7 @@ class ReelsScreenState extends State<ReelsScreen>
       try {
         final result = await food_Authservice.createCart(ordertype);
         //
-        debugPrint("✅ Cart created: $result");
+        // debugPrint("✅ Cart created: $result");
 
         if (!context.mounted) return;
 

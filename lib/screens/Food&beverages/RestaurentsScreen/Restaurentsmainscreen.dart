@@ -2738,6 +2738,7 @@
 import 'dart:async';
 import 'package:custom_cached_image/custom_cached_image.dart';
 
+import '../../../widgets/safearea.dart';
 import '../../../widgets/widgets/couponcards.dart';
 import '../Menu/menu_screen.dart';
 import '../distancehelpermethod.dart';
@@ -3338,10 +3339,10 @@ class _RestaurentsState extends State<Restaurents> {
                 //     ),
                 //   ),
                 // ),
-
-                // SliverToBoxAdapter(child: SizedBox(height: 4.h)),
                 //
-                // // ── 8. Offer filter strip ───────────────────────────────
+                // SliverToBoxAdapter(child: SizedBox(height: 4.h)),
+                // //
+                // // // ── 8. Offer filter strip ───────────────────────────────
                 // SliverToBoxAdapter(child: _buildOfferStrip()),
 
                 // ── 9. Restaurant list header ───────────────────────────
@@ -3787,7 +3788,7 @@ class _RestaurentsState extends State<Restaurents> {
         // final remaining = categories.skip(10).toList();
         final remaining = displayCategories.skip(10).toList();
         final sheetH = MediaQuery.of(ctx).size.height * 0.6;
-        return SafeArea(
+        return PlatformSafeArea(
           child: Container(
             height: sheetH,
             padding: EdgeInsets.all(16.w),
@@ -4488,7 +4489,7 @@ class _NearbyRestaurentBannersWidgetState
           return b.ratings.compareTo(a.ratings);
         });
         for (final r in filtered) {
-          debugPrint("${r.companyName} -> ${r.ratings}");
+          // debugPrint("${r.companyName} -> ${r.ratings}");
         }
 
         if (filtered.isEmpty) {

@@ -5,21 +5,26 @@ import 'animateddice.dart';
 
 class DiceScreen extends StatefulWidget {
   final int diceCount;
-  const DiceScreen({super.key, this.diceCount = 2});
+  const DiceScreen({super.key, this.diceCount = 1});
 
   @override
   State<DiceScreen> createState() => _DiceScreenState();
 }
 
 class _DiceScreenState extends State<DiceScreen> {
-  late final List<GlobalKey<AnimatedDiceState>> _keys;
+  late final List<GlobalKey<AnimatedDiceCubeState>> _keys;
+
   late final List<int> _results;
   bool _rolling = false;
 
-  @override
   void initState() {
     super.initState();
-    _keys = List.generate(widget.diceCount, (_) => GlobalKey<AnimatedDiceState>());
+
+    _keys = List.generate(
+      widget.diceCount,
+      (_) => GlobalKey<AnimatedDiceCubeState>(),
+    );
+
     _results = List.filled(widget.diceCount, 1);
   }
 
@@ -50,20 +55,25 @@ class _DiceScreenState extends State<DiceScreen> {
             Wrap(
               spacing: 20,
               runSpacing: 20,
-              children: [
-                for (int i = 0; i < widget.diceCount; i++)
-                  AnimatedDice(
-                    key: _keys[i],
-                    size: 90,
-                    onRollComplete: (value) {
-                      setState(() => _results[i] = value);
-                    },
-                  ),
-              ],
+              children: List.generate(
+                widget.diceCount,
+                (i) => AnimatedDiceCube(
+                  key: _keys[i],
+                  size: 120,
+                  onRollComplete: (value) {
+                    setState(() {
+                      _results[i] = value;
+                    });
+                  },
+                ),
+              ),
             ),
             const SizedBox(height: 32),
-            if (widget.diceCount > 1)
-              Text('Total: $_total', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            // if (widget.diceCount > 1)
+            Text(
+              'Total: $_total',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _rolling ? null : _rollAll,

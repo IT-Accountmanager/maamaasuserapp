@@ -761,26 +761,72 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
     final color = _categoryColor(address.category);
 
     return GestureDetector(
+      // onTap: () async {
+      //   await ref
+      //       .read(addressProvider.notifier)
+      //       .updateLocalAddress(
+      //         city: address.city,
+      //         stateName: address.state,
+      //         pincode: address.pincode.toString(),
+      //         latitude: address.latitude,
+      //         longitude: address.longitude,
+      //         fullAddress: [
+      //           address.doorNumber,
+      //           address.addressLine,
+      //           address.landMark,
+      //           address.city,
+      //           address.state,
+      //           address.pincode.toString(),
+      //         ].where((e) => e.toString().trim().isNotEmpty).join(', '),
+      //         category: address.category,
+      //       );
+      //   await ref.read(addressProvider.notifier).sendCurrentLocationToBackend();
+      //   widget.onAddressSelected?.call(
+      //     SelectedAddress(
+      //       city: address.city,
+      //       state: address.state,
+      //       pincode: address.pincode.toString(),
+      //       latitude: address.latitude,
+      //       longitude: address.longitude,
+      //       addressId: address.id,
+      //       category: address.category,
+      //       fullAddress: [
+      //         address.doorNumber,
+      //         address.addressLine,
+      //         address.landMark,
+      //         address.city,
+      //         address.state,
+      //         address.pincode.toString(),
+      //       ].where((e) => e.toString().isNotEmpty).join(', '),
+      //     ),
+      //   );
+      //   // ignore: use_build_context_synchronously
+      //   Navigator.pop(context);
+      // },
       onTap: () async {
-        await ref
-            .read(addressProvider.notifier)
-            .updateLocalAddress(
-              city: address.city,
-              stateName: address.state,
-              pincode: address.pincode.toString(),
-              latitude: address.latitude,
-              longitude: address.longitude,
-              fullAddress: [
-                address.doorNumber,
-                address.addressLine,
-                address.landMark,
-                address.city,
-                address.state,
-                address.pincode.toString(),
-              ].where((e) => e.toString().trim().isNotEmpty).join(', '),
-              category: address.category,
-            );
-        await ref.read(addressProvider.notifier).sendCurrentLocationToBackend();
+        final notifier = ref.read(addressProvider.notifier);
+
+        await notifier.updateLocalAddress(
+          city: address.city,
+          stateName: address.state,
+          pincode: address.pincode.toString(),
+          latitude: address.latitude,
+          longitude: address.longitude,
+          fullAddress: [
+            address.doorNumber,
+            address.addressLine,
+            address.landMark,
+            address.city,
+            address.state,
+            address.pincode.toString(),
+          ].where((e) => e.toString().trim().isNotEmpty).join(', '),
+          category: address.category,
+        );
+        if (!mounted) return;
+        await notifier.sendCurrentLocationToBackend();
+
+        if (!mounted) return;
+
         widget.onAddressSelected?.call(
           SelectedAddress(
             city: address.city,
@@ -797,11 +843,13 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
               address.city,
               address.state,
               address.pincode.toString(),
-            ].where((e) => e.toString().isNotEmpty).join(', '),
+            ].where((e) => e.toString().trim().isNotEmpty).join(', '),
           ),
         );
-        // ignore: use_build_context_synchronously
-        Navigator.pop(context);
+
+        if (mounted) {
+          Navigator.pop(context);
+        }
       },
       child: Container(
         margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
@@ -1591,7 +1639,10 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             controller: phoneNumberController,
             keyboardType: TextInputType.phone,
             maxLength: 10,
-            style: TextStyle(fontSize: 14.sp, color: savedddcolour.textSecondary),
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: savedddcolour.textSecondary,
+            ),
             enabled: _isEditable,
             cursorColor: savedddcolour.violet,
             decoration: InputDecoration(

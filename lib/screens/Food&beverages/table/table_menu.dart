@@ -304,7 +304,7 @@ class _MenuScreenState extends State<tablemneuScreen>
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: BannerSection(
-                restaurentstatus:widget.restaurantStatus?? true,
+                restaurentstatus: widget.restaurantStatus ?? true,
                 bannerItem: _bannerItem,
                 aboutus: _aboutus,
                 team: _team,
@@ -881,9 +881,7 @@ class _CategoryChip extends StatelessWidget {
                     : Icon(
                         Icons.restaurant_rounded,
                         size: 18.sp,
-                        color: isSelected
-                            ? AppColors.green
-                            : AppColors.textM,
+                        color: isSelected ? AppColors.green : AppColors.textM,
                       ),
               ),
             ),
@@ -1052,9 +1050,7 @@ class VegToggle extends StatelessWidget {
           color: isVeg ? AppColors.primaryDim : AppColors.surfaceAlt,
           borderRadius: appradius.r8,
           border: Border.all(
-            color: isVeg
-                ? AppColors.green.withOpacity(0.4)
-                : AppColors.border,
+            color: isVeg ? AppColors.green.withOpacity(0.4) : AppColors.border,
           ),
         ),
         child: Row(
@@ -1349,10 +1345,7 @@ class _DishGridTabState extends State<DishGridTab> {
               ),
             ),
             SizedBox(height: 14.h),
-            Text(
-              'Nothing here',
-              style: AppText.h2(color: AppColors.textH),
-            ),
+            Text('Nothing here', style: AppText.h2(color: AppColors.textH)),
             SizedBox(height: 6.h),
             Text(
               widget.emptyMessage,
@@ -1429,9 +1422,7 @@ class _DishGridTabState extends State<DishGridTab> {
                     backgroundColor: AppColors.green,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: appradius.r12,
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: appradius.r12),
                   ),
                 ),
               ),

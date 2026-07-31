@@ -28,7 +28,6 @@ class _FavoritesState extends State<Favorites> {
     _loadFavorites();
   }
 
-
   Widget _imagePlaceholder() => Container(
     color: const Color(0xFFF5F5F0),
     child: Icon(Icons.restaurant, size: 36.sp, color: Colors.black12),

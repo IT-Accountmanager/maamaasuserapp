@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../Models/food/cart_model.dart';
 import '../../../Models/food/dish.dart';
 import '../../../utils/utils.dart';
+import '../../../widgets/safearea.dart';
 import '../../../widgets/signinrequired.dart';
 import '../../../widgets/widgets/food/cartmode.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -38,6 +39,7 @@ class CartButton extends StatefulWidget {
 
 class _CartButtonState extends State<CartButton> {
   int itemCount = 0;
+  bool _isAddingToCart = false;
 
   @override
   void initState() {
@@ -116,16 +118,46 @@ class _CartButtonState extends State<CartButton> {
   //     );
   //   }
   // }
+  // Future<void> _addToCart(int quantity, {bool sheduleorder = false}) async {
+  //   CartNotifier.count.value += quantity;
+  //
+  //   await food_Authservice.addToCart(
+  //     dishId: widget.dish.dishId,
+  //     quantity: quantity,
+  //     sheduleorder: sheduleorder,
+  //   );
+  //
+  //   await _loadQuantity();
+  // }
   Future<void> _addToCart(int quantity, {bool sheduleorder = false}) async {
-    CartNotifier.count.value += quantity;
+    if (_isAddingToCart) return;
 
-    await food_Authservice.addToCart(
-      dishId: widget.dish.dishId,
-      quantity: quantity,
-      sheduleorder: sheduleorder,
-    );
+    setState(() {
+      _isAddingToCart = true;
+    });
 
-    await _loadQuantity();
+    try {
+      final success = await food_Authservice.addToCart(
+        dishId: widget.dish.dishId,
+        quantity: quantity,
+        sheduleorder: sheduleorder,
+      );
+
+      if (success) {
+        CartNotifier.count.value += quantity;
+        await _loadQuantity();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppAlert.error(context, e.toString().replaceFirst('Exception: ', ''));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAddingToCart = false;
+        });
+      }
+    }
   }
 
   Future<void> _removeFromCart() async {
@@ -148,37 +180,37 @@ class _CartButtonState extends State<CartButton> {
   }
 
   Future<void> _updateQuantity(int newQty) async {
-    debugPrint("========== UPDATE CART START ==========");
+    // debugPrint("========== UPDATE CART START ==========");
 
     final prefs = await SharedPreferences.getInstance();
 
     final itemId = prefs.getInt("dish_${widget.dish.dishId}_itemId");
 
-    debugPrint("Dish Id      : ${widget.dish.dishId}");
-    debugPrint("Item Id      : $itemId");
-    debugPrint("Old Qty(UI)  : $itemCount");
-    debugPrint("New Qty      : $newQty");
+    // debugPrint("Dish Id      : ${widget.dish.dishId}");
+    // debugPrint("Item Id      : $itemId");
+    // debugPrint("Old Qty(UI)  : $itemCount");
+    // debugPrint("New Qty      : $newQty");
 
     if (itemId == null) {
-      debugPrint("❌ ItemId is NULL");
+      // debugPrint("❌ ItemId is NULL");
       return;
     }
 
     CartNotifier.count.value = CartNotifier.count.value - itemCount + newQty;
 
-    debugPrint("Calling updateCartQuantity...");
+    // debugPrint("Calling updateCartQuantity...");
 
     final success = await food_Authservice.updateCartQuantity(itemId, newQty);
 
-    debugPrint("API Success : $success");
+    // debugPrint("API Success : $success");
 
     prefs.setInt("dish_${widget.dish.dishId}_quantity", newQty);
 
-    debugPrint(
-      "Saved Qty in Prefs : ${prefs.getInt("dish_${widget.dish.dishId}_quantity")}",
-    );
+    // debugPrint(
+    //   "Saved Qty in Prefs : ${prefs.getInt("dish_${widget.dish.dishId}_quantity")}",
+    // );
 
-    debugPrint("========== UPDATE CART END ==========");
+    // debugPrint("========== UPDATE CART END ==========");
   }
 
   Future<bool> _checkLogin(BuildContext context) async {
@@ -245,12 +277,30 @@ class _CartButtonState extends State<CartButton> {
 
           setState(() => itemCount = quantity);
 
-          await food_Authservice.addToCart(
+          // await food_Authservice.addToCart(
+          //   dishId: widget.dish.dishId,
+          //   quantity: quantity,
+          //   sheduleorder: false,
+          //   addons: addons,
+          // );
+          final success = await food_Authservice.addToCart(
             dishId: widget.dish.dishId,
             quantity: quantity,
             sheduleorder: false,
             addons: addons,
           );
+
+          if (success) {
+            if (!mounted) return;
+
+            setState(() {
+              itemCount = quantity;
+            });
+
+            await _loadQuantity();
+          } else {
+            AppAlert.error(context, "Failed to add item to cart");
+          }
 
           await _loadQuantity();
         },
@@ -285,9 +335,14 @@ class _CartButtonState extends State<CartButton> {
 
                 // setState(() => itemCount = 1);
                 // await _addToCart(1, sheduleorder: schedule);
+                // if (widget.dish.addons.isEmpty) {
+                //   setState(() => itemCount = 1);
+                //
+                //   await _addToCart(1, sheduleorder: schedule);
+                // } else {
+                //   _showAddonBottomSheet();
+                // }
                 if (widget.dish.addons.isEmpty) {
-                  setState(() => itemCount = 1);
-
                   await _addToCart(1, sheduleorder: schedule);
                 } else {
                   _showAddonBottomSheet();
@@ -295,14 +350,25 @@ class _CartButtonState extends State<CartButton> {
                 CartMode.type.value = CartType.normal;
               },
 
-              child: Text(
-                widget.dish.balanceQuantity <= 0 ? "Schedule" : "Add Cart",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: TextColors.whiteText, // 👈 NEVER greyed out
-                ),
-              ),
+              child: _isAddingToCart
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      widget.dish.balanceQuantity <= 0
+                          ? "Schedule"
+                          : "Add Cart",
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: TextColors.whiteText, // 👈 NEVER greyed out
+                      ),
+                    ),
             )
           : Container(
               decoration: BoxDecoration(
@@ -335,7 +401,7 @@ class _CartButtonState extends State<CartButton> {
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white
+                      color: Colors.white,
                     ),
                   ),
 
@@ -422,7 +488,7 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return PlatformSafeArea(
       child: SizedBox(
         height: MediaQuery.of(context).size.height * .70,
 
@@ -608,8 +674,8 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
                               return {"addonId": e.key, "quantity": e.value};
                             }).toList();
 
-                            debugPrint("Addon Qty Map: $addonQty");
-                            debugPrint("Addons Payload: ${jsonEncode(addons)}");
+                            // debugPrint("Addon Qty Map: $addonQty");
+                            // debugPrint("Addons Payload: ${jsonEncode(addons)}");
 
                             widget.onAdd(addons, quantity);
                           },

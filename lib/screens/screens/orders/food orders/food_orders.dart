@@ -1,4 +1,5 @@
 import 'package:maamaas/screens/screens/orders/food%20orders/food_helper.dart';
+import 'package:maamaas/widgets/safearea.dart';
 import '../../../../Services/Auth_service/delivery_service.dart';
 import '../../../../Services/Auth_service/food_authservice.dart';
 import '../../../../Services/websockets/web_socket_manager.dart';
@@ -63,7 +64,11 @@ class _food_ordersState extends State<food_orders> with WidgetsBindingObserver {
 
   // Track which order IDs are currently subscribed so we never double-subscribe
   final Set<int> _subscribedOrderIds = {};
+  final ScrollController _scrollController = ScrollController();
 
+  double _lastScrollOffset = 0;
+  int? _selectedOrderId;
+  final Map<int, GlobalKey> _orderKeys = {};
   @override
   void initState() {
     super.initState();
@@ -195,6 +200,7 @@ class _food_ordersState extends State<food_orders> with WidgetsBindingObserver {
       onRefresh: _loadOrders,
       color: foodordecolour.accent,
       child: ListView(
+        controller: _scrollController,
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
         children: [
           if (activeOrders.isNotEmpty) ...[
@@ -202,7 +208,8 @@ class _food_ordersState extends State<food_orders> with WidgetsBindingObserver {
             SizedBox(height: 10.h),
             ...activeOrders.map(
               (order) => OrderCard(
-                key: ValueKey('order_${order.orderId}'),
+                // key: ValueKey('order_${order.orderId}'),
+                key: _orderKeys.putIfAbsent(order.orderId, () => GlobalKey()),
                 order: order,
                 isActive: true,
                 onTap: () => _navigateToOrderDetails(context, order),
@@ -215,7 +222,8 @@ class _food_ordersState extends State<food_orders> with WidgetsBindingObserver {
             SizedBox(height: 10.h),
             ...pastOrders.map(
               (order) => OrderCard(
-                key: ValueKey('order_${order.orderId}'),
+                // key: ValueKey('order_${order.orderId}'),
+                key: _orderKeys.putIfAbsent(order.orderId, () => GlobalKey()),
                 order: order,
                 isActive: false,
                 onTap: () => _navigateToOrderDetails(context, order),
@@ -250,6 +258,8 @@ class _food_ordersState extends State<food_orders> with WidgetsBindingObserver {
   void _navigateToOrderDetails(BuildContext context, Order order) {
     // Do NOT unsubscribe here — the list screen should keep its own
     // subscription independent of the detail screen.
+    _lastScrollOffset = _scrollController.offset;
+    _selectedOrderId = order.orderId;
 
     Navigator.push(
       context,
@@ -285,10 +295,21 @@ class _food_ordersState extends State<food_orders> with WidgetsBindingObserver {
           // time: order.time,
         ),
       ),
-    ).then((_) {
+    ).then((_) async {
       // When returning from detail screen, refresh the list to pick up
       // any status changes that happened while we were away.
-      _loadOrders();
+      await _loadOrders();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final key = _orderKeys[_selectedOrderId];
+
+        if (key?.currentContext != null) {
+          Scrollable.ensureVisible(
+            key!.currentContext!,
+            duration: const Duration(milliseconds: 300),
+            alignment: 0.2,
+          );
+        }
+      });
     });
   }
 }
@@ -1408,7 +1429,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                     .map(
                       (e) => Column(
                         children: [
-                          _buildOrderItem(e.value),
+                          // _buildOrderItem(e.value),
+                          OrderItemTile(item: e.value),
                           if (e.key < widget.items.length - 1)
                             Divider(
                               height: 1,
@@ -1527,63 +1549,262 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     );
   }
 
-  Widget _buildOrderItem(OrderItem item) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28.w,
-            height: 28.w,
-            decoration: BoxDecoration(
-              color: foodordecolour.bg,
-              borderRadius: BorderRadius.circular(6.r),
-              border: Border.all(color: foodordecolour.border),
-            ),
-            child: Center(
-              child: Text(
-                "${item.quantity}×",
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w700,
-                  color: foodordecolour.ink,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              item.dishName,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: foodordecolour.ink,
-              ),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                "₹${item.totalPrice.toStringAsFixed(0)}",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: foodordecolour.ink,
-                ),
-              ),
-              Text(
-                "₹${item.price.toStringAsFixed(0)} each",
-                style: foodordecolour.body.copyWith(fontSize: 11),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildOrderItem(OrderItem item) {
+  //   return Padding(
+  //     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+  //     child: Row(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Container(
+  //           width: 28.w,
+  //           height: 28.w,
+  //           decoration: BoxDecoration(
+  //             color: foodordecolour.bg,
+  //             borderRadius: BorderRadius.circular(6.r),
+  //             border: Border.all(color: foodordecolour.border),
+  //           ),
+  //           child: Center(
+  //             child: Text(
+  //               "${item.quantity}×",
+  //               style: TextStyle(
+  //                 fontSize: 11.sp,
+  //                 fontWeight: FontWeight.w700,
+  //                 color: foodordecolour.ink,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //         SizedBox(width: 12.w),
+  //         // Expanded(
+  //         //   child: Text(
+  //         //     item.dishName,
+  //         //     style: const TextStyle(
+  //         //       fontSize: 14,
+  //         //       fontWeight: FontWeight.w500,
+  //         //       color: foodordecolour.ink,
+  //         //     ),
+  //         //   ),
+  //         // ),
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 item.dishName,
+  //                 style: const TextStyle(
+  //                   fontSize: 14,
+  //                   fontWeight: FontWeight.w600,
+  //                   color: foodordecolour.ink,
+  //                 ),
+  //               ),
+  //
+  //               if (item.addons.isNotEmpty) ...[
+  //                 SizedBox(height: 6.h),
+  //
+  //                 ...item.addons.map(
+  //                   (addon) => Padding(
+  //                     padding: EdgeInsets.only(bottom: 4.h),
+  //                     child: Row(
+  //                       children: [
+  //                         Icon(
+  //                           Icons.add_circle_outline,
+  //                           size: 12.sp,
+  //                           color: Colors.grey,
+  //                         ),
+  //                         SizedBox(width: 4.w),
+  //
+  //                         Expanded(
+  //                           child: Text(
+  //                             "${addon.addonName} × ${addon.quantity}",
+  //                             style: TextStyle(
+  //                               fontSize: 11.sp,
+  //                               color: Colors.grey.shade700,
+  //                             ),
+  //                           ),
+  //                         ),
+  //
+  //                         Text(
+  //                           "+ ₹${addon.totalPrice.toStringAsFixed(0)}",
+  //                           style: TextStyle(
+  //                             fontSize: 11.sp,
+  //                             fontWeight: FontWeight.w500,
+  //                             color: Colors.grey.shade700,
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ],
+  //           ),
+  //         ),
+  //         Column(
+  //           crossAxisAlignment: CrossAxisAlignment.end,
+  //           children: [
+  //             Text(
+  //               "₹${item.totalPrice.toStringAsFixed(0)}",
+  //               style: const TextStyle(
+  //                 fontSize: 14,
+  //                 fontWeight: FontWeight.w600,
+  //                 color: foodordecolour.ink,
+  //               ),
+  //             ),
+  //             Text(
+  //               "₹${item.price.toStringAsFixed(0)} each",
+  //               style: foodordecolour.body.copyWith(fontSize: 11),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // Widget _buildOrderItem(OrderItem item) {
+  //   return Padding(
+  //     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+  //     child: Row(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         // Quantity
+  //         Container(
+  //           width: 32.w,
+  //           height: 32.w,
+  //           alignment: Alignment.center,
+  //           decoration: BoxDecoration(
+  //             color: foodordecolour.bg,
+  //             borderRadius: BorderRadius.circular(8.r),
+  //             border: Border.all(color: foodordecolour.border),
+  //           ),
+  //           child: Text(
+  //             "${item.quantity}×",
+  //             style: TextStyle(
+  //               fontSize: 11.sp,
+  //               fontWeight: FontWeight.w700,
+  //               color: foodordecolour.ink,
+  //             ),
+  //           ),
+  //         ),
+  //
+  //         SizedBox(width: 12.w),
+  //
+  //         // Dish + Addons
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 item.dishName,
+  //                 maxLines: 2,
+  //                 overflow: TextOverflow.ellipsis,
+  //                 style: TextStyle(
+  //                   fontSize: 14.sp,
+  //                   fontWeight: FontWeight.w600,
+  //                   color: foodordecolour.ink,
+  //                 ),
+  //               ),
+  //
+  //               if (item.addons.isNotEmpty) ...[
+  //                 SizedBox(height: 8.h),
+  //
+  //                 // Container(
+  //                 //   width: double.infinity,
+  //                 //   padding: EdgeInsets.symmetric(
+  //                 //     horizontal: 10.w,
+  //                 //     vertical: 8.h,
+  //                 //   ),
+  //                 //   decoration: BoxDecoration(
+  //                 //     color: Colors.grey.shade50,
+  //                 //     borderRadius: BorderRadius.circular(8.r),
+  //                 //     border: Border.all(
+  //                 //       color: Colors.grey.shade300,
+  //                 //     ),
+  //                 //   ),
+  //                 //   child:
+  //                 Column(
+  //                   children: item.addons.map((addon) {
+  //                     return Padding(
+  //                       padding: EdgeInsets.symmetric(vertical: 3.h),
+  //                       child: Row(
+  //                         crossAxisAlignment: CrossAxisAlignment.start,
+  //                         children: [
+  //                           Icon(
+  //                             Icons.add_circle_outline_rounded,
+  //                             size: 14.sp,
+  //                             color: Colors.orange,
+  //                           ),
+  //
+  //                           SizedBox(width: 6.w),
+  //
+  //                           Expanded(
+  //                             child: Text(
+  //                               addon.addonName,
+  //                               style: TextStyle(
+  //                                 fontSize: 11.sp,
+  //                                 fontWeight: FontWeight.w500,
+  //                                 color: Colors.grey.shade800,
+  //                               ),
+  //                             ),
+  //                           ),
+  //
+  //                           Text(
+  //                             "x${addon.quantity}",
+  //                             style: TextStyle(
+  //                               fontSize: 11.sp,
+  //                               color: Colors.grey.shade700,
+  //                             ),
+  //                           ),
+  //
+  //                           // SizedBox(width: 10.w),
+  //
+  //                           // Text(
+  //                           //   "₹${addon.totalPrice.toStringAsFixed(0)}",
+  //                           //   style: TextStyle(
+  //                           //     fontSize: 11.sp,
+  //                           //     fontWeight: FontWeight.w600,
+  //                           //     color: Colors.grey.shade800,
+  //                           //   ),
+  //                           // ),
+  //                         ],
+  //                       ),
+  //                     );
+  //                   }).toList(),
+  //                 ),
+  //                 // ),
+  //               ],
+  //             ],
+  //           ),
+  //         ),
+  //
+  //         SizedBox(width: 12.w),
+  //
+  //         // Price
+  //         Column(
+  //           crossAxisAlignment: CrossAxisAlignment.end,
+  //           children: [
+  //             Text(
+  //               "₹${item.totalPrice.toStringAsFixed(0)}",
+  //               style: TextStyle(
+  //                 fontSize: 15.sp,
+  //                 fontWeight: FontWeight.w700,
+  //                 color: foodordecolour.ink,
+  //               ),
+  //             ),
+  //             // SizedBox(height: 4.h),
+  //             // Text(
+  //             //   "₹${item.price.toStringAsFixed(0)} each",
+  //             //   style: TextStyle(
+  //             //     fontSize: 11.sp,
+  //             //     color: Colors.grey.shade600,
+  //             //   ),
+  //             // ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildOrderSummary() {
     final order = widget.order;
@@ -1594,8 +1815,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
       child: Column(
         children: [
           if (order.subTotal > 0) _summaryRow("Subtotal", order.subTotal),
-          if (order.sgst > 0) _summaryRow("SGST", order.sgst),
-          if (order.cgst > 0) _summaryRow("CGST", order.cgst),
+          if ((order.sgst + order.sgst) > 0)
+            _summaryRow("GST", (order.sgst + order.sgst)),
+          // if (order.cgst > 0) _summaryRow("CGST", order.cgst),
           if (order.discountAmount > 0)
             _summaryRow(
               "Discount",
@@ -1913,62 +2135,64 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 32.h),
-        decoration: BoxDecoration(
-          color: foodordecolour.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36.w,
-              height: 4.h,
-              margin: EdgeInsets.only(bottom: 20.h),
-              decoration: BoxDecoration(
-                color: foodordecolour.border,
-                borderRadius: BorderRadius.circular(4.r),
+      builder: (_) => PlatformSafeArea(
+        child: Container(
+          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 32.h),
+          decoration: BoxDecoration(
+            color: foodordecolour.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36.w,
+                height: 4.h,
+                margin: EdgeInsets.only(bottom: 20.h),
+                decoration: BoxDecoration(
+                  color: foodordecolour.border,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
               ),
-            ),
-            const Text(
-              "How can we help?",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: foodordecolour.ink,
+              const Text(
+                "How can we help?",
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: foodordecolour.ink,
+                ),
               ),
-            ),
-            SizedBox(height: 16.h),
-            _helpTile(
-              icon: Icons.phone_outlined,
-              color: foodordecolour.blue,
-              title: "Call Support",
-              subtitle: "24/7 support team",
-              onTap: () {
-                Navigator.pop(context);
-                phonecall.makePhoneCall();
-              },
-            ),
-            _helpTile(
-              icon: Icons.flag_outlined,
-              color: foodordecolour.amber,
-              title: "Report an Issue",
-              subtitle: "Problem with your order?",
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CreateTicketScreen(
-                      orderId: widget.orderId,
-                      serviceType: "FOOD_AND_BEVERAGES",
+              SizedBox(height: 16.h),
+              _helpTile(
+                icon: Icons.phone_outlined,
+                color: foodordecolour.blue,
+                title: "Call Support",
+                subtitle: "24/7 support team",
+                onTap: () {
+                  Navigator.pop(context);
+                  phonecall.makePhoneCall();
+                },
+              ),
+              _helpTile(
+                icon: Icons.flag_outlined,
+                color: foodordecolour.amber,
+                title: "Report an Issue",
+                subtitle: "Problem with your order?",
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CreateTicketScreen(
+                        orderId: widget.orderId,
+                        serviceType: "FOOD_AND_BEVERAGES",
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2018,6 +2242,148 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
           color: foodordecolour.muted,
         ),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+class OrderItemTile extends StatefulWidget {
+  final OrderItem item;
+
+  const OrderItemTile({super.key, required this.item});
+
+  @override
+  State<OrderItemTile> createState() => _OrderItemTileState();
+}
+
+class _OrderItemTileState extends State<OrderItemTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32.w,
+            height: 32.w,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: foodordecolour.bg,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: foodordecolour.border),
+            ),
+            child: Text(
+              "${item.quantity}×",
+              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w700),
+            ),
+          ),
+
+          SizedBox(width: 12.w),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${item.dishName} ${item.metricQuantity} ${item.metrics}",
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+
+                if (item.addons.isNotEmpty) ...[
+                  SizedBox(height: 6.h),
+
+                  InkWell(
+                    borderRadius: BorderRadius.circular(6.r),
+                    onTap: () {
+                      setState(() {
+                        _expanded = !_expanded;
+                      });
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _expanded ? "Hide Add-ons" : "View Add-ons",
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        AnimatedRotation(
+                          turns: _expanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 250),
+                          child: Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 18.sp,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  AnimatedCrossFade(
+                    duration: const Duration(milliseconds: 250),
+                    crossFadeState: _expanded
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    firstChild: const SizedBox.shrink(),
+                    secondChild: Padding(
+                      padding: EdgeInsets.only(top: 8.h),
+                      child: Column(
+                        children: item.addons.map((addon) {
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 6.h),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.circle,
+                                  size: 6,
+                                  color: Colors.orange,
+                                ),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: Text(
+                                    addon.addonName,
+                                    style: TextStyle(fontSize: 11.sp),
+                                  ),
+                                ),
+                                Text(
+                                  "x${addon.quantity}",
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          SizedBox(width: 12.w),
+
+          Text(
+            "₹${item.totalPrice.toStringAsFixed(0)}",
+            style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
+          ),
+        ],
       ),
     );
   }

@@ -1,4 +1,3 @@
-
 import '../../screens/screens/orders/food orders/food_helper.dart';
 
 enum OrderStatus {
@@ -261,6 +260,9 @@ class OrderItem {
   final double gst;
   final double packingCharges;
   final String dishImage;
+  final List<Addon> addons;
+  final String? metrics;
+  final int? metricQuantity;
 
   OrderItem({
     required this.dishName,
@@ -270,6 +272,9 @@ class OrderItem {
     required this.gst,
     required this.packingCharges,
     required this.dishImage,
+    required this.addons,
+     this.metricQuantity,
+     this.metrics,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -281,6 +286,42 @@ class OrderItem {
       gst: (json['gst'] as num?)?.toDouble() ?? 0.0,
       packingCharges: (json['packingCharges'] as num?)?.toDouble() ?? 0.0,
       dishImage: json['dishImage'] ?? '',
+      addons:
+          (json['addons'] as List<dynamic>?)
+              ?.map((e) => Addon.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      metricQuantity: json['metricQuantity'] ?? 0,
+      metrics: json['metrics'] ?? '',
+    );
+  }
+}
+
+class Addon {
+  final int id;
+  final int addonId;
+  final String addonName;
+  final double addonPrice;
+  final int quantity;
+  final double totalPrice;
+
+  Addon({
+    required this.id,
+    required this.addonId,
+    required this.addonName,
+    required this.addonPrice,
+    required this.quantity,
+    required this.totalPrice,
+  });
+
+  factory Addon.fromJson(Map<String, dynamic> json) {
+    return Addon(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      addonId: (json['addonId'] as num?)?.toInt() ?? 0,
+      addonName: json['addonName'] ?? '',
+      addonPrice: (json['addonPrice'] as num?)?.toDouble() ?? 0.0,
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+      totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

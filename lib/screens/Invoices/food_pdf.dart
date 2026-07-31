@@ -71,10 +71,10 @@ class FoodPdf {
                 ),
               ),
             ),
-            pw.Spacer(),
+            // pw.Spacer(),
             pw.Expanded(
               child: pw.Text(
-                value,
+                ':  ${value}',
                 style: pw.TextStyle(
                   font: ttf,
                   fontSize: 10,
@@ -87,165 +87,381 @@ class FoodPdf {
       );
     }
 
+    final orderDate = DateTime.tryParse(safeText(data['orderDateAndTime']));
+
+    final invoiceNumber = orderDate != null
+        ? "INV-${orderDate.year}"
+              "${orderDate.month.toString().padLeft(2, '0')}"
+              "${orderDate.day.toString().padLeft(2, '0')}"
+              "${data['orderId']}"
+        : "INV-${data['orderId']}";
+
     // ---------------- Build PDF page ----------------
     pdf.addPage(
       pw.MultiPage(
         theme: pw.ThemeData.withFont(base: ttf, bold: ttf),
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
+        // pw.MultiPage(
+        //   pageTheme: pw.PageTheme(
+        //     margin: const pw.EdgeInsets.all(20),
+        //     buildBackground: (context) {
+        //       return pw.Container(
+        //         decoration: pw.BoxDecoration(
+        //           border: pw.Border.all(
+        //             color: PdfColors.black,
+        //             width: 1,
+        //           ),
+        //         ),
+        //       );
+        //     },
+        //   ),
         build: (context) => [
           // ---------------- HEADER ----------------
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          // pw.Row(
+          //   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     pw.Row(
+          //       children: [
+          //         pw.Container(width: 60, height: 60, child: pw.Image(image)),
+          //         pw.SizedBox(width: 10),
+          //       ],
+          //     ),
+          //     pw.Text(
+          //       'INVOICE',
+          //       style: pw.TextStyle(
+          //         font: ttf,
+          //         fontSize: 22,
+          //         fontWeight: pw.FontWeight.bold,
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          // pw.Padding(
+          //   padding: const pw.EdgeInsets.symmetric(
+          //     horizontal: 16,
+          //     vertical: 12,
+          //   ),
+          //   child: pw.Row(
+          //     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          //     crossAxisAlignment: pw.CrossAxisAlignment.center,
+          //     children: [
+          //       pw.Row(
+          //         children: [
+          //           pw.Container(width: 60, height: 60, child: pw.Image(image)),
+          //           pw.SizedBox(width: 10),
+          //         ],
+          //       ),
+          //       pw.Text(
+          //         'INVOICE',
+          //         style: pw.TextStyle(
+          //           font: ttf,
+          //           fontSize: 22,
+          //           fontWeight: pw.FontWeight.bold,
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          pw.Column(
             children: [
-              pw.Row(
-                children: [
-                  pw.Container(width: 60, height: 60, child: pw.Image(image)),
-                  pw.SizedBox(width: 10),
-                ],
-              ),
-              pw.Text(
-                'INVOICE',
-                style: pw.TextStyle(
-                  font: ttf,
-                  fontSize: 22,
-                  fontWeight: pw.FontWeight.bold,
+              pw.Padding(
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  children: [
+                    pw.Container(width: 60, height: 60, child: pw.Image(image)),
+                    pw.Center(
+                      child: pw.Column(
+                        children: [
+                          pw.Text(
+                            'INVOICE',
+                            style: pw.TextStyle(
+                              font: ttf,
+                              fontSize: 22,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.Text(
+                            invoiceNumber,
+                            style: pw.TextStyle(
+                              font: ttf,
+                              fontSize: 11,
+                              color: PdfColors.grey700,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
+
+              // pw.SizedBox(height: 4),
+              pw.Divider(),
             ],
           ),
-          pw.Divider(),
+          // pw.Divider(),
 
           // ---------------- ORDER INFO ----------------
+          // pw.Container(
+          //   padding: const pw.EdgeInsets.all(12),
+          //   decoration: pw.BoxDecoration(
+          //     border: pw.Border.all(color: PdfColors.grey400),
+          //     borderRadius: pw.BorderRadius.circular(6),
+          //   ),
+          //   child:
+          //   pw.Row(
+          //     crossAxisAlignment: pw.CrossAxisAlignment.start,
+          //     children: [
+          //       pw.Expanded(
+          //         child:
+          //         pw.Column(
+          //           crossAxisAlignment: pw.CrossAxisAlignment.start,
+          //           children: [
+          //             keyValue('Order ID', "#${safeText(data['orderId'])}"),
+          //             if (data['orderDateAndTime'] != null)
+          //               () {
+          //                 final raw = safeText(data['orderDateAndTime']);
+          //                 final parsed = DateTime.tryParse(raw);
+          //
+          //                 if (parsed != null) {
+          //                   // 🔥 Force UTC → convert to local (IST)
+          //                   final dt = DateTime.utc(
+          //                     parsed.year,
+          //                     parsed.month,
+          //                     parsed.day,
+          //                     parsed.hour,
+          //                     parsed.minute,
+          //                     parsed.second,
+          //                     parsed.millisecond,
+          //                   ).toLocal();
+          //
+          //                   final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+          //                   final minute = dt.minute.toString().padLeft(2, '0');
+          //                   final period = dt.hour >= 12 ? 'PM' : 'AM';
+          //
+          //                   return pw.Column(
+          //                     crossAxisAlignment: pw.CrossAxisAlignment.start,
+          //                     children: [
+          //                       keyValue(
+          //                         'Date',
+          //                         "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}",
+          //                       ),
+          //                       keyValue(
+          //                         'Time',
+          //                         "${hour.toString().padLeft(2, '0')}:$minute $period",
+          //                       ),
+          //                     ],
+          //                   );
+          //                 }
+          //                 return pw.Container();
+          //               }(),
+          //             keyValue(
+          //               'Order Type',
+          //               data['orderType']?.toString() == "TABLE_DINE_IN"
+          //                   ? 'Dineout'
+          //                   : safeText(data['orderType']).replaceAll('_', ' '),
+          //             ),
+          //             keyValue(
+          //               'Payment',
+          //               safeText(data['paymentMethod']).replaceAll('_', ' '),
+          //             ),
+          //             if (data['transactionId'] != null &&
+          //                 data['transactionId'].toString().trim().isNotEmpty &&
+          //                 data['paymentMethod'] != "Maamaas_Wallet")
+          //               keyValue(
+          //                 'Transaction ID',
+          //                 safeText(data['transactionId']),
+          //               ),
+          //             if ((data["sheduled"] ?? false) == true) ...[
+          //               pw.Text(
+          //                 'Scheduled Details',
+          //                 style: pw.TextStyle(
+          //                   font: ttf,
+          //                   fontSize: 12,
+          //                   fontWeight: pw.FontWeight.bold,
+          //                 ),
+          //               ),
+          //               if ((data['date']?.toString().isNotEmpty ?? false))
+          //                 keyValue('Scheduled Date', safeText(data['date'])),
+          //               if ((data['time']?.toString().isNotEmpty ?? false))
+          //                 keyValue('Scheduled Time', safeText(data['time'])),
+          //             ],
+          //           ],
+          //         ),
+          //       ),
+          //       pw.SizedBox(width: 20),
+          //       pw.Expanded(
+          //         child: pw.Column(
+          //           crossAxisAlignment: pw.CrossAxisAlignment.start,
+          //           children: [
+          //             keyValue(
+          //               'Restaurant Name',
+          //               safeText(
+          //                 data['vendorRegisteredName'],
+          //               ).replaceAll('_', ' ').toUpperCase(),
+          //             ),
+          //             keyValue('FSSAI No', safeText(data['vendorFssai'])),
+          //             keyValue('GSTIN', safeText(data['vendorGstIn'])),
+          //             keyValue(
+          //               'Restaurant Address',
+          //               [
+          //                     data['vendorFullAddress'],
+          //                     // data['vendorCity'],
+          //                     // data['vendorState'],
+          //                   ]
+          //                   .where((e) => e != null && e.toString().isNotEmpty)
+          //                   .join(', '),
+          //             ),
+          //             if (isDelivery) ...[
+          //               keyValue(
+          //                 'Customer Name',
+          //                 safeText(data['deliveryUserName']).toUpperCase(),
+          //               ),
+          //               keyValue(
+          //                 'Mobile Number',
+          //                 data['mobileNo'] != null
+          //                     ? "+91 ${data['mobileNo']}"
+          //                     : "N/A",
+          //               ),
+          //               keyValue(
+          //                 'Delivery Address',
+          //                 safeText(
+          //                   data['deliveryAddress'],
+          //                 ).replaceAll('_', ' '),
+          //               ),
+          //             ],
+          //           ],
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
           pw.Container(
             padding: const pw.EdgeInsets.all(12),
-            decoration: pw.BoxDecoration(
-              border: pw.Border.all(color: PdfColors.grey400),
-              borderRadius: pw.BorderRadius.circular(6),
-            ),
-            child: pw.Row(
+            // decoration: pw.BoxDecoration(
+            //   border: pw.Border.all(color: PdfColors.grey400),
+            //   borderRadius: pw.BorderRadius.circular(6),
+            // ),
+            child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Expanded(
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      keyValue('Order ID', "#${safeText(data['orderId'])}"),
-                      if (data['orderDateAndTime'] != null)
-                        () {
-                          final raw = safeText(data['orderDateAndTime']);
-                          final parsed = DateTime.tryParse(raw);
+                keyValue('Order ID', "#${safeText(data['orderId'])}"),
 
-                          if (parsed != null) {
-                            // 🔥 Force UTC → convert to local (IST)
-                            final dt = DateTime.utc(
-                              parsed.year,
-                              parsed.month,
-                              parsed.day,
-                              parsed.hour,
-                              parsed.minute,
-                              parsed.second,
-                              parsed.millisecond,
-                            ).toLocal();
+                if (data['orderDateAndTime'] != null)
+                  () {
+                    final raw = safeText(data['orderDateAndTime']);
+                    final parsed = DateTime.tryParse(raw);
 
-                            final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-                            final minute = dt.minute.toString().padLeft(2, '0');
-                            final period = dt.hour >= 12 ? 'PM' : 'AM';
+                    if (parsed != null) {
+                      final dt = DateTime.utc(
+                        parsed.year,
+                        parsed.month,
+                        parsed.day,
+                        parsed.hour,
+                        parsed.minute,
+                        parsed.second,
+                        parsed.millisecond,
+                      ).toLocal();
 
-                            return pw.Column(
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                keyValue(
-                                  'Date',
-                                  "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}",
-                                ),
-                                keyValue(
-                                  'Time',
-                                  "${hour.toString().padLeft(2, '0')}:$minute $period",
-                                ),
-                              ],
-                            );
-                          }
-                          return pw.Container();
-                        }(),
-                      keyValue(
-                        'Order Type',
-                        data['orderType']?.toString() == "TABLE_DINE_IN"
-                            ? 'Dineout'
-                            : safeText(data['orderType']).replaceAll('_', ' '),
-                      ),
-                      keyValue(
-                        'Payment',
-                        safeText(data['paymentMethod']).replaceAll('_', ' '),
-                      ),
-                      if (data['transactionId'] != null &&
-                          data['transactionId'].toString().trim().isNotEmpty &&
-                          data['paymentMethod'] != "Maamaas_Wallet")
-                        keyValue(
-                          'Transaction ID',
-                          safeText(data['transactionId']),
-                        ),
-                      if ((data["sheduled"] ?? false) == true) ...[
-                        pw.Text(
-                          'Scheduled Details',
-                          style: pw.TextStyle(
-                            font: ttf,
-                            fontSize: 12,
-                            fontWeight: pw.FontWeight.bold,
+                      final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+                      final minute = dt.minute.toString().padLeft(2, '0');
+                      final period = dt.hour >= 12 ? 'PM' : 'AM';
+
+                      return pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          keyValue(
+                            'Date',
+                            "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}",
                           ),
-                        ),
-                        if ((data['date']?.toString().isNotEmpty ?? false))
-                          keyValue('Scheduled Date', safeText(data['date'])),
-                        if ((data['time']?.toString().isNotEmpty ?? false))
-                          keyValue('Scheduled Time', safeText(data['time'])),
-                      ],
-                    ],
-                  ),
+                          keyValue(
+                            'Time',
+                            "${hour.toString().padLeft(2, '0')}:$minute $period",
+                          ),
+                        ],
+                      );
+                    }
+
+                    return pw.Container();
+                  }(),
+
+                keyValue(
+                  'Order Type',
+                  data['orderType']?.toString() == "TABLE_DINE_IN"
+                      ? 'Dineout'
+                      : safeText(data['orderType']).replaceAll('_', ' '),
                 ),
-                pw.SizedBox(width: 20),
-                pw.Expanded(
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      keyValue(
-                        'Restaurant Name',
-                        safeText(
-                          data['vendorRegisteredName'],
-                        ).replaceAll('_', ' ').toUpperCase(),
-                      ),
-                      keyValue('FSSAI No', safeText(data['vendorFssai'])),
-                      keyValue('GSTIN', safeText(data['vendorGstIn'])),
-                      keyValue(
-                        'Restaurant Address',
-                        [
-                              data['vendorFullAddress'],
-                              // data['vendorCity'],
-                              // data['vendorState'],
-                            ]
-                            .where((e) => e != null && e.toString().isNotEmpty)
-                            .join(', '),
-                      ),
-                      if (isDelivery) ...[
-                        keyValue(
-                          'Customer Name',
-                          safeText(data['deliveryUserName']).toUpperCase(),
-                        ),
-                        keyValue(
-                          'Mobile Number',
-                          data['mobileNo'] != null
-                              ? "+91 ${data['mobileNo']}"
-                              : "N/A",
-                        ),
-                        keyValue(
-                          'Delivery Address',
-                          safeText(
-                            data['deliveryAddress'],
-                          ).replaceAll('_', ' '),
-                        ),
-                      ],
-                    ],
-                  ),
+
+                keyValue(
+                  'Payment',
+                  safeText(data['paymentMethod']).replaceAll('_', ' '),
                 ),
+
+                if (data['transactionId'] != null &&
+                    data['transactionId'].toString().trim().isNotEmpty &&
+                    data['paymentMethod'] != "Maamaas_Wallet")
+                  keyValue('Transaction ID', safeText(data['transactionId'])),
+
+                if ((data["sheduled"] ?? false) == true) ...[
+                  pw.SizedBox(height: 6),
+                  pw.Text(
+                    'Scheduled Details',
+                    style: pw.TextStyle(
+                      font: ttf,
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  if ((data['date']?.toString().isNotEmpty ?? false))
+                    keyValue('Scheduled Date', safeText(data['date'])),
+                  if ((data['time']?.toString().isNotEmpty ?? false))
+                    keyValue('Scheduled Time', safeText(data['time'])),
+                ],
+
+                pw.SizedBox(height: 10),
+
+                keyValue(
+                  'Restaurant Name',
+                  safeText(
+                    data['vendorRegisteredName'],
+                  ).replaceAll('_', ' ').toUpperCase(),
+                ),
+
+                keyValue('FSSAI No', safeText(data['vendorFssai'])),
+
+                keyValue('GSTIN', safeText(data['vendorGstIn'])),
+
+                keyValue(
+                  'Restaurant Address',
+                  [data['vendorFullAddress']]
+                      .where((e) => e != null && e.toString().isNotEmpty)
+                      .join(', '),
+                ),
+
+                if (isDelivery) ...[
+                  pw.SizedBox(height: 10),
+                  keyValue(
+                    'Name',
+                    safeText(data['deliveryUserName']).toUpperCase(),
+                  ),
+                  keyValue(
+                    'Mobile Number',
+                    data['mobileNo'] != null
+                        ? "+91 ${data['mobileNo']}"
+                        : "N/A",
+                  ),
+                  keyValue(
+                    'Delivery Address',
+                    safeText(data['deliveryAddress']).replaceAll('_', ' '),
+                  ),
+                ],
               ],
             ),
           ),
@@ -253,7 +469,7 @@ class FoodPdf {
           pw.SizedBox(height: 20),
 
           pw.TableHelper.fromTextArray(
-            headers: ['#', 'Item', 'Qty', 'Price', 'Total'],
+            headers: ['#', 'Item', 'Qty', 'Price', 'Gst', 'Total'],
             headerStyle: pw.TextStyle(
               font: ttf,
               fontSize: 10,
@@ -271,17 +487,52 @@ class FoodPdf {
               2: pw.Alignment.center,
               3: pw.Alignment.center,
               4: pw.Alignment.center,
+              5: pw.Alignment.center,
             },
-            data: List.generate(items.length, (i) {
-              final item = items[i];
-              return [
-                (i + 1).toString(),
-                safeText(item['dishName']),
-                safeText(item['quantity']),
-                "₹${formatAmount(item['price'])}",
-                "₹${formatAmount(item['totalPrice'])}",
-              ];
-            }),
+            // data: List.generate(items.length, (i) {
+            //   final item = items[i];
+            //   return [
+            //     (i + 1).toString(),
+            //     safeText(item['dishName']),
+            //     safeText(item['quantity']),
+            //     "₹${formatAmount(item['price'])}",
+            //     "₹${formatAmount(item['sgst'] + item['cgst'])}",
+            //     "₹${formatAmount(item['totalPrice'])}",
+            //   ];
+            // }),
+            data: () {
+              final List<List<String>> rows = [];
+
+              for (int i = 0; i < items.length; i++) {
+                final item = items[i];
+
+                // Main item row
+                rows.add([
+                  (i + 1).toString(),
+                  safeText(item['dishName']),
+                  safeText(item['quantity']),
+                  "₹${formatAmount(item['price'])}",
+                  "₹${formatAmount((item['sgst'] ?? 0) + (item['cgst'] ?? 0))}",
+                  "₹${formatAmount(item['totalPrice'])}",
+                ]);
+
+                // Addons (if any)
+                final addons = List.from(item['addons'] ?? []);
+
+                for (final addon in addons) {
+                  rows.add([
+                    "", // No serial number
+                    "   ↳ ${safeText(addon['addonName'])}",
+                    safeText(addon['quantity']),
+                    "₹${formatAmount(addon['addonPrice'])}",
+                    "",
+                    "₹${formatAmount(addon['totalPrice'])}",
+                  ]);
+                }
+              }
+
+              return rows;
+            }(),
           ),
 
           pw.SizedBox(height: 20),

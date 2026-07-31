@@ -53,8 +53,8 @@ class _SignupState extends State<Signup> {
   void initState() {
     super.initState();
     _prefillReferralCode();
-    debugPrint("REAL SIGNUP SCREEN OPENED");
-    debugPrint("Signup referralCode = ${widget.referralCode}");
+    // debugPrint("REAL SIGNUP SCREEN OPENED");
+    // debugPrint("Signup referralCode = ${widget.referralCode}");
   }
 
   Future<void> _prefillReferralCode() async {

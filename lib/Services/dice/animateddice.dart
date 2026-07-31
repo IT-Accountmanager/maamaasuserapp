@@ -1,76 +1,167 @@
-// lib/widgets/animated_dice.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'cubeface.dart';
 
-import 'dice.dart';
-
-class AnimatedDice extends StatefulWidget {
+class AnimatedDiceCube extends StatefulWidget {
   final double size;
-  final void Function(int result) onRollComplete;
+  final Function(int) onRollComplete;
 
-  const AnimatedDice({
+  const AnimatedDiceCube({
     super.key,
     required this.onRollComplete,
-    this.size = 100,
+    this.size = 120,
   });
 
   @override
-  State<AnimatedDice> createState() => AnimatedDiceState();
+  State<AnimatedDiceCube> createState() => AnimatedDiceCubeState();
 }
 
-class AnimatedDiceState extends State<AnimatedDice>
+class AnimatedDiceCubeState extends State<AnimatedDiceCube>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  int _displayValue = 1;
-  bool _rolling = false;
-  final _random = Random();
+  late AnimationController controller;
+
+  late Animation<double> rotateX;
+  late Animation<double> rotateY;
+  late Animation<double> rotateZ;
+
+  final random = Random();
+
+  bool rolling = false;
+
+  int value = 1;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+
+    controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1800),
     );
+
+    rotateX = Tween<double>(
+      begin: 0,
+      end: pi * 8,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeOut));
+
+    rotateY = Tween<double>(
+      begin: 0,
+      end: pi * 7,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeOut));
+
+    rotateZ = Tween<double>(
+      begin: 0,
+      end: pi * 6,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeOut));
+  }
+
+  Future<void> roll() async {
+    if (rolling) return;
+
+    rolling = true;
+
+    controller.reset();
+
+    controller.forward();
+
+    await Future.delayed(const Duration(milliseconds: 1600));
+
+    setState(() {
+      value = random.nextInt(6) + 1;
+    });
+
+    await controller.forward(from: 0);
+
+    rolling = false;
+
+    widget.onRollComplete(value);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 
-  Future<void> roll() async {
-    if (_rolling) return;
-    setState(() => _rolling = true);
-
-    final finalValue = _random.nextInt(6) + 1;
-
-    // Rapidly cycle through random faces to sell the "rolling" effect.
-    const totalTicks = 12;
-    for (int i = 0; i < totalTicks; i++) {
-      await Future.delayed(Duration(milliseconds: 60 + i * 8)); // slow down over time
-      setState(() {
-        _displayValue = i == totalTicks - 1 ? finalValue : _random.nextInt(6) + 1;
-      });
-    }
-
-    setState(() => _rolling = false);
-    widget.onRollComplete(finalValue);
+  Matrix4 _faceTransform({
+    double x = 0,
+    double y = 0,
+    double z = 0,
+    double rx = 0,
+    double ry = 0,
+  }) {
+    return Matrix4.identity()
+      ..translate(x, y, z)
+      ..rotateX(rx)
+      ..rotateY(ry);
   }
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: _rolling ? 1 : 0),
-      duration: const Duration(milliseconds: 150),
-      builder: (context, wobble, child) {
-        return Transform.rotate(
-          angle: _rolling ? sin(_controller.value * 20) * 0.15 : 0,
-          child: child,
+    final depth = widget.size / 2;
+
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (_, __) {
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.002)
+            ..rotateX(rotateX.value)
+            ..rotateY(rotateY.value)
+            ..rotateZ(rotateZ.value),
+          child: SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CubeFace(
+                  value: 1,
+                  faceColor: Colors.white,
+                  size: widget.size,
+                  transform: _faceTransform(z: depth),
+                ),
+
+                CubeFace(
+                  value: 6,
+                  faceColor: Colors.grey.shade100,
+                  size: widget.size,
+                  transform: _faceTransform(z: -depth, ry: pi),
+                ),
+
+                CubeFace(
+                  faceColor: Colors.grey.shade100,
+                  value: 2,
+                  size: widget.size,
+                  transform: _faceTransform(x: depth, ry: pi / 2),
+                ),
+
+                CubeFace(
+                  faceColor: Colors.grey.shade100,
+                  value: 5,
+                  size: widget.size,
+                  transform: _faceTransform(x: -depth, ry: -pi / 2),
+                ),
+
+                CubeFace(
+                  faceColor: Colors.grey.shade100,
+                  value: 3,
+                  size: widget.size,
+                  transform: _faceTransform(y: -depth, rx: pi / 2),
+                ),
+
+                CubeFace(
+                  faceColor: Colors.grey.shade100,
+                  value: 4,
+                  size: widget.size,
+                  transform: _faceTransform(y: depth, rx: -pi / 2),
+                ),
+              ],
+            ),
+          ),
         );
       },
-      child: DiceFace(value: _displayValue, size: widget.size),
     );
   }
 }

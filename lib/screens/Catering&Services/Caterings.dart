@@ -115,171 +115,161 @@ class _CateringsPageState extends State<CateringsPage> {
                   return const Center(child: Text("No catering vendors found"));
                 }
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: banners.length,
-                      itemBuilder: (context, index) {
-                        final banner = banners[index];
+                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  itemCount: banners.length,
+                  itemBuilder: (context, index) {
+                    final banner = banners[index];
 
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => CateringVendorScreen(
-                                  vendorId: banner.vendorId,
-                                ),
-                              ),
-                            );
-                          },
-                          child: IntrinsicHeight(
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: restaurentsnewcolour.surface,
-                                borderRadius: BorderRadius.circular(
-                                  restaurentsnewcolour.cardRadius.r,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.07),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // IMAGE
-                                  AspectRatio(
-                                    aspectRatio: 10 / 4,
-                                    child: Stack(
-                                      fit: StackFit.expand,
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.vertical(
-                                            top: Radius.circular(
-                                              restaurentsnewcolour.cardRadius.r,
-                                            ),
-                                          ),
-                                          child: banner.companyBanner.isNotEmpty
-                                              ? Image.network(
-                                                  banner.companyBanner,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (_, __, ___) =>
-                                                      _placeholder(),
-                                                )
-                                              : _placeholder(),
-                                        ),
-
-                                        Positioned(
-                                          bottom: 0,
-                                          left: 0,
-                                          right: 0,
-                                          height: 60,
-                                          child: const DecoratedBox(
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                begin: Alignment.topCenter,
-                                                end: Alignment.bottomCenter,
-                                                colors: [
-                                                  Colors.transparent,
-                                                  Color(0x66000000),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // INFO
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 12.w,
-                                      vertical: 10.h,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                banner.companyName
-                                                    .toUpperCase(),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w700,
-                                                  color:
-                                                      restaurentsnewcolour.text,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-
-                                        SizedBox(height: 6.h),
-
-                                        Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                '${banner.addressLine}, ${banner.city}',
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: 11.sp,
-                                                  color: restaurentsnewcolour
-                                                      .textLight,
-                                                ),
-                                              ),
-                                            ),
-
-                                            SizedBox(width: 8.w),
-
-                                            Text(
-                                              Distancehelpermethod.formatDistance(
-                                                banner.distance,
-                                              ),
-                                              style: TextStyle(
-                                                fontSize: 12.sp,
-                                                fontWeight: FontWeight.w600,
-                                                color: restaurentsnewcolour
-                                                    .textMuted,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                CateringVendorScreen(vendorId: banner.vendorId),
                           ),
                         );
                       },
-                    ),
-                  ],
+                      child: IntrinsicHeight(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: restaurentsnewcolour.surface,
+                            borderRadius: BorderRadius.circular(
+                              restaurentsnewcolour.cardRadius.r,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.07),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // IMAGE
+                              AspectRatio(
+                                aspectRatio: 10 / 4,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(
+                                          restaurentsnewcolour.cardRadius.r,
+                                        ),
+                                      ),
+                                      child: banner.companyBanner.isNotEmpty
+                                          ? Image.network(
+                                              banner.companyBanner,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  _placeholder(),
+                                            )
+                                          : _placeholder(),
+                                    ),
+
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      height: 60,
+                                      child: const DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.transparent,
+                                              Color(0x66000000),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // INFO
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 10.h,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            banner.companyName.toUpperCase(),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: restaurentsnewcolour.text,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    SizedBox(height: 6.h),
+
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            '${banner.addressLine}, ${banner.city}',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 11.sp,
+                                              color: restaurentsnewcolour
+                                                  .textLight,
+                                            ),
+                                          ),
+                                        ),
+
+                                        SizedBox(width: 8.w),
+
+                                        Text(
+                                          Distancehelpermethod.formatDistance(
+                                            banner.distance,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 12.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                restaurentsnewcolour.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),

@@ -1,4 +1,3 @@
-
 String? safeString(dynamic value) {
   if (value == null) return null;
   if (value is String) return value;
@@ -193,6 +192,8 @@ class CartItem {
   final bool available;
   bool shedule;
   List<CartAddon> addons;
+  final String metrics;
+  final int metricQuantity;
 
   CartItem({
     required this.itemId,
@@ -210,6 +211,8 @@ class CartItem {
     required this.available,
     required this.shedule,
     required this.addons,
+    required this.metricQuantity,
+    required this.metrics,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -235,12 +238,12 @@ class CartItem {
       dishId: json['dishId'] ?? 0,
       gst: (json['gst'] ?? 0).toDouble(),
       packingCharges: (json['packingCharges'] ?? 0).toDouble(),
-      quantity: json['quantity'] ?? 0,
+      // quantity: json['quantity'] ?? 0,
       chefType: _safeStrOr(json['chefType']), // ✅ safe
       totalPrice: (json['totalPrice'] ?? 0).toDouble(),
       dishImage: _safeStr(json['dishImage']), // ✅ safe (nullable — Map → url)
       actualPrice: (json['actualPrice'] ?? 0).toDouble(),
-      balanceQuantity: json['balanceQuantity'] ?? 0,
+      // balanceQuantity: json['balanceQuantity'] ?? 0,
       available: json['available'] == true,
       shedule: parsedShedule,
       addons:
@@ -248,6 +251,13 @@ class CartItem {
               ?.map((addons) => CartAddon.fromJson(addons))
               .toList() ??
           [],
+      // metricQuantity: json['metricQuantity'] ?? 0,
+      metrics: json['metrics'] ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+
+      balanceQuantity: (json['balanceQuantity'] as num?)?.toInt() ?? 0,
+
+      metricQuantity: (json['metricQuantity'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -257,7 +267,7 @@ class CartAddon {
   final int addonId;
   final String addonName;
   final double addonPrice;
-   int quantity;
+  int quantity;
   final double totalPrice;
 
   CartAddon({

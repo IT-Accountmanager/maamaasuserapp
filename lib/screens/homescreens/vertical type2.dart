@@ -1,4 +1,5 @@
 import 'package:maamaas/screens/Food&beverages/RestaurentsScreen/Restaurentsmainscreen.dart';
+import '../Food&beverages/RestaurentsScreen/restarnetshomepage.dart';
 import '../Logistics&supply/logistics_homepage.dart';
 import 'package:flutter/material.dart';
 
@@ -28,6 +29,7 @@ class Vertical extends StatelessWidget {
       'image': 'assets/FOODBEVERAGES.webp',
       'title': 'Food & Beverages',
       'color': Color(0xFFFF6B35),
+      // 'route': Restaurentshmepage(scrollController: _scrollController),
       'route': Restaurents(scrollController: _scrollController),
     },
     // {

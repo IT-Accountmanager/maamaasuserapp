@@ -4,6 +4,9 @@ import 'package:maamaas/screens/Food&beverages/Menu/menu_screen.dart';
 import '../../../Models/promotions_model/promotions_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
+
+import '../../../widgets/safearea.dart';
+
 class PromotionPopup {
   static void show(BuildContext context, Campaign ads) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -20,7 +23,7 @@ class PromotionPopup {
             (ads.mediaType?.toUpperCase() == "VIDEO") ||
             url.toLowerCase().contains(".mp4");
 
-        return SafeArea(
+        return PlatformSafeArea(
           child: Container(
             height: screenHeight * 0.60,
             width: double.infinity,
@@ -66,38 +69,36 @@ class PromotionPopup {
                             child: isVideo
                                 ? _VideoPlayerWidget(url: url)
                                 :
-                            // Image.network(
-                            //         url,
-                            //         fit: BoxFit.fill,
-                            //         loadingBuilder: (context, child, progress) {
-                            //           if (progress == null) return child;
-                            //           return const Center(
-                            //             child: CircularProgressIndicator(),
-                            //           );
-                            //         },
-                            //         errorBuilder: (context, error, stackTrace) {
-                            //           return const Center(
-                            //             child: Icon(
-                            //               Icons.broken_image,
-                            //               size: 40,
-                            //             ),
-                            //           );
-                            //         },
-                            //       ),
-                            CustomCachedImage(
-                              imageUrl: url,
-                              fit: BoxFit.fill,
-                              width: double.infinity,
-                              height: double.infinity,
-                              isProfile: false,
+                                  // Image.network(
+                                  //         url,
+                                  //         fit: BoxFit.fill,
+                                  //         loadingBuilder: (context, child, progress) {
+                                  //           if (progress == null) return child;
+                                  //           return const Center(
+                                  //             child: CircularProgressIndicator(),
+                                  //           );
+                                  //         },
+                                  //         errorBuilder: (context, error, stackTrace) {
+                                  //           return const Center(
+                                  //             child: Icon(
+                                  //               Icons.broken_image,
+                                  //               size: 40,
+                                  //             ),
+                                  //           );
+                                  //         },
+                                  //       ),
+                                  CustomCachedImage(
+                                    imageUrl: url,
+                                    fit: BoxFit.fill,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    isProfile: false,
 
-                              errorWidget: const Center(
-                                child: Icon(
-                                  Icons.broken_image,
-                                  size: 40,
-                                ),
-                              ), borderRadius: 0,
-                            )
+                                    errorWidget: const Center(
+                                      child: Icon(Icons.broken_image, size: 40),
+                                    ),
+                                    borderRadius: 0,
+                                  ),
                           ),
                         ),
                       ),

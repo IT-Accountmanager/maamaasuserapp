@@ -2196,7 +2196,7 @@ class _ReferEarnScreenState extends State<ReferEarnScreen> {
     final type = _getReferralType(cat);
     final link =
         'https://applink.maamaas.com/referral?type=$type&referralCode=${Uri.encodeComponent(code)}';
-    print(link);
+    // print(link);
     Clipboard.setData(
       ClipboardData(
         text:
@@ -2210,7 +2210,7 @@ class _ReferEarnScreenState extends State<ReferEarnScreen> {
     final type = _getReferralType(cat);
     final link =
         'https://applink.maamaas.com/referral?type=$type&referralCode=${Uri.encodeComponent(code)}';
-    print(link);
+    // print(link);
     // ignore: deprecated_member_use
     Share.share(
       '🎉 Join Maamaas using my referral code: $code\n\n📲 Tap to download & sign up:\n$link',

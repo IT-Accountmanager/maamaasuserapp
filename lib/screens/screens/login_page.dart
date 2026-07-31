@@ -12,6 +12,7 @@ import '../../Services/Auth_service/Apiclient.dart';
 import '../../widgets/app_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../homescreens/home_page.dart';
 import 'forgetpassword_screen.dart';
 import '../Mainscreen.dart';
 
@@ -39,6 +40,7 @@ class _LoginPageState extends State<LoginScreen>
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
   final _fcm = FirebaseMessaging.instance;
+  final ScrollController _scrollController = ScrollController();
 
   bool _obscure = true;
   bool _isLoading = false;
@@ -176,6 +178,7 @@ class _LoginPageState extends State<LoginScreen>
         MaterialPageRoute(builder: (_) => MainScreenfood(showPromotion: true)),
         (r) => false,
       );
+
     } catch (e, st) {
       //       debugPrint("❌ Login exception: $e");
       //       debugPrint("📍 StackTrace: $st");

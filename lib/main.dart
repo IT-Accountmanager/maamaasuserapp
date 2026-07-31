@@ -103,16 +103,16 @@ class _BootstrapAppState extends State<BootstrapApp> {
   // ── cPanel App Links ──────────────────────────────────────────────────────
 
   Future<void> waitForReferrer() async {
-    debugPrint("SPLASH START");
-    debugPrint("WAITING FOR REFERRER");
+    // debugPrint("SPLASH START");
+    // debugPrint("WAITING FOR REFERRER");
 
     try {
       await _referrerCompleter.future.timeout(const Duration(seconds: 5));
     } catch (e) {
-      debugPrint("REFERRER TIMEOUT: $e");
+      // debugPrint("REFERRER TIMEOUT: $e");
     }
 
-    debugPrint("REFERRER COMPLETED");
+    // debugPrint("REFERRER COMPLETED");
   }
 
   Future<void> _initAppLinks() async {
@@ -165,7 +165,7 @@ class _BootstrapAppState extends State<BootstrapApp> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(kPendingReferralCodeKey, referralCode);
       //       debugPrint("✅ Referral code saved: $referralCode");
-      debugPrint("REFERRAL SAVED = $referralCode");
+      // debugPrint("REFERRAL SAVED = $referralCode");
     } catch (e) {
       //       debugPrint("❌ Could not save referral code: $e");
     }
@@ -195,14 +195,14 @@ class _BootstrapAppState extends State<BootstrapApp> {
 
       final referrer = referrerDetails.installReferrer;
 
-      debugPrint("📥 Referrer string: $referrer");
+      // debugPrint("📥 Referrer string: $referrer");
 
       if (referrer != null && referrer.isNotEmpty) {
-        debugPrint("RAW REFERRER = $referrer");
+        // debugPrint("RAW REFERRER = $referrer");
 
         final uri = Uri.parse("https://dummy?$referrer");
 
-        debugPrint("ALL PARAMS = ${uri.queryParameters}");
+        // debugPrint("ALL PARAMS = ${uri.queryParameters}");
 
         final referralCode = uri.queryParameters['referralCode'];
 
@@ -214,9 +214,9 @@ class _BootstrapAppState extends State<BootstrapApp> {
             referralCode,
             // "TEST123"
           );
-          debugPrint("REFERRAL = ${prefs.getString(kPendingReferralCodeKey)}");
+          // debugPrint("REFERRAL = ${prefs.getString(kPendingReferralCodeKey)}");
 
-          debugPrint("✅ Referral saved: $referralCode");
+          // debugPrint("✅ Referral saved: $referralCode");
         }
 
         final campaignIdStr = uri.queryParameters['campaignId'];
@@ -230,7 +230,7 @@ class _BootstrapAppState extends State<BootstrapApp> {
         }
       }
     } catch (e) {
-      debugPrint("❌ Referrer error: $e");
+      // debugPrint("❌ Referrer error: $e");
     } finally {
       if (!_referrerCompleter.isCompleted) {
         _referrerCompleter.complete();

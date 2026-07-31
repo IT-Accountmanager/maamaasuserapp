@@ -1,5 +1,6 @@
 import '../../Services/Auth_service/promotion_services_Authservice.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
+import '../../widgets/safearea.dart';
 import '../../widgets/widgets/food/currentcart_notifier.dart';
 import '../../Models/promotions_model/promotions_model.dart';
 import '../screens/advertisements/banneradvertisement.dart';
@@ -152,8 +153,8 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       final freshCart = results[0] as CartModel?;
       final walletData = results[1] as Wallet;
       final ads = results[2] as List<Campaign>;
-      debugPrint("freshCart items: ${freshCart?.cartItems.length}");
-      debugPrint("current cartData items: ${cartData?.cartItems.length}");
+      // debugPrint("freshCart items: ${freshCart?.cartItems.length}");
+      // debugPrint("current cartData items: ${cartData?.cartItems.length}");
 
       setState(() {
         if (cartData == null) {
@@ -251,6 +252,10 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     setState(() {
       cartData!.cartItems = socketItems.map((json) {
         final map = json as Map<String, dynamic>;
+        // debugPrint("========== SOCKET ITEM ==========");
+        map.forEach((key, value) {
+          // debugPrint("$key -> ${value.runtimeType} : $value");
+        });
         final idx = oldItems.indexWhere((i) => i.itemId == map['itemId']);
         if (idx != -1) {
           final old = oldItems[idx];
@@ -260,33 +265,65 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
             dishId: old.dishId,
             chefType: old.chefType,
             dishImage: old.dishImage,
-            actualPrice: (map['actualPrice'] ?? old.actualPrice).toDouble(),
-            gst: (map['gst'] ?? old.gst).toDouble(),
-            quantity: map['quantity'] ?? old.quantity,
-            price: (map['price'] ?? old.price).toDouble(),
-            totalPrice: (map['totalPrice'] ?? old.totalPrice).toDouble(),
-            packingCharges: (map['packingCharges'] ?? old.packingCharges)
-                .toDouble(),
-            balanceQuantity: map['balanceQuantity'] ?? old.balanceQuantity,
+            // actualPrice: (map['actualPrice'] ?? old.actualPrice).toDouble(),
+            actualPrice:
+                (map['actualPrice'] as num?)?.toDouble() ?? old.actualPrice,
+            // gst: (map['gst'] ?? old.gst).toDouble(),
+            gst: (map['gst'] as num?)?.toDouble() ?? old.gst,
+
+            // quantity: map['quantity'] ?? old.quantity,
+            quantity: (map['quantity'] as num?)?.toInt() ?? old.quantity,
+            // price: (map['price'] ?? old.price).toDouble(),
+            price: (map['price'] as num?)?.toDouble() ?? old.price,
+            // totalPrice: (map['totalPrice'] ?? old.totalPrice).toDouble(),
+            totalPrice:
+                (map['totalPrice'] as num?)?.toDouble() ?? old.totalPrice,
+            // packingCharges: (map['packingCharges'] ?? old.packingCharges)
+            //     .toDouble(),
+            packingCharges:
+                (map['packingCharges'] as num?)?.toDouble() ??
+                old.packingCharges,
+
+            // balanceQuantity: map['balanceQuantity'] ?? old.balanceQuantity,
+            balanceQuantity:
+                (map['balanceQuantity'] as num?)?.toInt() ??
+                old.balanceQuantity,
             available: map['available'] ?? old.available,
             shedule: map.containsKey('shedule')
                 ? map['shedule'] == true
                 : old.shedule,
             addons: old.addons,
+            metrics: map['metrics'] ?? old.metrics,
+            // metricQuantity: (map['metricQuantity'] ?? old.metricQuantity)
+            //     .toDouble(),
+            metricQuantity:
+                (map['metricQuantity'] as num?)?.toInt() ?? old.metricQuantity,
           );
         }
         return CartItem.fromJson(map);
       }).toList();
 
-      cartData!.subtotal = (data['subtotal'] ?? 0).toDouble();
-      cartData!.gstTotal = (data['gstTotal'] ?? 0).toDouble();
-      cartData!.packingTotal = (data['packingTotal'] ?? 0).toDouble();
-      cartData!.platformCharges = (data['platformCharges'] ?? 0).toDouble();
-      cartData!.deliveryCharges = (data['deliveryCharges'] ?? 0).toDouble();
-      cartData!.discountAmount = (data['discountAmount'] ?? 0).toDouble();
-      cartData!.grandTotal = (data['grandTotal'] ?? 0).toDouble();
-      cartData!.cgst = (data['cgst'] ?? 0).toDouble();
-      cartData!.sgst = (data['sgst'] ?? 0).toDouble();
+      // cartData!.subtotal = (data['subtotal'] ?? 0).toDouble();
+      cartData!.subtotal = (data['subtotal'] as num?)?.toDouble() ?? 0;
+      // cartData!.gstTotal = (data['gstTotal'] ?? 0).toDouble();
+      cartData!.gstTotal = (data['gstTotal'] as num?)?.toDouble() ?? 0;
+      // cartData!.packingTotal = (data['packingTotal'] ?? 0).toDouble();
+      cartData!.packingTotal = (data['packingTotal'] as num?)?.toDouble() ?? 0;
+      // cartData!.platformCharges = (data['platformCharges'] ?? 0).toDouble();
+      cartData!.platformCharges =
+          (data['platformCharges'] as num?)?.toDouble() ?? 0;
+      // cartData!.deliveryCharges = (data['deliveryCharges'] ?? 0).toDouble();
+      cartData!.deliveryCharges =
+          (data['deliveryCharges'] as num?)?.toDouble() ?? 0;
+      // cartData!.discountAmount = (data['discountAmount'] ?? 0).toDouble();
+      cartData!.discountAmount =
+          (data['discountAmount'] as num?)?.toDouble() ?? 0;
+      // cartData!.grandTotal = (data['grandTotal'] ?? 0).toDouble();
+      cartData!.grandTotal = (data['grandTotal'] as num?)?.toDouble() ?? 0;
+      // cartData!.cgst = (data['cgst'] ?? 0).toDouble();
+      cartData!.cgst = (data['cgst'] as num?)?.toDouble() ?? 0;
+      // cartData!.sgst = (data['sgst'] ?? 0).toDouble();
+      cartData!.sgst = (data['sgst'] as num?)?.toDouble() ?? 0;
       cartData!.deliveryAddress =
           data['deliveryAddress'] ?? cartData!.deliveryAddress;
       cartData!.mobileNo = data['mobileNo'] ?? cartData!.mobileNo;
@@ -456,6 +493,213 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       if (mounted) setState(() => isPlacingOrder = false);
     }
   }
+  // Future<void> placeOrder() async {
+  //   debugPrint("========== PLACE ORDER STARTED ==========");
+  //
+  //   final hasScheduledItems = cartData?.hasAnyScheduledItem ?? false;
+  //   debugPrint("Has Scheduled Items : $hasScheduledItems");
+  //   debugPrint("Selected Date       : $_selectedDate");
+  //   debugPrint("Selected Time       : $_selectedTime");
+  //
+  //   if (hasScheduledItems &&
+  //       (_selectedDate == null || _selectedTime == null)) {
+  //     debugPrint("Schedule validation failed");
+  //     AppAlert.error(
+  //       context,
+  //       "Please select date & time to schedule your order",
+  //     );
+  //     return;
+  //   }
+  //
+  //   debugPrint("Order Type : ${cartData?.orderType}");
+  //
+  //   if ((cartData?.orderType ?? '').trim().toLowerCase() == 'delivery') {
+  //     debugPrint("Delivery Address : ${cartData?.deliveryAddress}");
+  //
+  //     if ((cartData?.deliveryAddress ?? '').trim().isEmpty) {
+  //       AppAlert.error(context, "Please select a delivery address");
+  //       return;
+  //     }
+  //   }
+  //
+  //   debugPrint("Selected Payment Method : $selectedPaymentMethod");
+  //
+  //   if (selectedPaymentMethod == "Maamaas_Wallet") {
+  //     final wb = getSelectedWalletBalance();
+  //     final gt = (cartData?.grandTotal ?? 0).toDouble();
+  //
+  //     debugPrint("Wallet Balance : $wb");
+  //     debugPrint("Grand Total    : $gt");
+  //
+  //     if (wb < gt) {
+  //       AppAlert.error(
+  //         context,
+  //         "Insufficient wallet balance\nWallet: ₹${wb.toStringAsFixed(2)}\nOrder Total: ₹${gt.toStringAsFixed(2)}",
+  //       );
+  //       return;
+  //     }
+  //   }
+  //
+  //   if (selectedPaymentMethod.isEmpty) {
+  //     debugPrint("No payment method selected");
+  //     AppAlert.error(context, "Please select a payment method");
+  //     return;
+  //   }
+  //
+  //   setState(() => isPlacingOrder = true);
+  //
+  //   try {
+  //     final bool isUserScheduled =
+  //         _selectedDate != null || _selectedTime != null;
+  //
+  //     debugPrint("Is Scheduled Order : $isUserScheduled");
+  //
+  //     if (selectedPaymentMethod == "Online_Payment") {
+  //       final amount = (cartData?.grandTotal ?? 0).toDouble();
+  //
+  //       debugPrint("========== RAZORPAY FLOW ==========");
+  //       debugPrint("Amount : $amount");
+  //
+  //       if (mounted) {
+  //         setState(() => _overlayState = PaymentOverlayState.openingGateway);
+  //       }
+  //
+  //       debugPrint("Creating Razorpay Order...");
+  //
+  //       final orderId = await food_Authservice.createOrder(amount);
+  //
+  //       debugPrint("Razorpay OrderId : $orderId");
+  //
+  //       if (orderId == null) {
+  //         debugPrint("Failed to create Razorpay order");
+  //         AppAlert.error(context, "Failed to create payment order");
+  //         return;
+  //       }
+  //
+  //       final rp = RazorpayService();
+  //
+  //       rp.onSuccess = (res) async {
+  //         debugPrint("========== PAYMENT SUCCESS ==========");
+  //         debugPrint("PaymentId : ${res.paymentId}");
+  //         debugPrint("OrderId   : ${res.orderId}");
+  //         debugPrint("Signature : ${res.signature}");
+  //
+  //         final pid = res.paymentId!;
+  //         final oid = res.orderId!;
+  //
+  //         if (mounted) {
+  //           setState(() => _overlayState = PaymentOverlayState.processing);
+  //         }
+  //
+  //         debugPrint("Placing order on backend...");
+  //
+  //         final ok = isUserScheduled
+  //             ? await _placeScheduledOrder(
+  //           paymentMethod: "Online_Payment",
+  //           razorpayPaymentId: pid,
+  //           razorpayOrderId: oid,
+  //           amount: amount,
+  //         )
+  //             : await _placeDirectOrder(
+  //           paymentMethod: "Online_Payment",
+  //           razorpayPaymentId: pid,
+  //           razorpayOrderId: oid,
+  //           amount: amount,
+  //         );
+  //
+  //         debugPrint("Backend Order Result : $ok");
+  //
+  //         if (ok) {
+  //           debugPrint("Capturing Razorpay Payment...");
+  //
+  //           food_Authservice
+  //               .capturePayment(
+  //             paymentId: pid,
+  //             amount: amount,
+  //           )
+  //               .then((value) {
+  //             debugPrint("Payment Capture Success");
+  //           })
+  //               .catchError((e) {
+  //             debugPrint("Payment Capture Failed : $e");
+  //           });
+  //         } else {
+  //           debugPrint("Order placement failed after payment");
+  //           AppAlert.error(context, "Order failed. Refund in 3–5 days.");
+  //         }
+  //       };
+  //
+  //       rp.onError = (res) {
+  //         debugPrint("========== PAYMENT FAILED ==========");
+  //         debugPrint("Code    : ${res.code}");
+  //         debugPrint("Message : ${res.message}");
+  //
+  //         if (mounted) {
+  //           setState(() {
+  //             _overlayState = PaymentOverlayState.none;
+  //             isPlacingOrder = false;
+  //           });
+  //         }
+  //
+  //         AppAlert.error(context, "Payment failed: ${res.message}");
+  //       };
+  //
+  //       debugPrint("Opening Razorpay Checkout...");
+  //
+  //       rp.startPayment(
+  //         orderId: orderId,
+  //         amount: amount,
+  //         description: "Online Payment via Razorpay",
+  //       );
+  //
+  //       debugPrint("Razorpay Checkout Opened");
+  //
+  //       return;
+  //     }
+  //
+  //     debugPrint("========== NON-ONLINE PAYMENT ==========");
+  //
+  //     final amt = cartData!.grandTotal.toDouble();
+  //
+  //     if (isUserScheduled) {
+  //       debugPrint("Calling Scheduled Order API");
+  //       await _placeScheduledOrder(
+  //         paymentMethod: selectedPaymentMethod,
+  //         razorpayPaymentId: "",
+  //         razorpayOrderId: "",
+  //         amount: amt,
+  //       );
+  //     } else {
+  //       debugPrint("Calling Direct Order API");
+  //       await _placeDirectOrder(
+  //         paymentMethod: selectedPaymentMethod,
+  //         razorpayPaymentId: "",
+  //         razorpayOrderId: "",
+  //         amount: amt,
+  //       );
+  //     }
+  //   } catch (e, stackTrace) {
+  //     debugPrint("========== EXCEPTION ==========");
+  //     debugPrint(e.toString());
+  //     debugPrint(stackTrace.toString());
+  //
+  //     String message = e.toString().contains("Exception:")
+  //         ? e.toString().replaceFirst("Exception: ", "")
+  //         : e.toString();
+  //
+  //     if (mounted) {
+  //       setState(() => _overlayState = PaymentOverlayState.none);
+  //     }
+  //
+  //     AppAlert.error(context, message);
+  //   } finally {
+  //     debugPrint("========== PLACE ORDER FINISHED ==========");
+  //
+  //     if (mounted) {
+  //       setState(() => isPlacingOrder = false);
+  //     }
+  //   }
+  // }
 
   Future<bool> _placeScheduledOrder({
     required String paymentMethod,
@@ -967,7 +1211,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              item.dishName,
+                              "${item.dishName} ${item.metricQuantity} ${item.metrics}",
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -1055,90 +1299,92 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       builder: (_) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    item.dishName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  ...item.addons.map((addon) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  addon.addonName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-
-                                Text(
-                                  "₹${addon.addonPrice}",
-                                  style: const TextStyle(color: Colors.grey),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () async {
-                              if (addon.quantity == 0) return;
-
-                              await food_Authservice.updateAddon(
-                                item.itemId,
-                                addon.addonId,
-                                addon.quantity - 1,
-                              );
-
-                              setSheetState(() {
-                                addon.quantity--;
-                              });
-
-                              setState(() {});
-                            },
-                          ),
-
-                          Text(
-                            addon.quantity.toString(),
-                            style: const TextStyle(fontSize: 16),
-                          ),
-
-                          IconButton(
-                            icon: const Icon(Icons.add_circle),
-                            onPressed: () async {
-                              await food_Authservice.updateAddon(
-                                item.itemId,
-                                addon.addonId,
-                                addon.quantity + 1,
-                              );
-
-                              setSheetState(() {
-                                addon.quantity++;
-                              });
-
-                              setState(() {});
-                            },
-                          ),
-                        ],
+            return PlatformSafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.dishName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
-                    );
-                  }),
-                ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    ...item.addons.map((addon) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    addon.addonName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+
+                                  Text(
+                                    "₹${addon.addonPrice}",
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline),
+                              onPressed: () async {
+                                if (addon.quantity == 0) return;
+
+                                await food_Authservice.updateAddon(
+                                  item.itemId,
+                                  addon.addonId,
+                                  addon.quantity - 1,
+                                );
+
+                                setSheetState(() {
+                                  addon.quantity--;
+                                });
+
+                                setState(() {});
+                              },
+                            ),
+
+                            Text(
+                              addon.quantity.toString(),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+
+                            IconButton(
+                              icon: const Icon(Icons.add_circle),
+                              onPressed: () async {
+                                await food_Authservice.updateAddon(
+                                  item.itemId,
+                                  addon.addonId,
+                                  addon.quantity + 1,
+                                );
+
+                                setSheetState(() {
+                                  addon.quantity++;
+                                });
+
+                                setState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ),
             );
           },
@@ -1568,8 +1814,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => Scaffold(
         backgroundColor: Colors.transparent,
-        body: SafeArea(
-          top: false,
+        body: PlatformSafeArea(
           child: Container(
             height: MediaQuery.of(ctx).size.height * 0.99,
             decoration: BoxDecoration(
@@ -2111,18 +2356,42 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
               //     ),
               //   ),
               // ],
+              // if (onInfo != null) ...[
+              //   const SizedBox(width: 6),
+              //   GestureDetector(
+              //     onTap: onInfo,
+              //     child: const Text(
+              //       "Know more",
+              //       style: TextStyle(
+              //         fontSize: 12,
+              //         color: Colors.blue,
+              //         fontWeight: FontWeight.w500,
+              //         decoration: TextDecoration.underline,
+              //         decorationColor: Colors.blue,
+              //       ),
+              //     ),
+              //   ),
+              // ],
               if (onInfo != null) ...[
                 const SizedBox(width: 6),
                 GestureDetector(
                   onTap: onInfo,
-                  child: const Text(
-                    "Know more",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w500,
-                      decoration: TextDecoration.underline,
-                      decorationColor: Colors.blue,
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.blue, width: 1),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'i',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),

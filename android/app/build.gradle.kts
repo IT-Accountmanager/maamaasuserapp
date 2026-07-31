@@ -30,7 +30,7 @@ val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: ""
 android {
     namespace = "com.maamaas.app"
     compileSdk = 36
-    ndkVersion = "27.0.12077973"   // Recommended for 16 KB page support
+    ndkVersion = "28.2.13676358"   // Recommended for 16 KB page support
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

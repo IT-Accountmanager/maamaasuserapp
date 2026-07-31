@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/widgets/datetimehelper.dart';
+import 'package:maamaas/widgets/safearea.dart';
 import '../../Models/subscrptions/transaction_model.dart';
 import '../../Models/subscrptions/wallet_model.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
@@ -10,7 +11,7 @@ import '../../Services/paymentservice/razorpayservice.dart';
 import '../../widgets/signinrequired.dart';
 import '../skeleton/walletSkelton.dart';
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+// ── Design tokens ───────────────────────────────────────────────────────debugPrint──────
 class Walletcolour {
   static const bg = Color(0xFFF5F6FA);
   static const surface = Color(0xFFFFFFFF);
@@ -709,13 +710,13 @@ class _WalletScreenState extends State<WalletScreen> {
 
     showModalBottomSheet(
       context: context,
-      useSafeArea: true,
+      // useSafeArea: true,
       backgroundColor: Walletcolour.surface,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
-      builder: (sheetContext) => SafeArea(
+      builder: (sheetContext) => PlatformSafeArea(
         child: AnimatedPadding(
           duration: const Duration(milliseconds: 250),
           padding: EdgeInsets.only(
@@ -925,7 +926,7 @@ class _WalletScreenState extends State<WalletScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
-      builder: (_) => SafeArea(
+      builder: (_) => PlatformSafeArea(
         child: Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom + 16.h,

@@ -11,7 +11,6 @@ class restaurentsnewcolour {
   static const textLight = Color(0xFFB0B0B0);
   static const border = Color(0xFFECECEC);
   static const cardRadius = 16.0;
-
 }
 
 class RestaurentsHelper {
@@ -32,6 +31,12 @@ class RestaurentsHelper {
   // ];
   static const orderTabs = [
     {
+      'label': 'Delivery',
+      'icon': Icons.delivery_dining_outlined,
+      'type': 'delivery',
+      'configKey': 'DELIVERY',
+    },
+    {
       'label': 'Dine-In',
       'icon': Icons.restaurant_rounded,
       'type': 'dinein',
@@ -43,12 +48,7 @@ class RestaurentsHelper {
       'type': 'takeaway',
       'configKey': 'TAKEAWAY',
     },
-    {
-      'label': 'Delivery',
-      'icon': Icons.delivery_dining_outlined,
-      'type': 'delivery',
-      'configKey': 'DELIVERY',
-    },
+
     {
       'label': 'Dine-out',
       'icon': Icons.table_restaurant,
@@ -68,7 +68,7 @@ class RestaurentsHelper {
     'takeaway': 'TAKEAWAY',
     'delivery': 'DELIVERY',
     'dineout': 'TABLE_DINE_IN', // ✅ FIXED
-    // 'catering': 'CATERING', // ✅ FIXED (removed space)
+    'catering': 'CATERING', // ✅ FIXED (removed space)
   };
 
   static const filters = [

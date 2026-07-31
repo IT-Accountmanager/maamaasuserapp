@@ -468,78 +468,134 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildGuestAppBar({required bool isDark, required bool isExpanded}) {
+  // Widget _buildGuestAppBar({required bool isDark, required bool isExpanded}) {
+  //   final color = isDark ? _T.text : Colors.white;
+  //   final subColor = isDark ? _T.textMuted : Colors.white70;
+  //
+  //   return GestureDetector(
+  //     onTap: () {
+  //       // Navigate to login or location picker
+  //     },
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         /// 👇 Show title only in expanded (banner)
+  //         if (isExpanded)
+  //           Text(
+  //             "Current Location",
+  //             style: TextStyle(
+  //               fontSize: 11.sp,
+  //               fontWeight: FontWeight.w800,
+  //               color: subColor,
+  //             ),
+  //           ),
+  //
+  //         if (isExpanded) SizedBox(height: 2.h),
+  //
+  //         /// 🔄 Loading State
+  //         if (_isGuestLocationLoading)
+  //           Row(
+  //             children: [
+  //               Icon(
+  //                 Icons.location_on_rounded,
+  //                 color: color,
+  //                 size: isExpanded ? 18 : 16,
+  //               ),
+  //               SizedBox(
+  //                 width: isExpanded ? 14.w : 12.w,
+  //                 height: isExpanded ? 14.w : 12.w,
+  //                 child: CircularProgressIndicator(
+  //                   strokeWidth: 2,
+  //                   color: color,
+  //                 ),
+  //               ),
+  //               SizedBox(width: 6.w),
+  //               Text(
+  //                 "Fetching location...",
+  //                 style: TextStyle(
+  //                   fontSize: isExpanded ? 12.sp : 11.sp,
+  //                   color: color,
+  //                 ),
+  //               ),
+  //             ],
+  //           )
+  //         /// 📍 Location State
+  //         else
+  //           Row(
+  //             children: [
+  //               Expanded(
+  //                 child: Text(
+  //                   _currentLocation.isNotEmpty
+  //                       ? _currentLocation
+  //                       : "Select Location",
+  //                   maxLines: 1,
+  //                   overflow: TextOverflow.ellipsis,
+  //                   style: TextStyle(
+  //                     fontSize: isExpanded ? 13.sp : 12.sp,
+  //                     fontWeight: FontWeight.w600,
+  //                     color: color,
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //       ],
+  //     ),
+  //   );
+  // }
+  Widget _buildGuestAppBar({
+    required bool isDark,
+    required bool isExpanded,
+  }) {
     final color = isDark ? _T.text : Colors.white;
     final subColor = isDark ? _T.textMuted : Colors.white70;
 
     return GestureDetector(
-      onTap: () {
-        // Navigate to login or location picker
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      onTap: () {},
+      child: Row(
         children: [
-          /// 👇 Show title only in expanded (banner)
-          if (isExpanded)
-            Text(
-              "Current Location",
-              style: TextStyle(
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w800,
-                color: subColor,
-              ),
-            ),
+          Icon(
+            Icons.location_on_rounded,
+            color: color,
+            size: isExpanded ? 18 : 16,
+          ),
+          SizedBox(width: 6.w),
 
-          if (isExpanded) SizedBox(height: 2.h),
-
-          /// 🔄 Loading State
-          if (_isGuestLocationLoading)
-            Row(
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.location_on_rounded,
-                  color: color,
-                  size: isExpanded ? 18 : 16,
-                ),
-                SizedBox(
-                  width: isExpanded ? 14.w : 12.w,
-                  height: isExpanded ? 14.w : 12.w,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: color,
-                  ),
-                ),
-                SizedBox(width: 6.w),
-                Text(
-                  "Fetching location...",
-                  style: TextStyle(
-                    fontSize: isExpanded ? 12.sp : 11.sp,
-                    color: color,
-                  ),
-                ),
-              ],
-            )
-          /// 📍 Location State
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _currentLocation.isNotEmpty
-                        ? _currentLocation
-                        : "Select Location",
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                if (isExpanded)
+                  Text(
+                    "Current Location",
                     style: TextStyle(
-                      fontSize: isExpanded ? 13.sp : 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: color,
+                      fontSize: 10.sp,
+                      color: subColor,
                     ),
                   ),
+
+                Text(
+                  _currentLocation.isNotEmpty
+                      ? _currentLocation
+                      : "Select Location",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: isExpanded ? 13.sp : 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
                 ),
               ],
             ),
+          ),
+
+          Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: color,
+          ),
         ],
       ),
     );

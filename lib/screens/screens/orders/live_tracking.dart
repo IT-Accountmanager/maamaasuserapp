@@ -1,5 +1,6 @@
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../Models/delivery/deliverpartnerreview.dart';
 import '../../../Services/googleservices/googleapiservice.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../Services/Auth_service/delivery_service.dart';
@@ -93,7 +94,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
   // ── General ──────────────────────────────────────────────────────────────
   String? _googleApiKey;
   bool _isLoading = true;
-  double _deliveryProgress = 0.0;
   late OrderStatus _currentOrderStatus;
 
   // ── Debounce: avoid hammering ETA API ────────────────────────────────────
@@ -103,18 +103,13 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
   // ================= Production Tracking Constants =================
 
   static const double _gpsNoiseThreshold = 8.0; // meters
-  static const double _routeDeviationThreshold = 30.0;
   static const double _minCameraMoveDistance = 20.0;
-  static const double _etaRefreshDistance = 50.0;
 
-  LatLng? _previousPartnerPosition;
   double _currentBearing = 0;
-  double _currentSpeed = 0;
 
   DateTime? _lastLocationTime;
 
   bool _followPartner = true;
-  bool _userMovingMap = false;
 
   // ================= Route Engine =================
 
@@ -122,31 +117,18 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
   DateTime? _lastRouteRefresh;
 
-  int _lastNearestIndex = 0;
-
   static const Duration _routeRefreshCooldown = Duration(seconds: 20);
 
   static const double _routeDeviationDistance = 35;
 
   static const double _routeAdvanceDistance = 15.0;
 
-  //================ ETA Engine ====================
+  double _deliveryRating = 0;
+  final TextEditingController _deliveryReviewController =
+      TextEditingController();
 
-  Duration? _serverEta;
-
-  Duration? _displayEta;
-
-  Duration? _rawEta;
-
-  double _averageSpeed = 0;
-
-  static const int _speedHistorySize = 5;
-
-  final List<double> _speedHistory = [];
-
-  DateTime? _lastEtaUpdate;
-
-  DateTime? _arrivalTime;
+  DeliveryPartnerReview? _postedReview;
+  bool _loadingReview = true;
 
   List<LatLng> _smoothRoute(List<LatLng> points) {
     if (points.length < 3) {
@@ -183,6 +165,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     _currentOrderStatus = widget.orderStatus;
     _initializeAnimations();
     _loadDeliveryData();
+    _loadDeliveryReview();
   }
 
   @override
@@ -312,6 +295,57 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  Future<void> _loadDeliveryReview() async {
+    setState(() {
+      _loadingReview = true;
+    });
+
+    final review = await DeliveryOrderService.getDeliveryPartnerReview(
+      widget.orderId,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _postedReview = review;
+      _loadingReview = false;
+    });
+  }
+
+  Future<void> _submitDeliveryPartnerReview() async {
+    if (_deliveryRating == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please select a rating.")));
+      return;
+    }
+
+    final success = await DeliveryOrderService.submitDeliveryPartnerReview(
+      orderId: widget.orderId,
+      rating: _deliveryRating.toInt(),
+      review: _deliveryReviewController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Thank you for your feedback!")),
+      );
+
+      setState(() async {
+        _deliveryRating = 0;
+        _deliveryReviewController.clear();
+        await _loadDeliveryReview();
+      });
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to submit review.")));
+    }
+  }
+
 
   // ── ETA ───────────────────────────────────────────────────────────────────
 
@@ -462,24 +496,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         ? _deliveredAt!.difference(_orderStartTime!).inMinutes.clamp(1, 999)
         : null;
     _remainingEta = null;
-  }
-
-  bool _shouldRefreshEta(LatLng current) {
-    if (_lastPartnerPosition == null) {
-      return true;
-    }
-
-    final distance = Geolocator.distanceBetween(
-      _lastPartnerPosition!.latitude,
-
-      _lastPartnerPosition!.longitude,
-
-      current.latitude,
-
-      current.longitude,
-    );
-
-    return distance > 20;
   }
 
   // ── Icons ─────────────────────────────────────────────────────────────────
@@ -1013,10 +1029,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     return (atan2(y, x) * 180 / pi + 360) % 360;
   }
 
-  double _calculateMovementBearing(LatLng previous, LatLng current) {
-    return _calculateBearing(previous, current);
-  }
-
   // ── Progress ──────────────────────────────────────────────────────────────
 
   void _updateDeliveryProgressInternal(LatLng partnerPosition) {
@@ -1034,7 +1046,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       partnerPosition.latitude,
       partnerPosition.longitude,
     );
-    _deliveryProgress = (covered / total).clamp(0.0, 1.0);
   }
 
   void _calculateInitialProgress() {
@@ -1139,19 +1150,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     }
   }
 
-  Duration _calculateOfflineEta(LatLng partner) {
-    final distance = Geolocator.distanceBetween(
-      partner.latitude,
-      partner.longitude,
-      _delivery!.userLatitude,
-      _delivery!.userLongitude,
-    );
-
-    final speed = _averageSpeed < 3 ? 6 : _averageSpeed;
-
-    return Duration(seconds: (distance / speed).round());
-  }
-
   Future<void> _refreshDeliveryData() async {
     if (!mounted) return;
     final updated = await DeliveryOrderService.getOrder(widget.orderId);
@@ -1180,30 +1178,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     return '${_remainingEta!.inMinutes} min';
   }
 
-  Duration _nextEtaRefresh() {
-    if (_displayEta == null) {
-      return Duration(seconds: 20);
-    }
-
-    final min = _displayEta!.inMinutes;
-
-    if (min > 30) {
-      return Duration(minutes: 5);
-    }
-
-    if (min > 10) {
-      return Duration(minutes: 2);
-    }
-
-    if (min > 5) {
-      return Duration(seconds: 60);
-    }
-
-    return Duration(seconds: 20);
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     if (_currentOrderStatus == OrderStatus.cancelled) {
@@ -1226,6 +1200,34 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     );
   }
 
+  // Widget _buildDeliveryTracking() {
+  //   return SlideTransition(
+  //     position: _slideAnimation,
+  //     child: Container(
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(20),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: Colors.black.withOpacity(0.05),
+  //             blurRadius: 10,
+  //             offset: const Offset(0, 2),
+  //           ),
+  //         ],
+  //       ),
+  //       child: Column(
+  //         children: [
+  //           _buildStatusHeader(),
+  //           if (_currentOrderStatus == OrderStatus.ontheway ||
+  //               _currentOrderStatus == OrderStatus.waitingForPickup) ...[
+  //             _buildProgressMap(),
+  //           ],
+  //           _buildPartnerInfo(),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget _buildDeliveryTracking() {
     return SlideTransition(
       position: _slideAnimation,
@@ -1244,15 +1246,131 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         child: Column(
           children: [
             _buildStatusHeader(),
+
             if (_currentOrderStatus == OrderStatus.ontheway ||
-                _currentOrderStatus == OrderStatus.waitingForPickup)
+                _currentOrderStatus == OrderStatus.waitingForPickup) ...[
               _buildProgressMap(),
+            ],
+
+            // _buildPartnerInfo(),
+            //
+            // // New Section
+            // // if (_currentOrderStatus == OrderStatus.completed)
+            // //   _buildRateDeliveryPartner(),
+            // if (_currentOrderStatus == OrderStatus.completed)
+            //   _loadingReview
+            //       ? const Padding(
+            //           padding: EdgeInsets.all(20),
+            //           child: Center(child: CircularProgressIndicator()),
+            //         )
+            //       : (_postedReview == null
+            //             ? _buildRateDeliveryPartner()
+            //             : _buildPostedReview()),
             _buildPartnerInfo(),
+
+            if (_currentOrderStatus == OrderStatus.completed && _loadingReview)
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+
+            if (_currentOrderStatus == OrderStatus.completed &&
+                !_loadingReview &&
+                _postedReview == null)
+              _buildRateDeliveryPartner(),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildRateDeliveryPartner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Rate Your Delivery Partner",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            "How was your delivery experience?",
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+
+          const SizedBox(height: 20),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              return IconButton(
+                onPressed: () {
+                  setState(() {
+                    _deliveryRating = index + 1.0;
+                  });
+                },
+                icon: Icon(
+                  index < _deliveryRating
+                      ? Icons.star_rounded
+                      : Icons.star_border_rounded,
+                  color: Colors.amber,
+                  size: 36,
+                ),
+              );
+            }),
+          ),
+
+          const SizedBox(height: 16),
+
+          TextField(
+            controller: _deliveryReviewController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: "Write a review (optional)",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _deliveryRating == 0
+                  ? null
+                  : () {
+                      _submitDeliveryPartnerReview();
+                    },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                "Submit Rating",
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildStatusHeader() {
     final isDelivered = _currentOrderStatus == OrderStatus.completed;
@@ -1611,8 +1729,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     );
   }
 
-  final phoneNumber = "7036646624";
-
   Future<void> _makePhoneCall(String phoneNumber) async {
     final Uri uri = Uri(scheme: 'tel', path: phoneNumber);
 
@@ -1625,10 +1741,16 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     }
   }
 
+  String maskPhoneNumber(String phone) {
+    if (phone.length < 4) return phone;
+    return '${phone.substring(0, 2)}******${phone.substring(phone.length - 2)}';
+  }
+
   Widget _buildPartnerInfo() {
     if (_delivery?.deliveryPartnerName.isEmpty ?? true) {
       return const SizedBox.shrink();
     }
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
@@ -1637,64 +1759,158 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.green.shade100,
-            child: const Icon(Icons.person, color: Colors.green, size: 28),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          /// Partner Details
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.green.shade100,
+                child: const Icon(Icons.person, color: Colors.green, size: 28),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _delivery!.deliveryPartnerName,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _delivery!.deliveryPartnerName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        if (_currentOrderStatus != OrderStatus.completed)
+                          InkWell(
+                            onTap: () => _makePhoneCall(
+                              _delivery!.deliveryPartnerPhoneNumber,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.call,
+                                color: Colors.green,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                    IconButton(
-                      onPressed: () {
-                        _makePhoneCall(_delivery!.deliveryPartnerPhoneNumber);
-                        // _makePhoneCall(phoneNumber);
-                      },
-                      icon: const Icon(Icons.call, color: Colors.green),
-                      tooltip: 'Call Delivery Partner',
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      "+91 ${maskPhoneNumber(_delivery!.deliveryPartnerPhoneNumber)}",
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
 
-                const SizedBox(height: 4),
-                Text(
-                  'Vehicle: ${_delivery!.vehicleStatus.name.replaceAll('_', ' ')}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+          if (_currentOrderStatus != OrderStatus.completed) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Icon(Icons.two_wheeler, size: 18, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+
+                Expanded(
+                  child: Text(
+                    _delivery!.vehicleStatus.name.replaceAll("_", " "),
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
                 ),
-                const SizedBox(height: 2),
+
+                const Icon(Icons.lock_outline, size: 18),
+
+                const SizedBox(width: 6),
+
                 Text(
-                  'OTP: ${_delivery?.userOtp.toString() ?? '0'}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  "OTP ${_delivery?.userOtp ?? ""}",
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
-          ),
+          ],
+
+          if (_currentOrderStatus == OrderStatus.completed &&
+              _postedReview != null) ...[
+            const SizedBox(height: 16),
+            Divider(color: Colors.grey.shade300),
+            const SizedBox(height: 14),
+
+            Row(
+              children: [
+                const Icon(Icons.rate_review, color: Colors.orange, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  "Your Rating",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Row(
+              children: [
+                ...List.generate(
+                  5,
+                  (index) => Icon(
+                    index < _postedReview!.rating
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
+                    color: Colors.amber,
+                    size: 22,
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                Text(
+                  "${_postedReview!.rating}/5",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+
+            if (_postedReview!.review.isNotEmpty) ...[
+              const SizedBox(height: 3),
+
+              Text(
+                _postedReview!.review,
+                style: TextStyle(color: Colors.grey.shade800, height: 1.4),
+              ),
+            ],
+          ],
         ],
       ),
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// FullScreenMapPage — COMPLETELY INDEPENDENT
-// ---------------------------------------------------------------------------
-// Runs its OWN WebSocket subscriptions for partner location AND order status.
-// Does NOT depend on any callback from ModernDeliveryTracking.
-// When closed, it cleans up its own WS subscriptions.
-// ---------------------------------------------------------------------------
 
 class FullScreenMapPage extends StatefulWidget {
   final int orderId;

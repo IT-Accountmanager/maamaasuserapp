@@ -592,7 +592,10 @@ class subscription_AuthService {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
 
+    // print("Stored userId: $userId");
+
     if (userId == null) {
+      // print("userId is null");
       return null;
     }
 
@@ -601,11 +604,13 @@ class subscription_AuthService {
       service: "subscription",
     );
 
+    // print("Account API: ${response.body}");
+
     if (response.statusCode == 200) {
       return UserAccount.fromJson(jsonDecode(response.body));
-    } else {
-      return null; // don't throw exception
     }
+
+    return null;
   }
 
   static Future<UserModel?> getuserAccount() async {

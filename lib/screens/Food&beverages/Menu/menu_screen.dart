@@ -196,7 +196,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
         };
       });
     } catch (e) {
-      debugPrint("Fav error: $e");
+      // debugPrint("Fav error: $e");
     }
   }
 

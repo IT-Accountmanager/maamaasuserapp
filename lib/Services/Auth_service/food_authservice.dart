@@ -336,11 +336,7 @@ class food_Authservice {
     }
   }
 
-  static Future<bool> updateCartQuantity(
-      int itemId,
-      int quantity,
-      ) async {
-
+  static Future<bool> updateCartQuantity(int itemId, int quantity) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
 
@@ -352,17 +348,15 @@ class food_Authservice {
       },
     );
 
-    debugPrint("=================================");
-    debugPrint("PUT URL : ${uri.toString()}");
-    debugPrint("UserId  : $userId");
-    debugPrint("ItemId  : $itemId");
-    debugPrint("Qty     : $quantity");
+    // debugPrint("=================================");
+    // debugPrint("PUT URL : ${uri.toString()}");
+    // debugPrint("UserId  : $userId");
+    // debugPrint("ItemId  : $itemId");
+    // debugPrint("Qty     : $quantity");
 
-    final body = {
-      "quantity": quantity,
-    };
+    final body = {"quantity": quantity};
 
-    debugPrint("BODY : $body");
+    // debugPrint("BODY : $body");
 
     try {
       final response = await ApiClient.put(
@@ -371,16 +365,54 @@ class food_Authservice {
         service: 'food',
       );
 
-      debugPrint("STATUS : ${response.statusCode}");
-      debugPrint("BODY   : ${response.body}");
+      // debugPrint("STATUS : ${response.statusCode}");
+      // debugPrint("BODY   : ${response.body}");
 
       return response.statusCode == 200;
     } catch (e, stackTrace) {
-      debugPrint("ERROR : $e");
-      debugPrint("$stackTrace");
+      // debugPrint("ERROR : $e");
+      // debugPrint("$stackTrace");
       return false;
     }
   }
+
+  // static Future<bool> addToCart({
+  //   required int dishId,
+  //   required int quantity,
+  //   required sheduleorder,
+  //   List<Map<String, dynamic>> addons = const [],
+  // }) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final int userId = prefs.getInt('userId') ?? 0;
+  //   final endpoint =
+  //       "api/cart/add/item?userId=$userId&sheduleorder=$sheduleorder";
+  //   final body = {"dishId": dishId, "quantity": quantity, "addons": addons};
+  //
+  //   try {
+  //     final response = await ApiClient.post(endpoint, body, service: "food");
+  //     debugPrint("request body: $body");
+  //     final data = jsonDecode(response.body);
+  //     final int? cartId = data['cartId'];
+  //     if (cartId == null) return false;
+  //
+  //     await prefs.setInt('cartId', cartId);
+  //     debugPrint("Cart Status: ${response.statusCode}");
+  //     debugPrint(" Cart Body: ${response.body}");
+  //
+  //     // ✅ Cache shedule values from HTTP response by itemId
+  //     final items = data['cartItems'] as List<dynamic>? ?? [];
+  //     for (final item in items) {
+  //       final itemId = item['itemId'];
+  //       final shedule = item['shedule'] == true;
+  //       await prefs.setBool('shedule_item_$itemId', shedule);
+  //     }
+  //
+  //     return true;
+  //   } catch (e) {
+  //     //       debugPrint("❌ [AddToCart] Error: $e");
+  //     return false;
+  //   }
+  // }
 
   static Future<bool> addToCart({
     required int dishId,
@@ -390,22 +422,36 @@ class food_Authservice {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
+
     final endpoint =
         "api/cart/add/item?userId=$userId&sheduleorder=$sheduleorder";
-    final body = {"dishId": dishId, "quantity": quantity, "addons": addons};
+
+    final body = {
+      "dishId": dishId,
+      "quantity": quantity,
+      "addons": addons,
+    };
 
     try {
       final response = await ApiClient.post(endpoint, body, service: "food");
-      debugPrint("request body: $body");
+
+      // debugPrint("Request Body: $body");
+      // debugPrint("Status: ${response.statusCode}");
+      // debugPrint("Body: ${response.body}");
+
       final data = jsonDecode(response.body);
+
+      if (response.statusCode != 200) {
+        throw Exception(data['message'] ?? 'Failed to add item to cart');
+      }
+
       final int? cartId = data['cartId'];
-      if (cartId == null) return false;
+      if (cartId == null) {
+        throw Exception('Cart ID not found.');
+      }
 
       await prefs.setInt('cartId', cartId);
-      debugPrint("Cart Status: ${response.statusCode}");
-      debugPrint(" Cart Body: ${response.body}");
 
-      // ✅ Cache shedule values from HTTP response by itemId
       final items = data['cartItems'] as List<dynamic>? ?? [];
       for (final item in items) {
         final itemId = item['itemId'];
@@ -415,8 +461,8 @@ class food_Authservice {
 
       return true;
     } catch (e) {
-      //       debugPrint("❌ [AddToCart] Error: $e");
-      return false;
+      // debugPrint("AddToCart Error: $e");
+      rethrow;
     }
   }
 
@@ -425,28 +471,29 @@ class food_Authservice {
       final cart = await fetchCart();
 
       if (cart == null) {
-        debugPrint("❌ Cart is null");
+        // debugPrint("❌ Cart is null");
         return null;
       }
 
-      debugPrint("Cart Items Count: ${cart.cartItems.length}");
+      // debugPrint("Cart Items Count: ${cart.cartItems.length}");
 
       for (final item in cart.cartItems) {
-        debugPrint(
-            "DishId: ${item.dishId}, ItemId: ${item.itemId}, Qty: ${item.quantity}");
+        // debugPrint(
+        //   "DishId: ${item.dishId}, ItemId: ${item.itemId}, Qty: ${item.quantity}",
+        // );
       }
 
       final matched = cart.cartItems.where((i) => i.dishId == dishId).toList();
 
       if (matched.isNotEmpty) {
-        debugPrint("✅ Found ItemId: ${matched.first.itemId}");
+        // debugPrint("✅ Found ItemId: ${matched.first.itemId}");
         return matched.first.itemId;
       }
 
-      debugPrint("❌ No item found for DishId: $dishId");
+      // debugPrint("❌ No item found for DishId: $dishId");
       return null;
     } catch (e) {
-      debugPrint("Exception: $e");
+      // debugPrint("Exception: $e");
       return null;
     }
   }
@@ -486,12 +533,12 @@ class food_Authservice {
     final response = await ApiClient.get(endpoint, service: "food");
 
     if (response.statusCode == 200) {
-      debugPrint("response :${response.body}");
+      // debugPrint("response :${response.body}");
       final List<dynamic> data = jsonDecode(response.body);
       if (data.isNotEmpty) {
         final cartJson = data.first as Map<String, dynamic>;
         final items = cartJson['cartItems'] as List<dynamic>? ?? [];
-        debugPrint("Cart parsed successfully");
+        // debugPrint("Cart parsed successfully");
         // debugPrint("Items count: ${cart.cartItems.length}");
 
         for (final item in items) {
@@ -519,13 +566,13 @@ class food_Authservice {
     final endpoint =
         "api/cart/addon/update?userId=$userId&itemId=$itemId&addonId=$addonId&quantity=$quantity";
 
-    debugPrint("Request: $endpoint");
-    debugPrint("addon");
+    // debugPrint("Request: $endpoint");
+    // debugPrint("addon");
 
     final response = await ApiClient.put(endpoint, {}, service: "food");
 
-    debugPrint("Status Code: ${response.statusCode}");
-    debugPrint("Response Body: ${response.body}");
+    // debugPrint("Status Code: ${response.statusCode}");
+    // debugPrint("Response Body: ${response.body}");
 
     if (response.statusCode == 200) {
       return;

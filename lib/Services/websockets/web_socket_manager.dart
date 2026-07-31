@@ -328,4 +328,75 @@ class WebSocketManager {
       //       debugPrint('❌ Unsubscribed from cart $userId');
     }
   }
+
+  StompClient? _logisticsClient;
+
+  bool _logisticsConnecting = false;
+
+  void connectLogisticsSocket(Function()? onConnected) {
+    if (_logisticsClient != null && _logisticsClient!.connected) {
+      onConnected?.call();
+      return;
+    }
+
+    if (_logisticsConnecting) return;
+
+    _logisticsConnecting = true;
+
+    _logisticsClient = StompClient(
+      config: StompConfig(
+        url: 'ws://staging.maamaas.com:8080/delivery/ws',
+
+        onConnect: (frame) {
+          _logisticsConnecting = false;
+          debugPrint("✅ Logistics Connected");
+          onConnected?.call();
+        },
+
+        onWebSocketError: (error) {
+          _logisticsConnecting = false;
+          debugPrint("❌ Logistics Error $error");
+        },
+
+        onDisconnect: (_) {
+          debugPrint("Logistics disconnected");
+        },
+      ),
+    );
+
+    _logisticsClient!.activate();
+  }
+
+  final Map<int, StompUnsubscribe> _logisticSubscriptions = {};
+
+  void subscribeLogisticOrder(
+    int userId,
+    Function(Map<String, dynamic>) onMessage,
+  ) {
+    connectLogisticsSocket(() {
+      if (_logisticSubscriptions.containsKey(userId)) {
+        return;
+      }
+
+      final subscription = _logisticsClient!.subscribe(
+        destination: "/topic/logistic-order/$userId",
+        callback: (frame) {
+          if (frame.body == null) return;
+
+          final data = jsonDecode(frame.body!);
+
+          debugPrint("📦 Logistics Update : $data");
+
+          onMessage(data);
+        },
+      );
+
+      _logisticSubscriptions[userId] = subscription;
+    });
+  }
+
+  void unsubscribeLogisticOrder(int userId) {
+    _logisticSubscriptions[userId]?.call();
+    _logisticSubscriptions.remove(userId);
+  }
 }

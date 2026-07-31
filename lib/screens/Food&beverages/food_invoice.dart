@@ -62,14 +62,14 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
     _fadeController.forward();
     _slideController.forward();
 
-    Future.delayed(const Duration(seconds: 10), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainScreenfood()),
-        );
-      }
-    });
+    // Future.delayed(const Duration(seconds: 10), () {
+    //   if (mounted) {
+    //     Navigator.pushReplacement(
+    //       context,
+    //       MaterialPageRoute(builder: (context) => MainScreenfood()),
+    //     );
+    //   }
+    // });
   }
 
   @override
@@ -647,18 +647,77 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
                           textAlign: TextAlign.center,
                         ),
                       ),
+                      // Expanded(
+                      //   child: Text(
+                      //     item['dishName']?.toString() ?? 'N/A',
+                      //     maxLines: 2,
+                      //     overflow: TextOverflow.ellipsis,
+                      //     style: const TextStyle(
+                      //       color: invoice._textPrimary,
+                      //       fontSize: 12.5,
+                      //       fontWeight: FontWeight.w500,
+                      //     ),
+                      //   ),
+                      // ),
                       Expanded(
-                        child: Text(
-                          item['dishName']?.toString() ?? 'N/A',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: invoice._textPrimary,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['dishName']?.toString() ?? 'N/A',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: invoice._textPrimary,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+
+                            if ((item['addons'] as List?)?.isNotEmpty ??
+                                false) ...[
+                              const SizedBox(height: 4),
+
+                              ...(item['addons'] as List).map((addon) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.add_circle_outline,
+                                        size: 12,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 4),
+
+                                      Expanded(
+                                        child: Text(
+                                          "${addon['addonName']} × ${addon['quantity']}",
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+
+                                      Text(
+                                        "₹${(addon['totalPrice'] as num).toStringAsFixed(2)}",
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                          ],
                         ),
                       ),
+                      SizedBox(width: 8),
+
                       SizedBox(
                         width: 30,
                         child: Container(

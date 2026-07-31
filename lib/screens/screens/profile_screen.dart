@@ -2,12 +2,14 @@ import 'package:maamaas/screens/screens/referrznd%20earn.dart';
 import 'package:maamaas/screens/screens/supportteam/support_team.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import 'package:maamaas/widgets/safearea.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:maamaas/screens/screens/saved_address.dart';
 import 'package:maamaas/screens/screens/wallet_screen.dart';
 import 'package:media_compressor/media_compressor.dart';
 import '../../Models/subscrptions/user_account.dart';
+import '../../Services/cardgame/cards.dart';
 import '../../Services/dice/dicescreen.dart';
 import '../../Services/spin/newspinner.dart';
 import '../../Services/spin/spinscreen.dart';
@@ -557,23 +559,23 @@ class _MenuListState extends State<_MenuList> {
       'color': Color(0xFF8B5CF6),
       'key': 'account',
     },
-    {
-      'icon': Icons.manage_accounts_outlined,
-      'label': 'spin screen',
-      'color': Color(0xFF8B5CF6),
-      'key': 'spin',
-    },
-    {
-      'icon': Icons.manage_accounts_outlined,
-      'label': 'dice screen',
-      'color': Color(0xFF8B5CF6),
-      'key': 'dice',
-    },
     // {
     //   'icon': Icons.manage_accounts_outlined,
-    //   'label': 'Logistics',
+    //   'label': 'spin screen',
     //   'color': Color(0xFF8B5CF6),
-    //   'key': 'logitics',
+    //   'key': 'spin',
+    // },
+    // {
+    //   'icon': Icons.manage_accounts_outlined,
+    //   'label': 'dice screen',
+    //   'color': Color(0xFF8B5CF6),
+    //   'key': 'dice',
+    // },
+    // {
+    //   'icon': Icons.manage_accounts_outlined,
+    //   'label': 'cards',
+    //   'color': Color(0xFF8B5CF6),
+    //   'key': 'cards',
     // },
     // {
     //   'icon': Icons.manage_accounts_outlined,
@@ -610,10 +612,12 @@ class _MenuListState extends State<_MenuList> {
         return AccountScreen();
       // case 'logitics':
       //   return TravelHomeScreen();
-      case 'spin':
-        return SpinScreen();
-      case 'dice':
-        return DiceScreen();
+      // case 'spin':
+      //   return SpinScreen();
+      // case 'dice':
+      //   return DiceScreen();
+      //   case 'cards':
+      //   return CardGameScreen();
       default:
         return null;
     }
@@ -646,7 +650,7 @@ class _MenuListState extends State<_MenuList> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => SafeArea(child: _LogoutSheet(onConfirm: _logout)),
+      builder: (_) => PlatformSafeArea(child: _LogoutSheet(onConfirm: _logout)),
     );
   }
 
@@ -693,53 +697,109 @@ class _MenuListState extends State<_MenuList> {
           // Logout
           const SizedBox(height: 8),
           _SectionLabel(''),
-          Container(
-            decoration: BoxDecoration(
-              color: profile.redSoft,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: profile.red.withOpacity(0.12)),
-            ),
-            child: ListTile(
-              onTap: _showLogoutSheet,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 2,
+          // Container(
+          //   decoration: BoxDecoration(
+          //     color: profile.redSoft,
+          //     borderRadius: BorderRadius.circular(16),
+          //     border: Border.all(color: profile.red.withOpacity(0.12)),
+          //   ),
+          //   child: ListTile(
+          //     onTap: _showLogoutSheet,
+          //     contentPadding: const EdgeInsets.symmetric(
+          //       horizontal: 16,
+          //       vertical: 2,
+          //     ),
+          //     leading: Container(
+          //       width: 38,
+          //       height: 38,
+          //       decoration: BoxDecoration(
+          //         color: profile.red.withOpacity(0.1),
+          //         borderRadius: BorderRadius.circular(10),
+          //       ),
+          //       child: const Icon(
+          //         Icons.logout_rounded,
+          //         color: profile.red,
+          //         size: 18,
+          //       ),
+          //     ),
+          //     title: const Text(
+          //       'Logout',
+          //       style: TextStyle(
+          //         fontSize: 14,
+          //         fontWeight: FontWeight.w600,
+          //         color: profile.red,
+          //       ),
+          //     ),
+          //     trailing: _isLoggingOut
+          //         ? const SizedBox(
+          //             width: 16,
+          //             height: 16,
+          //             child: CircularProgressIndicator(
+          //               strokeWidth: 2,
+          //               color: profile.red,
+          //             ),
+          //           )
+          //         : const Icon(
+          //             Icons.arrow_forward_ios_rounded,
+          //             size: 13,
+          //             color: profile.red,
+          //           ),
+          //   ),
+          // ),
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            child: Ink(
+              decoration: BoxDecoration(
+                color: profile.redSoft,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: profile.red.withOpacity(0.12)),
               ),
-              leading: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: profile.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+              child: ListTile(
+                onTap: _showLogoutSheet,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
-                  Icons.logout_rounded,
-                  color: profile.red,
-                  size: 18,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 2,
                 ),
-              ),
-              title: const Text(
-                'Logout',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: profile.red,
+                leading: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: profile.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: profile.red,
+                    size: 18,
+                  ),
                 ),
-              ),
-              trailing: _isLoggingOut
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: profile.red,
+                  ),
+                ),
+                trailing: _isLoggingOut
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: profile.red,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 13,
                         color: profile.red,
                       ),
-                    )
-                  : const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 13,
-                      color: profile.red,
-                    ),
+              ),
             ),
           ),
         ],

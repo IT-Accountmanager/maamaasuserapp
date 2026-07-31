@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../Auth_service/Subscription_authservice.dart';
 
@@ -46,8 +47,8 @@ class RazorpayService {
     }
 
     var options = {
-      'key': 'rzp_live_RU5whSMu9rPV7s',
-      // 'key': 'rzp_test_R6hte6Puir9RAR',
+      // 'key': 'rzp_test_TJECsclCivENpY',
+      'key': 'rzp_live_TJDvykibQEsCuN',
       'amount': (amount * 100).toInt(),
       'order_id': orderId,
       'name': "maamaas",
@@ -63,14 +64,22 @@ class RazorpayService {
   }
 
   void _handleSuccess(PaymentSuccessResponse response) {
+    // debugPrint("Razorpay Success");
+    // debugPrint("PaymentId : ${response.paymentId}");
+    // debugPrint("OrderId   : ${response.orderId}");
+    // debugPrint("Signature : ${response.signature}");
     if (onSuccess != null) onSuccess!(response);
   }
 
   void _handleError(PaymentFailureResponse response) {
+    // debugPrint("Razorpay Error");
+    // debugPrint("Code    : ${response.code}");
+    // debugPrint("Message : ${response.message}");
     if (onError != null) onError!(response);
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
+    // debugPrint("External Wallet : ${response.walletName}");
     if (onExternalWallet != null) onExternalWallet!(response);
   }
 

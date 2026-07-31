@@ -98,4 +98,37 @@ class LocationService {
       fullAddress: fullAddress,
     );
   }
+
+  /// Convert latitude & longitude to address
+  static Future<String> getAddressFromLatLng(
+      double latitude,
+      double longitude,
+      ) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
+
+      if (placemarks.isEmpty) {
+        return "";
+      }
+
+      final place = placemarks.first;
+
+      return [
+        place.name,
+        place.street,
+        place.subLocality,
+        place.locality,
+        place.administrativeArea,
+        place.postalCode,
+      ]
+          .where((e) => e != null && e.isNotEmpty)
+          .join(", ");
+
+    } catch (e) {
+      return "";
+    }
+  }
 }

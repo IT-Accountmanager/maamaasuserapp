@@ -38,6 +38,7 @@ class ApiClient {
       // "http://staging.maamaas.com:8989/payments";
   "https://backend.maamaas.com/payments";
 
+
   static SessionExpiredHandler? onSessionExpired;
 
   // 🔒 Refresh lock — prevents parallel refresh calls
@@ -237,6 +238,20 @@ class ApiClient {
     return headers;
   }
 
+  // static Future<http.Response> get(
+  //   String endpoint, {
+  //   String service = 'subscription',
+  //   bool requiresAuth = true,
+  // }) async {
+  //   return _handleRequestWithRefreshRetry(() async {
+  //     final baseUrl = _resolveBaseUrl(service);
+  //     final url = Uri.parse('$baseUrl/$endpoint');
+  //     final headers = requiresAuth
+  //         ? await _headers()
+  //         : {"Content-Type": "application/json"};
+  //     return http.get(url, headers: headers);
+  //   });
+  // }
   static Future<http.Response> get(
     String endpoint, {
     String service = 'subscription',
@@ -245,13 +260,43 @@ class ApiClient {
     return _handleRequestWithRefreshRetry(() async {
       final baseUrl = _resolveBaseUrl(service);
       final url = Uri.parse('$baseUrl/$endpoint');
+
       final headers = requiresAuth
           ? await _headers()
           : {"Content-Type": "application/json"};
-      return http.get(url, headers: headers);
+
+      final response = await http.get(url, headers: headers);
+
+      // print("Status : ${response.statusCode}");
+      // print("Body : ${response.body}");
+
+      return response;
     });
   }
 
+  // static Future<http.Response> post(
+  //   String endpoint,
+  //   dynamic body, {
+  //   String service = 'subscription',
+  //   bool sendJson = true,
+  // }) async {
+  //   return _handleRequestWithRefreshRetry(() async {
+  //     final baseUrl = _resolveBaseUrl(service);
+  //     final url = Uri.parse('$baseUrl/$endpoint');
+  //
+  //     final headers = await _headers();
+  //
+  //     if (body == null || !sendJson) {
+  //       headers.remove('Content-Type');
+  //     }
+  //
+  //     return http.post(
+  //       url,
+  //       headers: headers,
+  //       body: body == null ? null : (sendJson ? jsonEncode(body) : body),
+  //     );
+  //   });
+  // }
   static Future<http.Response> post(
     String endpoint,
     dynamic body, {
@@ -268,13 +313,51 @@ class ApiClient {
         headers.remove('Content-Type');
       }
 
-      return http.post(
+      // print("Body : ${body == null ? "NULL" : jsonEncode(body)}");
+
+      // ===============================================
+
+      final response = await http.post(
         url,
         headers: headers,
         body: body == null ? null : (sendJson ? jsonEncode(body) : body),
       );
+
+      // print("Response : ${response.body}");
+
+      // ================================================
+
+      return response;
     });
   }
+
+  // static Future<http.Response> put(
+  //   String endpoint,
+  //   dynamic body, {
+  //   String service = "subscription",
+  // }) async {
+  //   return _handleRequestWithRefreshRetry(() async {
+  //     final baseUrl = _resolveBaseUrl(service);
+  //     final url = Uri.parse("$baseUrl/$endpoint");
+  //     final headers = await _headers();
+  //     print("========== API REQUEST ==========");
+  //     print("PUT : $url");
+  //     print("Headers : $headers");
+  //     print("Body : ${jsonEncode(body)}");
+  //     print("================================");
+  //
+  //     final response = await http.put(
+  //       url,
+  //       headers: headers,
+  //       body: jsonEncode(body),
+  //     );
+  //
+  //     print("========== API RESPONSE ==========");
+  //     print("Status : ${response.statusCode}");
+  //     print("Body : ${response.body}");
+  //     print("=================================");
+  //   });
+  // }
 
   static Future<http.Response> put(
     String endpoint,
@@ -285,10 +368,33 @@ class ApiClient {
       final baseUrl = _resolveBaseUrl(service);
       final url = Uri.parse("$baseUrl/$endpoint");
       final headers = await _headers();
-      return http.put(url, headers: headers, body: jsonEncode(body));
+
+      // print("Body : ${jsonEncode(body)}");
+
+      final response = await http.put(
+        url,
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      // print("Status : ${response.statusCode}");
+      // print("Body : ${response.body}");
+
+      return response; // ✅ Required
     });
   }
 
+  // static Future<http.Response> delete(
+  //   String endpoint, {
+  //   String service = 'subscription',
+  // }) async {
+  //   return _handleRequestWithRefreshRetry(() async {
+  //     final baseUrl = _resolveBaseUrl(service);
+  //     final url = Uri.parse('$baseUrl/$endpoint');
+  //     final headers = await _headers();
+  //     return http.delete(url, headers: headers);
+  //   });
+  // }
   static Future<http.Response> delete(
     String endpoint, {
     String service = 'subscription',
@@ -297,7 +403,22 @@ class ApiClient {
       final baseUrl = _resolveBaseUrl(service);
       final url = Uri.parse('$baseUrl/$endpoint');
       final headers = await _headers();
-      return http.delete(url, headers: headers);
+
+      final response = await http.delete(url, headers: headers);
+
+      // print("Status Code : ${response.statusCode}");
+
+      try {
+        final prettyResponse = const JsonEncoder.withIndent(
+          '  ',
+        ).convert(jsonDecode(response.body));
+
+        // print(prettyResponse);
+      } catch (_) {
+        // print("Response : ${response.body}");
+      }
+
+      return response;
     });
   }
 

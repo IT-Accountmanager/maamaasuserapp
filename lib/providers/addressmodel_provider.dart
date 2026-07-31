@@ -111,7 +111,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
             : state.category, // ✅ FINAL FIX
       };
       //
-      debugPrint("📍 CATEGORY SENT: ${body['category']}");
+      // debugPrint("📍 CATEGORY SENT: ${body['category']}");
 
       final uri = Uri.parse("$baseurl/api/user/curret/location/update");
 

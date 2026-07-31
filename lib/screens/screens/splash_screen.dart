@@ -420,6 +420,7 @@ import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/fcmservice/fcm_services.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import '../Mainscreen.dart';
+import '../homescreens/home_page.dart';
 import 'login_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -441,6 +442,8 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _textOpacity;
 
   String kPendingReferralCodeKey = 'pending_referral_code';
+  final ScrollController _scrollController = ScrollController();
+
 
   @override
   void initState() {
@@ -450,7 +453,7 @@ class _SplashScreenState extends State<SplashScreen>
       _initializeApp();
       unawaited(FCMService().initFCM());
     });
-    debugPrint("SPLASH OPENED");
+    // debugPrint("SPLASH OPENED");
   }
 
   @override
@@ -518,45 +521,45 @@ class _SplashScreenState extends State<SplashScreen>
   // }
   Future<void> _initializeApp() async {
     try {
-      debugPrint("LOGIN CHECK START");
+      // debugPrint("LOGIN CHECK START");
 
       await _checkLogin();
 
-      debugPrint("LOGIN CHECK DONE");
+      // debugPrint("LOGIN CHECK DONE");
 
       unawaited(_requestPermissions());
 
-      debugPrint("PERMISSION REQUEST STARTED");
+      // debugPrint("PERMISSION REQUEST STARTED");
 
       if (isLoggedIn) {
         unawaited(_sendLocationToApi());
       }
 
-      debugPrint("SPLASH START");
+      // debugPrint("SPLASH START");
 
       if (widget.waitForReferrer != null) {
-        debugPrint("WAITING FOR REFERRER");
+        // debugPrint("WAITING FOR REFERRER");
 
         await widget.waitForReferrer!().timeout(
           const Duration(seconds: 5),
           onTimeout: () {
-            debugPrint("REFERRER TIMEOUT");
+            // debugPrint("REFERRER TIMEOUT");
           },
         );
 
-        debugPrint("REFERRER COMPLETED");
+        // debugPrint("REFERRER COMPLETED");
       }
 
-      debugPrint("SPLASH END");
+      // debugPrint("SPLASH END");
 
       await Future.delayed(const Duration(milliseconds: 1200));
 
-      debugPrint("NAVIGATE START");
+      // debugPrint("NAVIGATE START");
 
       _navigate();
     } catch (e, s) {
-      debugPrint("SPLASH ERROR = $e");
-      debugPrint("$s");
+      // debugPrint("SPLASH ERROR = $e");
+      // debugPrint("$s");
 
       _navigate();
     }
@@ -576,56 +579,56 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _requestPermissions() async {
     try {
-      debugPrint("PERMISSION START");
+      // debugPrint("PERMISSION START");
 
-      debugPrint("BEFORE NOTIFICATION");
+      // debugPrint("BEFORE NOTIFICATION");
 
       final status = await Permission.notification.request();
 
-      debugPrint("AFTER NOTIFICATION = $status");
-      debugPrint("NOTIFICATION DONE");
+      // debugPrint("AFTER NOTIFICATION = $status");
+      // debugPrint("NOTIFICATION DONE");
 
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
-      debugPrint("LOCATION SERVICE = $serviceEnabled");
+      // debugPrint("LOCATION SERVICE = $serviceEnabled");
 
       if (!serviceEnabled) return;
 
       LocationPermission permission = await Geolocator.checkPermission();
 
-      debugPrint("CURRENT LOCATION PERMISSION = $permission");
+      // debugPrint("CURRENT LOCATION PERMISSION = $permission");
 
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
 
-        debugPrint("AFTER LOCATION REQUEST = $permission");
+        // debugPrint("AFTER LOCATION REQUEST = $permission");
 
         if (permission == LocationPermission.denied) return;
       }
 
       if (permission == LocationPermission.deniedForever) {
-        debugPrint("LOCATION DENIED FOREVER");
+        // debugPrint("LOCATION DENIED FOREVER");
         await openAppSettings();
         return;
       }
 
-      debugPrint("GETTING POSITION");
+      // debugPrint("GETTING POSITION");
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       ).timeout(const Duration(seconds: 8));
 
-      debugPrint("POSITION = ${position.latitude}, ${position.longitude}");
+      // debugPrint("POSITION = ${position.latitude}, ${position.longitude}");
 
       final prefs = await SharedPreferences.getInstance();
 
       await prefs.setDouble('latitude', position.latitude);
       await prefs.setDouble('longitude', position.longitude);
 
-      debugPrint("LOCATION SAVED");
+      // debugPrint("LOCATION SAVED");
     } catch (e, s) {
-      debugPrint("PERMISSION ERROR = $e");
-      debugPrint("$s");
+      // debugPrint("PERMISSION ERROR = $e");
+      // debugPrint("$s");
     }
   }
 
@@ -673,8 +676,8 @@ class _SplashScreenState extends State<SplashScreen>
     final referralCode = prefs.getString(kPendingReferralCodeKey);
 
     if (!isLoggedIn && referralCode != null && referralCode.isNotEmpty) {
-      debugPrint("GOING TO SIGNUP");
-      debugPrint("REFERRAL IN SPLASH = $referralCode");
+      // debugPrint("GOING TO SIGNUP");
+      // debugPrint("REFERRAL IN SPLASH = $referralCode");
 
       Navigator.pushReplacement(
         context,
@@ -682,11 +685,11 @@ class _SplashScreenState extends State<SplashScreen>
       );
       return;
     }
-    debugPrint("REFERRAL IN SPLASH = $referralCode");
-    debugPrint("isLoggedIn = $isLoggedIn");
-    debugPrint("NAVIGATE => isLoggedIn=$isLoggedIn referral=$referralCode");
-
-    debugPrint("GOING TO LOGIN");
+    // debugPrint("REFERRAL IN SPLASH = $referralCode");
+    // debugPrint("isLoggedIn = $isLoggedIn");
+    // debugPrint("NAVIGATE => isLoggedIn=$isLoggedIn referral=$referralCode");
+    //
+    // debugPrint("GOING TO LOGIN");
 
     Navigator.pushReplacement(
       context,
@@ -694,6 +697,7 @@ class _SplashScreenState extends State<SplashScreen>
         pageBuilder: (_, __, ___) {
           if (isLoggedIn) {
             return MainScreenfood(showPromotion: true);
+            // return HomePage(scrollController: _scrollController,);
           }
 
           return const LoginScreen();

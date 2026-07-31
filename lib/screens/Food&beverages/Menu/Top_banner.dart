@@ -74,7 +74,7 @@ class _BannerSectionState extends State<BannerSection> {
     }
   }
 
-  Widget _socialIcon(IconData icon, String url) {
+  Widget _socialIcon(FaIconData  icon, String url) {
     return GestureDetector(
       onTap: () => _openLink(url),
       child: Container(

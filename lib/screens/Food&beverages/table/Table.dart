@@ -1,4 +1,5 @@
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
+import 'package:maamaas/widgets/safearea.dart';
 import '../../../Models/food/Restaurentscdhule.dart';
 import '../../../Services/App_color_service/app_colours.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
@@ -114,188 +115,195 @@ class _TableTabContentState extends State<TableTabContent> {
       builder: (bottomSheetContext) {
         return StatefulBuilder(
           builder: (context, bottomSheetSetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom:
-                    MediaQuery.of(bottomSheetContext).viewInsets.bottom + 16,
-                left: 16,
-                right: 16,
-                top: 16,
-              ),
-              child: SingleChildScrollView(
-                child: (isScheduleLoading)
-                    ? const Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Text(
-                              "Schedule Your Table",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.of(context).primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(nameController, "Name", Icons.person),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            phoneController,
-                            "Phone Number",
-                            Icons.phone,
-                            TextInputType.phone,
-                          ),
-                          const SizedBox(height: 12),
-
-                          // _buildDateField(bottomSheetContext),
-                          _buildDateField(
-                            bottomSheetContext,
-                            bottomSheetSetState,
-                          ),
-                          const SizedBox(height: 12),
-                          if (isCheckingSchedule) ...[
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.blue.shade200),
-                              ),
-                              child: const Row(
-                                children: [
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      "Checking restaurant timings...",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ] else if (selectedDaySchedule != null) ...[
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.orange.shade200,
+            return PlatformSafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom:
+                      MediaQuery.of(bottomSheetContext).viewInsets.bottom + 16,
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                ),
+                child: SingleChildScrollView(
+                  child: (isScheduleLoading)
+                      ? const Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Text(
+                                "Schedule Your Table",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.of(context).primary,
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.access_time,
-                                    color: Colors.orange,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              nameController,
+                              "Name",
+                              Icons.person,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              phoneController,
+                              "Phone Number",
+                              Icons.phone,
+                              TextInputType.phone,
+                            ),
+                            const SizedBox(height: 12),
+
+                            // _buildDateField(bottomSheetContext),
+                            _buildDateField(
+                              bottomSheetContext,
+                              bottomSheetSetState,
+                            ),
+                            const SizedBox(height: 12),
+                            if (isCheckingSchedule) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.blue.shade200,
                                   ),
-
-                                  const SizedBox(width: 10),
-
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Restaurant Available Timings",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.orange.shade900,
-                                          ),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        "Checking restaurant timings...",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
                                         ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ] else if (selectedDaySchedule != null) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.orange.shade200,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.access_time,
+                                      color: Colors.orange,
+                                    ),
 
-                                        const SizedBox(height: 4),
+                                    const SizedBox(width: 10),
 
-                                        Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.calendar_today,
-                                              size: 14,
-                                              color: Colors.black54,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Restaurant Available Timings",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.orange.shade900,
                                             ),
-                                            const SizedBox(width: 6),
+                                          ),
 
-                                            Text(
-                                              selectedDaySchedule?.day ?? '',
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black87,
+                                          const SizedBox(height: 4),
+
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.calendar_today,
+                                                size: 14,
+                                                color: Colors.black54,
+                                              ),
+                                              const SizedBox(width: 6),
+
+                                              Text(
+                                                selectedDaySchedule?.day ?? '',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          const SizedBox(height: 6),
+
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              "${_formatApiTime(selectedDaySchedule?.startTime ?? '')}  →  ${_formatApiTime(selectedDaySchedule?.lastTime ?? '')}",
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.of(
+                                                  context,
+                                                ).primary,
                                               ),
                                             ),
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 6),
-
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
                                           ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            "${_formatApiTime(selectedDaySchedule?.startTime ?? '')}  →  ${_formatApiTime(selectedDaySchedule?.lastTime ?? '')}",
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.of(
-                                                context,
-                                              ).primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
+
+                              const SizedBox(height: 12),
+                            ],
+
+                            _buildTimeField(
+                              bottomSheetContext,
+                              bottomSheetSetState,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              noofpeople,
+                              "Number of People",
+                              Icons.people,
+                              TextInputType.number,
                             ),
 
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 20),
+                            _buildSubmitButton(bottomSheetContext),
+                            const SizedBox(height: 16),
                           ],
-
-                          _buildTimeField(
-                            bottomSheetContext,
-                            bottomSheetSetState,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            noofpeople,
-                            "Number of People",
-                            Icons.people,
-                            TextInputType.number,
-                          ),
-
-                          const SizedBox(height: 20),
-                          _buildSubmitButton(bottomSheetContext),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
+                        ),
+                ),
               ),
             );
           },
