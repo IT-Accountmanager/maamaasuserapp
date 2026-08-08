@@ -45,10 +45,11 @@ android {
     defaultConfig {
         applicationId = "com.maamaas.app"
         minSdk = flutter.minSdkVersion   // Required for 16 KB memory page support
-        targetSdk = 35
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["AIzaSyCf7bYn7iDIs2T6-sDnmr7qWy9oFZOPOuc"] = mapsApiKey
+//        manifestPlaceholders["AIzaSyCf7bYn7iDIs2T6-sDnmr7qWy9oFZOPOuc"] = mapsApiKey
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     signingConfigs {

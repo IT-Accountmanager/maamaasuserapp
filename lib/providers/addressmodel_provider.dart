@@ -1,13 +1,12 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Services/Auth_service/Apiclient.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// const String baseurl = "http://staging.maamaas.com:8080//subscription";
-const String baseurl = "https://backend.maamaas.com/subscription";
+const String baseurl = "http://staging.maamaas.com:8080//subscription";
+// const String baseurl = "https://backend.maamaas.com/subscription";
 
 class AddressState {
   final String city;

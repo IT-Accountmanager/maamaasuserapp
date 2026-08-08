@@ -1,5 +1,6 @@
 import '../../Services/Auth_service/promotion_services_Authservice.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
+import '../../widgets/paymentstatus.dart';
 import '../../widgets/safearea.dart';
 import '../../widgets/widgets/food/currentcart_notifier.dart';
 import '../../Models/promotions_model/promotions_model.dart';
@@ -59,13 +60,7 @@ class cartuser {
 }
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
-enum PaymentOverlayState {
-  none,
-  placingOrder,
-  openingGateway,
-  processing,
-  success,
-}
+
 
 // ─── Main Widget ──────────────────────────────────────────────────────────────
 // ignore: camel_case_types
@@ -116,6 +111,17 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
   // ignore: prefer_final_fields
   int _socketVersion = 0;
   String? _lastSocketEventKey;
+
+  bool _orderCreationStarted = false;
+
+  PaymentStatus _paymentStatus = PaymentStatus.created;
+
+  String paymentMessage = "Preparing payment...";
+
+  String paymentStatusTitle = "Payment Created";
+
+  String paymentStatusDescription =
+      "Your payment request has been created. Please complete the payment.";
 
   @override
   void initState() {
@@ -377,6 +383,80 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     return t;
   }
 
+
+  void _updatePaymentStatus(PaymentStatus status) {
+    if (!mounted) return;
+
+    setState(() {
+      _paymentStatus = status;
+
+      switch (status) {
+        case PaymentStatus.created:
+          paymentStatusTitle = "Payment Created";
+          paymentStatusDescription =
+          "Your payment request has been created. Please complete the payment.";
+          paymentMessage = "Preparing payment...";
+
+          break;
+
+        case PaymentStatus.authenticated:
+          paymentStatusTitle = "Payment Authenticated";
+          paymentStatusDescription =
+          "Your bank has authenticated the payment. We are waiting for the payment authorization to complete.";
+          paymentMessage = "Waiting for bank confirmation...";
+
+          break;
+
+        case PaymentStatus.authorized:
+          paymentStatusTitle = "Payment Authorized";
+          paymentStatusDescription =
+          "Your bank has approved the payment, but the amount has not been captured yet. We are finalizing the payment.";
+
+          paymentMessage = "Finalizing payment...";
+
+          break;
+
+        case PaymentStatus.captured:
+          paymentStatusTitle = "Payment Successful";
+          paymentStatusDescription =
+          "Your payment has been successfully captured. We can now create your order.";
+
+          paymentMessage = "Payment successful. Creating your order...";
+
+          break;
+
+        case PaymentStatus.failed:
+          paymentStatusTitle = "Payment Failed";
+          paymentStatusDescription =
+          "The payment could not be completed. Your order will not be placed.";
+
+          paymentMessage = "Payment failed.";
+
+          break;
+
+        case PaymentStatus.refunded:
+          paymentStatusTitle = "Payment Refunded";
+          paymentStatusDescription =
+          "The payment was not captured successfully. If money was debited from your account, it will be reversed/refunded according to the payment provider and bank processing time.";
+
+          paymentMessage = "Payment refunded.";
+
+          break;
+
+        case PaymentStatus.unknown:
+          paymentStatusTitle = "Checking Payment";
+          paymentStatusDescription =
+          "We are checking the latest status of your payment. Please wait.";
+
+          paymentMessage = "Verifying payment...";
+          break;
+      }
+    });
+  }
+
+
+
+
   Future<void> placeOrder() async {
     final hasScheduledItems = cartData?.hasAnyScheduledItem ?? false;
     if (hasScheduledItems && (_selectedDate == null || _selectedTime == null)) {
@@ -424,31 +504,162 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
           return;
         }
         final rp = RazorpayService();
+        // rp.onSuccess = (res) async {
+        //   final pid = res.paymentId!, oid = res.orderId!;
+        //   if (mounted) {
+        //     setState(() => _overlayState = PaymentOverlayState.processing);
+        //   }
+        //   final ok = isUserScheduled
+        //       ? await _placeScheduledOrder(
+        //           paymentMethod: "Online_Payment",
+        //           razorpayPaymentId: pid,
+        //           razorpayOrderId: oid,
+        //           amount: amount,
+        //         )
+        //       : await _placeDirectOrder(
+        //           paymentMethod: "Online_Payment",
+        //           razorpayPaymentId: pid,
+        //           razorpayOrderId: oid,
+        //           amount: amount,
+        //         );
+        //   if (ok) {
+        //     food_Authservice
+        //         .capturePayment(paymentId: pid, amount: amount)
+        //         .catchError((_) {});
+        //   } else {
+        //     AppAlert.error(context, "Order failed. Refund in 3–5 days.");
+        //   }
+        // };
         rp.onSuccess = (res) async {
-          final pid = res.paymentId!, oid = res.orderId!;
+          final pid = res.paymentId!;
+          final oid = res.orderId!;
+
           if (mounted) {
             setState(() => _overlayState = PaymentOverlayState.processing);
           }
-          final ok = isUserScheduled
-              ? await _placeScheduledOrder(
-                  paymentMethod: "Online_Payment",
-                  razorpayPaymentId: pid,
-                  razorpayOrderId: oid,
-                  amount: amount,
-                )
-              : await _placeDirectOrder(
-                  paymentMethod: "Online_Payment",
-                  razorpayPaymentId: pid,
-                  razorpayOrderId: oid,
-                  amount: amount,
-                );
-          if (ok) {
-            food_Authservice
-                .capturePayment(paymentId: pid, amount: amount)
-                .catchError((_) {});
-          } else {
-            AppAlert.error(context, "Order failed. Refund in 3–5 days.");
+
+          // Capture payment first
+          final captured = await food_Authservice.capturePayment(
+            paymentId: pid,
+            amount: amount,
+          );
+
+          if (!captured) {
+            AppAlert.error(
+              context,
+              "Unable to capture payment. We'll verify automatically.",
+            );
+            return;
           }
+
+          // Wait until Razorpay confirms CAPTURED
+          for (int i = 0; i < 15; i++) {
+            final payment = await food_Authservice.verifyPayment(pid);
+
+            print("========== PAYMENT VERIFY ==========");
+            print("Attempt      : ${i + 1}");
+            print("Payment ID   : $pid");
+
+            if (payment == null) {
+              print("Response     : NULL");
+              print("====================================");
+
+              await Future.delayed(const Duration(seconds: 2));
+              continue;
+            }
+
+            print("Status       : ${payment.status}");
+            print("Captured     : ${payment.captured}");
+            print("====================================");
+
+            switch (payment.status?.toLowerCase()) {
+              case "created":
+                print("Payment Status -> CREATED");
+                if (mounted) {
+                  setState(() {
+                    paymentMessage = "Preparing payment...";
+                  });
+                }
+                break;
+
+              case "authenticated":
+                print("Payment Status -> AUTHENTICATED");
+                if (mounted) {
+                  setState(() {
+                    paymentMessage =
+                        "Payment authenticated.\nWaiting for bank confirmation...";
+                  });
+                }
+                break;
+
+              case "authorized":
+                print("Payment Status -> AUTHORIZED");
+                if (mounted) {
+                  setState(() {
+                    paymentMessage =
+                        "Payment authorized.\nFinalizing payment...";
+                  });
+                }
+                break;
+
+              case "captured":
+                print("Payment Status -> CAPTURED");
+                if (mounted) {
+                  setState(() {
+                    paymentMessage =
+                        "Payment successful.\nCreating your order...";
+                  });
+                }
+
+                final ok = isUserScheduled
+                    ? await _placeScheduledOrder(
+                        paymentMethod: "Online_Payment",
+                        razorpayPaymentId: pid,
+                        razorpayOrderId: oid,
+                        amount: amount,
+                      )
+                    : await _placeDirectOrder(
+                        paymentMethod: "Online_Payment",
+                        razorpayPaymentId: pid,
+                        razorpayOrderId: oid,
+                        amount: amount,
+                      );
+
+                print("Order Created : $ok");
+
+                if (!ok) {
+                  AppAlert.error(
+                    context,
+                    "Payment completed but order creation failed.\nPayment ID: $pid",
+                  );
+                }
+
+                return;
+
+              case "refunded":
+                print("Payment Status -> REFUNDED");
+                AppAlert.info(
+                  context,
+                  "Payment refunded.\nAmount will be credited in 3-5 business days.",
+                );
+                return;
+
+              case "failed":
+                print("Payment Status -> FAILED");
+                AppAlert.error(context, "Payment failed.");
+                return;
+
+              default:
+                print("Unknown Payment Status -> ${payment.status}");
+            }
+
+            await Future.delayed(const Duration(seconds: 2));
+          }
+
+          AppAlert.info(
+            context,
+            "Payment is still being verified. Please wait a moment.",
+          );
         };
         rp.onError = (res) {
           if (mounted) {
@@ -493,213 +704,6 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
       if (mounted) setState(() => isPlacingOrder = false);
     }
   }
-  // Future<void> placeOrder() async {
-  //   debugPrint("========== PLACE ORDER STARTED ==========");
-  //
-  //   final hasScheduledItems = cartData?.hasAnyScheduledItem ?? false;
-  //   debugPrint("Has Scheduled Items : $hasScheduledItems");
-  //   debugPrint("Selected Date       : $_selectedDate");
-  //   debugPrint("Selected Time       : $_selectedTime");
-  //
-  //   if (hasScheduledItems &&
-  //       (_selectedDate == null || _selectedTime == null)) {
-  //     debugPrint("Schedule validation failed");
-  //     AppAlert.error(
-  //       context,
-  //       "Please select date & time to schedule your order",
-  //     );
-  //     return;
-  //   }
-  //
-  //   debugPrint("Order Type : ${cartData?.orderType}");
-  //
-  //   if ((cartData?.orderType ?? '').trim().toLowerCase() == 'delivery') {
-  //     debugPrint("Delivery Address : ${cartData?.deliveryAddress}");
-  //
-  //     if ((cartData?.deliveryAddress ?? '').trim().isEmpty) {
-  //       AppAlert.error(context, "Please select a delivery address");
-  //       return;
-  //     }
-  //   }
-  //
-  //   debugPrint("Selected Payment Method : $selectedPaymentMethod");
-  //
-  //   if (selectedPaymentMethod == "Maamaas_Wallet") {
-  //     final wb = getSelectedWalletBalance();
-  //     final gt = (cartData?.grandTotal ?? 0).toDouble();
-  //
-  //     debugPrint("Wallet Balance : $wb");
-  //     debugPrint("Grand Total    : $gt");
-  //
-  //     if (wb < gt) {
-  //       AppAlert.error(
-  //         context,
-  //         "Insufficient wallet balance\nWallet: ₹${wb.toStringAsFixed(2)}\nOrder Total: ₹${gt.toStringAsFixed(2)}",
-  //       );
-  //       return;
-  //     }
-  //   }
-  //
-  //   if (selectedPaymentMethod.isEmpty) {
-  //     debugPrint("No payment method selected");
-  //     AppAlert.error(context, "Please select a payment method");
-  //     return;
-  //   }
-  //
-  //   setState(() => isPlacingOrder = true);
-  //
-  //   try {
-  //     final bool isUserScheduled =
-  //         _selectedDate != null || _selectedTime != null;
-  //
-  //     debugPrint("Is Scheduled Order : $isUserScheduled");
-  //
-  //     if (selectedPaymentMethod == "Online_Payment") {
-  //       final amount = (cartData?.grandTotal ?? 0).toDouble();
-  //
-  //       debugPrint("========== RAZORPAY FLOW ==========");
-  //       debugPrint("Amount : $amount");
-  //
-  //       if (mounted) {
-  //         setState(() => _overlayState = PaymentOverlayState.openingGateway);
-  //       }
-  //
-  //       debugPrint("Creating Razorpay Order...");
-  //
-  //       final orderId = await food_Authservice.createOrder(amount);
-  //
-  //       debugPrint("Razorpay OrderId : $orderId");
-  //
-  //       if (orderId == null) {
-  //         debugPrint("Failed to create Razorpay order");
-  //         AppAlert.error(context, "Failed to create payment order");
-  //         return;
-  //       }
-  //
-  //       final rp = RazorpayService();
-  //
-  //       rp.onSuccess = (res) async {
-  //         debugPrint("========== PAYMENT SUCCESS ==========");
-  //         debugPrint("PaymentId : ${res.paymentId}");
-  //         debugPrint("OrderId   : ${res.orderId}");
-  //         debugPrint("Signature : ${res.signature}");
-  //
-  //         final pid = res.paymentId!;
-  //         final oid = res.orderId!;
-  //
-  //         if (mounted) {
-  //           setState(() => _overlayState = PaymentOverlayState.processing);
-  //         }
-  //
-  //         debugPrint("Placing order on backend...");
-  //
-  //         final ok = isUserScheduled
-  //             ? await _placeScheduledOrder(
-  //           paymentMethod: "Online_Payment",
-  //           razorpayPaymentId: pid,
-  //           razorpayOrderId: oid,
-  //           amount: amount,
-  //         )
-  //             : await _placeDirectOrder(
-  //           paymentMethod: "Online_Payment",
-  //           razorpayPaymentId: pid,
-  //           razorpayOrderId: oid,
-  //           amount: amount,
-  //         );
-  //
-  //         debugPrint("Backend Order Result : $ok");
-  //
-  //         if (ok) {
-  //           debugPrint("Capturing Razorpay Payment...");
-  //
-  //           food_Authservice
-  //               .capturePayment(
-  //             paymentId: pid,
-  //             amount: amount,
-  //           )
-  //               .then((value) {
-  //             debugPrint("Payment Capture Success");
-  //           })
-  //               .catchError((e) {
-  //             debugPrint("Payment Capture Failed : $e");
-  //           });
-  //         } else {
-  //           debugPrint("Order placement failed after payment");
-  //           AppAlert.error(context, "Order failed. Refund in 3–5 days.");
-  //         }
-  //       };
-  //
-  //       rp.onError = (res) {
-  //         debugPrint("========== PAYMENT FAILED ==========");
-  //         debugPrint("Code    : ${res.code}");
-  //         debugPrint("Message : ${res.message}");
-  //
-  //         if (mounted) {
-  //           setState(() {
-  //             _overlayState = PaymentOverlayState.none;
-  //             isPlacingOrder = false;
-  //           });
-  //         }
-  //
-  //         AppAlert.error(context, "Payment failed: ${res.message}");
-  //       };
-  //
-  //       debugPrint("Opening Razorpay Checkout...");
-  //
-  //       rp.startPayment(
-  //         orderId: orderId,
-  //         amount: amount,
-  //         description: "Online Payment via Razorpay",
-  //       );
-  //
-  //       debugPrint("Razorpay Checkout Opened");
-  //
-  //       return;
-  //     }
-  //
-  //     debugPrint("========== NON-ONLINE PAYMENT ==========");
-  //
-  //     final amt = cartData!.grandTotal.toDouble();
-  //
-  //     if (isUserScheduled) {
-  //       debugPrint("Calling Scheduled Order API");
-  //       await _placeScheduledOrder(
-  //         paymentMethod: selectedPaymentMethod,
-  //         razorpayPaymentId: "",
-  //         razorpayOrderId: "",
-  //         amount: amt,
-  //       );
-  //     } else {
-  //       debugPrint("Calling Direct Order API");
-  //       await _placeDirectOrder(
-  //         paymentMethod: selectedPaymentMethod,
-  //         razorpayPaymentId: "",
-  //         razorpayOrderId: "",
-  //         amount: amt,
-  //       );
-  //     }
-  //   } catch (e, stackTrace) {
-  //     debugPrint("========== EXCEPTION ==========");
-  //     debugPrint(e.toString());
-  //     debugPrint(stackTrace.toString());
-  //
-  //     String message = e.toString().contains("Exception:")
-  //         ? e.toString().replaceFirst("Exception: ", "")
-  //         : e.toString();
-  //
-  //     if (mounted) {
-  //       setState(() => _overlayState = PaymentOverlayState.none);
-  //     }
-  //
-  //     AppAlert.error(context, message);
-  //   } finally {
-  //     debugPrint("========== PLACE ORDER FINISHED ==========");
-  //
-  //     if (mounted) {
-  //       setState(() => isPlacingOrder = false);
-  //     }
-  //   }
-  // }
 
   Future<bool> _placeScheduledOrder({
     required String paymentMethod,

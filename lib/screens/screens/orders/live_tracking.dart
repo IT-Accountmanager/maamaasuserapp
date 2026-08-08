@@ -253,7 +253,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       _googleApiKey = await ApiKeyService.getApiKey();
       _delivery =
           widget.deliveryModel ??
-          await DeliveryOrderService.getOrder(widget.orderId);
+          await DeliveryService.getOrder(widget.orderId);
 
       if (_delivery != null) {
         _orderStartTime = DateTime.now();
@@ -301,7 +301,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       _loadingReview = true;
     });
 
-    final review = await DeliveryOrderService.getDeliveryPartnerReview(
+    final review = await DeliveryService.getDeliveryPartnerReview(
       widget.orderId,
     );
 
@@ -321,7 +321,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       return;
     }
 
-    final success = await DeliveryOrderService.submitDeliveryPartnerReview(
+    final success = await DeliveryService.submitDeliveryPartnerReview(
       orderId: widget.orderId,
       rating: _deliveryRating.toInt(),
       review: _deliveryReviewController.text.trim(),
@@ -345,7 +345,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       ).showSnackBar(const SnackBar(content: Text("Failed to submit review.")));
     }
   }
-
 
   // ── ETA ───────────────────────────────────────────────────────────────────
 
@@ -658,59 +657,128 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
   // ── Polyline ──────────────────────────────────────────────────────────────
 
+  // Future<void> _drawPolyline() async {
+  //   if (_googleApiKey == null || _delivery == null) return;
+  //
+  //   final bool isOnTheWay = _currentOrderStatus == OrderStatus.ontheway;
+  //
+  //   final PointLatLng origin;
+  //   if (isOnTheWay && _currentAnimatedPosition != null) {
+  //     origin = PointLatLng(
+  //       _currentAnimatedPosition!.latitude,
+  //       _currentAnimatedPosition!.longitude,
+  //     );
+  //   } else if (isOnTheWay &&
+  //       _delivery!.deliveryPartnerLatitude != 0 &&
+  //       _delivery!.deliveryPartnerLongitude != 0) {
+  //     origin = PointLatLng(
+  //       _delivery!.deliveryPartnerLatitude,
+  //       _delivery!.deliveryPartnerLongitude,
+  //     );
+  //   } else {
+  //     origin = PointLatLng(
+  //       _delivery!.vendorLatitude,
+  //       _delivery!.vendorLongitude,
+  //     );
+  //   }
+  //
+  //   final destination = PointLatLng(
+  //     _delivery!.userLatitude,
+  //     _delivery!.userLongitude,
+  //   );
+  //
+  //   try {
+  //     final result = await PolylinePoints().getRouteBetweenCoordinates(
+  //       request: PolylineRequest(
+  //         origin: origin,
+  //         destination: destination,
+  //         mode: TravelMode.driving,
+  //       ),
+  //       googleApiKey: _googleApiKey!,
+  //     );
+  //     if (result.points.isNotEmpty) {
+  //       final points = result.points
+  //           .map((p) => LatLng(p.latitude, p.longitude))
+  //           .toList();
+  //       // _fullRoutePoints = points;
+  //       _fullRoutePoints = _smoothRoute(points);
+  //
+  //       final trimFrom = _currentAnimatedPosition ?? points.first;
+  //       _applyTrimmedPolyline(trimFrom, points);
+  //
+  //       if (mounted) setState(() {});
+  //     }
+  //   } catch (e) {
+  //     //       debugPrint('Error drawing polyline: $e');
+  //   }
+  // }
+
   Future<void> _drawPolyline() async {
     if (_googleApiKey == null || _delivery == null) return;
 
-    final bool isOnTheWay = _currentOrderStatus == OrderStatus.ontheway;
+    PointLatLng origin;
+    PointLatLng destination;
 
-    final PointLatLng origin;
-    if (isOnTheWay && _currentAnimatedPosition != null) {
-      origin = PointLatLng(
-        _currentAnimatedPosition!.latitude,
-        _currentAnimatedPosition!.longitude,
-      );
-    } else if (isOnTheWay &&
-        _delivery!.deliveryPartnerLatitude != 0 &&
-        _delivery!.deliveryPartnerLongitude != 0) {
-      origin = PointLatLng(
-        _delivery!.deliveryPartnerLatitude,
-        _delivery!.deliveryPartnerLongitude,
-      );
-    } else {
-      origin = PointLatLng(
-        _delivery!.vendorLatitude,
-        _delivery!.vendorLongitude,
-      );
+    switch (_currentOrderStatus) {
+      case OrderStatus.waitingForPickup:
+        origin = PointLatLng(
+          _currentAnimatedPosition?.latitude ??
+              _delivery!.deliveryPartnerLatitude,
+          _currentAnimatedPosition?.longitude ??
+              _delivery!.deliveryPartnerLongitude,
+        );
+
+        destination = PointLatLng(
+          _delivery!.vendorLatitude,
+          _delivery!.vendorLongitude,
+        );
+        break;
+
+      case OrderStatus.ontheway:
+        origin = PointLatLng(
+          _currentAnimatedPosition?.latitude ??
+              _delivery!.deliveryPartnerLatitude,
+          _currentAnimatedPosition?.longitude ??
+              _delivery!.deliveryPartnerLongitude,
+        );
+
+        destination = PointLatLng(
+          _delivery!.userLatitude,
+          _delivery!.userLongitude,
+        );
+        break;
+
+      default:
+        origin = PointLatLng(
+          _delivery!.vendorLatitude,
+          _delivery!.vendorLongitude,
+        );
+
+        destination = PointLatLng(
+          _delivery!.userLatitude,
+          _delivery!.userLongitude,
+        );
     }
 
-    final destination = PointLatLng(
-      _delivery!.userLatitude,
-      _delivery!.userLongitude,
+    final result = await PolylinePoints().getRouteBetweenCoordinates(
+      googleApiKey: _googleApiKey!,
+      request: PolylineRequest(
+        origin: origin,
+        destination: destination,
+        mode: TravelMode.driving,
+      ),
     );
 
-    try {
-      final result = await PolylinePoints().getRouteBetweenCoordinates(
-        request: PolylineRequest(
-          origin: origin,
-          destination: destination,
-          mode: TravelMode.driving,
-        ),
-        googleApiKey: _googleApiKey!,
+    if (result.points.isNotEmpty) {
+      _fullRoutePoints = result.points
+          .map((e) => LatLng(e.latitude, e.longitude))
+          .toList();
+
+      _applyTrimmedPolyline(
+        _currentAnimatedPosition ?? LatLng(origin.latitude, origin.longitude),
       );
-      if (result.points.isNotEmpty) {
-        final points = result.points
-            .map((p) => LatLng(p.latitude, p.longitude))
-            .toList();
-        // _fullRoutePoints = points;
-        _fullRoutePoints = _smoothRoute(points);
 
-        final trimFrom = _currentAnimatedPosition ?? points.first;
-        _applyTrimmedPolyline(trimFrom, points);
-
-        if (mounted) setState(() {});
-      }
-    } catch (e) {
-      //       debugPrint('Error drawing polyline: $e');
+      setState(() {});
     }
   }
 
@@ -896,7 +964,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     }
 
     _startPartnerAnimation(_lastPartnerPosition!, to);
-    _startPartnerAnimation(_lastPartnerPosition!, to);
     if (_pendingPartnerPosition != null) {
       final next = _pendingPartnerPosition!;
 
@@ -904,8 +971,13 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
       _startPartnerAnimation(to, next);
     }
+    // if (_isRouteDeviation(to)) {
+    //   _refreshRoute(to);
+    // }
     if (_isRouteDeviation(to)) {
       _refreshRoute(to);
+    } else {
+      _applyTrimmedPolyline(to);
     }
   }
 
@@ -1140,7 +1212,8 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       _setupStaticMarkers();
     });
 
-    if (wasOnTheWay) _drawPolyline();
+    // if (wasOnTheWay) _drawPolyline();
+    _drawPolyline();
 
     if (newStatus == OrderStatus.completed) {
       _onDelivered();
@@ -1152,7 +1225,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
   Future<void> _refreshDeliveryData() async {
     if (!mounted) return;
-    final updated = await DeliveryOrderService.getOrder(widget.orderId);
+    final updated = await DeliveryService.getOrder(widget.orderId);
     if (updated == null || !mounted) return;
 
     setState(() => _delivery = updated);
@@ -1369,8 +1442,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
       ),
     );
   }
-
-
 
   Widget _buildStatusHeader() {
     final isDelivered = _currentOrderStatus == OrderStatus.completed;
@@ -2347,7 +2418,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage>
     _moveController?.dispose();
     _moveController = null;
 
-    // _bearing = _calculateBearing(from, to);
+    _bearing = _calculateBearing(from, to);
     double _calculateMovementBearing(LatLng previous, LatLng current) {
       return _calculateBearing(previous, current);
     }

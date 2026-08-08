@@ -1,21 +1,21 @@
-buildscript {
-
-//    ext.kotlin_version = '2.2.0'   // ✅ ADD THIS LINE
-
-    repositories {
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath("com.android.tools.build:gradle:8.9.1")
-        classpath("com.google.gms:google-services:4.4.4")
-        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.9")
-
-        // ✅ ADD THIS LINE
-//        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
-    }
-}
+//buildscript {
+//
+////    ext.kotlin_version = '2.2.0'   // ✅ ADD THIS LINE
+//
+//    repositories {
+//        google()
+//        mavenCentral()
+//    }
+//
+//    dependencies {
+//        classpath("com.android.tools.build:gradle:8.11.1")
+//        classpath("com.google.gms:google-services:4.4.4")
+//        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.9")
+//
+//        // ✅ ADD THIS LINE
+////        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+//    }
+//}
 
 
 //allprojects {

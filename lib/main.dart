@@ -103,16 +103,12 @@ class _BootstrapAppState extends State<BootstrapApp> {
   // ── cPanel App Links ──────────────────────────────────────────────────────
 
   Future<void> waitForReferrer() async {
-    // debugPrint("SPLASH START");
-    // debugPrint("WAITING FOR REFERRER");
-
     try {
       await _referrerCompleter.future.timeout(const Duration(seconds: 5));
     } catch (e) {
-      // debugPrint("REFERRER TIMEOUT: $e");
     }
 
-    // debugPrint("REFERRER COMPLETED");
+
   }
 
   Future<void> _initAppLinks() async {
@@ -134,15 +130,8 @@ class _BootstrapAppState extends State<BootstrapApp> {
     }, onError: (err) => debugPrint("❌ uriLinkStream error: $err"));
   }
 
-  /// Handles deep links of the form:
-  ///   https://applink.maamaas.com/campaign?campaignId=123
-  ///   https://applink.maamaas.com/referral?referralCode=ABC123   ← NEW
-  void _handleDeepLink(Uri uri) {
-    //     debugPrint("🔗 Deep Link Received: $uri");
 
-    // ── Referral link ─────────────────────────────────────────────────────
-    // Supported: /referral?referralCode=ABC123
-    //            /campaign?referralCode=ABC123  (optional fallback)
+  void _handleDeepLink(Uri uri) {
     final referralCode = uri.queryParameters['referralCode'];
     if (referralCode != null && referralCode.isNotEmpty) {
       //       debugPrint("🎁 Referral code from deep link: $referralCode");

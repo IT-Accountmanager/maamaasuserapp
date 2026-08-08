@@ -96,6 +96,7 @@ class Order {
   final int ratings;
   final String ratingCategory;
   final String vendorRegisteredName;
+  final String cancelReason;
 
   Order({
     required this.id,
@@ -133,6 +134,7 @@ class Order {
     required this.ratings,
     required this.ratingCategory,
     required this.vendorRegisteredName,
+    required this.cancelReason,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -175,6 +177,7 @@ class Order {
       ratings: json['ratings'] ?? 0,
       ratingCategory: json['ratingCategory'] ?? '',
       vendorRegisteredName: json["vendorRegisteredName"] ?? '',
+      cancelReason: json['cancelReason'] ?? " ",
     );
   }
 
@@ -248,6 +251,7 @@ class Order {
       ratings: ratings,
       ratingCategory: ratingCategory,
       vendorRegisteredName: vendorRegisteredName,
+      cancelReason: cancelReason,
     );
   }
 }

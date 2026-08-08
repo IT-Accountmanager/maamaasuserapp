@@ -1,8 +1,10 @@
 import '../../Models/food/Restaurentscdhule.dart';
 import '../../Models/food/aboutus_model.dart';
+import '../../Models/food/filterrequest.dart';
 import '../../Models/food/seatingdetails.dart';
 import '../../Models/food/tablebooking.dart';
 import '../../Models/food/team_model.dart';
+import '../../Models/food/verifypaymentl.dart';
 import '../../Models/subscrptions/advertisement_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Models/food/table_confirmedlist_model.dart' hide Seating;
@@ -426,11 +428,7 @@ class food_Authservice {
     final endpoint =
         "api/cart/add/item?userId=$userId&sheduleorder=$sheduleorder";
 
-    final body = {
-      "dishId": dishId,
-      "quantity": quantity,
-      "addons": addons,
-    };
+    final body = {"dishId": dishId, "quantity": quantity, "addons": addons};
 
     try {
       final response = await ApiClient.post(endpoint, body, service: "food");
@@ -1427,8 +1425,8 @@ class food_Authservice {
 
       final response = await ApiClient.put(endpoint, body, service: "food");
 
-      debugPrint("STATUS: ${response.statusCode}");
-      debugPrint("BODY: ${response.body}");
+      // debugPrint("STATUS: ${response.statusCode}");
+      // debugPrint("BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         return CouponResult(success: true);
@@ -1594,6 +1592,22 @@ class food_Authservice {
     }
   }
 
+  static Future<PaymentVerifyModel?> verifyPayment(String paymentId) async {
+    try {
+      final endpoint = "api/payments/verify/$paymentId";
+
+      final res = await ApiClient.get(endpoint, service: "food");
+      debugPrint("Status Code : ${res.statusCode}");
+      debugPrint("Response    : ${res.body}");
+
+      if (res.statusCode == 200) {
+        return PaymentVerifyModel.fromJson(jsonDecode(res.body));
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
   static Future<List<Advertisement>> fetchAdvertisements() async {
     const String endpoint = 'api/advertisements/valid';
 
@@ -1682,9 +1696,9 @@ class food_Authservice {
 
       final response = await ApiClient.get(endpoint, service: 'food');
 
-      debugPrint("📥 Status Code: ${response.statusCode}");
-      debugPrint("📥 Raw Response Body:");
-      debugPrint(response.body);
+      // debugPrint("📥 Status Code: ${response.statusCode}");
+      // debugPrint("📥 Raw Response Body:");
+      // debugPrint(response.body);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -1711,6 +1725,43 @@ class food_Authservice {
       // debugPrint("❌ Exception in fetchCoupons: $e");
       // debugPrint("📛 StackTrace:");
       // debugPrint(stack.toString());
+      return [];
+    }
+  }
+
+  static Future<List<Restaurent_Banner>> filterVendors(
+    VendorFilterRequest request,
+  ) async {
+    const endpoint = "api/filter/vendors/filter";
+
+    try {
+      final response = await ApiClient.post(
+        endpoint,
+        request.toJson(),
+        service: "food",
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+
+        // If API returns a List
+        if (decoded is List) {
+          return decoded
+              .map<Restaurent_Banner>((e) => Restaurent_Banner.fromJson(e))
+              .toList();
+        }
+
+        // If API returns { "data": [...] }
+        if (decoded is Map && decoded["data"] is List) {
+          return (decoded["data"] as List)
+              .map<Restaurent_Banner>((e) => Restaurent_Banner.fromJson(e))
+              .toList();
+        }
+      }
+
+      return [];
+    } catch (e) {
+      debugPrint("Filter Vendors Error: $e");
       return [];
     }
   }

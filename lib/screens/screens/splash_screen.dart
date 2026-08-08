@@ -444,7 +444,6 @@ class _SplashScreenState extends State<SplashScreen>
   String kPendingReferralCodeKey = 'pending_referral_code';
   final ScrollController _scrollController = ScrollController();
 
-
   @override
   void initState() {
     super.initState();
@@ -625,7 +624,8 @@ class _SplashScreenState extends State<SplashScreen>
       await prefs.setDouble('latitude', position.latitude);
       await prefs.setDouble('longitude', position.longitude);
 
-      // debugPrint("LOCATION SAVED");
+      debugPrint("Lalitude: ${position.latitude}");
+      debugPrint("Lonitude: ${position.longitude}");
     } catch (e, s) {
       // debugPrint("PERMISSION ERROR = $e");
       // debugPrint("$s");

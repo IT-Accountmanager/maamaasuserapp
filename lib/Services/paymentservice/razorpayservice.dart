@@ -35,32 +35,74 @@ class RazorpayService {
     }
   }
 
+  // Future<void> startPayment({
+  //   required String orderId,
+  //   required double amount,
+  //   required String description,
+  //   // required String name,
+  // }) async {
+  //   // Ensure profile loaded
+  //   if (_email == null || _mobile == null) {
+  //     await _loadUserProfile();
+  //   }
+  //
+  //   var options = {
+  //     'key': 'rzp_test_TJECsclCivENpY',
+  //     // 'key': 'rzp_live_TJDvykibQEsCuN',
+  //     'amount': (amount * 100).toInt(),
+  //     'order_id': orderId,
+  //     'name': "maamaas",
+  //     'description': description,
+  //     'prefill': {'contact': _mobile ?? '', 'email': _email ?? ''},
+  //     // 'image': 'https://yourdomain.com/logo.png',
+  //     'theme': {
+  //       'color': '#FF6F00', // your brand color
+  //     },
+  //   };
+  //
+  //   debugPrint("=========== OPEN RAZORPAY ===========");
+  //
+  //   debugPrint("Key : ${options["key"]}");
+  //   debugPrint("OrderId : ${options["order_id"]}");
+  //   debugPrint("Amount : ${options["amount"]}");
+  //   debugPrint("Name : ${options["name"]}");
+  //   debugPrint("Description : ${options["description"]}");
+  //   debugPrint("Prefill : ${options["prefill"]}");
+  //
+  //   _razorpay.open(options);
+  // }
+
   Future<void> startPayment({
     required String orderId,
     required double amount,
     required String description,
-    // required String name,
   }) async {
-    // Ensure profile loaded
-    if (_email == null || _mobile == null) {
-      await _loadUserProfile();
+    try {
+      debugPrint("========== OPENING RAZORPAY ==========");
+      debugPrint("OrderId : $orderId");
+      debugPrint("Amount : $amount");
+      debugPrint("Email : $_email");
+      debugPrint("Mobile : $_mobile");
+
+      var options = {
+        'key': 'rzp_test_TJECsclCivENpY',
+        // 'key': 'rzp_live_TJDvykibQEsCuN',
+        'amount': (amount * 100).toInt(),
+        'order_id': orderId,
+        'name': 'Maamaas',
+        'description': description,
+        'prefill': {'contact': _mobile ?? '', 'email': _email ?? ''},
+      };
+
+      debugPrint("Options : $options");
+
+      _razorpay.open(options);
+    } catch (e, s) {
+      debugPrint("RAZORPAY OPEN ERROR");
+      debugPrint(e.toString());
+      debugPrint(s.toString());
+      rethrow;
     }
-
-    var options = {
-      // 'key': 'rzp_test_TJECsclCivENpY',
-      'key': 'rzp_live_TJDvykibQEsCuN',
-      'amount': (amount * 100).toInt(),
-      'order_id': orderId,
-      'name': "maamaas",
-      'description': description,
-      'prefill': {'contact': _mobile ?? '', 'email': _email ?? ''},
-      // 'image': 'https://yourdomain.com/logo.png',
-      'theme': {
-        'color': '#FF6F00', // your brand color
-      },
-    };
-
-    _razorpay.open(options);
   }
 
   void _handleSuccess(PaymentSuccessResponse response) {

@@ -1,3 +1,6 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../Services/Auth_service/delivery_service.dart';
 import '../../Services/Auth_service/promotion_services_Authservice.dart';
 import 'package:maamaas/screens/homescreens/vertical%20type2.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
@@ -96,12 +99,6 @@ class _HomePageState extends State<HomePage> {
       final loc = await subscription_AuthService.fetchCurrentLocation();
 
       if (!mounted) return;
-
-      // print("📍 RAW LOC: $loc");
-      // print("📍 ADDRESS CHECK: ${loc?.address}");
-      // print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
-
-      // ✅ VALID LOCATION CHECK
       final isValidLocation = loc != null && loc.address.trim().isNotEmpty;
 
       if (isValidLocation) {
@@ -248,6 +245,9 @@ class _HomePageState extends State<HomePage> {
       setState(() => _isBannerCollapsed = collapsed);
     }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -544,10 +544,7 @@ class _HomePageState extends State<HomePage> {
   //     ),
   //   );
   // }
-  Widget _buildGuestAppBar({
-    required bool isDark,
-    required bool isExpanded,
-  }) {
+  Widget _buildGuestAppBar({required bool isDark, required bool isExpanded}) {
     final color = isDark ? _T.text : Colors.white;
     final subColor = isDark ? _T.textMuted : Colors.white70;
 
@@ -570,10 +567,7 @@ class _HomePageState extends State<HomePage> {
                 if (isExpanded)
                   Text(
                     "Current Location",
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      color: subColor,
-                    ),
+                    style: TextStyle(fontSize: 10.sp, color: subColor),
                   ),
 
                 Text(
@@ -592,10 +586,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: color,
-          ),
+          Icon(Icons.keyboard_arrow_down_rounded, color: color),
         ],
       ),
     );

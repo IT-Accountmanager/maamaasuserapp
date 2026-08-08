@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'cart_footer_button.dart';
 import '../table/Table.dart';
 import 'cart_button.dart';
+import 'cartbuttonwthout.dart';
 import 'fullscreen.dart';
 import 'Menuhelper.dart';
 import 'Top_banner.dart';
@@ -352,31 +353,6 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                   bottom: 16,
                   child: const food_Cart_count(),
                 ),
-              // if (!(widget.restaurantStatus ?? true))
-              //   Positioned.fill(
-              //     child: Container(
-              //       color: Colors.black.withOpacity(0.35),
-              //       alignment: Alignment.center,
-              //       child: Container(
-              //         padding: const EdgeInsets.symmetric(
-              //           horizontal: 24,
-              //           vertical: 12,
-              //         ),
-              //         decoration: BoxDecoration(
-              //           color: Colors.red,
-              //           borderRadius: BorderRadius.circular(30),
-              //         ),
-              //         child: const Text(
-              //           "RESTAURANT CLOSED",
-              //           style: TextStyle(
-              //             color: Colors.white,
-              //             fontWeight: FontWeight.bold,
-              //             fontSize: 18,
-              //           ),
-              //         ),
-              //       ),
-              //     ),
-              //   ),
             ],
           ),
         ),
@@ -523,12 +499,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 vendorId: widget.vendorId,
                 selectedVendorId: widget.vendorId,
                 favoriteMap: favoriteMap,
-                cartButton: (dish) => CartButton(
-                  dish: dish,
-                  // dishId: dish.dishId,
-                  // balanceQuantity: dish.balanceQuantity,
-                ),
-                // favoriteButton: favbutton(),
+                cartButton: (dish) => CartButton(dish: dish),
                 isOutOfStock: (dish) => dish.stock?.toLowerCase() != 'in stock',
                 selectedCategoryId: selectedCategoryId,
                 searchQuery: searchQuery,
@@ -1468,6 +1439,24 @@ class DishGridTab extends StatefulWidget {
 }
 
 class _DishGridTabState extends State<DishGridTab> {
+  void showDishDetailsSheet(
+    BuildContext context, {
+    required List<Dish> dishes,
+    required int initialIndex,
+    required bool showCartButton,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DishDetailsSheet(
+        dishes: dishes,
+        initialIndex: initialIndex,
+        showCartButton: showCartButton,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoryFiltered = widget.parentId == null
@@ -1557,48 +1546,103 @@ class _DishGridTabState extends State<DishGridTab> {
               dish.stock?.toLowerCase() != 'in_stock';
           final isFav = widget.favoriteMap.containsKey(dish.dishId);
 
+          // return _AnimatedProductCard(
+          //   index: i,
+          //   child: ProductCard(
+          //     restaurentstatus: widget.restaurentstatus,
+          //     dish: dish,
+          //     // imageWidget: _buildDishImage(dish.dishImage),
+          //     imageUrl: dish.dishImage ?? '',
+          //     name: dish.dishName ?? '',
+          //     metrics: dish.metrics,
+          //     metricQuantity: dish.metricQuantity,
+          //     price: '₹${dish.price}',
+          //     effectivePrice: '₹${dish.effectivePrice}',
+          //     description: dish.description ?? '',
+          //     favoriteButton: FavoriteButton(
+          //       dish: dish,
+          //       isInitiallyLiked: isFav,
+          //       favId: widget.favoriteMap[dish.dishId],
+          //       onChanged: (dishId, isLiked, favId) {
+          //         setState(() {
+          //           if (isLiked) {
+          //             if (favId != null) {
+          //               widget.favoriteMap[dishId] = favId;
+          //             }
+          //           } else {
+          //             widget.favoriteMap.remove(dishId);
+          //           }
+          //         });
+          //       },
+          //     ),
+          //     cartButton: CartButton(
+          //       // dishId: dish.dishId,
+          //       // balanceQuantity: dish.balanceQuantity,
+          //       dish: dish,
+          //     ),
+          //     isOutOfStock: isOut,
+          //     balanceQuantity: dish.balanceQuantity,
+          //     discount: dish.discount,
+          //     tag: dish.tag,
+          //     showCartButton: widget.showCartButton,
+          //     promotionText: dish.promotionText ?? '',
+          //     promotionAvailable: dish.promotionAvailable ?? false,
+          //   ),
+          // );
+
           return _AnimatedProductCard(
             index: i,
-            child: ProductCard(
-              restaurentstatus: widget.restaurentstatus,
-              dish: dish,
-              // imageWidget: _buildDishImage(dish.dishImage),
-              imageUrl: dish.dishImage ?? '',
-              name: dish.dishName ?? '',
-              metrics: dish.metrics,
-              metricQuantity: dish.metricQuantity,
-              price: '₹${dish.price}',
-              effectivePrice: '₹${dish.effectivePrice}',
-              description: dish.description ?? '',
-              favoriteButton: FavoriteButton(
+            // child: GestureDetector(
+            //   onTap: () {
+            //     showDishDetailsSheet(
+            //       context,
+            //       dishes: filtered,
+            //       initialIndex: i,
+            //       showCartButton: widget.showCartButton,
+            //     );
+            //   },
+
+              child: ProductCard(
+                restaurentstatus: widget.restaurentstatus,
                 dish: dish,
-                isInitiallyLiked: isFav,
-                favId: widget.favoriteMap[dish.dishId],
-                onChanged: (dishId, isLiked, favId) {
-                  setState(() {
-                    if (isLiked) {
-                      if (favId != null) {
-                        widget.favoriteMap[dishId] = favId;
+                // imageWidget: _buildDishImage(dish.dishImage),
+                imageUrl: dish.dishImage ?? '',
+                name: dish.dishName ?? '',
+                metrics: dish.metrics,
+                metricQuantity: dish.metricQuantity,
+                price: '₹${dish.price}',
+                effectivePrice: '₹${dish.effectivePrice}',
+                description: dish.description ?? '',
+                favoriteButton: FavoriteButton(
+                  dish: dish,
+                  isInitiallyLiked: isFav,
+                  favId: widget.favoriteMap[dish.dishId],
+                  onChanged: (dishId, isLiked, favId) {
+                    setState(() {
+                      if (isLiked) {
+                        if (favId != null) {
+                          widget.favoriteMap[dishId] = favId;
+                        }
+                      } else {
+                        widget.favoriteMap.remove(dishId);
                       }
-                    } else {
-                      widget.favoriteMap.remove(dishId);
-                    }
-                  });
-                },
+                    });
+                  },
+                ),
+                cartButton: CartButton(
+                  // dishId: dish.dishId,
+                  // balanceQuantity: dish.balanceQuantity,
+                  dish: dish,
+                ),
+                isOutOfStock: isOut,
+                balanceQuantity: dish.balanceQuantity,
+                discount: dish.discount,
+                tag: dish.tag,
+                showCartButton: widget.showCartButton,
+                promotionText: dish.promotionText ?? '',
+                promotionAvailable: dish.promotionAvailable ?? false,
               ),
-              cartButton: CartButton(
-                // dishId: dish.dishId,
-                // balanceQuantity: dish.balanceQuantity,
-                dish: dish,
-              ),
-              isOutOfStock: isOut,
-              balanceQuantity: dish.balanceQuantity,
-              discount: dish.discount,
-              tag: dish.tag,
-              showCartButton: widget.showCartButton,
-              promotionText: dish.promotionText ?? '',
-              promotionAvailable: dish.promotionAvailable ?? false,
-            ),
+            // ),
           );
         },
       ),
@@ -2624,6 +2668,376 @@ class _ExpandableTextState extends State<ExpandableText> {
             ),
           ),
       ],
+    );
+  }
+}
+
+class DishDetailsSheet extends StatefulWidget {
+  final List<Dish> dishes;
+  final int initialIndex;
+  final bool showCartButton;
+
+  const DishDetailsSheet({
+    super.key,
+    required this.dishes,
+    required this.initialIndex,
+    required this.showCartButton,
+  });
+
+  @override
+  State<DishDetailsSheet> createState() => _DishDetailsSheetState();
+}
+
+class _DishDetailsSheetState extends State<DishDetailsSheet> {
+  late PageController pageController;
+
+  int current = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    current = widget.initialIndex;
+
+    pageController = PageController(
+      initialPage: current,
+      viewportFraction: 0.98,
+    );
+  }
+
+  @override
+  void dispose() {
+    pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: .70,
+      minChildSize: .55,
+      maxChildSize: .95,
+
+      expand: false,
+
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          ),
+
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+
+              Container(
+                width: 40,
+
+                height: 4,
+
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+
+              Expanded(
+                child: PageView.builder(
+                  controller: pageController,
+
+                  itemCount: widget.dishes.length,
+
+                  onPageChanged: (i) {
+                    setState(() {
+                      current = i;
+                    });
+                  },
+
+                  itemBuilder: (_, index) {
+                    return SingleChildScrollView(
+                      controller: scrollController,
+
+                      child: DishPage(
+                        dish: widget.dishes[index],
+
+                        showCartButton: widget.showCartButton,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class DishPage extends StatefulWidget {
+  final Dish dish;
+
+  final bool showCartButton;
+
+  const DishPage({super.key, required this.dish, required this.showCartButton});
+
+  @override
+  State<DishPage> createState() => _DishPageState();
+}
+
+class _DishPageState extends State<DishPage> {
+  final Map<int, int> addonQty = {};
+
+  Dish get dish => widget.dish;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+
+            child: CustomCachedImage(
+              imageUrl: dish.dishImage ?? "",
+
+              width: double.infinity,
+
+              height: 300,
+
+              fit: BoxFit.fill,
+              borderRadius: 16,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                dish.dishName ?? "",
+
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              vegNonVegIndicator(dish.tag),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+          dish.metrics.isNotEmpty && dish.metricQuantity > 0
+              ? Text(
+                  "${dish.metricQuantity} ${dish.metrics}",
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1565C0),
+                  ),
+                )
+              : const SizedBox.shrink(),
+
+          // Price row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (dish.discount > 0) ...[
+                Text(
+                  '₹${dish.price ?? 0}',
+                  style: TextStyle(
+                    decoration: TextDecoration.lineThrough,
+                    decorationColor: Colors.grey,
+                    fontSize: 13.sp,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(width: 5.w),
+              ],
+              Text("₹${dish.effectivePrice ?? 0}", style: AppText.price()),
+              const Spacer(),
+              if (dish.discount > 0)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE85D04),
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Text(
+                    '${dish.discount.toStringAsFixed(0)}% OFF',
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 15),
+
+          Text(dish.description ?? "", style: const TextStyle(height: 1.5)),
+
+          const SizedBox(height: 20),
+
+          // if(dish.promotionAvailable)
+          // Container(
+          //   padding: const EdgeInsets.all(12),
+          //
+          //   decoration: BoxDecoration(
+          //     color: Colors.orange.shade50,
+          //
+          //     borderRadius: BorderRadius.circular(12),
+          //   ),
+          //
+          //   child: Text(dish.promotionText ?? ""),
+          // ),
+          const SizedBox(height: 20),
+
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: dish.addons.length,
+            itemBuilder: (context, index) {
+              final addon = dish.addons[index];
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(addon.addonName),
+                          Text("₹${addon.addonPrice}"),
+                        ],
+                      ),
+                    ),
+                    _qtyButton(addon),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          if (widget.showCartButton) CartButtonwithout(dish: dish),
+
+          const SizedBox(height: 80),
+        ],
+      ),
+    );
+  }
+
+  Widget _qtyButton(Addon addon) {
+    final qty = addonQty[addon.addonId] ?? 0;
+
+    if (qty == 0) {
+      return SizedBox(
+        width: 80,
+        height: 34,
+        child: OutlinedButton(
+          onPressed: () {
+            setState(() {
+              addonQty[addon.addonId] = 1;
+            });
+          },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: BorderSide(color: AppColors.primary, width: 1.2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: EdgeInsets.zero,
+          ),
+          child: const Text(
+            "ADD",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: 90,
+      height: 34,
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.primary),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  if (qty == 1) {
+                    addonQty.remove(addon.addonId);
+                  } else {
+                    addonQty[addon.addonId] = qty - 1;
+                  }
+                });
+              },
+              child: const Center(child: Icon(Icons.remove, size: 18)),
+            ),
+          ),
+
+          // Container(width: 1, color: Colors.grey.shade300),
+          Expanded(
+            child: Center(
+              child: Text(
+                "$qty",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+
+          // Container(width: 1, color: Colors.grey.shade300),
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  addonQty[addon.addonId] = qty + 1;
+                });
+              },
+              child: const Center(child: Icon(Icons.add, size: 18)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget vegNonVegIndicator(String? tag) {
+    final isVeg = tag?.toLowerCase() == 'veg';
+    final color = isVeg ? AppColors.vegGreen : AppColors.nonVegRed;
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        border: Border.all(color: color, width: 1.5),
+        borderRadius: const BorderRadius.all(Radius.circular(3)),
+      ),
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
     );
   }
 }

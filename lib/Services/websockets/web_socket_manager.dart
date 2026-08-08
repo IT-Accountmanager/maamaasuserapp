@@ -33,8 +33,8 @@ class WebSocketManager {
     _foodConnecting = true;
     _foodClient = StompClient(
       config: StompConfig(
-        // url: 'ws://staging.maamaas.com:8080/food/ws',
-        url: 'ws://backend.maamaas.com/food/ws',
+        url: 'ws://staging.maamaas.com:8080/food/ws',
+        // url: 'ws://backend.maamaas.com/food/ws',
         onConnect: (frame) {
           _foodConnecting = false;
           for (var callback in _pendingFoodSubscriptions) {
@@ -129,58 +129,170 @@ class WebSocketManager {
   // --------------------------
   // DELIVERY WS (Partner Location)
   // --------------------------
+  // final Map<int, StompUnsubscribe> _deliverySubscriptions = {};
+
   final Map<int, StompUnsubscribe> _deliverySubscriptions = {};
 
-  void connectDeliverySocket(Function()? onConnected) {
+  /// Multiple listeners for each partner
+  final Map<int, Map<String, Function(Map<String, dynamic>)>>
+  _deliveryListeners = {};
+
+  /// Pending subscriptions until socket connects
+  final List<VoidCallback> _pendingDeliverySubscriptions = [];
+
+  // void connectDeliverySocket(Function()? onConnected) {
+  //   if (_deliveryClient != null && _deliveryClient!.connected) {
+  //     onConnected?.call();
+  //     return;
+  //   }
+  //
+  //   _deliveryClient = StompClient(
+  //     config: StompConfig(
+  //       // url: 'ws://backend.maamaas.com/delivery/ws/websocket',
+  //       url: 'ws://staging.maamaas.com:8080/delivery/ws',
+  //       onConnect: (frame) {
+  //         //           debugPrint('✅ Delivery WebSocket Connected');
+  //         onConnected?.call();
+  //       },
+  //       onWebSocketError: (error) => debugPrint('❌ Delivery WS Error: $error'),
+  //     ),
+  //   );
+  //
+  //   _deliveryClient!.activate();
+  // }
+
+  bool _deliveryConnecting = false;
+
+  void connectDeliverySocket() {
     if (_deliveryClient != null && _deliveryClient!.connected) {
-      onConnected?.call();
       return;
     }
 
+    if (_deliveryConnecting) {
+      return;
+    }
+
+    _deliveryConnecting = true;
+
     _deliveryClient = StompClient(
       config: StompConfig(
-        url: 'ws://backend.maamaas.com/delivery/ws/websocket',
-        // url: 'ws://staging.maamaas.com:8080/delivery/ws',
+        url: 'ws://staging.maamaas.com:8080/delivery/ws',
+
         onConnect: (frame) {
-          //           debugPrint('✅ Delivery WebSocket Connected');
-          onConnected?.call();
+          debugPrint("✅ Delivery Connected");
+
+          _deliveryConnecting = false;
+
+          for (final callback in _pendingDeliverySubscriptions) {
+            callback();
+          }
+
+          _pendingDeliverySubscriptions.clear();
         },
-        onWebSocketError: (error) => debugPrint('❌ Delivery WS Error: $error'),
+
+        onWebSocketError: (error) {
+          debugPrint("Delivery Error $error");
+          _deliveryConnecting = false;
+        },
+
+        onDisconnect: (_) {
+          debugPrint("Delivery disconnected");
+        },
       ),
     );
 
     _deliveryClient!.activate();
   }
 
+  // void subscribePartnerLocation(
+  //   int partnerId,
+  //   Function(Map<String, dynamic>) onMessage,
+  // ) {
+  //   connectDeliverySocket(() {
+  //     final subscription = _deliveryClient?.subscribe(
+  //       destination: '/topic/partner-location/$partnerId',
+  //       callback: (frame) {
+  //         if (frame.body != null) {
+  //           final data = json.decode(frame.body!);
+  //           onMessage(data);
+  //         }
+  //       },
+  //     );
+  //
+  //     if (subscription != null) {
+  //       _deliverySubscriptions[partnerId] = subscription;
+  //       //         debugPrint('🔔 Subscribed to Delivery partner $partnerId');
+  //     }
+  //   });
+  // }
+
   void subscribePartnerLocation(
     int partnerId,
-    Function(Map<String, dynamic>) onMessage,
-  ) {
-    connectDeliverySocket(() {
-      final subscription = _deliveryClient?.subscribe(
-        destination: '/topic/partner-location/$partnerId',
+    Function(Map<String, dynamic>) onMessage, {
+    String listenerId = "default",
+  }) {
+    _deliveryListeners.putIfAbsent(partnerId, () => {});
+
+    _deliveryListeners[partnerId]![listenerId] = onMessage;
+
+    if (_deliverySubscriptions.containsKey(partnerId)) {
+      return;
+    }
+
+    void subscribe() {
+      if (_deliveryClient == null || !_deliveryClient!.connected) {
+        return;
+      }
+
+      final subscription = _deliveryClient!.subscribe(
+        destination: "/topic/partner-location/$partnerId",
+
         callback: (frame) {
-          if (frame.body != null) {
-            final data = json.decode(frame.body!);
-            onMessage(data);
+          if (frame.body == null) return;
+
+          final data = jsonDecode(frame.body!);
+
+          final listeners = Map.of(_deliveryListeners[partnerId] ?? {});
+
+          for (final callback in listeners.values) {
+            callback(data);
           }
         },
       );
 
-      if (subscription != null) {
-        _deliverySubscriptions[partnerId] = subscription;
-        //         debugPrint('🔔 Subscribed to Delivery partner $partnerId');
-      }
-    });
+      _deliverySubscriptions[partnerId] = subscription;
+    }
+
+    if (_deliveryClient != null && _deliveryClient!.connected) {
+      subscribe();
+    } else {
+      _pendingDeliverySubscriptions.add(subscribe);
+
+      connectDeliverySocket();
+    }
   }
 
-  void unsubscribePartnerLocation(int partnerId) {
-    if (_deliverySubscriptions.containsKey(partnerId)) {
+  // void unsubscribePartnerLocation(int partnerId) {
+  //   if (_deliverySubscriptions.containsKey(partnerId)) {
+  //     _deliverySubscriptions[partnerId]?.call();
+  //     _deliverySubscriptions.remove(partnerId);
+  //     //       debugPrint('❌ Unsubscribed from Delivery partner $partnerId location');
+  //   } else {
+  //     //       debugPrint('⚠️ No subscription found for partner $partnerId');
+  //   }
+  // }
+  void unsubscribePartnerLocation(
+    int partnerId, {
+    String listenerId = "default",
+  }) {
+    _deliveryListeners[partnerId]?.remove(listenerId);
+
+    if ((_deliveryListeners[partnerId]?.isEmpty ?? true)) {
+      _deliveryListeners.remove(partnerId);
+
       _deliverySubscriptions[partnerId]?.call();
+
       _deliverySubscriptions.remove(partnerId);
-      //       debugPrint('❌ Unsubscribed from Delivery partner $partnerId location');
-    } else {
-      //       debugPrint('⚠️ No subscription found for partner $partnerId');
     }
   }
 
@@ -333,6 +445,38 @@ class WebSocketManager {
 
   bool _logisticsConnecting = false;
 
+  final Map<int, Function(Map<String, dynamic>)> _logisticListeners = {};
+
+  void subscribeLogisticOrder(
+    int userId,
+    Function(Map<String, dynamic>) onMessage,
+  ) {
+    _logisticListeners[userId] = onMessage;
+
+    connectLogisticsSocket(() {
+      _subscribeLogistic(userId);
+    });
+  }
+
+  void _subscribeLogistic(int userId) {
+    if (_logisticSubscriptions.containsKey(userId)) return;
+    debugPrint("Subscribing to /topic/logistic-order/$userId");
+    final subscription = _logisticsClient!.subscribe(
+      destination: "/topic/logistic-order/$userId",
+      callback: (frame) {
+        if (frame.body == null) return;
+
+        final data = jsonDecode(frame.body!);
+
+        debugPrint("📦 Logistics Update : $data");
+
+        _logisticListeners[userId]?.call(data);
+      },
+    );
+
+    _logisticSubscriptions[userId] = subscription;
+  }
+
   void connectLogisticsSocket(Function()? onConnected) {
     if (_logisticsClient != null && _logisticsClient!.connected) {
       onConnected?.call();
@@ -354,12 +498,31 @@ class WebSocketManager {
         },
 
         onWebSocketError: (error) {
+          debugPrint("Socket Error : $error");
+
           _logisticsConnecting = false;
-          debugPrint("❌ Logistics Error $error");
+
+          Future.delayed(const Duration(seconds: 2), () {
+            connectLogisticsSocket(() {
+              for (final userId in _logisticListeners.keys) {
+                _subscribeLogistic(userId);
+              }
+            });
+          });
         },
 
         onDisconnect: (_) {
-          debugPrint("Logistics disconnected");
+          debugPrint("❌ Logistics disconnected");
+
+          _logisticsConnecting = false;
+
+          Future.delayed(const Duration(seconds: 2), () {
+            connectLogisticsSocket(() {
+              for (final userId in _logisticListeners.keys) {
+                _subscribeLogistic(userId);
+              }
+            });
+          });
         },
       ),
     );
@@ -369,34 +532,124 @@ class WebSocketManager {
 
   final Map<int, StompUnsubscribe> _logisticSubscriptions = {};
 
-  void subscribeLogisticOrder(
-    int userId,
-    Function(Map<String, dynamic>) onMessage,
-  ) {
-    connectLogisticsSocket(() {
-      if (_logisticSubscriptions.containsKey(userId)) {
-        return;
-      }
-
-      final subscription = _logisticsClient!.subscribe(
-        destination: "/topic/logistic-order/$userId",
-        callback: (frame) {
-          if (frame.body == null) return;
-
-          final data = jsonDecode(frame.body!);
-
-          debugPrint("📦 Logistics Update : $data");
-
-          onMessage(data);
-        },
-      );
-
-      _logisticSubscriptions[userId] = subscription;
-    });
-  }
+  // void subscribeLogisticOrder(
+  //   int userId,
+  //   Function(Map<String, dynamic>) onMessage,
+  // ) {
+  //   connectLogisticsSocket(() {
+  //     if (_logisticSubscriptions.containsKey(userId)) {
+  //       return;
+  //     }
+  //
+  //     final subscription = _logisticsClient!.subscribe(
+  //       destination: "/topic/logistic-order/$userId",
+  //       callback: (frame) {
+  //         if (frame.body == null) return;
+  //
+  //         final data = jsonDecode(frame.body!);
+  //
+  //         debugPrint("📦 Logistics Update : $data");
+  //
+  //         onMessage(data);
+  //       },
+  //     );
+  //
+  //     _logisticSubscriptions[userId] = subscription;
+  //   });
+  // }
 
   void unsubscribeLogisticOrder(int userId) {
     _logisticSubscriptions[userId]?.call();
     _logisticSubscriptions.remove(userId);
   }
+
+
+  final Map<int, StompUnsubscribe> _logisticOrderStatusSubscriptions = {};
+
+  final Map<int, Map<String, Function(Map<String, dynamic>)>>
+  _logisticOrderStatusListeners = {};
+
+  final List<VoidCallback> _pendingLogisticStatusSubscriptions = [];
+
+
+  void subscribeLogisticOrderStatus(
+      int orderId,
+      Function(Map<String, dynamic>) onMessage, {
+        String listenerId = "default",
+      }) {
+    _logisticOrderStatusListeners.putIfAbsent(orderId, () => {});
+    _logisticOrderStatusListeners[orderId]![listenerId] = onMessage;
+
+    if (_logisticOrderStatusSubscriptions.containsKey(orderId)) {
+      return;
+    }
+
+    void subscribe() {
+      if (_logisticsClient == null || !_logisticsClient!.connected) {
+        return;
+      }
+
+      debugPrint(
+        "📡 Subscribing to /topic/logistic-order-status/$orderId",
+      );
+
+      final subscription = _logisticsClient!.subscribe(
+        destination: "/topic/logistic-order-status/$orderId",
+          callback: (frame) {
+            if (frame.body == null) return;
+
+            debugPrint("🔥 FRAME RECEIVED");
+            debugPrint(frame.body);
+
+            final data = jsonDecode(frame.body!);
+
+            debugPrint("STATUS FROM WS = ${data["status"]}");
+
+            final listeners = Map.of(
+              _logisticOrderStatusListeners[orderId] ?? {},
+            );
+
+            debugPrint("Listeners = ${listeners.length}");
+
+            for (final callback in listeners.values) {
+              callback(data);
+            }
+          }
+      );
+
+      _logisticOrderStatusSubscriptions[orderId] = subscription;
+    }
+
+    if (_logisticsClient != null && _logisticsClient!.connected) {
+      subscribe();
+    } else {
+      _pendingLogisticStatusSubscriptions.add(subscribe);
+
+      connectLogisticsSocket(() {
+        for (final callback in _pendingLogisticStatusSubscriptions) {
+          callback();
+        }
+        _pendingLogisticStatusSubscriptions.clear();
+      });
+    }
+  }
+
+  void unsubscribeLogisticOrderStatus(
+      int orderId, {
+        String listenerId = "default",
+      }) {
+    _logisticOrderStatusListeners[orderId]?.remove(listenerId);
+
+    if ((_logisticOrderStatusListeners[orderId]?.isEmpty ?? true)) {
+      _logisticOrderStatusListeners.remove(orderId);
+
+      _logisticOrderStatusSubscriptions[orderId]?.call();
+      _logisticOrderStatusSubscriptions.remove(orderId);
+
+      debugPrint(
+        "❌ Unsubscribed from /topic/logistic-order-status/$orderId",
+      );
+    }
+  }
+
 }

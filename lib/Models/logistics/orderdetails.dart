@@ -32,6 +32,7 @@ class OrderDetails {
 
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool cashPayment;
 
   OrderDetails({
     required this.orderId,
@@ -59,6 +60,7 @@ class OrderDetails {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    required this.cashPayment,
   });
 
   factory OrderDetails.fromJson(Map<String, dynamic> json) {
@@ -96,10 +98,11 @@ class OrderDetails {
       pickupOtp: json['pickupOtp'],
 
       appType: json['appType'] ?? '',
-      status: json['status'] ?? '',
+      status: json['paymentStatus'] ?? '',
 
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
+      cashPayment: json['cashPayment'] ?? false,
     );
   }
 
@@ -127,22 +130,22 @@ class OrderDetails {
       "partnerAddress": partnerAddress,
       "pickupOtp": pickupOtp,
       "appType": appType,
-      "status": status,
+      "paymentStatus": status,
       "createdAt": createdAt.toIso8601String(),
       "updatedAt": updatedAt.toIso8601String(),
+      "cashPayment": cashPayment,
     };
   }
 }
 
-
-class OrderStatus {
-  static const pending = "PENDING";
-  static const searchingPartner = "SEARCHING_PARTNER";
-  static const partnerAssigned = "PARTNER_ASSIGNED";
-  static const partnerAccepted = "PARTNER_ACCEPTED";
-  static const arrived = "ARRIVED";
-  static const pickedUp = "PICKED_UP";
-  static const ongoing = "ONGOING";
-  static const completed = "COMPLETED";
-  static const cancelled = "CANCELLED";
-}
+// class OrderStatus {
+//   static const pending = "PENDING";
+//   static const searchingPartner = "SEARCHING_PARTNER";
+//   static const partnerAssigned = "PARTNER_ASSIGNED";
+//   static const partnerAccepted = "PARTNER_ACCEPTED";
+//   static const arrived = "ARRIVED";
+//   static const pickedUp = "PICKED_UP";
+//   static const ongoing = "ONGOING";
+//   static const completed = "COMPLETED";
+//   static const cancelled = "CANCELLED";
+// }

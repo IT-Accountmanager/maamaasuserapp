@@ -1217,169 +1217,376 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           child: Container(height: 1, color: savedddcolour.border),
         ),
       ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Expanded(
+      // body: SafeArea(
+      //   child: Form(
+      //     key: _formKey,
+      //     child: Column(
+      //       children: [
+      //         Expanded(
+      //           child: SingleChildScrollView(
+      //             padding: EdgeInsets.all(16.w),
+      //             child: Column(
+      //               crossAxisAlignment: CrossAxisAlignment.start,
+      //               children: [
+      //                 // ── Map ──────────────────────────────────────
+      //                 _buildMapSection(),
+      //                 SizedBox(height: 20.h),
+      //                 if (_fullAddress.isNotEmpty)
+      //                   Container(
+      //                     width: double.infinity,
+      //                     margin: EdgeInsets.only(bottom: 16.h),
+      //                     padding: EdgeInsets.all(14.w),
+      //                     decoration: BoxDecoration(
+      //                       color: Colors.white,
+      //                       borderRadius: BorderRadius.circular(12.r),
+      //                       border: Border.all(color: savedddcolour.border),
+      //                     ),
+      //                     child: Row(
+      //                       crossAxisAlignment: CrossAxisAlignment.start,
+      //                       children: [
+      //                         Icon(
+      //                           Icons.location_on_rounded,
+      //                           color: AppColors.primary,
+      //                           size: 18.sp,
+      //                         ),
+      //                         SizedBox(width: 8.w),
+      //                         Expanded(
+      //                           child: Text(
+      //                             _fullAddress,
+      //                             style: TextStyle(
+      //                               fontSize: 13.sp,
+      //                               color: savedddcolour.textPrimary,
+      //                               height: 1.4,
+      //                             ),
+      //                           ),
+      //                         ),
+      //                       ],
+      //                     ),
+      //                   ),
+      //
+      //                 // ── Form card ────────────────────────────────
+      //                 _sectionCard(
+      //                   title: 'Address Details',
+      //                   child: Column(
+      //                     children: [
+      //                       _field(
+      //                         doorNumberController,
+      //                         'House / Flat Number/Tower Name',
+      //                         'e.g. 4B, Plot 12, ...Homes',
+      //                         Icons.home_rounded,
+      //                         validator: _required,
+      //                       ),
+      //                       SizedBox(height: 14.h),
+      //                       _field(
+      //                         addressLineController,
+      //                         'Address',
+      //                         'Enter street / area',
+      //                         Icons.place_rounded,
+      //                         validator: _required,
+      //                       ),
+      //                       SizedBox(height: 14.h),
+      //                       _field(
+      //                         landMarkController,
+      //                         'Landmark (optional)',
+      //                         'Nearby landmark',
+      //                         Icons.flag_rounded,
+      //                       ),
+      //                       SizedBox(height: 14.h),
+      //                       _field(
+      //                         cityController,
+      //                         'City',
+      //                         'City name',
+      //                         Icons.location_city_rounded,
+      //                         validator: _required,
+      //                       ),
+      //                       SizedBox(height: 14.h),
+      //                       _field(
+      //                         pincodeController,
+      //                         'Pincode',
+      //                         '6-digit pincode',
+      //                         Icons.markunread_mailbox_rounded,
+      //                         keyboard: TextInputType.number,
+      //                         validator: (v) {
+      //                           if (v == null || v.isEmpty) return 'Required';
+      //                           if (int.tryParse(v) == null) {
+      //                             return 'Invalid pincode';
+      //                           }
+      //                           return null;
+      //                         },
+      //                       ),
+      //                       SizedBox(height: 14.h),
+      //                       _field(
+      //                         stateController,
+      //                         'State',
+      //                         'State',
+      //                         Icons.map_rounded,
+      //                         readOnly: true,
+      //                       ),
+      //                     ],
+      //                   ),
+      //                 ),
+      //                 SizedBox(height: 14.h),
+      //                 _sectionCard(
+      //                   title: 'Address Type',
+      //                   child: _buildAddressTypeSelector(),
+      //                 ),
+      //                 SizedBox(height: 14.h),
+      //
+      //                 _sectionCard(
+      //                   title: 'Contact Info',
+      //                   trailing: TextButton(
+      //                     // 👈 HERE
+      //                     onPressed: () {
+      //                       setState(() {
+      //                         _isEditable = !_isEditable;
+      //
+      //                         if (!_isEditable) {
+      //                           _loadUserProfile(); // reset data
+      //                         }
+      //                       });
+      //                     },
+      //                     child: Text(
+      //                       _isEditable ? 'Use My Info' : 'For Others',
+      //                       style: TextStyle(
+      //                         fontSize: 12.sp,
+      //                         fontWeight: FontWeight.w600,
+      //                         color: AppColors.primary,
+      //                       ),
+      //                     ),
+      //                   ),
+      //                   child: Column(
+      //                     children: [
+      //                       _field(
+      //                         nameController,
+      //                         'Full Name',
+      //                         'Enter your full name',
+      //                         Icons.person_rounded,
+      //                         validator: _required,
+      //                         enabled: _isEditable, // 👈 ADD THIS
+      //                       ),
+      //                       SizedBox(height: 14.h),
+      //                       _phoneField(),
+      //                     ],
+      //                   ),
+      //                 ),
+      //                 SizedBox(height: 8.h),
+      //               ],
+      //             ),
+      //           ),
+      //         ),
+      //
+      //         // ── Save bar ─────────────────────────────────────────
+      //         _saveBar(isEdit),
+      //       ],
+      //     ),
+      //   ),
+      // ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: GoogleMapsPage(
+              onAddressSelected: (fullAddress, city, pincode, state, lat, lng) {
+                setState(() {
+                  addressLineController.text = fullAddress;
+                  cityController.text = city;
+                  pincodeController.text = pincode;
+                  stateController.text = state;
+                  _latitude = lat;
+                  _longitude = lng;
+
+                  _fullAddress = [
+                    // doorNumberController.text,
+                    addressLineController.text,
+                    landMarkController.text,
+                    // city,
+                    // state,
+                    // pincode,
+                  ].where((e) => e.isNotEmpty).join(', ');
+                });
+              },
+            ),
+          ),
+
+          DraggableScrollableSheet(
+            initialChildSize: 0.42,
+            minChildSize: 0.20,
+            maxChildSize: 0.90,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(16.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── Map ──────────────────────────────────────
-                      _buildMapSection(),
-                      SizedBox(height: 20.h),
-                      if (_fullAddress.isNotEmpty)
-                        Container(
-                          width: double.infinity,
-                          margin: EdgeInsets.only(bottom: 16.h),
-                          padding: EdgeInsets.all(14.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(color: savedddcolour.border),
+                  controller: scrollController,
+                  padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 30.h),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Drag Handle
+                        Center(
+                          child: Container(
+                            width: 45.w,
+                            height: 5.h,
+                            margin: EdgeInsets.only(bottom: 18.h),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
                           ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.location_on_rounded,
-                                color: AppColors.primary,
-                                size: 18.sp,
-                              ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: Text(
-                                  _fullAddress,
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    color: savedddcolour.textPrimary,
-                                    height: 1.4,
+                        ),
+
+                        if (_fullAddress.isNotEmpty)
+                          Container(
+                            width: double.infinity,
+                            margin: EdgeInsets.only(bottom: 16.h),
+                            padding: EdgeInsets.all(14.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(color: savedddcolour.border),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.location_on_rounded,
+                                  color: AppColors.primary,
+                                  size: 18.sp,
+                                ),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: Text(
+                                    _fullAddress,
+                                    style: TextStyle(
+                                      fontSize: 13.sp,
+                                      height: 1.4,
+                                    ),
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+
+                        _sectionCard(
+                          title: 'Address Details',
+                          child: Column(
+                            children: [
+                              _field(
+                                doorNumberController,
+                                'House / Flat Number',
+                                'Enter House Number',
+                                Icons.home_rounded,
+                                validator: _required,
+                              ),
+                              SizedBox(height: 14.h),
+
+                              _field(
+                                addressLineController,
+                                'Address',
+                                'Street Address',
+                                Icons.place_rounded,
+                                validator: _required,
+                              ),
+
+                              SizedBox(height: 14.h),
+
+                              _field(
+                                landMarkController,
+                                'Landmark',
+                                'Nearby Landmark',
+                                Icons.flag_rounded,
+                              ),
+
+                              SizedBox(height: 14.h),
+
+                              _field(
+                                cityController,
+                                'City',
+                                'City',
+                                Icons.location_city,
+                                validator: _required,
+                              ),
+
+                              SizedBox(height: 14.h),
+
+                              _field(
+                                pincodeController,
+                                'Pincode',
+                                'Pincode',
+                                Icons.markunread_mailbox,
+                                keyboard: TextInputType.number,
+                              ),
+
+                              SizedBox(height: 14.h),
+
+                              _field(
+                                stateController,
+                                'State',
+                                'State',
+                                Icons.map,
+                                readOnly: true,
                               ),
                             ],
                           ),
                         ),
 
-                      // ── Form card ────────────────────────────────
-                      _sectionCard(
-                        title: 'Address Details',
-                        child: Column(
-                          children: [
-                            _field(
-                              doorNumberController,
-                              'House / Flat Number/Tower Name',
-                              'e.g. 4B, Plot 12, ...Homes',
-                              Icons.home_rounded,
-                              validator: _required,
-                            ),
-                            SizedBox(height: 14.h),
-                            _field(
-                              addressLineController,
-                              'Address',
-                              'Enter street / area',
-                              Icons.place_rounded,
-                              validator: _required,
-                            ),
-                            SizedBox(height: 14.h),
-                            _field(
-                              landMarkController,
-                              'Landmark (optional)',
-                              'Nearby landmark',
-                              Icons.flag_rounded,
-                            ),
-                            SizedBox(height: 14.h),
-                            _field(
-                              cityController,
-                              'City',
-                              'City name',
-                              Icons.location_city_rounded,
-                              validator: _required,
-                            ),
-                            SizedBox(height: 14.h),
-                            _field(
-                              pincodeController,
-                              'Pincode',
-                              '6-digit pincode',
-                              Icons.markunread_mailbox_rounded,
-                              keyboard: TextInputType.number,
-                              validator: (v) {
-                                if (v == null || v.isEmpty) return 'Required';
-                                if (int.tryParse(v) == null) {
-                                  return 'Invalid pincode';
-                                }
-                                return null;
-                              },
-                            ),
-                            SizedBox(height: 14.h),
-                            _field(
-                              stateController,
-                              'State',
-                              'State',
-                              Icons.map_rounded,
-                              readOnly: true,
-                            ),
-                          ],
+                        SizedBox(height: 14.h),
+
+                        _sectionCard(
+                          title: "Address Type",
+                          child: _buildAddressTypeSelector(),
                         ),
-                      ),
-                      SizedBox(height: 14.h),
-                      _sectionCard(
-                        title: 'Address Type',
-                        child: _buildAddressTypeSelector(),
-                      ),
-                      SizedBox(height: 14.h),
 
-                      _sectionCard(
-                        title: 'Contact Info',
-                        trailing: TextButton(
-                          // 👈 HERE
-                          onPressed: () {
-                            setState(() {
-                              _isEditable = !_isEditable;
+                        SizedBox(height: 14.h),
 
-                              if (!_isEditable) {
-                                _loadUserProfile(); // reset data
-                              }
-                            });
-                          },
-                          child: Text(
-                            _isEditable ? 'Use My Info' : 'For Others',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+                        _sectionCard(
+                          title: "Contact Info",
+                          trailing: TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _isEditable = !_isEditable;
+                                if (!_isEditable) {
+                                  _loadUserProfile();
+                                }
+                              });
+                            },
+                            child: Text(
+                              _isEditable ? "Use My Info" : "For Others",
                             ),
                           ),
+                          child: Column(
+                            children: [
+                              _field(
+                                nameController,
+                                "Full Name",
+                                "Enter Name",
+                                Icons.person,
+                                validator: _required,
+                                enabled: _isEditable,
+                              ),
+                              SizedBox(height: 14.h),
+                              _phoneField(),
+                            ],
+                          ),
                         ),
-                        child: Column(
-                          children: [
-                            _field(
-                              nameController,
-                              'Full Name',
-                              'Enter your full name',
-                              Icons.person_rounded,
-                              validator: _required,
-                              enabled: _isEditable, // 👈 ADD THIS
-                            ),
-                            SizedBox(height: 14.h),
-                            _phoneField(),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                    ],
+
+                        SizedBox(height: 20.h),
+
+                        _saveBar(isEdit),
+
+                        SizedBox(height: MediaQuery.of(context).padding.bottom),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-
-              // ── Save bar ─────────────────────────────────────────
-              _saveBar(isEdit),
-            ],
+              );
+            },
           ),
-        ),
+        ],
       ),
     );
   }

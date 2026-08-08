@@ -55,12 +55,12 @@ class RestaurentsHelper {
       'type': 'dineout',
       'configKey': 'TABLE_DINE_IN',
     },
-    // {
-    //   'label': 'catering',
-    //   'icon': Icons.table_restaurant,
-    //   'type': 'catering',
-    //   'configKey': 'catering',
-    // },
+    {
+      'label': 'catering',
+      'icon': Icons.table_restaurant,
+      'type': 'catering',
+      'configKey': 'catering',
+    },
   ];
 
   static final Map<String, String> typeMapping = {
@@ -75,57 +75,12 @@ class RestaurentsHelper {
     {'icon': Icons.tune_rounded, 'label': 'Filters'},
     {'icon': Icons.star_rounded, 'label': 'Rating 4.0+'},
     {'icon': Icons.bolt_rounded, 'label': 'Near & Fast'},
-    {'icon': Icons.eco_rounded, 'label': 'Pure Veg'},
     {'icon': Icons.local_offer_rounded, 'label': 'Offers'},
-    {'icon': Icons.whatshot_rounded, 'label': 'Trending'},
   ];
 
-  static const menu = ['Time', 'Rating', 'Offers', 'Dish price', 'Trust'];
+  static const menu = ['Rating', 'Dish price', 'Offers'];
 
-  static const panelData = [
-    {
-      'title': 'Delivery time',
-      'opts': [
-        {'icon': Icons.schedule_rounded, 'label': 'Under 30 min'},
-        {'icon': Icons.bolt_rounded, 'label': 'Near & fast'},
-        {'icon': Icons.calendar_today_rounded, 'label': 'Schedule order'},
-      ],
-    },
-    {
-      'title': 'Restaurant rating',
-      'opts': [
-        {'icon': Icons.star_rounded, 'label': 'Rated 3.5+'},
-        {'icon': Icons.star_rounded, 'label': 'Rated 4.0+'},
-        {'icon': Icons.star_rounded, 'label': 'Rated 4.5+'},
-      ],
-    },
-    {
-      'title': 'Offers',
-      'opts': [
-        {'icon': Icons.card_giftcard_rounded, 'label': 'Buy 1 get 1'},
-        {'icon': Icons.percent_rounded, 'label': 'Deals of the day'},
-        {
-          'icon': Icons.confirmation_number_rounded,
-          'label': 'Coupon available',
-        },
-      ],
-    },
-    {
-      'title': 'Dish price',
-      'opts': [
-        {'icon': Icons.currency_rupee_rounded, 'label': 'Under ₹150'},
-        {'icon': Icons.currency_rupee_rounded, 'label': 'Under ₹250'},
-        {'icon': Icons.currency_rupee_rounded, 'label': 'Under ₹500'},
-      ],
-    },
-    {
-      'title': 'Trust markers',
-      'opts': [
-        {'icon': Icons.verified_rounded, 'label': 'Hygiene rated'},
-        {'icon': Icons.verified_user_rounded, 'label': 'Trusted seller'},
-      ],
-    },
-  ];
+  //
 
   static final offers = [
     {

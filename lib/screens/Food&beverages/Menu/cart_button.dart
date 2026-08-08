@@ -18,17 +18,13 @@ import 'package:maamaas/Services/Auth_service/Subscription_authservice.dart';
 
 class CartButton extends StatefulWidget {
   final Dish dish;
-  // final int dishId;
   final double? savedAmount;
-  // final int balanceQuantity;
   final bool? sheduleorder;
 
   const CartButton({
     super.key,
     required this.dish,
-    // required this.dishId,
     this.savedAmount,
-    // required this.balanceQuantity,
     this.sheduleorder,
   });
 
@@ -84,51 +80,6 @@ class _CartButtonState extends State<CartButton> {
     Utils.refreshCartCount();
   }
 
-  // Future<void> _addToCart(int quantity, {bool sheduleorder = false}) async {
-  //   CartNotifier.count.value += quantity;
-  //
-  //   await food_Authservice.addToCart(
-  //     dishId: widget.dish.dishId,
-  //     quantity: quantity,
-  //     sheduleorder: sheduleorder,
-  //   );
-  //
-  //   debugPrint("✅ AddToCart finished");
-  //   // final itemId = await food_Authservice.getItemIdByDishId(widget.dish.dishId);
-  //   //
-  //   // if (itemId != null) {
-  //   //   final prefs = await SharedPreferences.getInstance();
-  //   //   await prefs.setInt("dish_${widget.dish.dishId}_itemId", itemId);
-  //   //   await prefs.setInt("dish_${widget.dish.dishId}_quantity", quantity);
-  //   // }
-  //   final itemId = await food_Authservice.getItemIdByDishId(widget.dish.dishId);
-  //
-  //   debugPrint("Fetched ItemId after Add: $itemId");
-  //
-  //   debugPrint("Calling getItemIdByDishId...");
-  //
-  //   final prefs = await SharedPreferences.getInstance();
-  //
-  //   if (itemId != null) {
-  //     await prefs.setInt("dish_${widget.dish.dishId}_itemId", itemId);
-  //     debugPrint("Returned ItemId = $itemId");
-  //
-  //     debugPrint(
-  //       "Saved ItemId: ${prefs.getInt("dish_${widget.dish.dishId}_itemId")}",
-  //     );
-  //   }
-  // }
-  // Future<void> _addToCart(int quantity, {bool sheduleorder = false}) async {
-  //   CartNotifier.count.value += quantity;
-  //
-  //   await food_Authservice.addToCart(
-  //     dishId: widget.dish.dishId,
-  //     quantity: quantity,
-  //     sheduleorder: sheduleorder,
-  //   );
-  //
-  //   await _loadQuantity();
-  // }
   Future<void> _addToCart(int quantity, {bool sheduleorder = false}) async {
     if (_isAddingToCart) return;
 
@@ -166,7 +117,6 @@ class _CartButtonState extends State<CartButton> {
 
     if (itemId == null) return;
 
-    // INSTANT SUBTRACT FROM CART BADGE
     CartNotifier.count.value -= itemCount;
 
     final removed = await food_Authservice.removeCartItem(itemId);
@@ -180,37 +130,19 @@ class _CartButtonState extends State<CartButton> {
   }
 
   Future<void> _updateQuantity(int newQty) async {
-    // debugPrint("========== UPDATE CART START ==========");
-
     final prefs = await SharedPreferences.getInstance();
 
     final itemId = prefs.getInt("dish_${widget.dish.dishId}_itemId");
 
-    // debugPrint("Dish Id      : ${widget.dish.dishId}");
-    // debugPrint("Item Id      : $itemId");
-    // debugPrint("Old Qty(UI)  : $itemCount");
-    // debugPrint("New Qty      : $newQty");
-
     if (itemId == null) {
-      // debugPrint("❌ ItemId is NULL");
       return;
     }
 
     CartNotifier.count.value = CartNotifier.count.value - itemCount + newQty;
 
-    // debugPrint("Calling updateCartQuantity...");
-
-    final success = await food_Authservice.updateCartQuantity(itemId, newQty);
-
-    // debugPrint("API Success : $success");
+    await food_Authservice.updateCartQuantity(itemId, newQty);
 
     prefs.setInt("dish_${widget.dish.dishId}_quantity", newQty);
-
-    // debugPrint(
-    //   "Saved Qty in Prefs : ${prefs.getInt("dish_${widget.dish.dishId}_quantity")}",
-    // );
-
-    // debugPrint("========== UPDATE CART END ==========");
   }
 
   Future<bool> _checkLogin(BuildContext context) async {
@@ -242,47 +174,12 @@ class _CartButtonState extends State<CartButton> {
       isScrollControlled: true,
       builder: (_) => AddonBottomSheet(
         dish: widget.dish,
-        // onAdd: (addons) async {
-        //   Navigator.pop(context);
-        //
-        //   setState(() => itemCount = 1);
-        //
-        //   // await food_Authservice.addToCart(
-        //   //   dishId: widget.dish.dishId,
-        //   //   quantity: 1,
-        //   //   addons: addons,
-        //   //   sheduleorder: sheduleorder,
-        //   // );
-        //   await food_Authservice.addToCart(
-        //     dishId: widget.dish.dishId,
-        //     quantity: 1,
-        //     sheduleorder: false,
-        //     addons: addons,
-        //   );
-        // },
-        // onAdd: (addons, quantity) async {
-        //   Navigator.pop(context);
-        //
-        //   setState(() => itemCount = quantity);
-        //
-        //   await food_Authservice.addToCart(
-        //     dishId: widget.dish.dishId,
-        //     quantity: quantity,
-        //     sheduleorder: false,
-        //     addons: addons,
-        //   );
-        // },
+
         onAdd: (addons, quantity) async {
           Navigator.pop(context);
 
           setState(() => itemCount = quantity);
 
-          // await food_Authservice.addToCart(
-          //   dishId: widget.dish.dishId,
-          //   quantity: quantity,
-          //   sheduleorder: false,
-          //   addons: addons,
-          // );
           final success = await food_Authservice.addToCart(
             dishId: widget.dish.dishId,
             quantity: quantity,
@@ -333,15 +230,6 @@ class _CartButtonState extends State<CartButton> {
 
                 final schedule = widget.dish.balanceQuantity <= 0;
 
-                // setState(() => itemCount = 1);
-                // await _addToCart(1, sheduleorder: schedule);
-                // if (widget.dish.addons.isEmpty) {
-                //   setState(() => itemCount = 1);
-                //
-                //   await _addToCart(1, sheduleorder: schedule);
-                // } else {
-                //   _showAddonBottomSheet();
-                // }
                 if (widget.dish.addons.isEmpty) {
                   await _addToCart(1, sheduleorder: schedule);
                 } else {
@@ -416,15 +304,7 @@ class _CartButtonState extends State<CartButton> {
                           }
                         : null,
                     child: IconButton(
-                      icon: Icon(
-                        Icons.add,
-                        size: 14.sp,
-                        color:
-                            // itemCount >= widget.balanceQuantity
-                            //     ? Colors.grey
-                            //     :
-                            Colors.white,
-                      ),
+                      icon: Icon(Icons.add, size: 14.sp, color: Colors.white),
 
                       onPressed: () async {
                         final allowed = await _checkLogin(context);
@@ -461,17 +341,6 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
 
   double get dishPrice => widget.dish.effectivePrice ?? widget.dish.price ?? 0;
 
-  // double get addonTotal {
-  //   double total = 0;
-  //
-  //   for (final addon in widget.dish.addons) {
-  //     if (selected.contains(addon.addonId)) {
-  //       total += addon.addonPrice;
-  //     }
-  //   }
-  //
-  //   return total;
-  // }
   double get addonTotal {
     double total = 0;
 
@@ -537,33 +406,6 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
               ),
             ),
 
-            // Expanded(
-            //   child: ListView.builder(
-            //     itemCount: widget.dish.addons.length,
-            //
-            //     itemBuilder: (_, index) {
-            //       final addon = widget.dish.addons[index];
-            //
-            //       return CheckboxListTile(
-            //         value: selected.contains(addon.addonId),
-            //
-            //         title: Text(addon.addonName),
-            //
-            //         subtitle: Text("₹${addon.addonPrice.toStringAsFixed(0)}"),
-            //
-            //         onChanged: (value) {
-            //           setState(() {
-            //             if (value == true) {
-            //               selected.add(addon.addonId);
-            //             } else {
-            //               selected.remove(addon.addonId);
-            //             }
-            //           });
-            //         },
-            //       );
-            //     },
-            //   ),
-            // ),
             Expanded(
               child: ListView.builder(
                 itemCount: widget.dish.addons.length,
@@ -674,9 +516,6 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
                               return {"addonId": e.key, "quantity": e.value};
                             }).toList();
 
-                            // debugPrint("Addon Qty Map: $addonQty");
-                            // debugPrint("Addons Payload: ${jsonEncode(addons)}");
-
                             widget.onAdd(addons, quantity);
                           },
 
@@ -749,7 +588,6 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
             ),
           ),
 
-          // Container(width: 1, color: Colors.grey.shade300),
           Expanded(
             child: Center(
               child: Text(
@@ -762,7 +600,6 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
             ),
           ),
 
-          // Container(width: 1, color: Colors.grey.shade300),
           Expanded(
             child: InkWell(
               onTap: () {
@@ -778,89 +615,3 @@ class _AddonBottomSheetState extends State<AddonBottomSheet> {
     );
   }
 }
-
-// class AddonBottomSheet extends StatefulWidget {
-//   final Dish dish;
-//
-//   // final Function(List<Map<String, dynamic>>) onAdd;
-//   final Function(List<Map<String, dynamic>> addons, int quantity) onAdd;
-//
-//   const AddonBottomSheet({super.key, required this.dish, required this.onAdd});
-//
-//   @override
-//   State<AddonBottomSheet> createState() => _AddonBottomSheetState();
-// }
-//
-// class _AddonBottomSheetState extends State<AddonBottomSheet> {
-//   final Set<int> selected = {};
-//   int quantity = 1;
-//
-//   double get totalPrice {
-//     double addonPrice = 0;
-//
-//     for (final addon in widget.dish.addons) {
-//       if (selected.contains(addon.addonId)) {
-//         addonPrice += addon.addonPrice;
-//       }
-//     }
-//
-//     return (widget.dish.effectivePrice ?? widget.dish.price ?? 0 + addonPrice) *
-//         quantity;
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.all(16),
-//
-//       child: Column(
-//         mainAxisSize: MainAxisSize.min,
-//
-//         children: [
-//           Text(
-//             "Select Addons",
-//             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//           ),
-//
-//           Text("${widget.dish.description}", style: TextStyle(fontSize: 14)),
-//
-//           const SizedBox(height: 16),
-//
-//           ...widget.dish.addons.map((addon) {
-//             return CheckboxListTile(
-//               value: selected.contains(addon.addonId),
-//
-//               title: Text(addon.addonName),
-//
-//               subtitle: Text("₹${addon.addonPrice}"),
-//
-//               onChanged: (v) {
-//                 setState(() {
-//                   if (v == true) {
-//                     selected.add(addon.addonId);
-//                   } else {
-//                     selected.remove(addon.addonId);
-//                   }
-//                 });
-//               },
-//             );
-//           }),
-//
-//           Expanded(
-//             child: ElevatedButton(
-//               onPressed: () {
-//                 final addons = selected.map((id) {
-//                   return {"addonId": id, "quantity": 1};
-//                 }).toList();
-//
-//                 widget.onAdd(addons, quantity);
-//               },
-//
-//               child: Text("Add Item ₹${totalPrice.toStringAsFixed(0)}"),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

@@ -2216,17 +2216,19 @@ class _HomePageState extends State<logistic_HomePage>
   @override
   Widget build(BuildContext context) {
     // ignore: deprecated_member_use
-    return WillPopScope(
-      onWillPop: () async {
-        if (_currentIndex != 0) {
-          setState(() {
-            _currentIndex = 0;
-          });
-          return false;
-        }
-        return false;
-      },
-      child: Scaffold(
+    return
+      // WillPopScope(
+      // onWillPop: () async {
+      //   if (_currentIndex != 0) {
+      //     setState(() {
+      //       _currentIndex = 0;
+      //     });
+      //     return false;
+      //   }
+      //   return false;
+      // },
+      // child:
+      Scaffold(
         backgroundColor: _kBg,
         body: RefreshIndicator(
           color: _kPrimary,
@@ -2242,7 +2244,7 @@ class _HomePageState extends State<logistic_HomePage>
             ],
           ),
         ),
-      ),
+      // ),
     );
   }
 

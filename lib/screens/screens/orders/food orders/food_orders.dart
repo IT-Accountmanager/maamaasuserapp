@@ -378,6 +378,7 @@ class _OrderCardState extends State<OrderCard> {
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
+    final reason = widget.order.cancelReason;
 
     // ✅ AUTO MARK AS SUBMITTED IF API HAS DATA
     final bool isAlreadyRated =
@@ -444,6 +445,11 @@ class _OrderCardState extends State<OrderCard> {
                 if (isCancelled) ...[
                   SizedBox(height: 10.h),
                   _buildCancelledTag(),
+                ],
+                if (widget.order.status == OrderStatus.pending &&
+                    widget.order.orderType == OrderType.DELIVERY) ...[
+                  SizedBox(height: 10.h),
+                  _buildCancelButton(context),
                 ],
                 if (!widget.isActive &&
                     order.status == OrderStatus.completed &&
@@ -690,25 +696,54 @@ class _OrderCardState extends State<OrderCard> {
 
   Widget _buildCancelledTag() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      width: double.infinity,
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(6.r),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: Colors.grey.shade300),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.cancel_outlined, size: 12.sp, color: foodordecolour.muted),
-          SizedBox(width: 4.w),
-          Text(
-            "Cancelled",
-            style: TextStyle(
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w500,
-              color: foodordecolour.muted,
-            ),
+          Row(
+            children: [
+              Icon(Icons.cancel_outlined, size: 16.sp, color: Colors.red),
+              SizedBox(width: 6.w),
+              Text(
+                "Cancelled",
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+            ],
           ),
+          SizedBox(height: 8.h),
+          if (widget.order.cancelReason != null &&
+              widget.order.cancelReason!.trim().isNotEmpty) ...[
+            Text(
+              "Reason for cancellation",
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+
+            SizedBox(height: 4.h),
+            Text(
+              widget.order.cancelReason!,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: foodordecolour.muted,
+                height: 1.4,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );
@@ -1131,6 +1166,101 @@ class _OrderCardState extends State<OrderCard> {
       ),
     );
   }
+
+  Widget _buildCancelButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52.h,
+      child: ElevatedButton(
+        onPressed: () async {
+          final reasonController = TextEditingController();
+
+          final reason = await showDialog<String>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("Cancel Order"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("Please provide a reason for cancellation:"),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: reasonController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: "Enter cancellation reason",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("No"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (reasonController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Please enter a cancellation reason"),
+                        ),
+                      );
+                      return;
+                    }
+
+                    Navigator.pop(context, reasonController.text.trim());
+                  },
+                  child: const Text("Yes"),
+                ),
+              ],
+            ),
+          );
+
+          if (reason == null) return;
+
+          AppAlert.info(context, "Cancelling order...");
+
+          final success = await food_Authservice.cancelOrder(
+            widget.order.orderId,
+            reason, // pass reason string here
+          );
+
+          Navigator.pop(context); // close loading dialog
+
+          if (success) {
+            AppAlert.success(context, "Order cancelled successfully");
+          } else {
+            AppAlert.error(context, "Failed to cancel order");
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cancel_rounded, size: 20),
+            SizedBox(width: 8.w),
+            const Text(
+              "Cancel Order",
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ProgressStep {
@@ -1225,7 +1355,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     if (!mounted) return;
     setState(() => isLoadingDelivery = true);
     try {
-      final result = await DeliveryOrderService.getOrder(widget.order.orderId);
+      final result = await DeliveryService.getOrder(widget.order.orderId);
       if (mounted) {
         setState(() {
           deliveryModel = result;
@@ -1267,20 +1397,22 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
 
         centerTitle: true,
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton.icon(
-              onPressed: () async {
-                AppAlert.info(context, "Generating invoice...");
-                await FoodPdf().downloadInvoice(widget.orderId);
-              },
-              icon: const Icon(Icons.download_rounded, size: 18),
-              label: const Text("Invoice"),
-              style: TextButton.styleFrom(
-                foregroundColor: foodordecolour._brandOrange,
+          if (widget.order.status != OrderStatus.pending &&
+              widget.order.status != OrderStatus.cancelled)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton.icon(
+                onPressed: () async {
+                  AppAlert.info(context, "Generating invoice...");
+                  await FoodPdf().downloadInvoice(widget.orderId);
+                },
+                icon: const Icon(Icons.download_rounded, size: 18),
+                label: const Text("Invoice"),
+                style: TextButton.styleFrom(
+                  foregroundColor: foodordecolour._brandOrange,
+                ),
               ),
             ),
-          ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),

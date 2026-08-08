@@ -250,12 +250,12 @@ class catering_authservice {
       };
 
       // debugPrint("📤 URL → $url");
-      //       debugPrint("📦 Payload → ${jsonEncode(body)}");
+      // debugPrint("📦 Payload → ${jsonEncode(body)}");
 
       final response = await ApiClient.post(url, body, service: "catering");
       //
       // debugPrint("📬 Status → ${response.statusCode}");
-      //       debugPrint("📬 Body → ${response.body}");
+      // debugPrint("📬 Body → ${response.body}");
 
       final responseData = response.body.isNotEmpty
           ? jsonDecode(response.body)
