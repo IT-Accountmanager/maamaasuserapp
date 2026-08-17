@@ -21,7 +21,7 @@ import 'package:flutter/services.dart';
 import 'coupons_rewards_screen.dart';
 import 'orders/orders_screen.dart';
 import 'Reviewsandratings.dart';
-import '../Mainscreen.dart';
+import '../../Mainscreen.dart';
 import 'login_page.dart';
 import 'Favorites.dart';
 import 'dart:io';
@@ -184,11 +184,12 @@ class _ProfileHeader extends StatelessWidget {
                 children: [
                   // Back button
                   GestureDetector(
-                    onTap: () => Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => MainScreenfood()),
-                      (r) => false,
-                    ),
+                    // onTap: () => Navigator.pushAndRemoveUntil(
+                    //   context,
+                    //   MaterialPageRoute(builder: (_) => MainScreen()),
+                    //   (r) => false,
+                    // ),
+                    onTap: () { if (Navigator.canPop(context)) { Navigator.pop(context); } },
                     child: Container(
                       width: 36,
                       height: 36,

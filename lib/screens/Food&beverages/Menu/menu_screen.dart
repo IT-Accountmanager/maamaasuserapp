@@ -8,6 +8,7 @@ import '../../../Services/App_color_service/resposnive.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../Services/scaffoldmessenger/messenger.dart';
 import '../../../widgets/widgets/food/favorite_button.dart';
 import '../../../Models/food/restaurent_banner_model.dart';
 import '../../../Models/subscrptions/coupon_model.dart';
@@ -203,7 +204,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
   Future<void> _loadBannerData() async {
     try {
-      final banner = await Authservice().fetchVendorBanner(widget.vendorId);
+      final banner = await Authservice.fetchVendorBanner(widget.vendorId);
 
       if (!mounted) return;
 
@@ -1592,20 +1593,19 @@ class _DishGridTabState extends State<DishGridTab> {
 
           return _AnimatedProductCard(
             index: i,
-            // child: GestureDetector(
-            //   onTap: () {
-            //     showDishDetailsSheet(
-            //       context,
-            //       dishes: filtered,
-            //       initialIndex: i,
-            //       showCartButton: widget.showCartButton,
-            //     );
-            //   },
 
+            child: GestureDetector(
+              onTap: () {
+                showDishDetailsSheet(
+                  context,
+                  dishes: filtered,
+                  initialIndex: i,
+                  showCartButton: widget.showCartButton,
+                );
+              },
               child: ProductCard(
                 restaurentstatus: widget.restaurentstatus,
                 dish: dish,
-                // imageWidget: _buildDishImage(dish.dishImage),
                 imageUrl: dish.dishImage ?? '',
                 name: dish.dishName ?? '',
                 metrics: dish.metrics,
@@ -1629,11 +1629,7 @@ class _DishGridTabState extends State<DishGridTab> {
                     });
                   },
                 ),
-                cartButton: CartButton(
-                  // dishId: dish.dishId,
-                  // balanceQuantity: dish.balanceQuantity,
-                  dish: dish,
-                ),
+                cartButton: CartButton(dish: dish),
                 isOutOfStock: isOut,
                 balanceQuantity: dish.balanceQuantity,
                 discount: dish.discount,
@@ -1642,7 +1638,7 @@ class _DishGridTabState extends State<DishGridTab> {
                 promotionText: dish.promotionText ?? '',
                 promotionAvailable: dish.promotionAvailable ?? false,
               ),
-            // ),
+            ),
           );
         },
       ),
@@ -2793,6 +2789,153 @@ class _DishPageState extends State<DishPage> {
 
   Dish get dish => widget.dish;
 
+  int? cartItemId;
+  bool _addonUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCartItem();
+  }
+
+  Future<void> _loadCartItem() async {
+    try {
+      final cart = await food_Authservice.fetchCart();
+
+      if (cart == null) return;
+
+      for (final item in cart.cartItems) {
+        if (item.dishId == dish.dishId) {
+          if (!mounted) return;
+
+          setState(() {
+            cartItemId = item.itemId;
+          });
+
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Load cart item error: $e");
+    }
+  }
+
+  // Future<void> _updateAddonQuantity(
+  //     Addon addon,
+  //     int newQuantity,
+  //     ) async {
+  //   final addonId = addon.addonId;
+  //
+  //   // --------------------------------------------------
+  //   // Dish is NOT in cart yet
+  //   // --------------------------------------------------
+  //   if (cartItemId == null) {
+  //     setState(() {
+  //       if (newQuantity <= 0) {
+  //         addonQty.remove(addonId);
+  //       } else {
+  //         addonQty[addonId] = newQuantity;
+  //       }
+  //     });
+  //
+  //     return;
+  //   }
+  //
+  //   // --------------------------------------------------
+  //   // Dish IS already in cart
+  //   // --------------------------------------------------
+  //   try {
+  //     setState(() {
+  //       _addonUpdating = true;
+  //     });
+  //
+  //     // Optimistic UI update
+  //     setState(() {
+  //       if (newQuantity <= 0) {
+  //         addonQty.remove(addonId);
+  //       } else {
+  //         addonQty[addonId] = newQuantity;
+  //       }
+  //     });
+  //
+  //     // YOUR EXISTING API
+  //     await food_Authservice.updateAddon(
+  //       cartItemId!,
+  //       addonId,
+  //       newQuantity,
+  //     );
+  //   } catch (e) {
+  //     debugPrint("Addon update error: $e");
+  //
+  //     // Reload cart if API failed
+  //     await _loadCartItem();
+  //
+  //     if (mounted) {
+  //       AppAlert.error(
+  //         context,
+  //         e.toString().replaceFirst(
+  //           'Exception: ',
+  //           '',
+  //         ),
+  //       );
+  //     }
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() {
+  //         _addonUpdating = false;
+  //       });
+  //     }
+  //   }
+  // }
+
+  Future<void> _updateAddonQuantity(Addon addon, int newQuantity) async {
+    final addonId = addon.addonId;
+    if (cartItemId == null) {
+      setState(() {
+        if (newQuantity <= 0) {
+          addonQty.remove(addonId);
+        } else {
+          addonQty[addonId] = newQuantity;
+        }
+      });
+
+      return;
+    }
+
+    try {
+      setState(() {
+        _addonUpdating = true;
+      });
+
+      // Optimistic UI update
+      setState(() {
+        if (newQuantity <= 0) {
+          addonQty.remove(addonId);
+        } else {
+          addonQty[addonId] = newQuantity;
+        }
+      });
+
+      // YOUR EXISTING API
+      await food_Authservice.updateAddon(cartItemId!, addonId, newQuantity);
+    } catch (e) {
+      debugPrint("Addon update error: $e");
+
+      // Reload cart if API failed
+      await _loadCartItem();
+
+      if (mounted) {
+        AppAlert.error(context, e.toString().replaceFirst('Exception: ', ''));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _addonUpdating = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -2883,24 +3026,11 @@ class _DishPageState extends State<DishPage> {
             ],
           ),
 
-          const SizedBox(height: 15),
+          if (dish.description?.isNotEmpty ?? false) ...[
+            const SizedBox(height: 15),
+            Text(dish.description ?? "", style: const TextStyle(height: 1.5)),
+          ],
 
-          Text(dish.description ?? "", style: const TextStyle(height: 1.5)),
-
-          const SizedBox(height: 20),
-
-          // if(dish.promotionAvailable)
-          // Container(
-          //   padding: const EdgeInsets.all(12),
-          //
-          //   decoration: BoxDecoration(
-          //     color: Colors.orange.shade50,
-          //
-          //     borderRadius: BorderRadius.circular(12),
-          //   ),
-          //
-          //   child: Text(dish.promotionText ?? ""),
-          // ),
           const SizedBox(height: 20),
 
           ListView.builder(
@@ -2933,7 +3063,8 @@ class _DishPageState extends State<DishPage> {
             },
           ),
 
-          if (widget.showCartButton) CartButtonwithout(dish: dish),
+          if (widget.showCartButton)
+            CartButtonwithout(dish: dish, selectedAddons: addonQty),
 
           const SizedBox(height: 80),
         ],
@@ -2949,10 +3080,9 @@ class _DishPageState extends State<DishPage> {
         width: 80,
         height: 34,
         child: OutlinedButton(
-          onPressed: () {
-            setState(() {
-              addonQty[addon.addonId] = 1;
-            });
+
+          onPressed: () async {
+            await _updateAddonQuantity(addon, 1);
           },
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.primary,
@@ -2981,14 +3111,19 @@ class _DishPageState extends State<DishPage> {
         children: [
           Expanded(
             child: InkWell(
-              onTap: () {
-                setState(() {
-                  if (qty == 1) {
-                    addonQty.remove(addon.addonId);
-                  } else {
-                    addonQty[addon.addonId] = qty - 1;
-                  }
-                });
+              // onTap: () {
+              //   setState(() {
+              //     if (qty == 1) {
+              //       addonQty.remove(addon.addonId);
+              //     } else {
+              //       addonQty[addon.addonId] = qty - 1;
+              //     }
+              //   });
+              // },
+              onTap: () async {
+                final newQty = qty - 1;
+
+                await _updateAddonQuantity(addon, newQty);
               },
               child: const Center(child: Icon(Icons.remove, size: 18)),
             ),
@@ -3010,10 +3145,13 @@ class _DishPageState extends State<DishPage> {
           // Container(width: 1, color: Colors.grey.shade300),
           Expanded(
             child: InkWell(
-              onTap: () {
-                setState(() {
-                  addonQty[addon.addonId] = qty + 1;
-                });
+              // onTap: () {
+              //   setState(() {
+              //     addonQty[addon.addonId] = qty + 1;
+              //   });
+              // },
+              onTap: () async {
+                await _updateAddonQuantity(addon, qty + 1);
               },
               child: const Center(child: Icon(Icons.add, size: 18)),
             ),

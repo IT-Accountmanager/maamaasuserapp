@@ -3,7 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../Services/Auth_service/food_authservice.dart';
 import 'package:flutter/material.dart';
 import '../Invoices/food_pdf.dart';
-import '../Mainscreen.dart';
+import '../../Mainscreen.dart';
+import 'foodmainscreen.dart';
 
 class invoice {
   static const Color _brandOrange = Color(0xFFFF6B35);
@@ -66,7 +67,7 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MainScreenfood()),
+          MaterialPageRoute(builder: (context) => foodMainScreen()),
         );
       }
     });
@@ -88,7 +89,7 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
       onWillPop: () async {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => MainScreenfood()),
+          MaterialPageRoute(builder: (context) => foodMainScreen()),
           (route) => false,
         );
         return false;
@@ -175,7 +176,7 @@ class _InvoiceState extends State<food_Invoice> with TickerProviderStateMixin {
                 ),
                 onPressed: () => Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_) => MainScreenfood()),
+                  MaterialPageRoute(builder: (_) => foodMainScreen()),
                   (r) => false,
                 ),
               ),

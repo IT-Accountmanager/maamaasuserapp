@@ -9,7 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import '../../Food&beverages/Menu/menu_screen.dart';
-import '../../Mainscreen.dart';
+import '../../Food&beverages/foodmainscreen.dart';
+import '../../../Mainscreen.dart';
 import 'enquiryscreen.dart';
 import '../../../main.dart';
 import 'dart:async';
@@ -436,24 +437,6 @@ class ReelsScreenState extends State<ReelsScreen>
     }
   }
 
-  // ── Analytics ────────────────────────────────────────────────────────────────
-
-  int _calculateWatchDuration(int index) {
-    if (_videoStartTime == null) return 0;
-    final seconds = DateTime.now().difference(_videoStartTime!).inSeconds;
-    _watchDuration[index] = seconds;
-    return seconds;
-  }
-
-  double _calculateScrollDepth(int index) {
-    final controller = _videoControllers[index];
-    if (controller == null || !controller.value.isInitialized) return 0;
-    final total = controller.value.duration.inSeconds;
-    final watched = controller.value.position.inSeconds;
-    if (total == 0) return 0;
-    return (watched / total) * 100;
-  }
-
   Future<Map<String, dynamic>> _buildPayload(int campaignId) async {
     final prefs = await SharedPreferences.getInstance();
     final customerId = prefs.getString('customerId') ?? '';
@@ -505,20 +488,10 @@ class ReelsScreenState extends State<ReelsScreen>
   }
 
   void _handleCTA(Campaign campaign) async {
-    //     debugPrint("🚀 CTA Handler Triggered");
-    //     debugPrint("👉 Goal: ${campaign.goal}");
-    //     debugPrint("👉 SubGoal: ${campaign.subGoal}");
-    //     debugPrint("👉 CTA: ${campaign.callToAction}");
-    // debugPrint("CTA Enum Value = $cta");
-
     final cta = campaign.callToAction;
 
-    // 📱 WhatsApp
     if (cta == CallToAction.SEND_MESSAGE) {
-      //       debugPrint("✅ Branch: WhatsApp");
-
       final phone = campaign.mobileNumber ?? '';
-      //       debugPrint("📞 Phone: $phone");
 
       final message =
           "Hi there 😊\n"
@@ -528,26 +501,16 @@ class ReelsScreenState extends State<ReelsScreen>
 
       final encodedMessage = Uri.encodeComponent(message);
       final url = "https://wa.me/$phone?text=$encodedMessage";
-      //
-      //       debugPrint("🌐 URL: $url");
 
       if (await canLaunchUrl(Uri.parse(url))) {
-        //         debugPrint("🚀 Launching WhatsApp...");
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      } else {
-        //         debugPrint("❌ Could not launch WhatsApp");
-      }
+      } else {}
       return;
     }
 
-    // 📞 Phone Call
     if (cta == CallToAction.CONTACT_US) {
-      //       debugPrint("✅ Branch: Phone Call");
-
       final phone = campaign.mobileNumber ?? '';
       final url = "tel:$phone";
-      //
-      // debugPrint("📞 Calling: $phone");
 
       if (await canLaunchUrl(Uri.parse(url))) {
         //         debugPrint("🚀 Launching Dialer...");
@@ -563,7 +526,7 @@ class ReelsScreenState extends State<ReelsScreen>
       final ordertype = "DINE_IN";
 
       try {
-        final result = await food_Authservice.createCart(ordertype);
+        await food_Authservice.createCart(ordertype);
         //
         // debugPrint("✅ Cart created: $result");
 
@@ -739,7 +702,7 @@ class ReelsScreenState extends State<ReelsScreen>
         ),
         onPressed: () => Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const MainScreenfood()),
+          MaterialPageRoute(builder: (_) => const foodMainScreen()),
           (r) => false,
         ),
       ),

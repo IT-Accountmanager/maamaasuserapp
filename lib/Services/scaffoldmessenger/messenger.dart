@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import '../App_color_service/app_colours.dart';
 
 class AppAlert {
-  static void error(BuildContext context, String message) {
-    _show(context, message, AppColors.error, Icons.error_outline);
+  static void error(BuildContext context, String message, {Duration? duration}) {
+    _show(context, message, AppColors.error, Icons.error_outline ,duration,);
   }
 
-  static void success(BuildContext context, String message) {
-    _show(context, message, AppColors.success, Icons.check_circle_outline);
+  static void success(BuildContext context, String message, {Duration? duration}) {
+    _show(context, message, AppColors.success, Icons.check_circle_outline, duration,);
   }
 
-  static void info(BuildContext context, String message) {
-    _show(context, message, AppColors.info, Icons.info_outline);
+  static void info(BuildContext context, String message , {Duration? duration}) {
+    _show(context, message, AppColors.info, Icons.info_outline, duration,);
   }
 
   static void _show(
@@ -20,6 +20,7 @@ class AppAlert {
     String message,
     Color color,
     IconData icon,
+      Duration? duration,
   ) {
     if (!context.mounted) return;
 

@@ -9,7 +9,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:maamaas/providers/provider.dart';
-import 'package:maamaas/screens/Mainscreen.dart';
+import 'package:maamaas/Mainscreen.dart';
+import 'package:maamaas/screens/Food&beverages/foodmainscreen.dart';
 import 'package:maamaas/screens/screens/splash_screen.dart';
 import 'package:maamaas/session_controller.dart';
 import 'package:maamaas/widgets/app_navigator.dart';
@@ -168,7 +169,8 @@ class _BootstrapAppState extends State<BootstrapApp> {
       navigatorKey.currentState!.pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (_) =>
-              MainScreenfood(initialIndex: 1, campaignId: campaignId),
+              // foodMainScreen(initialIndex: 1, campaignId: campaignId),
+              MainScreen(initialIndex: 1, campaignId: campaignId),
         ),
         (route) => false,
       );

@@ -367,8 +367,8 @@ class food_Authservice {
         service: 'food',
       );
 
-      // debugPrint("STATUS : ${response.statusCode}");
-      // debugPrint("BODY   : ${response.body}");
+      debugPrint("STATUS : ${response.statusCode}");
+      debugPrint("BODY   : ${response.body}");
 
       return response.statusCode == 200;
     } catch (e, stackTrace) {
@@ -420,6 +420,8 @@ class food_Authservice {
     required int dishId,
     required int quantity,
     required sheduleorder,
+    // // List<Map<String, dynamic>> addons = const [],
+    // Map<int, int> addons = const {},
     List<Map<String, dynamic>> addons = const [],
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -433,9 +435,9 @@ class food_Authservice {
     try {
       final response = await ApiClient.post(endpoint, body, service: "food");
 
-      // debugPrint("Request Body: $body");
-      // debugPrint("Status: ${response.statusCode}");
-      // debugPrint("Body: ${response.body}");
+      debugPrint("Request Body: $body");
+      debugPrint("Status: ${response.statusCode}");
+      debugPrint("Body: ${response.body}");
 
       final data = jsonDecode(response.body);
 
@@ -557,15 +559,11 @@ class food_Authservice {
   }
 
   static Future<void> updateAddon(int itemId, int addonId, int quantity) async {
-    // final endpoint =
-    //     "api/cart/addon/update?itemId=$itemId&addonId=$addonId&quantity=$quantity";
     final prefs = await SharedPreferences.getInstance();
     final int userId = prefs.getInt('userId') ?? 0;
     final endpoint =
         "api/cart/addon/update?userId=$userId&itemId=$itemId&addonId=$addonId&quantity=$quantity";
 
-    // debugPrint("Request: $endpoint");
-    // debugPrint("addon");
 
     final response = await ApiClient.put(endpoint, {}, service: "food");
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,8 +18,8 @@ class subscription_AuthService {
   static const _secureStorage = FlutterSecureStorage();
 
   static final String baseUrlgateway =
-      "http://staging.maamaas.com:8080/subscription";
-  // "https://backend.maamaas.com/subscription";
+      // "http://staging.maamaas.com:8080/subscription";
+  "https://backend.maamaas.com/subscription";
 
   Future<String> registerUser({
     required String userName,
@@ -330,7 +331,8 @@ class subscription_AuthService {
     Map<String, dynamic> body,
   ) async {
     final endpoint = "api/user/location/add";
-
+    debugPrint("Request Body: $body");
+    debugPrint("========================================");
     try {
       final response = await ApiClient.post(
         endpoint,
@@ -339,6 +341,7 @@ class subscription_AuthService {
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint(response.body);
         return {"success": true, "message": "Address added successfully"};
       } else {
         return {"success": false, "message": response.body};
@@ -355,6 +358,9 @@ class subscription_AuthService {
     try {
       final endpoint = "api/user/update/$addressId";
 
+      debugPrint("Request Body: $body");
+      debugPrint("========================================");
+
       final response = await ApiClient.put(
         endpoint,
         body,
@@ -362,6 +368,7 @@ class subscription_AuthService {
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint("resposnse ${response.body}");
         return {"success": true, "message": "Address updated successfully"};
       } else {
         return {"success": false, "message": response.body};
@@ -399,10 +406,7 @@ class subscription_AuthService {
         endpoint: "api/user/editprofile/$userId",
         method: "PUT",
         // same as Postman
-        data: {
-          // EXACTLY like Postman: key=userProfileData, value={}
-          'userProfileData': '{}',
-        },
+        data: {'userProfileData': '{}'},
         files: {
           // field name must match Postman: profileImage
           'profileImage': profileImage,
@@ -494,7 +498,7 @@ class subscription_AuthService {
       } catch (_) {
         message = res.body;
       }
-
+      debugPrint("response body : ${res.body}");
       if (res.statusCode == 200) {
         return {"success": true, "message": message};
       } else {
@@ -699,6 +703,7 @@ class subscription_AuthService {
       );
 
       String message = "Something went wrong";
+      // print(response.body);
 
       try {
         final decoded = jsonDecode(response.body);
@@ -709,12 +714,122 @@ class subscription_AuthService {
 
       final isSuccess =
           response.statusCode == 200 || response.statusCode == 201;
+      print(response.body);
 
       return {"success": isSuccess, "message": message};
     } catch (e) {
       return {"success": false, "message": e.toString()};
     }
   }
+
+  static Future<bool> updateProfileName(String userName) async {
+    try {
+      print("========================================");
+      print("STARTING UPDATE PROFILE NAME");
+      print("========================================");
+
+      // Get user ID
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('userId');
+
+      print("USER ID: $userId");
+
+      if (userId == null) {
+        print("❌ USER ID IS NULL");
+        print("========================================");
+        return false;
+      }
+
+      // Prepare name
+      final trimmedName = userName.trim();
+
+      print("OLD/ENTERED NAME: $userName");
+      print("TRIMMED NAME: $trimmedName");
+
+      if (trimmedName.isEmpty) {
+        print("❌ NAME IS EMPTY");
+        print("========================================");
+        return false;
+      }
+
+      // Prepare profile data
+      final profileData = {'userName': trimmedName};
+
+      print("PROFILE DATA MAP: $profileData");
+      print("PROFILE DATA TYPE: ${profileData.runtimeType}");
+
+      final encodedProfileData = jsonEncode(profileData);
+
+      print("ENCODED PROFILE DATA: $encodedProfileData");
+      print("ENCODED DATA TYPE: ${encodedProfileData.runtimeType}");
+
+      // Endpoint
+      final endpoint = "api/user/editprofile/$userId";
+
+      print("SERVICE: subscription");
+      print("METHOD: PUT");
+      print("ENDPOINT: $endpoint");
+
+      // Send request
+      print("SENDING UPDATE PROFILE REQUEST...");
+
+      final response = await ApiClient.sendMultipartRequest(
+        service: "subscription",
+        endpoint: endpoint,
+        method: "PUT",
+        data: {'userProfileData': encodedProfileData},
+        files: {},
+      );
+
+      print("========================================");
+      print("UPDATE PROFILE RESPONSE");
+      print("STATUS CODE: ${response.statusCode}");
+      print("RESPONSE BODY: ${response.body}");
+      print("========================================");
+
+      final success = response.statusCode == 200 || response.statusCode == 201;
+
+      print("UPDATE SUCCESS: $success");
+      print("========================================");
+
+      return success;
+    } catch (e, stackTrace) {
+      print("========================================");
+      print("❌ UPDATE PROFILE NAME ERROR");
+      print("ERROR: $e");
+      print("ERROR TYPE: ${e.runtimeType}");
+      print("STACK TRACE:");
+      print(stackTrace);
+      print("========================================");
+
+      return false;
+    }
+  }
+
+  // static Future<bool> updateProfileName(String userName) async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final userId = prefs.getInt('userId');
+  //     final endpoint = "api/user/editprofile/$userId";
+  //     final body = {userName};
+  //
+  //     if (userId == null) {
+  //       return false;
+  //     }
+  //
+  //     final response = await ApiClient.put(
+  //       service: "subscription",
+  //       endpoint,
+  //       body,
+  //     );
+  //
+  //     return response.statusCode == 200 || response.statusCode == 201;
+  //     print(response.body);
+  //   } catch (e) {
+  //     print("Update profile name error: $e");
+  //     return false;
+  //   }
+  // }
 
   static Future<bool> logout() async {
     //     debugPrint("🚪 Logout started");

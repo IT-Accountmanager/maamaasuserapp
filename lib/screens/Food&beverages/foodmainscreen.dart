@@ -1,30 +1,31 @@
 import 'dart:math';
+import '../../Models/food/orders_model.dart';
+import '../../Models/promotions_model/promotions_model.dart';
+import '../../Services/App_color_service/app_colours.dart';
+import '../../Services/Auth_service/food_authservice.dart';
+import '../../Services/Auth_service/promotion_services_Authservice.dart';
+import '../../Services/websockets/web_socket_manager.dart';
 import '../../utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import '../Models/food/orders_model.dart';
-import 'Food&beverages/commonCartscreen.dart';
-import 'homescreens/home_page.dart';
-import 'screens/orders/food orders/food_helper.dart';
-import '../Services/websockets/web_socket_manager.dart';
-import '../Services/Auth_service/food_authservice.dart';
-import '../Services/App_color_service/app_colours.dart';
-import '../Models/promotions_model/promotions_model.dart';
 import 'package:maamaas/screens/screens/profile_screen.dart';
 import '../../widgets/widgets/food/currentcart_notifier.dart';
 import 'package:maamaas/screens/screens/orders/ordertracking.dart';
-import 'Food&beverages/RestaurentsScreen/Restaurentsmainscreen.dart';
-import '../Services/Auth_service/promotion_services_Authservice.dart';
 import 'package:maamaas/screens/screens/advertisements/videoscreen.dart';
 import 'package:firebase_in_app_messaging/firebase_in_app_messaging.dart';
 import 'package:maamaas/screens/screens/advertisements/popup_message.dart';
 
-class MainScreenfood extends StatefulWidget {
+import '../homescreens/home_page.dart';
+import '../screens/orders/food orders/food_helper.dart';
+import 'RestaurentsScreen/Restaurentsmainscreen.dart';
+import 'commonCartscreen.dart';
+
+class foodMainScreen extends StatefulWidget {
   final int? initialIndex;
   final int? campaignId;
   final bool showPromotion;
 
-  const MainScreenfood({
+  const foodMainScreen({
     super.key,
     this.initialIndex,
     this.campaignId,
@@ -32,10 +33,10 @@ class MainScreenfood extends StatefulWidget {
   });
 
   @override
-  State<MainScreenfood> createState() => _MainScreenState();
+  State<foodMainScreen> createState() => _foodMainScreenState();
 }
 
-class _MainScreenState extends State<MainScreenfood>
+class _foodMainScreenState extends State<foodMainScreen>
     with WidgetsBindingObserver {
   final GlobalKey<ReelsScreenState> reelsKey = GlobalKey();
 
@@ -231,12 +232,9 @@ class _MainScreenState extends State<MainScreenfood>
   }
 
   late final _screens = [
-    // HomePage(scrollController: _scrollController),
     Restaurents(scrollController: _scrollController),
     ReelsScreen(key: reelsKey, campaignId: widget.campaignId),
-
     CommonCartScreen(),
-
     Profile(),
   ];
 

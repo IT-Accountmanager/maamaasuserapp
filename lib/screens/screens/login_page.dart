@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../homescreens/home_page.dart';
 import 'forgetpassword_screen.dart';
-import '../Mainscreen.dart';
+import '../../Mainscreen.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 class _C {
@@ -175,7 +175,7 @@ class _LoginPageState extends State<LoginScreen>
       //   (r) => false,
       // );
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => MainScreenfood(showPromotion: true)),
+        MaterialPageRoute(builder: (_) => MainScreen(showPromotion: true)),
         (r) => false,
       );
 
@@ -236,7 +236,7 @@ class _LoginPageState extends State<LoginScreen>
                     ApiClient.isGuestUser = true;
 
                     navigatorKey.currentState!.pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const MainScreenfood()),
+                      MaterialPageRoute(builder: (_) => const MainScreen()),
                       (route) => false,
                     );
                   },

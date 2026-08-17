@@ -91,7 +91,7 @@ class _CateringVendorScreenState extends State<CateringVendorScreen>
 
   Future<void> _loadBannerData() async {
     try {
-      final banner = await Authservice().fetchVendorBanner(widget.vendorId);
+      final banner = await Authservice.fetchVendorBanner(widget.vendorId);
       if (mounted) {
         setState(() {
           _bannerItem = banner;

@@ -33,8 +33,8 @@ class WebSocketManager {
     _foodConnecting = true;
     _foodClient = StompClient(
       config: StompConfig(
-        url: 'ws://staging.maamaas.com:8080/food/ws',
-        // url: 'ws://backend.maamaas.com/food/ws',
+        // url: 'ws://staging.maamaas.com:8080/food/ws',
+        url: 'ws://backend.maamaas.com/food/ws',
         onConnect: (frame) {
           _foodConnecting = false;
           for (var callback in _pendingFoodSubscriptions) {
@@ -176,7 +176,8 @@ class WebSocketManager {
 
     _deliveryClient = StompClient(
       config: StompConfig(
-        url: 'ws://staging.maamaas.com:8080/delivery/ws',
+        // url: 'ws://staging.maamaas.com:8080/delivery/ws',
+        url: 'ws://backend.maamaas.com/delivery/ws/websocket',
 
         onConnect: (frame) {
           debugPrint("✅ Delivery Connected");
@@ -489,7 +490,8 @@ class WebSocketManager {
 
     _logisticsClient = StompClient(
       config: StompConfig(
-        url: 'ws://staging.maamaas.com:8080/delivery/ws',
+        // url: 'ws://staging.maamaas.com:8080/delivery/ws',
+        url: 'ws://backend.maamaas.com/delivery/ws/websocket',
 
         onConnect: (frame) {
           _logisticsConnecting = false;
@@ -563,7 +565,6 @@ class WebSocketManager {
     _logisticSubscriptions.remove(userId);
   }
 
-
   final Map<int, StompUnsubscribe> _logisticOrderStatusSubscriptions = {};
 
   final Map<int, Map<String, Function(Map<String, dynamic>)>>
@@ -571,12 +572,11 @@ class WebSocketManager {
 
   final List<VoidCallback> _pendingLogisticStatusSubscriptions = [];
 
-
   void subscribeLogisticOrderStatus(
-      int orderId,
-      Function(Map<String, dynamic>) onMessage, {
-        String listenerId = "default",
-      }) {
+    int orderId,
+    Function(Map<String, dynamic>) onMessage, {
+    String listenerId = "default",
+  }) {
     _logisticOrderStatusListeners.putIfAbsent(orderId, () => {});
     _logisticOrderStatusListeners[orderId]![listenerId] = onMessage;
 
@@ -589,32 +589,30 @@ class WebSocketManager {
         return;
       }
 
-      debugPrint(
-        "📡 Subscribing to /topic/logistic-order-status/$orderId",
-      );
+      debugPrint("📡 Subscribing to /topic/logistic-order-status/$orderId");
 
       final subscription = _logisticsClient!.subscribe(
         destination: "/topic/logistic-order-status/$orderId",
-          callback: (frame) {
-            if (frame.body == null) return;
+        callback: (frame) {
+          if (frame.body == null) return;
 
-            debugPrint("🔥 FRAME RECEIVED");
-            debugPrint(frame.body);
+          debugPrint("🔥 FRAME RECEIVED");
+          debugPrint(frame.body);
 
-            final data = jsonDecode(frame.body!);
+          final data = jsonDecode(frame.body!);
 
-            debugPrint("STATUS FROM WS = ${data["status"]}");
+          debugPrint("STATUS FROM WS = ${data["status"]}");
 
-            final listeners = Map.of(
-              _logisticOrderStatusListeners[orderId] ?? {},
-            );
+          final listeners = Map.of(
+            _logisticOrderStatusListeners[orderId] ?? {},
+          );
 
-            debugPrint("Listeners = ${listeners.length}");
+          debugPrint("Listeners = ${listeners.length}");
 
-            for (final callback in listeners.values) {
-              callback(data);
-            }
+          for (final callback in listeners.values) {
+            callback(data);
           }
+        },
       );
 
       _logisticOrderStatusSubscriptions[orderId] = subscription;
@@ -635,9 +633,9 @@ class WebSocketManager {
   }
 
   void unsubscribeLogisticOrderStatus(
-      int orderId, {
-        String listenerId = "default",
-      }) {
+    int orderId, {
+    String listenerId = "default",
+  }) {
     _logisticOrderStatusListeners[orderId]?.remove(listenerId);
 
     if ((_logisticOrderStatusListeners[orderId]?.isEmpty ?? true)) {
@@ -646,10 +644,7 @@ class WebSocketManager {
       _logisticOrderStatusSubscriptions[orderId]?.call();
       _logisticOrderStatusSubscriptions.remove(orderId);
 
-      debugPrint(
-        "❌ Unsubscribed from /topic/logistic-order-status/$orderId",
-      );
+      debugPrint("❌ Unsubscribed from /topic/logistic-order-status/$orderId");
     }
   }
-
 }

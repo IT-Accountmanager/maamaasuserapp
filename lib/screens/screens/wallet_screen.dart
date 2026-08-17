@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:maamaas/Services/Auth_service/food_authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
 import 'package:maamaas/widgets/datetimehelper.dart';
 import 'package:maamaas/widgets/safearea.dart';
@@ -8,6 +9,7 @@ import '../../Models/subscrptions/transaction_model.dart';
 import '../../Models/subscrptions/wallet_model.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/paymentservice/razorpayservice.dart';
+import '../../widgets/paymentstatus.dart';
 import '../../widgets/signinrequired.dart';
 import '../skeleton/walletSkelton.dart';
 
@@ -59,7 +61,14 @@ class _WalletScreenState extends State<WalletScreen> {
 
   final GlobalKey<RefreshIndicatorState> _refreshKey =
       GlobalKey<RefreshIndicatorState>();
+  bool isPlacingOrder = false;
+  String paymentMessage = "Preparing payment...";
 
+  String paymentStatusTitle = "Payment Created";
+
+  String paymentStatusDescription =
+      "Your payment request has been created. Please complete the payment.";
+  PaymentOverlayState _overlayState = PaymentOverlayState.none;
   @override
   void initState() {
     super.initState();
@@ -853,24 +862,367 @@ class _WalletScreenState extends State<WalletScreen> {
                         }
 
                         final razorpay = RazorpayService();
+                        // razorpay.onSuccess = (res) async {
+                        //   final pid = res.paymentId!;
+                        //   final captured = await subscription_AuthService
+                        //       .capturePayment(paymentId: pid, amount: amount);
+                        //   if (captured) {
+                        //     await subscription_AuthService.addCashToWallet(
+                        //       paymentId: pid,
+                        //       orderId: orderId,
+                        //       amount: amount,
+                        //     );
+                        //     // ignore: use_build_context_synchronously
+                        //     AppAlert.success(context, 'Wallet recharged 🎉');
+                        //     await loadWallet();
+                        //   } else {
+                        //     // ignore: use_build_context_synchronously
+                        //     AppAlert.error(context, 'Capture failed ❌');
+                        //   }
+                        // };
+
                         razorpay.onSuccess = (res) async {
-                          final pid = res.paymentId!;
-                          final captured = await subscription_AuthService
-                              .capturePayment(paymentId: pid, amount: amount);
-                          if (captured) {
-                            await subscription_AuthService.addCashToWallet(
-                              paymentId: pid,
-                              orderId: orderId,
-                              amount: amount,
+                          final String pid = res.paymentId!;
+                          final String oid = res.orderId ?? orderId;
+
+                          print("====================================");
+                          print("WALLET PAYMENT SUCCESS");
+                          print("Payment ID : $pid");
+                          print("Order ID   : $oid");
+                          print("Amount     : $amount");
+                          print("====================================");
+
+                          if (!mounted) return;
+
+                          setState(() {
+                            isPlacingOrder = true;
+                            paymentMessage = "Processing your payment...";
+                          });
+
+                          try {
+                            // ============================================================
+                            // STEP 1: CAPTURE PAYMENT
+                            // ============================================================
+
+                            print("====================================");
+                            print("STARTING WALLET PAYMENT CAPTURE");
+                            print("Payment ID : $pid");
+                            print("Amount     : $amount");
+                            print("====================================");
+
+                            final capturedRequest =
+                                await subscription_AuthService.capturePayment(
+                                  paymentId: pid,
+                                  amount: amount,
+                                );
+
+                            print("Capture API result : $capturedRequest");
+
+                            // ============================================================
+                            // STEP 2: VERIFY PAYMENT WITH POLLING
+                            // ============================================================
+
+                            bool paymentCaptured = false;
+
+                            for (int i = 0; i < 15; i++) {
+                              print("");
+                              print("====================================");
+                              print("WALLET PAYMENT VERIFICATION");
+                              print("Attempt    : ${i + 1}/15");
+                              print("Payment ID : $pid");
+                              print("====================================");
+
+                              final payment = await food_Authservice
+                                  .verifyPayment(pid);
+
+                              if (payment == null) {
+                                print("Payment verification returned NULL");
+
+                                if (mounted) {
+                                  setState(() {
+                                    paymentMessage =
+                                        "Checking payment status...";
+                                  });
+                                }
+
+                                await Future.delayed(
+                                  const Duration(seconds: 2),
+                                );
+
+                                continue;
+                              }
+
+                              print("Payment Status : ${payment.status}");
+                              print("Captured       : ${payment.captured}");
+
+                              // ==========================================================
+                              // CAPTURED
+                              // ==========================================================
+
+                              final status = paymentstatus.parsePaymentStatus(
+                                payment.status,
+                              );
+
+                              if (status == PaymentStatus.captured ||
+                                  payment.captured == true) {
+                                print("====================================");
+                                print("WALLET PAYMENT CAPTURED");
+                                print("====================================");
+
+                                paymentCaptured = true;
+
+                                if (mounted) {
+                                  setState(() {
+                                    paymentMessage =
+                                        "Payment successful.\nAdding money to your wallet...";
+                                  });
+                                }
+
+                                break;
+                              }
+
+                              // ==========================================================
+                              // FAILED
+                              // ==========================================================
+
+                              if (status == PaymentStatus.failed) {
+                                print("WALLET PAYMENT FAILED");
+
+                                if (mounted) {
+                                  setState(() {
+                                    isPlacingOrder = false;
+
+                                    paymentStatusTitle = "Payment Failed";
+
+                                    paymentStatusDescription =
+                                        "Your wallet was not recharged because the payment failed.";
+
+                                    paymentMessage =
+                                        "Payment failed. Wallet was not recharged.";
+                                  });
+
+                                  AppAlert.error(
+                                    context,
+                                    "Payment failed. Wallet was not recharged.",
+                                  );
+                                }
+
+                                return;
+                              }
+
+                              // ==========================================================
+                              // REFUNDED
+                              // ==========================================================
+
+                              if (status == PaymentStatus.refunded) {
+                                print("WALLET PAYMENT REFUNDED");
+
+                                if (mounted) {
+                                  setState(() {
+                                    isPlacingOrder = false;
+
+                                    paymentStatusTitle = "Payment Refunded";
+
+                                    paymentStatusDescription =
+                                        "The payment was refunded. Your wallet was not recharged.";
+
+                                    paymentMessage =
+                                        "Payment refunded. Wallet was not recharged.";
+                                  });
+
+                                  AppAlert.info(
+                                    context,
+                                    "Payment was refunded. Wallet was not recharged.",
+                                  );
+                                }
+
+                                return;
+                              }
+
+                              // ==========================================================
+                              // STILL PROCESSING
+                              // ==========================================================
+
+                              if (mounted) {
+                                setState(() {
+                                  paymentMessage =
+                                      "Confirming payment... ${i + 1}/15";
+                                });
+                              }
+
+                              await Future.delayed(const Duration(seconds: 2));
+                            }
+
+                            // ============================================================
+                            // STEP 3: PAYMENT NOT CONFIRMED
+                            // ============================================================
+
+                            if (!paymentCaptured) {
+                              print("====================================");
+                              print("WALLET PAYMENT NOT CAPTURED");
+                              print("Verification timeout");
+                              print("Payment ID : $pid");
+                              print("====================================");
+
+                              if (mounted) {
+                                setState(() {
+                                  _overlayState = PaymentOverlayState.none;
+                                  isPlacingOrder = false;
+
+                                  paymentStatusTitle =
+                                      "Payment Status Could Not Be Confirmed";
+
+                                  paymentStatusDescription =
+                                      "We couldn't confirm your payment status.\n\n"
+                                      "Your wallet has NOT been recharged.\n\n"
+                                      "If money was debited from your account, "
+                                      "please wait for the payment to be processed "
+                                      "or refunded.";
+
+                                  paymentMessage =
+                                      "Payment status could not be confirmed.";
+                                });
+
+                                AppAlert.info(
+                                  context,
+                                  "Payment status could not be confirmed.\n\n"
+                                  "Your wallet has NOT been recharged.\n\n"
+                                  "If money was debited, please wait for the payment "
+                                  "to be processed or refunded.",
+                                  duration: const Duration(seconds: 5),
+                                );
+                              }
+
+                              return;
+                            }
+
+                            // ============================================================
+                            // STEP 4: PAYMENT CONFIRMED → CREDIT WALLET
+                            // ============================================================
+
+                            print("====================================");
+                            print("ADDING CASH TO WALLET");
+                            print("Payment ID : $pid");
+                            print("Order ID   : $oid");
+                            print("Amount     : $amount");
+                            print("====================================");
+
+                            if (mounted) {
+                              setState(() {
+                                paymentMessage =
+                                    "Payment successful.\nUpdating wallet...";
+                              });
+                            }
+
+                            final Map<String, dynamic> walletResponse =
+                                await subscription_AuthService.addCashToWallet(
+                                  paymentId: pid,
+                                  orderId: orderId,
+                                  amount: amount,
+                                );
+
+                            final bool walletSuccess =
+                                walletResponse["success"] == true;
+
+                            // ============================================================
+                            // STEP 5: WALLET UPDATE SUCCESS
+                            // ============================================================
+
+                            if (walletSuccess) {
+                              print("====================================");
+                              print("WALLET RECHARGE SUCCESS");
+                              print("Amount : $amount");
+                              print("====================================");
+
+                              if (mounted) {
+                                setState(() {
+                                  isPlacingOrder = false;
+                                  paymentMessage =
+                                      "Wallet recharged successfully 🎉";
+                                });
+                              }
+
+                              // Refresh wallet balance
+                              await loadWallet();
+
+                              if (!mounted) return;
+
+                              AppAlert.success(context, 'Wallet recharged 🎉');
+
+                              return;
+                            }
+
+                            // ============================================================
+                            // STEP 6: PAYMENT SUCCESS BUT WALLET UPDATE FAILED
+                            // ============================================================
+
+                            print("====================================");
+                            print("PAYMENT SUCCESSFUL");
+                            print("BUT WALLET UPDATE FAILED");
+                            print("Payment ID : $pid");
+                            print("====================================");
+
+                            if (mounted) {
+                              setState(() {
+                                isPlacingOrder = false;
+
+                                paymentStatusTitle = "Wallet Update Pending";
+
+                                paymentStatusDescription =
+                                    "Your payment was successful, "
+                                    "but we could not update your wallet right now.";
+
+                                paymentMessage =
+                                    "Payment successful, but wallet update failed.";
+                              });
+
+                              AppAlert.info(
+                                context,
+                                "Payment was successful, but your wallet "
+                                "could not be updated right now.",
+                                duration: const Duration(seconds: 5),
+                              );
+                            }
+                          } catch (e) {
+                            // ============================================================
+                            // ERROR
+                            // ============================================================
+
+                            print("====================================");
+                            print("WALLET PAYMENT ERROR");
+                            print("Error : $e");
+                            print("====================================");
+
+                            if (!mounted) return;
+
+                            setState(() {
+                              _overlayState = PaymentOverlayState.none;
+                              isPlacingOrder = false;
+
+                              paymentStatusTitle =
+                                  "Payment Verification Failed";
+
+                              paymentStatusDescription =
+                                  "We couldn't confirm your payment status.\n\n"
+                                  "Your wallet has NOT been recharged.\n\n"
+                                  "If money was debited, please check your "
+                                  "payment status before trying again.";
+
+                              paymentMessage =
+                                  "Payment status could not be confirmed.";
+                            });
+
+                            AppAlert.info(
+                              context,
+                              "We couldn't confirm your payment status.\n\n"
+                              "Your wallet has NOT been recharged.\n\n"
+                              "If money was debited, please check your payment "
+                              "status before trying again.",
+                              duration: const Duration(seconds: 5),
                             );
-                            // ignore: use_build_context_synchronously
-                            AppAlert.success(context, 'Wallet recharged 🎉');
-                            await loadWallet();
-                          } else {
-                            // ignore: use_build_context_synchronously
-                            AppAlert.error(context, 'Capture failed ❌');
                           }
                         };
+
                         razorpay.onError = (res) {
                           AppAlert.error(
                             context,

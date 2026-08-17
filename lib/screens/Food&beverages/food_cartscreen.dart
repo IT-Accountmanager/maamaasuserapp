@@ -1,3 +1,7 @@
+import 'package:maamaas/screens/Food&beverages/foodmainscreen.dart';
+
+import '../../Models/food/restaurent_banner_model.dart';
+import '../../Services/App_color_service/app_colours.dart';
 import '../../Services/Auth_service/promotion_services_Authservice.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../widgets/paymentstatus.dart';
@@ -16,7 +20,7 @@ import 'package:maamaas/widgets/signinrequired.dart';
 import '../../Models/subscrptions/coupon_model.dart';
 import '../../Models/subscrptions/wallet_model.dart';
 import '../../providers/addressmodel_provider.dart';
-import 'package:maamaas/screens/Mainscreen.dart';
+import 'package:maamaas/Mainscreen.dart';
 import '../../widgets/widgets/cart wallet.dart';
 import '../../Models/food/cart_model.dart';
 import '../screens/ordertypebutton.dart';
@@ -60,7 +64,6 @@ class cartuser {
 }
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
-
 
 // ─── Main Widget ──────────────────────────────────────────────────────────────
 // ignore: camel_case_types
@@ -122,6 +125,33 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
 
   String paymentStatusDescription =
       "Your payment request has been created. Please complete the payment.";
+  Restaurent_Banner? vendorBanner;
+  bool isLoadingVendorName = false;
+
+  int _paymentStatusIndex(PaymentStatus status) {
+    switch (status) {
+      case PaymentStatus.created:
+        return 0;
+
+      case PaymentStatus.authenticated:
+        return 1;
+
+      case PaymentStatus.authorized:
+        return 2;
+
+      case PaymentStatus.captured:
+        return 3;
+
+      case PaymentStatus.refunded:
+        return 4;
+
+      case PaymentStatus.failed:
+        return 4;
+
+      case PaymentStatus.unknown:
+        return 0;
+    }
+  }
 
   @override
   void initState() {
@@ -383,7 +413,6 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
     return t;
   }
 
-
   void _updatePaymentStatus(PaymentStatus status) {
     if (!mounted) return;
 
@@ -394,7 +423,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         case PaymentStatus.created:
           paymentStatusTitle = "Payment Created";
           paymentStatusDescription =
-          "Your payment request has been created. Please complete the payment.";
+              "Your payment request has been created. Please complete the payment.";
           paymentMessage = "Preparing payment...";
 
           break;
@@ -402,7 +431,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         case PaymentStatus.authenticated:
           paymentStatusTitle = "Payment Authenticated";
           paymentStatusDescription =
-          "Your bank has authenticated the payment. We are waiting for the payment authorization to complete.";
+              "Your bank has authenticated the payment. We are waiting for the payment authorization to complete.";
           paymentMessage = "Waiting for bank confirmation...";
 
           break;
@@ -410,7 +439,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         case PaymentStatus.authorized:
           paymentStatusTitle = "Payment Authorized";
           paymentStatusDescription =
-          "Your bank has approved the payment, but the amount has not been captured yet. We are finalizing the payment.";
+              "Your bank has approved the payment, but the amount has not been captured yet. We are finalizing the payment.";
 
           paymentMessage = "Finalizing payment...";
 
@@ -419,7 +448,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         case PaymentStatus.captured:
           paymentStatusTitle = "Payment Successful";
           paymentStatusDescription =
-          "Your payment has been successfully captured. We can now create your order.";
+              "Your payment has been successfully captured. We can now create your order.";
 
           paymentMessage = "Payment successful. Creating your order...";
 
@@ -428,7 +457,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         case PaymentStatus.failed:
           paymentStatusTitle = "Payment Failed";
           paymentStatusDescription =
-          "The payment could not be completed. Your order will not be placed.";
+              "The payment could not be completed. Your order will not be placed.";
 
           paymentMessage = "Payment failed.";
 
@@ -437,7 +466,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         case PaymentStatus.refunded:
           paymentStatusTitle = "Payment Refunded";
           paymentStatusDescription =
-          "The payment was not captured successfully. If money was debited from your account, it will be reversed/refunded according to the payment provider and bank processing time.";
+              "The payment was not captured successfully. If money was debited from your account, it will be reversed/refunded according to the payment provider and bank processing time.";
 
           paymentMessage = "Payment refunded.";
 
@@ -446,16 +475,13 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         case PaymentStatus.unknown:
           paymentStatusTitle = "Checking Payment";
           paymentStatusDescription =
-          "We are checking the latest status of your payment. Please wait.";
+              "We are checking the latest status of your payment. Please wait.";
 
           paymentMessage = "Verifying payment...";
           break;
       }
     });
   }
-
-
-
 
   Future<void> placeOrder() async {
     final hasScheduledItems = cartData?.hasAnyScheduledItem ?? false;
@@ -504,106 +530,217 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
           return;
         }
         final rp = RazorpayService();
+
         // rp.onSuccess = (res) async {
-        //   final pid = res.paymentId!, oid = res.orderId!;
+        //   final pid = res.paymentId!;
+        //   final oid = res.orderId!;
+        //
         //   if (mounted) {
         //     setState(() => _overlayState = PaymentOverlayState.processing);
         //   }
-        //   final ok = isUserScheduled
-        //       ? await _placeScheduledOrder(
-        //           paymentMethod: "Online_Payment",
-        //           razorpayPaymentId: pid,
-        //           razorpayOrderId: oid,
-        //           amount: amount,
-        //         )
-        //       : await _placeDirectOrder(
-        //           paymentMethod: "Online_Payment",
-        //           razorpayPaymentId: pid,
-        //           razorpayOrderId: oid,
-        //           amount: amount,
-        //         );
-        //   if (ok) {
-        //     food_Authservice
-        //         .capturePayment(paymentId: pid, amount: amount)
-        //         .catchError((_) {});
-        //   } else {
-        //     AppAlert.error(context, "Order failed. Refund in 3–5 days.");
+        //
+        //   // Capture payment first
+        //   final captured = await food_Authservice.capturePayment(
+        //     paymentId: pid,
+        //     amount: amount,
+        //   );
+        //
+        //   if (!captured) {
+        //     AppAlert.error(
+        //       context,
+        //       "Unable to capture payment. We'll verify automatically.",
+        //     );
+        //     return;
         //   }
+        //
+        //   // Wait until Razorpay confirms CAPTURED
+        //   for (int i = 0; i < 15; i++) {
+        //     final payment = await food_Authservice.verifyPayment(pid);
+        //
+        //     print("========== PAYMENT VERIFY ==========");
+        //     print("Attempt      : ${i + 1}");
+        //     print("Payment ID   : $pid");
+        //
+        //     if (payment == null) {
+        //       print("Response     : NULL");
+        //       print("====================================");
+        //
+        //       await Future.delayed(const Duration(seconds: 2));
+        //       continue;
+        //     }
+        //
+        //     print("Status       : ${payment.status}");
+        //     print("Captured     : ${payment.captured}");
+        //     print("====================================");
+        //
+        //     switch (payment.status?.toLowerCase()) {
+        //       case "created":
+        //         print("Payment Status -> CREATED");
+        //         if (mounted) {
+        //           setState(() {
+        //             paymentMessage = "Preparing payment...";
+        //           });
+        //         }
+        //         break;
+        //
+        //       case "authenticated":
+        //         print("Payment Status -> AUTHENTICATED");
+        //         if (mounted) {
+        //           setState(() {
+        //             paymentMessage =
+        //                 "Payment authenticated.\nWaiting for bank confirmation...";
+        //           });
+        //         }
+        //         break;
+        //
+        //       case "authorized":
+        //         print("Payment Status -> AUTHORIZED");
+        //         if (mounted) {
+        //           setState(() {
+        //             paymentMessage =
+        //                 "Payment authorized.\nFinalizing payment...";
+        //           });
+        //         }
+        //         break;
+        //
+        //       case "captured":
+        //         print("Payment Status -> CAPTURED");
+        //         if (mounted) {
+        //           setState(() {
+        //             paymentMessage =
+        //                 "Payment successful.\nCreating your order...";
+        //           });
+        //         }
+        //
+        //         final ok = isUserScheduled
+        //             ? await _placeScheduledOrder(
+        //                 paymentMethod: "Online_Payment",
+        //                 razorpayPaymentId: pid,
+        //                 razorpayOrderId: oid,
+        //                 amount: amount,
+        //               )
+        //             : await _placeDirectOrder(
+        //                 paymentMethod: "Online_Payment",
+        //                 razorpayPaymentId: pid,
+        //                 razorpayOrderId: oid,
+        //                 amount: amount,
+        //               );
+        //
+        //         print("Order Created : $ok");
+        //
+        //         if (!ok) {
+        //           AppAlert.error(
+        //             context,
+        //             "Payment completed but order creation failed.\nPayment ID: $pid",
+        //           );
+        //         }
+        //
+        //         return;
+        //
+        //       case "refunded":
+        //         print("Payment Status -> REFUNDED");
+        //         AppAlert.info(
+        //           context,
+        //           "Payment refunded.\nAmount will be credited in 3-5 business days.",
+        //         );
+        //         return;
+        //
+        //       case "failed":
+        //         print("Payment Status -> FAILED");
+        //         AppAlert.error(context, "Payment failed.");
+        //         return;
+        //
+        //       default:
+        //         print("Unknown Payment Status -> ${payment.status}");
+        //     }
+        //
+        //     await Future.delayed(const Duration(seconds: 2));
+        //   }
+        //
+        //   AppAlert.info(
+        //     context,
+        //     "Payment is still being verified. Please wait a moment.",
+        //   );
         // };
         rp.onSuccess = (res) async {
           final pid = res.paymentId!;
           final oid = res.orderId!;
 
           if (mounted) {
-            setState(() => _overlayState = PaymentOverlayState.processing);
+            setState(() {
+              _overlayState = PaymentOverlayState.processing;
+              _paymentStatus = PaymentStatus.created;
+            });
           }
 
-          // Capture payment first
-          final captured = await food_Authservice.capturePayment(
-            paymentId: pid,
-            amount: amount,
-          );
-
-          if (!captured) {
-            AppAlert.error(
-              context,
-              "Unable to capture payment. We'll verify automatically.",
-            );
-            return;
-          }
-
-          // Wait until Razorpay confirms CAPTURED
-          for (int i = 0; i < 15; i++) {
-            final payment = await food_Authservice.verifyPayment(pid);
-
-            print("========== PAYMENT VERIFY ==========");
-            print("Attempt      : ${i + 1}");
-            print("Payment ID   : $pid");
-
-            if (payment == null) {
-              print("Response     : NULL");
-              print("====================================");
-
-              await Future.delayed(const Duration(seconds: 2));
-              continue;
-            }
-
-            print("Status       : ${payment.status}");
-            print("Captured     : ${payment.captured}");
+          try {
+            print("====================================");
+            print("STARTING PAYMENT CAPTURE");
+            print("Payment ID : $pid");
+            print("Order ID   : $oid");
+            print("Amount     : $amount");
             print("====================================");
 
-            switch (payment.status?.toLowerCase()) {
-              case "created":
-                print("Payment Status -> CREATED");
-                if (mounted) {
-                  setState(() {
-                    paymentMessage = "Preparing payment...";
-                  });
-                }
-                break;
+            final capturedRequest = await food_Authservice.capturePayment(
+              paymentId: pid,
+              amount: amount,
+            );
 
-              case "authenticated":
-                print("Payment Status -> AUTHENTICATED");
-                if (mounted) {
-                  setState(() {
-                    paymentMessage =
-                        "Payment authenticated.\nWaiting for bank confirmation...";
-                  });
-                }
-                break;
+            print("Capture API result : $capturedRequest");
 
-              case "authorized":
-                print("Payment Status -> AUTHORIZED");
-                if (mounted) {
-                  setState(() {
-                    paymentMessage =
-                        "Payment authorized.\nFinalizing payment...";
-                  });
-                }
-                break;
+            for (int i = 0; i < 15; i++) {
+              print("");
+              print("====================================");
+              print("PAYMENT VERIFICATION");
+              print("Attempt    : ${i + 1}/15");
+              print("Payment ID : $pid");
+              print("====================================");
 
-              case "captured":
-                print("Payment Status -> CAPTURED");
+              final payment = await food_Authservice.verifyPayment(pid);
+
+              if (payment == null) {
+                print("Payment verification returned NULL");
+
+                if (mounted) {
+                  _updatePaymentStatus(PaymentStatus.unknown);
+                }
+
+                await Future.delayed(const Duration(seconds: 2));
+
+                continue;
+              }
+
+              final status = paymentstatus.parsePaymentStatus(payment.status);
+
+              print("Status   : ${payment.status}");
+              print("Captured : ${payment.captured}");
+
+              // --------------------------------------------------
+              // STEP 3: Update UI
+              // --------------------------------------------------
+
+              if (mounted) {
+                _updatePaymentStatus(status);
+              }
+
+              // --------------------------------------------------
+              // STEP 4: ONLY CAPTURED CAN CREATE ORDER
+              // --------------------------------------------------
+
+              if (status == PaymentStatus.captured ||
+                  payment.captured == true) {
+                print("====================================");
+                print("PAYMENT CAPTURED");
+                print("CREATING ORDER...");
+                print("====================================");
+
+                if (_orderCreationStarted) {
+                  print("Order creation already started.");
+                  return;
+                }
+
+                _orderCreationStarted = true;
+
                 if (mounted) {
                   setState(() {
                     paymentMessage =
@@ -611,7 +748,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   });
                 }
 
-                final ok = isUserScheduled
+                final bool ok = isUserScheduled
                     ? await _placeScheduledOrder(
                         paymentMethod: "Online_Payment",
                         razorpayPaymentId: pid,
@@ -625,49 +762,160 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                         amount: amount,
                       );
 
-                print("Order Created : $ok");
+                print("====================================");
+                print("ORDER CREATED : $ok");
+                print("====================================");
 
                 if (!ok) {
-                  AppAlert.error(
-                    context,
-                    "Payment completed but order creation failed.\nPayment ID: $pid",
-                  );
+                  if (mounted) {
+                    AppAlert.error(
+                      context,
+                      "Payment was successful, but we could not create your order.\n"
+                      "Payment ID: $pid",
+                    );
+                  }
                 }
 
                 return;
+              }
 
-              case "refunded":
-                print("Payment Status -> REFUNDED");
-                AppAlert.info(
-                  context,
-                  "Payment refunded.\nAmount will be credited in 3-5 business days.",
-                );
+              // --------------------------------------------------
+              // FAILED
+              // --------------------------------------------------
+
+              if (status == PaymentStatus.failed) {
+                print("PAYMENT FAILED");
+
+                if (mounted) {
+                  setState(() {
+                    paymentMessage =
+                        "Payment failed. Your order has not been placed.";
+                  });
+                }
+
                 return;
+              }
 
-              case "failed":
-                print("Payment Status -> FAILED");
-                AppAlert.error(context, "Payment failed.");
+              // --------------------------------------------------
+              // REFUNDED
+              // --------------------------------------------------
+
+              if (status == PaymentStatus.refunded) {
+                print("PAYMENT REFUNDED");
+
+                if (mounted) {
+                  setState(() {
+                    paymentMessage =
+                        "Payment was refunded. Your order has not been placed.";
+                  });
+                }
+
                 return;
+              }
 
-              default:
-                print("Unknown Payment Status -> ${payment.status}");
+              // --------------------------------------------------
+              // CREATED / AUTHENTICATED / AUTHORIZED
+              // --------------------------------------------------
+
+              await Future.delayed(const Duration(seconds: 2));
             }
 
-            await Future.delayed(const Duration(seconds: 2));
-          }
+            // --------------------------------------------------
+            // STEP 5: Still not captured
+            // --------------------------------------------------
 
-          AppAlert.info(
-            context,
-            "Payment is still being verified. Please wait a moment.",
-          );
+            print("PAYMENT NOT CAPTURED AFTER POLLING");
+
+            print("====================================");
+            print("PAYMENT VERIFICATION TIMEOUT");
+            print("Payment ID : $pid");
+            print("Attempts   : 15");
+            print("====================================");
+
+            if (mounted) {
+              setState(() {
+                _overlayState = PaymentOverlayState.none;
+                isPlacingOrder = false;
+              });
+
+              AppAlert.info(
+                context,
+                "Payment status could not be confirmed.\n\n"
+                "Your order has NOT been placed.\n\n"
+                "If money was debited from your account, "
+                "the amount will be automatically refunded "
+                "within 2–3 working days.",
+                duration: Duration(seconds: 5),
+              );
+            }
+
+            // catch (e) {
+            //   print("PAYMENT ERROR: $e");
+            //
+            //   if (mounted) {
+            //     setState(() {
+            //       paymentStatusTitle = "Payment Verification Error";
+            //
+            //       paymentStatusDescription =
+            //           "We couldn't confirm the payment status right now. "
+            //           "Your order has not been placed. "
+            //           "Please check your payment status before trying again.";
+            //
+            //       paymentMessage = "Unable to verify payment.";
+            //     });
+            //   }
+            // }
+          } catch (e) {
+            print("====================================");
+            print("PAYMENT VERIFICATION ERROR");
+            print("Error : $e");
+            print("====================================");
+
+            if (mounted) {
+              setState(() {
+                _overlayState = PaymentOverlayState.none;
+                isPlacingOrder = false;
+
+                paymentStatusTitle = "Payment Verification Failed";
+
+                paymentStatusDescription =
+                    "We couldn't confirm the payment status.\n\n"
+                    "Your order has NOT been placed.\n\n"
+                    "If money was debited from your account, "
+                    "the amount will be automatically refunded "
+                    "within 2–3 working days.";
+
+                paymentMessage = "Payment status could not be confirmed.";
+              });
+
+              AppAlert.info(
+                context,
+                "We couldn't confirm your payment status.\n\n"
+                "Your order has NOT been placed.\n\n"
+                "If money was debited, the amount will be "
+                "automatically refunded within 2–3 working days.",
+                duration: Duration(seconds: 4),
+              );
+            }
+
+            return;
+          }
         };
         rp.onError = (res) {
-          if (mounted) {
-            setState(() {
-              _overlayState = PaymentOverlayState.none;
-              isPlacingOrder = false;
-            });
-          }
+          if (!mounted) return;
+
+          setState(() {
+            _overlayState = PaymentOverlayState.none;
+
+            paymentStatusTitle = "Payment Failed";
+
+            paymentStatusDescription =
+                "The payment process was cancelled or failed. "
+                "Your order has not been placed.";
+
+            paymentMessage = "Payment failed.";
+          });
+
           AppAlert.error(context, "Payment failed: ${res.message}");
         };
         rp.startPayment(
@@ -936,7 +1184,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   } else {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const MainScreenfood()),
+                      MaterialPageRoute(builder: (_) => const foodMainScreen()),
                     );
                   }
                 },
@@ -959,7 +1207,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                   child: GestureDetector(
                     onTap: () => Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => MainScreenfood()),
+                      MaterialPageRoute(builder: (_) => foodMainScreen()),
                     ),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -1002,7 +1250,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
                       if (!mounted) return;
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => MainScreenfood()),
+                        MaterialPageRoute(builder: (_) => foodMainScreen()),
                       );
                       AppAlert.success(context, 'Cart cleared');
                     } else {
@@ -1154,7 +1402,7 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
           GestureDetector(
             onTap: () => Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => MainScreenfood()),
+              MaterialPageRoute(builder: (_) => foodMainScreen()),
             ),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
@@ -2890,6 +3138,122 @@ class _food_cartScreenState extends ConsumerState<food_cartScreen> {
         ],
       ),
       child: child,
+    );
+  }
+
+  Widget _paymentOverlay() {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            paymentStatusTitle,
+            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w700),
+          ),
+
+          SizedBox(height: 12.h),
+
+          Text(
+            paymentStatusDescription,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13.sp,
+              height: 1.5,
+              color: Colors.grey.shade700,
+            ),
+          ),
+
+          SizedBox(height: 25.h),
+
+          _paymentStep(title: "Created", status: PaymentStatus.created),
+
+          _paymentStep(
+            title: "Authenticated",
+            status: PaymentStatus.authenticated,
+          ),
+
+          _paymentStep(title: "Authorized", status: PaymentStatus.authorized),
+
+          _paymentStep(title: "Captured", status: PaymentStatus.captured),
+
+          _paymentStep(title: "Refunded", status: PaymentStatus.refunded),
+
+          _paymentStep(title: "Failed", status: PaymentStatus.failed),
+        ],
+      ),
+    );
+  }
+
+  Widget _paymentStep({required String title, required PaymentStatus status}) {
+    final currentIndex = _paymentStatusIndex(_paymentStatus);
+    final stepIndex = _paymentStatusIndex(status);
+
+    final bool isCurrent = _paymentStatus == status;
+
+    final bool isCompleted =
+        currentIndex > stepIndex &&
+        _paymentStatus != PaymentStatus.failed &&
+        _paymentStatus != PaymentStatus.refunded;
+
+    Color circleColor;
+
+    if (isCurrent) {
+      if (status == PaymentStatus.failed) {
+        circleColor = Colors.red;
+      } else if (status == PaymentStatus.refunded) {
+        circleColor = Colors.orange;
+      } else {
+        circleColor = AppColors.primary;
+      }
+    } else if (isCompleted) {
+      circleColor = Colors.green;
+    } else {
+      circleColor = Colors.grey.shade300;
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 5.h),
+      child: Row(
+        children: [
+          Container(
+            width: 28.w,
+            height: 28.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: circleColor,
+            ),
+            child: isCompleted
+                ? const Icon(Icons.check, color: Colors.white, size: 16)
+                : isCurrent
+                ? const Icon(Icons.circle, color: Colors.white, size: 10)
+                : null,
+          ),
+
+          SizedBox(width: 12.w),
+
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                color: isCurrent ? Colors.black : Colors.grey.shade600,
+              ),
+            ),
+          ),
+
+          if (isCurrent &&
+              status != PaymentStatus.failed &&
+              status != PaymentStatus.refunded)
+            SizedBox(
+              width: 18.w,
+              height: 18.w,
+              child: const CircularProgressIndicator(strokeWidth: 2),
+            ),
+        ],
+      ),
     );
   }
 }

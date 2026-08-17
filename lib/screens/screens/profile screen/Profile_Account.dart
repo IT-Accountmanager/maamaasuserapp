@@ -165,12 +165,14 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> saveBasic() => _save(() async {
-    await subscription_AuthService.saveAccount(
-      UserAccount(
-        userId: await _userId(),
-        city: cityCtrl.text,
-        languagePreference: language,
-      ),
+    // await subscription_AuthService.saveAccount(
+    //   UserAccount(
+    //     userId: await _userId(),
+    //    userName: nameCtrl.text,
+    //   ),
+    // );
+    final success = await subscription_AuthService.updateProfileName(
+      nameCtrl.text.trim(),
     );
     // ignore: use_build_context_synchronously
     AppAlert.success(context, "Basic profile saved");
@@ -489,29 +491,66 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   // ── Forms ─────────────────────────────────────────────────────────────────
+  // Widget _basicForm() => Column(
+  //   children: [
+  //     _field(
+  //       ctrl: nameCtrl,
+  //       hint: "Full Name",
+  //       icon: Icons.person_outline_rounded,
+  //     ),
+  //     SizedBox(height: 12.h),
+  //     _field(
+  //       ctrl: emailCtrl,
+  //       hint: "Email Address",
+  //       icon: Icons.alternate_email_rounded,
+  //       type: TextInputType.emailAddress,
+  //     ),
+  //     SizedBox(height: 12.h),
+  //     _field(
+  //       ctrl: phonenumberCtrl,
+  //       hint: "Phone Number",
+  //       icon: Icons.phone_outlined,
+  //       type: TextInputType.phone,
+  //     ),
+  //     // SizedBox(height: 16.h),
+  //     // _saveBtn(saveBasic),
+  //   ],
+  // );
+
   Widget _basicForm() => Column(
     children: [
+      // Name - Editable
       _field(
         ctrl: nameCtrl,
         hint: "Full Name",
         icon: Icons.person_outline_rounded,
       ),
+
       SizedBox(height: 12.h),
+
+      // Email - Read Only
       _field(
         ctrl: emailCtrl,
         hint: "Email Address",
         icon: Icons.alternate_email_rounded,
         type: TextInputType.emailAddress,
+        readOnly: true,
       ),
+
       SizedBox(height: 12.h),
+
+      // Phone - Read Only
       _field(
         ctrl: phonenumberCtrl,
         hint: "Phone Number",
         icon: Icons.phone_outlined,
         type: TextInputType.phone,
+        readOnly: true,
       ),
-      // SizedBox(height: 16.h),
-      // _saveBtn(saveBasic),
+
+      SizedBox(height: 16.h),
+
+      _saveBtn(saveBasic),
     ],
   );
 
@@ -733,6 +772,7 @@ class _AccountScreenState extends State<AccountScreen> {
     required String hint,
     required IconData icon,
     TextInputType type = TextInputType.text,
+    bool readOnly = false,
   }) {
     return TextFormField(
       controller: ctrl,

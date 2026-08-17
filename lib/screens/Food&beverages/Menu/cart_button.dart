@@ -41,15 +41,73 @@ class _CartButtonState extends State<CartButton> {
   void initState() {
     super.initState();
     _loadQuantity();
+    CartNotifier.quantities.addListener(_onCartQuantityChanged);
   }
+
+  @override
+  void dispose() {
+    CartNotifier.quantities.removeListener(_onCartQuantityChanged);
+
+    super.dispose();
+  }
+
+  void _onCartQuantityChanged() {
+    if (!mounted) return;
+
+    final quantity = CartNotifier.getDishQuantity(widget.dish.dishId);
+
+    if (itemCount != quantity) {
+      setState(() {
+        itemCount = quantity;
+      });
+    }
+  }
+
+  // Future<void> _loadQuantity() async {
+  //   try {
+  //     final cart = await food_Authservice.fetchCart();
+  //
+  //     CartItem? matchedItem;
+  //     if (cart != null) {
+  //       for (var item in cart.cartItems) {
+  //         if (item.dishId == widget.dish.dishId) {
+  //           matchedItem = item;
+  //           break;
+  //         }
+  //       }
+  //     }
+  //
+  //     final prefs = await SharedPreferences.getInstance();
+  //
+  //     if (matchedItem != null) {
+  //       await prefs.setInt(
+  //         "dish_${widget.dish.dishId}_itemId",
+  //         matchedItem.itemId,
+  //       );
+  //
+  //       await prefs.setInt(
+  //         "dish_${widget.dish.dishId}_quantity",
+  //         matchedItem.quantity,
+  //       );
+  //     }
+  //
+  //     setState(() => itemCount = matchedItem?.quantity ?? 0);
+  //   } catch (e) {
+  //     if (mounted) setState(() => itemCount = 0);
+  //   }
+  //
+  //   // update global cart badge
+  //   Utils.refreshCartCount();
+  // }
 
   Future<void> _loadQuantity() async {
     try {
       final cart = await food_Authservice.fetchCart();
 
       CartItem? matchedItem;
+
       if (cart != null) {
-        for (var item in cart.cartItems) {
+        for (final item in cart.cartItems) {
           if (item.dishId == widget.dish.dishId) {
             matchedItem = item;
             break;
@@ -58,6 +116,8 @@ class _CartButtonState extends State<CartButton> {
       }
 
       final prefs = await SharedPreferences.getInstance();
+
+      final quantity = matchedItem?.quantity ?? 0;
 
       if (matchedItem != null) {
         await prefs.setInt(
@@ -69,15 +129,31 @@ class _CartButtonState extends State<CartButton> {
           "dish_${widget.dish.dishId}_quantity",
           matchedItem.quantity,
         );
+      } else {
+        await prefs.remove("dish_${widget.dish.dishId}_itemId");
+
+        await prefs.remove("dish_${widget.dish.dishId}_quantity");
       }
 
-      setState(() => itemCount = matchedItem?.quantity ?? 0);
-    } catch (e) {
-      if (mounted) setState(() => itemCount = 0);
-    }
+      if (mounted) {
+        setState(() {
+          itemCount = quantity;
+        });
+      }
 
-    // update global cart badge
-    Utils.refreshCartCount();
+      // 🔥 IMPORTANT
+      CartNotifier.updateDishQuantity(widget.dish.dishId, quantity);
+
+      await Utils.refreshCartCount();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          itemCount = 0;
+        });
+      }
+
+      CartNotifier.updateDishQuantity(widget.dish.dishId, 0);
+    }
   }
 
   Future<void> _addToCart(int quantity, {bool sheduleorder = false}) async {
@@ -94,8 +170,11 @@ class _CartButtonState extends State<CartButton> {
         sheduleorder: sheduleorder,
       );
 
+      // if (success) {
+      //   CartNotifier.count.value += quantity;
+      //   await _loadQuantity();
+      // }
       if (success) {
-        CartNotifier.count.value += quantity;
         await _loadQuantity();
       }
     } catch (e) {
@@ -111,23 +190,72 @@ class _CartButtonState extends State<CartButton> {
     }
   }
 
+  // Future<void> _removeFromCart() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final itemId = prefs.getInt("dish_${widget.dish.dishId}_itemId");
+  //
+  //   if (itemId == null) return;
+  //
+  //   CartNotifier.count.value -= itemCount;
+  //
+  //   final removed = await food_Authservice.removeCartItem(itemId);
+  //
+  //   if (removed) {
+  //     prefs.remove("dish_${widget.dish.dishId}_quantity");
+  //     prefs.remove("dish_${widget.dish.dishId}_itemId");
+  //
+  //     setState(() => itemCount = 0);
+  //   }
+  // }
+
   Future<void> _removeFromCart() async {
     final prefs = await SharedPreferences.getInstance();
+
     final itemId = prefs.getInt("dish_${widget.dish.dishId}_itemId");
 
     if (itemId == null) return;
 
-    CartNotifier.count.value -= itemCount;
+    try {
+      final removed = await food_Authservice.removeCartItem(itemId);
 
-    final removed = await food_Authservice.removeCartItem(itemId);
+      if (removed) {
+        await prefs.remove("dish_${widget.dish.dishId}_quantity");
 
-    if (removed) {
-      prefs.remove("dish_${widget.dish.dishId}_quantity");
-      prefs.remove("dish_${widget.dish.dishId}_itemId");
+        await prefs.remove("dish_${widget.dish.dishId}_itemId");
 
-      setState(() => itemCount = 0);
+        if (mounted) {
+          setState(() {
+            itemCount = 0;
+          });
+        }
+
+        // 🔥 Tell both scenarios
+        CartNotifier.updateDishQuantity(widget.dish.dishId, 0);
+
+        await Utils.refreshCartCount();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppAlert.error(context, e.toString().replaceFirst('Exception: ', ''));
+      }
     }
   }
+
+  // Future<void> _updateQuantity(int newQty) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //
+  //   final itemId = prefs.getInt("dish_${widget.dish.dishId}_itemId");
+  //
+  //   if (itemId == null) {
+  //     return;
+  //   }
+  //
+  //   CartNotifier.count.value = CartNotifier.count.value - itemCount + newQty;
+  //
+  //   await food_Authservice.updateCartQuantity(itemId, newQty);
+  //
+  //   prefs.setInt("dish_${widget.dish.dishId}_quantity", newQty);
+  // }
 
   Future<void> _updateQuantity(int newQty) async {
     final prefs = await SharedPreferences.getInstance();
@@ -138,11 +266,29 @@ class _CartButtonState extends State<CartButton> {
       return;
     }
 
-    CartNotifier.count.value = CartNotifier.count.value - itemCount + newQty;
+    try {
+      await food_Authservice.updateCartQuantity(itemId, newQty);
 
-    await food_Authservice.updateCartQuantity(itemId, newQty);
+      await prefs.setInt("dish_${widget.dish.dishId}_quantity", newQty);
 
-    prefs.setInt("dish_${widget.dish.dishId}_quantity", newQty);
+      if (mounted) {
+        setState(() {
+          itemCount = newQty;
+        });
+      }
+
+      // 🔥 Synchronize both scenarios
+      CartNotifier.updateDishQuantity(widget.dish.dishId, newQty);
+
+      await Utils.refreshCartCount();
+    } catch (e) {
+      if (mounted) {
+        AppAlert.error(context, e.toString().replaceFirst('Exception: ', ''));
+      }
+
+      // Reload server value if update failed
+      await _loadQuantity();
+    }
   }
 
   Future<bool> _checkLogin(BuildContext context) async {

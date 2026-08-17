@@ -20,7 +20,6 @@ import '../../providers/addressmodel_provider.dart';
 import '../../Services/googleservices/Location_servces.dart';
 import '../skeleton/savedAddress.dart';
 
-// ── Design tokens (shared with Ticket & Wallet screens) ───────────────────────
 class savedddcolour {
   static const bg = Color(0xFFF5F6FA);
   static const surface = Color(0xFFFFFFFF);
@@ -85,12 +84,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
     ].where((e) => e.toString().trim().isNotEmpty).join(', ');
   }
 
-  // Future<void> _loadKey() async {
-  //   _googleApiKey = await ApiKeyService.getApiKey();
-  // }
-
   void _refreshTable() {
-    //     debugPrint("📦 Refreshing address list...");
     setState(() {
       _futureAddresses = subscription_AuthService.fetchAddresses();
     });
@@ -941,7 +935,7 @@ class _SavedAddressState extends ConsumerState<SavedAddress> {
                         SizedBox(height: 4.h),
 
                         Text(
-                          address.address,
+                          address.addressLine,
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: savedddcolour.textSecondary,
@@ -1121,14 +1115,27 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       return;
     }
 
+    // final addressParts = [
+    //   doorNumberController.text.trim(),
+    //   addressLineController.text.trim(),
+    //   landMarkController.text.trim(),
+    // ];
+    //
+    // final address = addressParts
+    //     .where((e) => e.isNotEmpty && e != 'null')
+    //     .join(', ');
+
     final addressParts = [
       doorNumberController.text.trim(),
       addressLineController.text.trim(),
       landMarkController.text.trim(),
+      cityController.text.trim(),
+      stateController.text.trim(),
+      pincodeController.text.trim(),
     ];
 
     final address = addressParts
-        .where((e) => e.isNotEmpty && e != 'null')
+        .where((e) => e.isNotEmpty && e.toLowerCase() != 'null')
         .join(', ');
 
     final categoryValue = categoryController.text == 'Other'
@@ -2139,7 +2146,7 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
               initialCameraPosition: _initCam,
               onMapCreated: (c) => mapController = c,
               myLocationEnabled: true,
-              myLocationButtonEnabled: false,
+              myLocationButtonEnabled: true,
               zoomControlsEnabled: false,
               onCameraMove: (pos) => _current = pos.target,
               onCameraIdle: () => _updateLocation(_current),

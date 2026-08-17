@@ -648,9 +648,10 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:maamaas/screens/Food&beverages/foodmainscreen.dart';
 import '../../../Models/food/seatingdetails.dart';
 import '../../../Services/Auth_service/food_authservice.dart';
-import '../../Mainscreen.dart';
+import '../../../Mainscreen.dart';
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -1137,7 +1138,7 @@ class _SeatingScreenState extends State<SeatingScreen> {
         await fetchData();
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => MainScreenfood()),
+          MaterialPageRoute(builder: (_) => foodMainScreen()),
           (route) => false,
         );
       }

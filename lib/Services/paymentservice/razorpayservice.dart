@@ -78,15 +78,15 @@ class RazorpayService {
     required String description,
   }) async {
     try {
-      debugPrint("========== OPENING RAZORPAY ==========");
-      debugPrint("OrderId : $orderId");
-      debugPrint("Amount : $amount");
-      debugPrint("Email : $_email");
-      debugPrint("Mobile : $_mobile");
+      // debugPrint("========== OPENING RAZORPAY ==========");
+      // debugPrint("OrderId : $orderId");
+      // debugPrint("Amount : $amount");
+      // debugPrint("Email : $_email");
+      // debugPrint("Mobile : $_mobile");
 
       var options = {
-        'key': 'rzp_test_TJECsclCivENpY',
-        // 'key': 'rzp_live_TJDvykibQEsCuN',
+        // 'key': 'rzp_test_TJECsclCivENpY',
+        'key': 'rzp_live_TJDvykibQEsCuN',
         'amount': (amount * 100).toInt(),
         'order_id': orderId,
         'name': 'Maamaas',
@@ -98,9 +98,9 @@ class RazorpayService {
 
       _razorpay.open(options);
     } catch (e, s) {
-      debugPrint("RAZORPAY OPEN ERROR");
-      debugPrint(e.toString());
-      debugPrint(s.toString());
+      // debugPrint("RAZORPAY OPEN ERROR");
+      // debugPrint(e.toString());
+      // debugPrint(s.toString());
       rethrow;
     }
   }

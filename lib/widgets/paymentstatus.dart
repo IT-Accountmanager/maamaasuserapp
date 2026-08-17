@@ -15,29 +15,30 @@ enum PaymentOverlayState {
   processing,
   success,
 }
+class paymentstatus {
 
+  static PaymentStatus parsePaymentStatus(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'created':
+        return PaymentStatus.created;
 
-PaymentStatus _parsePaymentStatus(String? status) {
-  switch (status?.toLowerCase()) {
-    case 'created':
-      return PaymentStatus.created;
+      case 'authenticated':
+        return PaymentStatus.authenticated;
 
-    case 'authenticated':
-      return PaymentStatus.authenticated;
+      case 'authorized':
+        return PaymentStatus.authorized;
 
-    case 'authorized':
-      return PaymentStatus.authorized;
+      case 'captured':
+        return PaymentStatus.captured;
 
-    case 'captured':
-      return PaymentStatus.captured;
+      case 'failed':
+        return PaymentStatus.failed;
 
-    case 'failed':
-      return PaymentStatus.failed;
+      case 'refunded':
+        return PaymentStatus.refunded;
 
-    case 'refunded':
-      return PaymentStatus.refunded;
-
-    default:
-      return PaymentStatus.unknown;
+      default:
+        return PaymentStatus.unknown;
+    }
   }
 }

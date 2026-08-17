@@ -1774,13 +1774,33 @@ class _NearbyRestaurentBannersWidgetState
               );
           return matchType && matchCat && matchSearch;
         }).toList();
+        // filtered.sort((a, b) {
+        //   // Open restaurants first
+        //   if (a.restaurantStatus != b.restaurantStatus) {
+        //     return a.restaurantStatus ? -1 : 1;
+        //   }
+        //
+        //   // Then top-rated restaurants
+        //   final aRating = double.tryParse(a.ratings.toString()) ?? 0.0;
+        //   final bRating = double.tryParse(b.ratings.toString()) ?? 0.0;
+        //
+        //   final aTopRated = aRating >= 4.0;
+        //   final bTopRated = bRating >= 4.0;
+        //
+        //   if (aTopRated != bTopRated) {
+        //     return bTopRated ? 1 : -1;
+        //   }
+        //
+        //   // Finally by rating (highest first)
+        //   return b.ratings.compareTo(a.ratings);
+        // });
         filtered.sort((a, b) {
-          // Open restaurants first
+          // 1. Open restaurants first
           if (a.restaurantStatus != b.restaurantStatus) {
             return a.restaurantStatus ? -1 : 1;
           }
 
-          // Then top-rated restaurants
+          // 2. Top-rated restaurants first
           final aRating = double.tryParse(a.ratings.toString()) ?? 0.0;
           final bRating = double.tryParse(b.ratings.toString()) ?? 0.0;
 
@@ -1791,8 +1811,8 @@ class _NearbyRestaurentBannersWidgetState
             return bTopRated ? 1 : -1;
           }
 
-          // Finally by rating (highest first)
-          return b.ratings.compareTo(a.ratings);
+          // 3. Nearest distance first
+          return a.distance.compareTo(b.distance);
         });
         for (final r in filtered) {
           // debugPrint("${r.companyName} -> ${r.ratings}");

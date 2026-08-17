@@ -411,6 +411,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:maamaas/screens/Food&beverages/foodmainscreen.dart';
 import 'package:maamaas/screens/screens/signup_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -419,7 +420,7 @@ import '../../Services/App_color_service/app_text.dart';
 import '../../Services/Auth_service/Subscription_authservice.dart';
 import '../../Services/fcmservice/fcm_services.dart';
 import '../../Services/googleservices/Location_servces.dart';
-import '../Mainscreen.dart';
+import '../../Mainscreen.dart';
 import '../homescreens/home_page.dart';
 import 'login_page.dart';
 
@@ -696,7 +697,7 @@ class _SplashScreenState extends State<SplashScreen>
       PageRouteBuilder(
         pageBuilder: (_, __, ___) {
           if (isLoggedIn) {
-            return MainScreenfood(showPromotion: true);
+            return MainScreen(showPromotion: true);
             // return HomePage(scrollController: _scrollController,);
           }
 

@@ -1,4 +1,5 @@
 import 'package:maamaas/screens/Food&beverages/food_cartscreen.dart';
+import 'package:maamaas/screens/Food&beverages/foodmainscreen.dart';
 import '../../Models/promotions_model/promotions_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,7 +7,7 @@ import '../screens/advertisements/banneradvertisement.dart';
 import '../../Services/Auth_service/Apiclient.dart';
 import 'table/tablecart.dart' hide cartuser;
 import 'package:flutter/material.dart';
-import '../Mainscreen.dart';
+import '../../Mainscreen.dart';
 import 'dart:convert';
 
 // ignore: must_be_immutable
@@ -173,7 +174,7 @@ class _CommonCartScreenState extends State<CommonCartScreen> {
               GestureDetector(
                 onTap: () => Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => MainScreenfood()),
+                  MaterialPageRoute(builder: (_) => foodMainScreen()),
                 ),
                 child: Container(
                   padding: EdgeInsets.symmetric(

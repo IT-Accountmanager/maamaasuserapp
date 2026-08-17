@@ -1,3 +1,5 @@
+import 'package:maamaas/screens/Food&beverages/food_cartscreen.dart';
+import 'package:maamaas/screens/Food&beverages/foodmainscreen.dart';
 import 'package:maamaas/screens/Food&beverages/table/tablecartpayment.dart';
 import '../../../Services/Auth_service/Subscription_authservice.dart';
 import 'package:maamaas/Services/scaffoldmessenger/messenger.dart';
@@ -12,7 +14,7 @@ import '../../../Models/subscrptions/wallet_model.dart';
 import '../../../Models/food/tablecartmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../Mainscreen.dart';
+import '../../../Mainscreen.dart';
 import '../food_invoice.dart';
 import 'TableCart_helper.dart';
 import 'table_menu.dart';
@@ -489,7 +491,7 @@ class _tablecartState extends State<tablecart>
                   } else {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const MainScreenfood()),
+                      MaterialPageRoute(builder: (_) => const foodMainScreen()),
                     );
                   }
                 },

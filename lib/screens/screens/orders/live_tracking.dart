@@ -660,61 +660,77 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
   // Future<void> _drawPolyline() async {
   //   if (_googleApiKey == null || _delivery == null) return;
   //
-  //   final bool isOnTheWay = _currentOrderStatus == OrderStatus.ontheway;
+  //   PointLatLng origin;
+  //   PointLatLng destination;
   //
-  //   final PointLatLng origin;
-  //   if (isOnTheWay && _currentAnimatedPosition != null) {
-  //     origin = PointLatLng(
-  //       _currentAnimatedPosition!.latitude,
-  //       _currentAnimatedPosition!.longitude,
-  //     );
-  //   } else if (isOnTheWay &&
-  //       _delivery!.deliveryPartnerLatitude != 0 &&
-  //       _delivery!.deliveryPartnerLongitude != 0) {
-  //     origin = PointLatLng(
-  //       _delivery!.deliveryPartnerLatitude,
-  //       _delivery!.deliveryPartnerLongitude,
-  //     );
-  //   } else {
-  //     origin = PointLatLng(
-  //       _delivery!.vendorLatitude,
-  //       _delivery!.vendorLongitude,
-  //     );
+  //   switch (_currentOrderStatus) {
+  //     case OrderStatus.waitingForPickup:
+  //       origin = PointLatLng(
+  //         _currentAnimatedPosition?.latitude ??
+  //             _delivery!.deliveryPartnerLatitude,
+  //         _currentAnimatedPosition?.longitude ??
+  //             _delivery!.deliveryPartnerLongitude,
+  //       );
+  //
+  //       destination = PointLatLng(
+  //         _delivery!.vendorLatitude,
+  //         _delivery!.vendorLongitude,
+  //       );
+  //       break;
+  //
+  //     case OrderStatus.ontheway:
+  //       origin = PointLatLng(
+  //         _currentAnimatedPosition?.latitude ??
+  //             _delivery!.deliveryPartnerLatitude,
+  //         _currentAnimatedPosition?.longitude ??
+  //             _delivery!.deliveryPartnerLongitude,
+  //       );
+  //
+  //       destination = PointLatLng(
+  //         _delivery!.userLatitude,
+  //         _delivery!.userLongitude,
+  //       );
+  //       break;
+  //
+  //     default:
+  //       origin = PointLatLng(
+  //         _delivery!.vendorLatitude,
+  //         _delivery!.vendorLongitude,
+  //       );
+  //
+  //       destination = PointLatLng(
+  //         _delivery!.userLatitude,
+  //         _delivery!.userLongitude,
+  //       );
   //   }
   //
-  //   final destination = PointLatLng(
-  //     _delivery!.userLatitude,
-  //     _delivery!.userLongitude,
+  //   final result = await PolylinePoints().getRouteBetweenCoordinates(
+  //     googleApiKey: _googleApiKey!,
+  //     request: PolylineRequest(
+  //       origin: origin,
+  //       destination: destination,
+  //       mode: TravelMode.driving,
+  //     ),
   //   );
   //
-  //   try {
-  //     final result = await PolylinePoints().getRouteBetweenCoordinates(
-  //       request: PolylineRequest(
-  //         origin: origin,
-  //         destination: destination,
-  //         mode: TravelMode.driving,
-  //       ),
-  //       googleApiKey: _googleApiKey!,
+  //   if (result.points.isNotEmpty) {
+  //     _fullRoutePoints = result.points
+  //         .map((e) => LatLng(e.latitude, e.longitude))
+  //         .toList();
+  //
+  //     _applyTrimmedPolyline(
+  //       _currentAnimatedPosition ?? LatLng(origin.latitude, origin.longitude),
   //     );
-  //     if (result.points.isNotEmpty) {
-  //       final points = result.points
-  //           .map((p) => LatLng(p.latitude, p.longitude))
-  //           .toList();
-  //       // _fullRoutePoints = points;
-  //       _fullRoutePoints = _smoothRoute(points);
   //
-  //       final trimFrom = _currentAnimatedPosition ?? points.first;
-  //       _applyTrimmedPolyline(trimFrom, points);
-  //
-  //       if (mounted) setState(() {});
-  //     }
-  //   } catch (e) {
-  //     //       debugPrint('Error drawing polyline: $e');
+  //     setState(() {});
   //   }
   // }
 
   Future<void> _drawPolyline() async {
-    if (_googleApiKey == null || _delivery == null) return;
+    if (_googleApiKey == null || _delivery == null) {
+      debugPrint('❌ Google API key or delivery data is null');
+      return;
+    }
 
     PointLatLng origin;
     PointLatLng destination;
@@ -760,25 +776,44 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         );
     }
 
-    final result = await PolylinePoints().getRouteBetweenCoordinates(
-      googleApiKey: _googleApiKey!,
-      request: PolylineRequest(
-        origin: origin,
-        destination: destination,
-        mode: TravelMode.driving,
-      ),
+    debugPrint('🗺️ DRAWING ROUTE');
+    debugPrint('Origin: ${origin.latitude}, ${origin.longitude}');
+    debugPrint(
+      'Destination: ${destination.latitude}, ${destination.longitude}',
+    );
+    debugPrint(
+      'API KEY: ${_googleApiKey == null ? "NULL" : "LOADED (${_googleApiKey!.length} chars)"}',
     );
 
-    if (result.points.isNotEmpty) {
-      _fullRoutePoints = result.points
-          .map((e) => LatLng(e.latitude, e.longitude))
-          .toList();
-
-      _applyTrimmedPolyline(
-        _currentAnimatedPosition ?? LatLng(origin.latitude, origin.longitude),
+    try {
+      final result = await PolylinePoints().getRouteBetweenCoordinates(
+        googleApiKey: _googleApiKey!,
+        request: PolylineRequest(
+          origin: origin,
+          destination: destination,
+          mode: TravelMode.driving,
+        ),
       );
 
-      setState(() {});
+      debugPrint('🗺️ ROUTE STATUS: ${result.status}');
+      debugPrint('🗺️ ROUTE POINTS: ${result.points.length}');
+
+      if (result.points.isNotEmpty) {
+        _fullRoutePoints = result.points
+            .map((e) => LatLng(e.latitude, e.longitude))
+            .toList();
+
+        _applyTrimmedPolyline(
+          _currentAnimatedPosition ?? LatLng(origin.latitude, origin.longitude),
+        );
+
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ POLYLINE ERROR: $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
