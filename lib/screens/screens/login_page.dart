@@ -12,7 +12,6 @@ import '../../Services/Auth_service/Apiclient.dart';
 import '../../widgets/app_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../homescreens/home_page.dart';
 import 'forgetpassword_screen.dart';
 import '../../Mainscreen.dart';
 
@@ -40,7 +39,6 @@ class _LoginPageState extends State<LoginScreen>
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
   final _fcm = FirebaseMessaging.instance;
-  final ScrollController _scrollController = ScrollController();
 
   bool _obscure = true;
   bool _isLoading = false;
@@ -75,10 +73,7 @@ class _LoginPageState extends State<LoginScreen>
   }
 
   Future<void> _handleLogin() async {
-    //     debugPrint("🔐 Login started");
-
     if (!_formKey.currentState!.validate()) {
-      //       debugPrint("❌ Form validation failed");
       return;
     }
 
@@ -97,78 +92,40 @@ class _LoginPageState extends State<LoginScreen>
         AppAlert.error(context, result);
         return;
       }
-      //
-      //       debugPrint("✅ Login successful");
       TextInput.finishAutofillContext(shouldSave: true);
-      //       debugPrint("✅ Autofill save requested");
-
       ApiClient.isGuestUser = false;
       ApiClient.resetSessionFlag();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
-      //       debugPrint("💾 Saved isLoggedIn = true");
-
-      // 📍 Location
       try {
-        //         debugPrint("📍 Fetching current location...");
         final location = await LocationService.getCurrentLocationWithAddress();
 
         if (location != null) {
-          //           debugPrint("📍 Location fetched:");
-          //           debugPrint("   Lat: ${location.latitude}");
-          //           debugPrint("   Lng: ${location.longitude}");
-          //           debugPrint("   Address: ${location.fullAddress}");
-          //           debugPrint("   City: ${location.city}");
-
           final success = await subscription_AuthService.updateLocation(
             latitude: location.latitude,
             longitude: location.longitude,
             address: location.fullAddress,
             city: location.city,
           );
-          //
-          //           debugPrint("📡 Location update API status: $success");
 
           if (success) {
             await prefs.setBool('locationSet', true);
-            //             debugPrint("💾 locationSet = true");
           }
-        } else {
-          //           debugPrint("⚠️ Location is NULL");
-        }
-      } catch (e) {
-        //         debugPrint("❌ Location error: $e");
-      }
+        } else {}
+      } catch (e) {}
 
-      // 🔔 FCM
       try {
-        //         debugPrint("🔔 Fetching FCM token...");
         final token = await _fcm.getToken();
 
         if (token != null) {
-          //           debugPrint("🔑 FCM Token: $token");
           await NotificationService.registerFcmToken(token);
-          //           debugPrint("📡 FCM token sent to server");
-        } else {
-          //           debugPrint("⚠️ FCM token is NULL");
-        }
-      } catch (e) {
-        //         debugPrint("❌ FCM error: $e");
-      }
+        } else {}
+      } catch (e) {}
 
-      // 🔐 Permissions
-      //       debugPrint("🔐 Requesting permissions...");
-      final permissions = await [
-        Permission.location,
-        Permission.notification,
-      ].request();
-      //
-      //       debugPrint("📊 Permission results: $permissions");
+      await [Permission.location, Permission.notification].request();
 
       if (!mounted) return;
-      //
-      //       debugPrint("➡️ Navigating to MainScreenfood");
 
       // Navigator.of(context).pushAndRemoveUntil(
       //   MaterialPageRoute(builder: (_) => const MainScreenfood()),
@@ -178,18 +135,13 @@ class _LoginPageState extends State<LoginScreen>
         MaterialPageRoute(builder: (_) => MainScreen(showPromotion: true)),
         (r) => false,
       );
-
-    } catch (e, st) {
-      //       debugPrint("❌ Login exception: $e");
-      //       debugPrint("📍 StackTrace: $st");
-
+    } catch (e) {
       if (mounted) {
         AppAlert.error(context, 'Something went wrong');
       }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
-        //         debugPrint("🔄 Loading stopped");
       }
     }
   }
@@ -374,10 +326,6 @@ class _LoginPageState extends State<LoginScreen>
               fontSize: 20.sp,
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
-              // decoration: TextDecoration.underline,
-              // decorationColor: AppColors.primary, // underline color
-              // decorationThickness: 2, // thickness
-              // decorationStyle: TextDecorationStyle.solid, // or dotted, dashed
             ),
           ),
         ),
