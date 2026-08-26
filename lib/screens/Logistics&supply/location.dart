@@ -67,18 +67,6 @@ class _MapLocationSelectorState extends State<MapLocationSelector> {
     super.dispose();
   }
 
-  // Future<void> _confirm() async {
-  //
-  //   final location = SelectedLocation(
-  //     address: _selectedAddress.isNotEmpty
-  //         ? _selectedAddress
-  //         : "Selected Location",
-  //     latitude: _selectedLatLng.latitude,
-  //     longitude: _selectedLatLng.longitude,
-  //   );
-  //
-  //   Navigator.pop(context, location);
-  // }
   Future<void> _confirm() async {
     final address = await LocationService.getAddressFromLatLng(
       _selectedLatLng.latitude,
@@ -109,24 +97,6 @@ class _MapLocationSelectorState extends State<MapLocationSelector> {
             Expanded(
               child: Stack(
                 children: [
-                  // Map
-                  // GoogleMap(
-                  //   initialCameraPosition: CameraPosition(
-                  //     target: _initialTarget,
-                  //     zoom: 14,
-                  //   ),
-                  //   markers: _markers,
-                  //   polylines: _polylines,
-                  //   zoomControlsEnabled: false,
-                  //   myLocationEnabled: false,
-                  //   compassEnabled: false,
-                  //   onMapCreated: (c) => _mapController = c,
-                  //   gestureRecognizers: {
-                  //     Factory<OneSequenceGestureRecognizer>(
-                  //       () => EagerGestureRecognizer(),
-                  //     ),
-                  //   },
-                  // ),
                   GoogleMap(
                     initialCameraPosition: CameraPosition(
                       target: _initialTarget,

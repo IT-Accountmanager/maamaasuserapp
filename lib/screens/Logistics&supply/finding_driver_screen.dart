@@ -1,19 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:maamaas/Services/Auth_service/food_authservice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../Models/logistics/orderdetails.dart';
 import '../../Services/Auth_service/delivery_service.dart';
-import '../../Services/paymentservice/razorpayservice.dart';
 import '../../Services/websockets/web_socket_manager.dart';
+import 'dart:math' as math;
 
 class _AppColors {
   static const primary = Color(0xFFB15DC6);
   static const success = Color(0xFF1FAA59);
   static const danger = Color(0xFFE0403F);
-  static const surface = Colors.white;
   static const background = Color(0xFFF7F6FA);
   static const textPrimary = Color(0xFF1B1B23);
   static const textSecondary = Color(0xFF6B6B76);
@@ -30,8 +28,6 @@ class FindingDriverScreen extends StatefulWidget {
 
 class _FindingDriverScreenState extends State<FindingDriverScreen>
     with SingleTickerProviderStateMixin {
-  Timer? _timer;
-
   String status = "SEARCHING_PARTNER";
 
   OrderDetails? order;
@@ -39,30 +35,58 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   int? _orderId;
   GoogleMapController? _mapController;
 
-  Marker? _driverMarker;
   Marker? _pickupMarker;
+  Marker? _dropMarker;
+
+  bool _isAnimatingDriver = false;
+
+  DateTime? _lastLocationUpdate;
+  DateTime? _lastRouteUpdate;
+
+  List<LatLng> _routePoints = [];
 
   int? _partnerId;
   late final AnimationController _pulseController;
-  bool _paymentDialogShowing = false;
 
   bool _statusSocketSubscribed = false;
+
+  Marker? _driverMarker;
+
+  Set<Polyline> _polylines = {};
+
+  LatLng? _driverPosition;
+
+  double _driverBearing = 0;
+
+  bool _isFollowingDriver = true;
+
+  bool _driverLocationSubscribed = false;
+
+  DateTime? _lastDriverLocationTime;
+
+  int? _trackingPartnerId;
+  String? _trackingListenerId;
+
+  LatLng? _pendingDriverPosition;
+  double? _pendingDriverBearing;
 
   @override
   void initState() {
     super.initState();
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     )..repeat();
+
     _listenForDriver();
+
+    _loadExistingOrder();
   }
 
   @override
   void dispose() {
-    if (_partnerId != null) {
-      WebSocketManager().unsubscribePartnerLocation(_partnerId!);
-    }
+    _stopDriverTracking();
 
     if (userId != null) {
       WebSocketManager().unsubscribeLogisticOrder(userId!);
@@ -73,187 +97,444 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
     }
 
     _pulseController.dispose();
+
     super.dispose();
   }
 
-  // Future<void> _listenForDriver() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int userId = prefs.getInt('userId') ?? 0;
-  //
-  //   WebSocketManager().subscribeLogisticOrder(userId, (data) async {
-  //     debugPrint("WS DATA = $data");
-  //
-  //     if (data["orderId"] == null) return;
-  //
-  //     _orderId = data["orderId"];
-  //
-  //     final latestOrder = await DeliveryService.getOrderById(_orderId!);
-  //
-  //     debugPrint("API STATUS = ${latestOrder.status}");
-  //     debugPrint("PARTNER ID = ${latestOrder.partnerId}");
-  //     debugPrint("PARTNER NAME = ${latestOrder.partnerName}");
-  //
-  //     if (!mounted) return;
-  //
-  //     setState(() {
-  //       order = latestOrder;
-  //       status = latestOrder.status;
-  //     });
-  //
-  //     debugPrint("CURRENT UI STATUS = $status");
-  //   });
-  // }
-
-  Future<void> _listenForDriver() async {
+  Future<void> _loadExistingOrder() async {
     final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getInt('userId') ?? 0;
 
-    WebSocketManager().subscribeLogisticOrder(userId!, (data) async {
-      debugPrint("📦 USER WS DATA = $data");
+    final activeOrderId = prefs.getInt("activeLogisticsOrderId");
 
-      if (data["orderId"] == null) return;
+    if (activeOrderId == null) {
+      return;
+    }
 
-      _orderId = data["orderId"];
-
-      final latestOrder = await DeliveryService.getOrderById(_orderId!);
-      final prefs = await SharedPreferences.getInstance();
-
-      await prefs.setInt("activeLogisticsOrderId", latestOrder.orderId);
+    try {
+      final latestOrder = await DeliveryService.getOrderById(activeOrderId);
 
       if (!mounted) return;
+
+      _orderId = latestOrder.orderId;
 
       setState(() {
         order = latestOrder;
         status = latestOrder.status;
       });
 
-      debugPrint("API STATUS = ${latestOrder.status}");
+      debugPrint(
+        "📦 Existing order loaded: "
+        "${latestOrder.orderId}",
+      );
 
-      // Subscribe to order-specific status updates only once
-      if (!_statusSocketSubscribed) {
-        _statusSocketSubscribed = true;
+      if (latestOrder.status == "PICKED_UP" ||
+          latestOrder.status == "ONGOING") {
+        _startDriverTracking(latestOrder);
+      }
 
-        debugPrint("Subscribing to order status for $_orderId");
+      _subscribeToOrderStatus(latestOrder.orderId);
+    } catch (e) {
+      debugPrint("❌ Failed to load existing order: $e");
+    }
+  }
 
-        // WebSocketManager().subscribeLogisticOrderStatus(_orderId!, (
-        //   statusData,
-        // ) async {
-        //
-        //   debugPrint("========== STATUS WS ==========");
-        //   debugPrint(statusData.toString());
-        //   debugPrint("📲 ORDER STATUS WS = $statusData");
-        //
-        //   if (!mounted) return;
-        //
-        //   final latest = await DeliveryService.getOrderById(_orderId!);
-        //
-        //   setState(() {
-        //     order = latest;
-        //     status = latest.status;
-        //   });
-        //
-        //   debugPrint("LIVE STATUS UPDATED = ${latest.status}");
-        //   if (latest.status == "COMPLETED") {
-        //     final prefs = await SharedPreferences.getInstance();
-        //     await prefs.remove("activeLogisticsOrderId");
-        //
-        //     Future.delayed(const Duration(milliseconds: 500), () {
-        //       if (!mounted) return;
-        //
-        //       Navigator.of(context).pop();
-        //       // or pushNamedAndRemoveUntil("/home", (route) => false);
-        //     });
-        //   }
-        // });
-        WebSocketManager().subscribeLogisticOrderStatus(
-          _orderId!,
-              (statusData) async {
+  void _subscribeToOrderStatus(int orderId) {
+    if (_statusSocketSubscribed && _orderId == orderId) {
+      return;
+    }
 
-            debugPrint("========== SCREEN CALLBACK ==========");
-            debugPrint(statusData.toString());
+    _statusSocketSubscribed = true;
+    _orderId = orderId;
 
-            final latest = await DeliveryService.getOrderById(_orderId!);
+    debugPrint("📡 Subscribing order status: $orderId");
 
-            debugPrint("API STATUS = ${latest.status}");
+    WebSocketManager().subscribeLogisticOrderStatus(orderId, (
+      statusData,
+    ) async {
+      debugPrint("========== ORDER STATUS ==========");
 
-            if (!mounted) return;
+      debugPrint(statusData.toString());
 
-            setState(() {
-              order = latest;
-              status = latest.status;
-            });
+      try {
+        final latest = await DeliveryService.getOrderById(orderId);
 
-            debugPrint("UI STATUS = $status");
-          },
-        );
+        if (!mounted) return;
+
+        debugPrint("API STATUS = ${latest.status}");
+
+        if (latest.status == "COMPLETED") {
+          setState(() {
+            order = latest;
+            status = latest.status;
+          });
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.of(context).pop();
+            }
+          });
+
+          return;
+        }
+
+        setState(() {
+          order = latest;
+          status = latest.status;
+        });
+
+        if (latest.status == "PICKED_UP" || latest.status == "ONGOING") {
+          _startDriverTracking(latest);
+        }
+
+        if (latest.status == "CANCELLED") {
+          _stopDriverTracking();
+        }
+      } catch (e) {
+        debugPrint("❌ Failed to refresh order: $e");
       }
     });
   }
 
-  void _listenPartnerLocation(int partnerId) {
-    WebSocketManager().subscribePartnerLocation(partnerId, (data) {
-      debugPrint("Partner Location : $data");
+  void _stopDriverTracking() {
+    if (_trackingPartnerId != null) {
+      WebSocketManager().unsubscribePartnerLocation(_trackingPartnerId!);
+    }
 
-      final lat = double.parse(data["latitude"].toString());
-      final lng = double.parse(data["longitude"].toString());
+    _trackingPartnerId = null;
+    _driverLocationSubscribed = false;
 
-      setState(() {
-        _driverMarker = Marker(
-          markerId: const MarkerId("driver"),
-          position: LatLng(lat, lng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueViolet,
-          ),
-        );
-      });
+    _pendingDriverPosition = null;
+    _pendingDriverBearing = null;
 
-      _mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(lat, lng)));
-      _updateCamera(lat, lng);
+    debugPrint("🛑 Driver tracking stopped");
+  }
+
+  void _startDriverTracking(OrderDetails latestOrder) {
+    final partnerId = latestOrder.partnerId;
+
+    if (partnerId == null) {
+      debugPrint("⚠️ Cannot start driver tracking: partnerId is null");
+      return;
+    }
+
+    // Initialize driver position from API.
+    _initializeDriverPosition(latestOrder);
+
+    // Already subscribed to this driver.
+    if (_driverLocationSubscribed && _trackingPartnerId == partnerId) {
+      return;
+    }
+
+    // If partner changed, clean old subscription.
+    if (_trackingPartnerId != null && _trackingPartnerId != partnerId) {
+      WebSocketManager().unsubscribePartnerLocation(_trackingPartnerId!);
+    }
+
+    _trackingPartnerId = partnerId;
+    _driverLocationSubscribed = true;
+
+    _trackingListenerId = "order_${latestOrder.orderId}";
+
+    WebSocketManager().subscribePartnerLocation(
+      partnerId,
+      _onDriverLocation,
+      listenerId: _trackingListenerId!,
+    );
+
+    debugPrint(
+      "🚗 Driver tracking started | "
+      "partner=$partnerId | "
+      "order=${latestOrder.orderId}",
+    );
+
+    // Fit camera after map is available.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      if (_driverPosition != null) {
+        _fitDriverAndDestination();
+      }
     });
   }
 
-  void _updateCamera(double driverLat, double driverLng) {
-    final bounds = LatLngBounds(
-      southwest: LatLng(
-        driverLat < order!.pickupLatitude ? driverLat : order!.pickupLatitude,
-        driverLng < order!.pickupLongitude ? driverLng : order!.pickupLongitude,
-      ),
-      northeast: LatLng(
-        driverLat > order!.pickupLatitude ? driverLat : order!.pickupLatitude,
-        driverLng > order!.pickupLongitude ? driverLng : order!.pickupLongitude,
-      ),
-    );
+  void _initializeDriverPosition(OrderDetails latestOrder) {
+    final latitude = latestOrder.partnerLatitude;
+    final longitude = latestOrder.partnerLongitude;
 
-    _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
+    if (latitude == null || longitude == null) {
+      debugPrint("ℹ️ No initial driver location available");
+      return;
+    }
+
+    if (latitude == 0 || longitude == 0) {
+      debugPrint("⚠️ Invalid initial driver location");
+      return;
+    }
+
+    final position = LatLng(latitude, longitude);
+
+    _driverPosition = position;
+
+    if (!mounted) return;
+
+    setState(() {
+      _driverMarker = _buildDriverMarker(position, _driverBearing);
+    });
   }
 
-  // Future<void> _refreshOrderStatus() async {
-  //   if (_orderId == null) {
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(const SnackBar(content: Text("Order not available yet")));
-  //     return;
-  //   }
-  //
-  //   try {
-  //     final latestOrder = await DeliveryService.getOrderById(_orderId!);
-  //
-  //     if (!mounted) return;
-  //
-  //     setState(() {
-  //       order = latestOrder;
-  //       status = latestOrder.status;
-  //     });
-  //
-  //     debugPrint("Manual Refresh Status : ${latestOrder.status}");
-  //   } catch (e) {
-  //     debugPrint("Refresh Error : $e");
-  //
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(const SnackBar(content: Text("Unable to refresh status")));
-  //   }
-  // }
+  void _onDriverLocation(Map<String, dynamic> data) {
+    debugPrint("🚗 DRIVER LOCATION = $data");
+
+    final lat = double.tryParse(data["latitude"]?.toString() ?? "");
+
+    final lng = double.tryParse(data["longitude"]?.toString() ?? "");
+
+    if (lat == null || lng == null) {
+      debugPrint("⚠️ Invalid driver coordinates");
+      return;
+    }
+
+    if (lat == 0 || lng == 0) {
+      return;
+    }
+
+    final newPosition = LatLng(lat, lng);
+
+    final serverBearing = double.tryParse(data["bearing"]?.toString() ?? "");
+
+    final bearing =
+        serverBearing ?? _calculateBearing(_driverPosition, newPosition);
+
+    _lastDriverLocationTime = DateTime.now();
+
+    _animateDriver(newPosition, bearing);
+  }
+
+  Future<void> _animateDriver(LatLng target, double bearing) async {
+    if (!mounted) return;
+
+    // First location.
+    if (_driverPosition == null) {
+      _driverPosition = target;
+      _driverBearing = bearing;
+
+      setState(() {
+        _driverMarker = _buildDriverMarker(target, bearing);
+      });
+
+      _fitDriverAndDestination();
+
+      return;
+    }
+
+    // If an animation is already running,
+    // keep only the newest location.
+    if (_isAnimatingDriver) {
+      _pendingDriverPosition = target;
+      _pendingDriverBearing = bearing;
+      return;
+    }
+
+    _isAnimatingDriver = true;
+
+    try {
+      LatLng start = _driverPosition!;
+      LatLng destination = target;
+      double currentBearing = bearing;
+
+      while (mounted) {
+        const duration = Duration(milliseconds: 1000);
+
+        final stopwatch = Stopwatch()..start();
+
+        while (stopwatch.elapsed < duration) {
+          if (!mounted) return;
+
+          final progress =
+              stopwatch.elapsedMilliseconds / duration.inMilliseconds;
+
+          final t = progress.clamp(0.0, 1.0);
+
+          final lat =
+              start.latitude + (destination.latitude - start.latitude) * t;
+
+          final lng =
+              start.longitude + (destination.longitude - start.longitude) * t;
+
+          final position = LatLng(lat, lng);
+
+          _driverPosition = position;
+          _driverBearing = currentBearing;
+
+          setState(() {
+            _driverMarker = _buildDriverMarker(position, currentBearing);
+          });
+
+          // Don't animate camera every 50ms.
+          // Update camera at a controlled interval.
+          if (_isFollowingDriver && stopwatch.elapsedMilliseconds % 200 < 60) {
+            _moveCameraToDriver(position);
+          }
+
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+
+        stopwatch.stop();
+
+        if (!mounted) return;
+
+        _driverPosition = destination;
+
+        setState(() {
+          _driverMarker = _buildDriverMarker(destination, currentBearing);
+        });
+
+        // A newer WebSocket location arrived
+        // while we were animating.
+        if (_pendingDriverPosition != null) {
+          start = destination;
+
+          destination = _pendingDriverPosition!;
+
+          currentBearing =
+              _pendingDriverBearing ?? _calculateBearing(start, destination);
+
+          _pendingDriverPosition = null;
+          _pendingDriverBearing = null;
+
+          continue;
+        }
+
+        break;
+      }
+    } finally {
+      _isAnimatingDriver = false;
+    }
+  }
+
+  double _calculateBearing(LatLng? start, LatLng end) {
+    if (start == null) {
+      return _driverBearing;
+    }
+
+    final lat1 = start.latitude * math.pi / 180;
+    final lat2 = end.latitude * math.pi / 180;
+
+    final dLon = (end.longitude - start.longitude) * math.pi / 180;
+
+    final y = math.sin(dLon) * math.cos(lat2);
+
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+
+    final bearing = math.atan2(y, x) * 180 / math.pi;
+
+    return (bearing + 360) % 360;
+  }
+
+  Marker _buildDriverMarker(LatLng position, double bearing) {
+    return Marker(
+      markerId: const MarkerId('driver'),
+      position: position,
+      rotation: bearing,
+      flat: true,
+      anchor: const Offset(0.5, 0.5),
+      infoWindow: InfoWindow(title: order?.partnerName ?? 'Captain'),
+    );
+  }
+
+  void _moveCameraToDriver(LatLng position) {
+    if (_mapController == null || !_isFollowingDriver) {
+      return;
+    }
+
+    _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: position, zoom: 16, bearing: 0, tilt: 0),
+      ),
+    );
+  }
+
+  Future<void> _listenForDriver() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    userId = prefs.getInt('userId') ?? 0;
+
+    if (userId == 0) {
+      debugPrint("⚠️ userId not found");
+      return;
+    }
+
+    WebSocketManager().subscribeLogisticOrder(userId!, (data) async {
+      debugPrint("📦 USER WS DATA = $data");
+
+      final rawOrderId = data["orderId"];
+
+      if (rawOrderId == null) {
+        return;
+      }
+
+      final orderId = int.tryParse(rawOrderId.toString());
+
+      if (orderId == null) {
+        return;
+      }
+
+      try {
+        final latestOrder = await DeliveryService.getOrderById(orderId);
+
+        await prefs.setInt("activeLogisticsOrderId", latestOrder.orderId);
+
+        if (!mounted) return;
+
+        _orderId = latestOrder.orderId;
+
+        setState(() {
+          order = latestOrder;
+          status = latestOrder.status;
+        });
+
+        debugPrint("API STATUS = ${latestOrder.status}");
+
+        if (latestOrder.status == "PICKED_UP" ||
+            latestOrder.status == "ONGOING") {
+          _startDriverTracking(latestOrder);
+        }
+
+        _subscribeToOrderStatus(latestOrder.orderId);
+      } catch (e) {
+        debugPrint("❌ Failed to process order: $e");
+      }
+    });
+  }
+
+  void _fitDriverAndDestination() {
+    if (_mapController == null || order == null || _driverPosition == null) {
+      return;
+    }
+
+    final driver = _driverPosition!;
+
+    final destination = LatLng(order!.dropLatitude, order!.dropLongitude);
+
+    final southwest = LatLng(
+      math.min(driver.latitude, destination.latitude),
+      math.min(driver.longitude, destination.longitude),
+    );
+
+    final northeast = LatLng(
+      math.max(driver.latitude, destination.latitude),
+      math.max(driver.longitude, destination.longitude),
+    );
+
+    _mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(southwest: southwest, northeast: northeast),
+        80,
+      ),
+    );
+  }
 
   String getStatusText(String status) {
     switch (status) {
@@ -291,286 +572,20 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
     }
   }
 
-  Future<void> _payOnline() async {
-    if (order == null) return;
-
-    try {
-      debugPrint("=========== START PAYMENT ===========");
-      debugPrint("Ride Fare : ${order!.fare}");
-
-      _showProcessingDialog("Preparing payment...\nPlease wait.");
-
-      final razorpayOrderId = await food_Authservice.createOrder(order!.fare);
-
-      if (!mounted) return;
-
-      if (razorpayOrderId == null || razorpayOrderId.isEmpty) {
-        _hideProcessingDialog();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Unable to create payment order.")),
-        );
-        return;
-      }
-
-      _hideProcessingDialog();
-
-      debugPrint("Received Razorpay Order Id : $razorpayOrderId");
-
-      final razorpay = RazorpayService();
-
-      razorpay.onSuccess = (success) async {
-        try {
-          debugPrint("=========== PAYMENT SUCCESS ===========");
-          debugPrint("PaymentId : ${success.paymentId}");
-          debugPrint("OrderId : ${success.orderId}");
-          debugPrint("Signature : ${success.signature}");
-
-          _showProcessingDialog("Capturing payment...\nPlease wait.");
-
-          final captured = await food_Authservice.capturePayment(
-            paymentId: success.paymentId!,
-            amount: order!.fare,
-          );
-
-          debugPrint("Capture Result : $captured");
-
-          _hideProcessingDialog();
-
-          _showProcessingDialog("Verifying payment...\nPlease wait.");
-
-          final verify = await food_Authservice.verifyPayment(
-            success.paymentId!,
-          );
-
-          _hideProcessingDialog();
-
-          debugPrint("Verify Response : $verify");
-
-          if (verify == null) {
-            await DeliveryService.updateLogisticsPayment(
-              orderId: order!.orderId,
-              paymentMode: "UPI",
-              paymentStatus: "PENDING",
-              transactionId: success.paymentId,
-              gatewayOrderId: success.orderId,
-              gatewayPaymentId: success.paymentId,
-              totalAmount: order!.fare,
-            );
-
-            _showPaymentFailed("Unable to verify payment.");
-            return;
-          }
-
-          final status = verify.status?.toLowerCase() ?? "";
-
-          debugPrint("Payment Status : $status");
-
-          switch (status) {
-            case "captured":
-              await DeliveryService.updateLogisticsPayment(
-                orderId: order!.orderId,
-                paymentMode: "UPI",
-                paymentStatus: "SUCCESS",
-                transactionId: success.paymentId,
-                gatewayOrderId: success.orderId,
-                gatewayPaymentId: success.paymentId,
-                totalAmount: order!.fare,
-              );
-
-              _showPaymentSuccess();
-              break;
-
-            case "authorized":
-              await DeliveryService.updateLogisticsPayment(
-                orderId: order!.orderId,
-                paymentMode: "UPI",
-                paymentStatus: "PENDING",
-                transactionId: success.paymentId,
-                gatewayOrderId: success.orderId,
-                gatewayPaymentId: success.paymentId,
-                totalAmount: order!.fare,
-              );
-
-              _showPaymentPending();
-              break;
-
-            case "refunded":
-              _showPaymentRefunded();
-              break;
-
-            case "failed":
-              _showPaymentFailed("Payment Failed");
-              break;
-
-            default:
-              _showPaymentPending();
-          }
-        } catch (e, s) {
-          _hideProcessingDialog();
-
-          debugPrint(e.toString());
-          debugPrint(s.toString());
-
-          _showPaymentFailed("Something went wrong while processing payment.");
-        }
-      };
-
-      razorpay.onError = (error) async {
-        await DeliveryService.updateLogisticsPayment(
-          orderId: order!.orderId,
-          paymentMode: "UPI",
-          paymentStatus: "PENDING",
-          totalAmount: order!.fare,
-        );
-        _hideProcessingDialog();
-
-        debugPrint("=========== PAYMENT FAILED ===========");
-        debugPrint(error.toString());
-
-        _showPaymentFailed(error.message ?? "Payment Failed");
-      };
-
-      razorpay.onExternalWallet = (wallet) {
-        debugPrint("External Wallet : ${wallet.walletName}");
-      };
-
-      debugPrint("Opening Razorpay");
-
-      await razorpay.startPayment(
-        orderId: razorpayOrderId,
-        amount: order!.fare,
-        description: "Ride Payment",
-      );
-    } catch (e, s) {
-      _hideProcessingDialog();
-
-      debugPrint("PAYMENT EXCEPTION");
-      debugPrint(e.toString());
-      debugPrint(s.toString());
-
-      _showPaymentFailed("Unexpected error occurred.");
-    }
-  }
-
-  void _showPaymentSuccess() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text("Payment Successful"),
-        content: const Text(
-          "Your ride payment has been completed successfully.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      ),
+  Marker _buildPickupMarker() {
+    return Marker(
+      markerId: const MarkerId('pickup'),
+      position: LatLng(order!.pickupLatitude, order!.pickupLongitude),
+      infoWindow: InfoWindow(title: 'Pickup', snippet: order!.pickupAddress),
     );
   }
 
-  void _showPaymentPending() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Payment Processing"),
-        content: const Text(
-          "Your payment has been authorized and is being processed.\n\nPlease wait a moment.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
+  Marker _buildDropMarker() {
+    return Marker(
+      markerId: const MarkerId('destination'),
+      position: LatLng(order!.dropLatitude, order!.dropLongitude),
+      infoWindow: InfoWindow(title: 'Destination', snippet: order!.dropAddress),
     );
-  }
-
-  void _showPaymentRefunded() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Payment Refunded"),
-        content: const Text("The payment has been refunded successfully."),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-
-              // Navigator.pushNamedAndRemoveUntil(context, "/home", (_) => false);
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPaymentFailed(String message) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Payment Failed"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Retry"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showProcessingDialog(String message) {
-    if (_paymentDialogShowing) return;
-
-    _paymentDialogShowing = true;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) {
-        return PopScope(
-          canPop: false,
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 45,
-                  height: 45,
-                  child: CircularProgressIndicator(),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _hideProcessingDialog() {
-    if (!_paymentDialogShowing) return;
-
-    _paymentDialogShowing = false;
-
-    Navigator.of(context, rootNavigator: true).pop();
   }
 
   void _cancelRide() {
@@ -594,7 +609,6 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 350),
           child: _buildBody(),
-
         ),
       ),
     );
@@ -611,31 +625,6 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       );
     }
 
-    if (status == "PAYMENT_PENDING") {
-      return _PaymentSelectionView(
-        order: order,
-        onCash: () async {
-          if (order == null) return;
-
-          final success = await DeliveryService.updateLogisticsPayment(
-            orderId: order!.orderId,
-            paymentMode: "CASH",
-            paymentStatus: "SUCCESS",
-            totalAmount: order!.fare,
-          );
-
-          if (success && context.mounted) {
-            Navigator.of(context).maybePop();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Unable to update payment.")),
-            );
-          }
-        },
-        onOnline: _payOnline,
-      );
-    }
-
     if (status == "CANCELLED") {
       return const _ResultView(
         key: ValueKey('cancelled'),
@@ -647,17 +636,72 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
     }
 
     // All remaining statuses use the same screen
+    // return _DriverAssignedView(
+    //   key: const ValueKey("driver"),
+    //   order: order,
+    //   status: status,
+    //   onCall: _callDriver,
+    //   onCancel: _cancelRide,
+    //   // onRefresh: _refreshOrderStatus,
+    //   mapController: _mapController,
+    //   driverMarker: _driverMarker,
+    //   onMapCreated: (controller) {
+    //     _mapController = controller;
+    //   },
+    // );
+
     return _DriverAssignedView(
       key: const ValueKey("driver"),
+
       order: order,
       status: status,
+
       onCall: _callDriver,
       onCancel: _cancelRide,
-      // onRefresh: _refreshOrderStatus,
+
       mapController: _mapController,
+
       driverMarker: _driverMarker,
+
+      pickupMarker: order != null ? _buildPickupMarker() : null,
+
+      destinationMarker: order != null ? _buildDropMarker() : null,
+
+      polylines: _polylines,
+      onCameraMoveStarted: () {
+        _isFollowingDriver = false;
+      },
+
+      showPickup:
+          status != "PICKED_UP" && status != "ONGOING" && status != "COMPLETED",
+
+      onRecenter: () {
+        _isFollowingDriver = true;
+
+        if (_driverPosition != null) {
+          if (status == "PICKED_UP" || status == "ONGOING") {
+            _fitDriverAndDestination();
+          } else {
+            _mapController?.animateCamera(
+              CameraUpdate.newLatLng(_driverPosition!),
+            );
+          }
+        } else if (order != null) {
+          _mapController?.animateCamera(
+            CameraUpdate.newLatLng(
+              LatLng(order!.pickupLatitude, order!.pickupLongitude),
+            ),
+          );
+        }
+      },
+
       onMapCreated: (controller) {
         _mapController = controller;
+
+        if (_driverPosition != null &&
+            (status == "PICKED_UP" || status == "ONGOING")) {
+          _fitDriverAndDestination();
+        }
       },
     );
   }
@@ -804,12 +848,25 @@ class _SearchingView extends StatelessWidget {
 class _DriverAssignedView extends StatelessWidget {
   final OrderDetails? order;
   final String status;
+
   final VoidCallback onCall;
   final VoidCallback onCancel;
-  // final VoidCallback onRefresh;
+
   final GoogleMapController? mapController;
+
   final Marker? driverMarker;
+
+  final Marker? pickupMarker;
+  final Marker? destinationMarker;
+
+  final Set<Polyline> polylines;
+
+  final bool showPickup;
+
+  final VoidCallback onRecenter;
+
   final Function(GoogleMapController) onMapCreated;
+  final VoidCallback onCameraMoveStarted;
 
   const _DriverAssignedView({
     super.key,
@@ -817,13 +874,17 @@ class _DriverAssignedView extends StatelessWidget {
     required this.status,
     required this.onCall,
     required this.onCancel,
-    // required this.onRefresh,
-    required this.driverMarker,
     required this.mapController,
+    required this.driverMarker,
+    required this.pickupMarker,
+    required this.destinationMarker,
+    required this.polylines,
+    required this.showPickup,
+    required this.onRecenter,
     required this.onMapCreated,
+    required this.onCameraMoveStarted,
   });
 
-  @override
   @override
   Widget build(BuildContext context) {
     if (order == null) {
@@ -833,44 +894,61 @@ class _DriverAssignedView extends StatelessWidget {
     return Stack(
       children: [
         // Full Screen Map
+        // Positioned.fill(
+        //   child: GoogleMap(
+        //     onMapCreated: onMapCreated,
+        //     initialCameraPosition: CameraPosition(
+        //       target: LatLng(order!.pickupLatitude, order!.pickupLongitude),
+        //       zoom: 14,
+        //     ),
+        //     zoomControlsEnabled: false,
+        //     myLocationButtonEnabled: false,
+        //
+        //     markers: {
+        //       Marker(
+        //         markerId: const MarkerId("pickup"),
+        //         position: LatLng(order!.pickupLatitude, order!.pickupLongitude),
+        //       ),
+        //
+        //
+        //       if (driverMarker != null) driverMarker!,
+        //     },
+        //   ),
+        // ),
         Positioned.fill(
           child: GoogleMap(
-            // onMapCreated: (controller) {
-            //   _mapController = controller;
-            // },
             onMapCreated: onMapCreated,
+
             initialCameraPosition: CameraPosition(
               target: LatLng(order!.pickupLatitude, order!.pickupLongitude),
               zoom: 14,
             ),
-            zoomControlsEnabled: false,
-            myLocationButtonEnabled: false,
-            // markers: {
-            //   Marker(
-            //     markerId: const MarkerId("pickup"),
-            //     position: LatLng(order!.pickupLatitude, order!.pickupLongitude),
-            //   ),
-            //   if (order!.partnerLatitude != null &&
-            //       order!.partnerLongitude != null)
-            //     Marker(
-            //       markerId: const MarkerId("driver"),
-            //       position: LatLng(
-            //         order!.partnerLatitude!,
-            //         order!.partnerLongitude!,
-            //       ),
-            //       icon: BitmapDescriptor.defaultMarkerWithHue(
-            //         BitmapDescriptor.hueViolet,
-            //       ),
-            //     ),
-            // },
+
             markers: {
-              Marker(
-                markerId: const MarkerId("pickup"),
-                position: LatLng(order!.pickupLatitude, order!.pickupLongitude),
-              ),
+              if (showPickup && pickupMarker != null) pickupMarker!,
+
+              if (destinationMarker != null) destinationMarker!,
 
               if (driverMarker != null) driverMarker!,
             },
+
+            polylines: polylines,
+            onCameraMoveStarted: onCameraMoveStarted,
+
+            zoomControlsEnabled: false,
+            myLocationButtonEnabled: false,
+            compassEnabled: false,
+            mapToolbarEnabled: false,
+          ),
+        ),
+
+        // Re-center
+        Positioned(
+          right: 16,
+          bottom: 340,
+          child: FloatingActionButton.small(
+            onPressed: onRecenter,
+            child: const Icon(Icons.my_location),
           ),
         ),
 
@@ -910,262 +988,6 @@ class _DriverAssignedView extends StatelessWidget {
     );
   }
 }
-
-// class _DriverCard extends StatelessWidget {
-//   final OrderDetails order;
-//   final String status;
-//   final VoidCallback onCall;
-//   final VoidCallback onCancel;
-//   // final VoidCallback onRefresh;
-//
-//   const _DriverCard({
-//     super.key,
-//     required this.order,
-//     required this.status,
-//     required this.onCall,
-//     required this.onCancel,
-//     // required this.onRefresh,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.all(20),
-//       decoration: BoxDecoration(
-//         color: _AppColors.surface,
-//         borderRadius: BorderRadius.circular(20),
-//         boxShadow: const [
-//           BoxShadow(
-//             color: Colors.black12,
-//             blurRadius: 16,
-//             offset: Offset(0, 6),
-//           ),
-//         ],
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.stretch,
-//         children: [
-//           Row(
-//             children: [
-//               CircleAvatar(
-//                 radius: 32,
-//                 backgroundColor: _AppColors.primary.withOpacity(0.12),
-//                 child: const Icon(
-//                   Icons.person_rounded,
-//                   color: _AppColors.primary,
-//                   size: 32,
-//                 ),
-//               ),
-//               const SizedBox(width: 16),
-//               Expanded(
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Text(
-//                       order.partnerName ?? "Captain",
-//                       overflow: TextOverflow.ellipsis,
-//                       style: const TextStyle(
-//                         fontSize: 18,
-//                         fontWeight: FontWeight.w700,
-//                         color: _AppColors.textPrimary,
-//                       ),
-//                     ),
-//                     const SizedBox(height: 4),
-//                     Row(
-//                       children: [
-//                         const Icon(
-//                           Icons.star_rounded,
-//                           size: 16,
-//                           color: Color(0xFFF5A623),
-//                         ),
-//                         const SizedBox(width: 4),
-//                         Text(
-//                           order.partnerPhone ?? "",
-//                           overflow: TextOverflow.ellipsis,
-//                           style: const TextStyle(
-//                             fontSize: 13,
-//                             color: _AppColors.textSecondary,
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//               _CircleIconButton(
-//                 icon: Icons.call_rounded,
-//                 background: _AppColors.success,
-//                 onTap: onCall,
-//               ),
-//             ],
-//           ),
-//           const SizedBox(height: 20),
-//
-//           if (status == "PARTNER_ACCEPTED") ...[
-//             const Text(
-//               "Captain is on the way.",
-//               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-//             ),
-//           ],
-//
-//           _OtpBanner(otp: "${order.pickupOtp}"),
-//           const SizedBox(height: 15),
-//
-//           // SizedBox(
-//           //   width: double.infinity,
-//           //   child: OutlinedButton.icon(
-//           //     onPressed: onRefresh,
-//           //     icon: const Icon(Icons.refresh),
-//           //     label: const Text("Refresh Status"),
-//           //   ),
-//           // ),
-//           if (status == "PICKED_UP" || status == "ONGOING") ...[
-//             Container(
-//               padding: const EdgeInsets.all(16),
-//               decoration: BoxDecoration(
-//                 color: Colors.green.shade50,
-//                 borderRadius: BorderRadius.circular(12),
-//               ),
-//               child: const Row(
-//                 children: [
-//                   Icon(Icons.directions_car, color: Colors.green),
-//                   SizedBox(width: 10),
-//                   Expanded(
-//                     child: Text(
-//                       "Trip in progress",
-//                       style: TextStyle(fontWeight: FontWeight.bold),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ],
-//           if (onCancel != null) ...[
-//             const SizedBox(height: 20),
-//             const Divider(color: _AppColors.divider, height: 1),
-//             const SizedBox(height: 16),
-//             SizedBox(
-//               width: double.infinity,
-//               child: TextButton(
-//                 onPressed: onCancel,
-//                 style: TextButton.styleFrom(
-//                   foregroundColor: _AppColors.danger,
-//                   padding: const EdgeInsets.symmetric(vertical: 12),
-//                 ),
-//                 child: const Text(
-//                   "Cancel ride",
-//                   style: TextStyle(fontWeight: FontWeight.w600),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ],
-//       ),
-//     );
-//   }
-// }
-//
-// class _CircleIconButton extends StatelessWidget {
-//   final IconData icon;
-//   final Color background;
-//   final VoidCallback onTap;
-//
-//   const _CircleIconButton({
-//     required this.icon,
-//     required this.background,
-//     required this.onTap,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Material(
-//       color: background,
-//       shape: const CircleBorder(),
-//       child: InkWell(
-//         customBorder: const CircleBorder(),
-//         onTap: onTap,
-//         child: Padding(
-//           padding: const EdgeInsets.all(12),
-//           child: Icon(icon, color: Colors.white, size: 22),
-//         ),
-//       ),
-//     );
-//   }
-// }
-//
-// class _OtpBanner extends StatelessWidget {
-//   final String otp;
-//   const _OtpBanner({required this.otp});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-//       decoration: BoxDecoration(
-//         color: _AppColors.success.withOpacity(0.08),
-//         borderRadius: BorderRadius.circular(16),
-//         border: Border.all(color: _AppColors.success.withOpacity(0.25)),
-//       ),
-//       child: Column(
-//         children: [
-//           Row(
-//             mainAxisSize: MainAxisSize.min,
-//             children: const [
-//               Icon(
-//                 Icons.check_circle_rounded,
-//                 color: _AppColors.success,
-//                 size: 18,
-//               ),
-//               SizedBox(width: 6),
-//               Text(
-//                 "Captain has arrived",
-//                 style: TextStyle(
-//                   fontSize: 15,
-//                   fontWeight: FontWeight.w700,
-//                   color: _AppColors.textPrimary,
-//                 ),
-//               ),
-//             ],
-//           ),
-//           const SizedBox(height: 12),
-//           const Text(
-//             "Share this OTP with your captain",
-//             style: TextStyle(fontSize: 13, color: _AppColors.textSecondary),
-//           ),
-//           const SizedBox(height: 10),
-//           Wrap(
-//             spacing: 10,
-//             alignment: WrapAlignment.center,
-//             children: otp.split('').map((digit) {
-//               return Container(
-//                 width: 42,
-//                 height: 52,
-//                 alignment: Alignment.center,
-//                 decoration: BoxDecoration(
-//                   color: Colors.white,
-//                   borderRadius: BorderRadius.circular(10),
-//                   border: Border.all(
-//                     color: _AppColors.success.withOpacity(0.4),
-//                   ),
-//                 ),
-//                 child: Text(
-//                   digit,
-//                   style: const TextStyle(
-//                     fontSize: 24,
-//                     fontWeight: FontWeight.w800,
-//                     color: _AppColors.success,
-//                   ),
-//                 ),
-//               );
-//             }).toList(),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
 
 class _DriverCard extends StatelessWidget {
   final OrderDetails order;
@@ -1284,19 +1106,6 @@ class _DriverCard extends StatelessWidget {
 
         Row(
           children: [
-            // Expanded(
-            //   child: OutlinedButton.icon(
-            //     onPressed: onRefresh,
-            //     icon: const Icon(Icons.refresh, size: 18),
-            //     label: const Text("Refresh Status"),
-            //     style: OutlinedButton.styleFrom(
-            //       padding: const EdgeInsets.symmetric(vertical: 12),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(10),
-            //       ),
-            //     ),
-            //   ),
-            // ),
             if (!isOngoing) ...[
               const SizedBox(width: 12),
               Expanded(
@@ -1548,1236 +1357,3 @@ class _CancelRideSheet extends StatelessWidget {
     );
   }
 }
-
-class _PaymentSelectionView extends StatelessWidget {
-  final OrderDetails? order;
-  final VoidCallback onCash;
-  final VoidCallback onOnline;
-
-  const _PaymentSelectionView({
-    required this.order,
-    required this.onCash,
-    required this.onOnline,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 80),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            "Ride Completed",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 10),
-
-          Text("Amount to Pay", style: TextStyle(color: Colors.grey.shade600)),
-
-          const SizedBox(height: 8),
-
-          Text(
-            "₹ ${order?.fare.toStringAsFixed(2) ?? "0.00"}",
-            style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 40),
-
-          // SizedBox(
-          //   width: double.infinity,
-          //   child: ElevatedButton.icon(
-          //     onPressed: onCash,
-          //     icon: const Icon(Icons.money),
-          //     label: const Text("Pay by Cash"),
-          //   ),
-          // ),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: order?.cashPayment == true ? onCash : null,
-              icon: const Icon(Icons.money),
-              label: Text(
-                order?.cashPayment == true
-                    ? "Pay by Cash"
-                    : "Cash Payment Not Available",
-              ),
-              style: ElevatedButton.styleFrom(
-                disabledBackgroundColor: Colors.grey.shade300,
-                disabledForegroundColor: Colors.grey.shade600,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 15),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: onOnline,
-              icon: const Icon(Icons.payment),
-              label: const Text("Pay Online"),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-//
-// import 'dart:async';
-// import 'dart:convert';
-// import 'package:flutter/material.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import 'package:http/http.dart' as http;
-// import 'package:maamaas/Services/Auth_service/food_authservice.dart';
-// import 'package:maamaas/Services/googleservices/googleapiservice.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:url_launcher/url_launcher.dart';
-// import '../../Models/logistics/orderdetails.dart';
-// import '../../Services/Auth_service/delivery_service.dart';
-// import '../../Services/paymentservice/razorpayservice.dart';
-// import '../../Services/websockets/web_socket_manager.dart';
-//
-// // IMPORTANT: Replace this with your Google Maps Directions API key
-// // const String GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
-//
-// class _AppColors {
-//   static const primary = Color(0xFF000000); // Uber/Ola classic dark style
-//   static const accent = Color(0xFF276EF1);
-//   static const success = Color(0xFF1FAA59);
-//   static const danger = Color(0xFFE0403F);
-//   static const surface = Colors.white;
-//   static const background = Color(0xFFF4F5F7);
-//   static const textPrimary = Color(0xFF1B1B23);
-//   static const textSecondary = Color(0xFF6B6B76);
-//   static const divider = Color(0xFFEDEBF2);
-// }
-//
-// class FindingDriverScreen extends StatefulWidget {
-//   const FindingDriverScreen({super.key});
-//
-//   @override
-//   State<FindingDriverScreen> createState() => _FindingDriverScreenState();
-// }
-//
-// class _FindingDriverScreenState extends State<FindingDriverScreen>
-//     with SingleTickerProviderStateMixin {
-//   String status = "SEARCHING_PARTNER";
-//
-//   OrderDetails? order;
-//   int? userId;
-//   int? _orderId;
-//   GoogleMapController? _mapController;
-//
-//   Marker? _driverMarker;
-//   Marker? _pickupMarker;
-//   Marker? _dropMarker;
-//
-//   Set<Polyline> _polylines = {};
-//   String _estimatedTime = "";
-//
-//   int? _partnerId;
-//   late final AnimationController _pulseController;
-//   bool _paymentDialogShowing = false;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _pulseController = AnimationController(
-//       vsync: this,
-//       duration: const Duration(milliseconds: 1600),
-//     )..repeat();
-//     _listenForDriver();
-//   }
-//
-//   @override
-//   void dispose() {
-//     if (_partnerId != null) {
-//       WebSocketManager().unsubscribePartnerLocation(_partnerId!);
-//     }
-//     if (userId != null) {
-//       WebSocketManager().unsubscribeLogisticOrder(userId!);
-//     }
-//     _pulseController.dispose();
-//     super.dispose();
-//   }
-//
-//   Future<void> _listenForDriver() async {
-//     final prefs = await SharedPreferences.getInstance();
-//     final int userId = prefs.getInt('userId') ?? 0;
-//     debugPrint("Subscribing logistics for user : $userId");
-//
-//     WebSocketManager().subscribeLogisticOrder(userId, (data) async {
-//       debugPrint("WS CALLBACK RECEIVED");
-//       debugPrint("WS DATA : $data");
-//       if (data["orderId"] == null) return;
-//
-//       _orderId = data["orderId"];
-//       final latestOrder = await DeliveryService.getOrderById(_orderId!);
-//
-//       if (!mounted) return;
-//
-//       setState(() {
-//         order = latestOrder;
-//         status = latestOrder.status;
-//         _setupStaticMarkers();
-//         debugPrint("INSIDE SETSTATE -> $status");
-//       });
-//
-//       if (latestOrder.partnerId != null &&
-//           latestOrder.partnerId != _partnerId) {
-//         _partnerId = latestOrder.partnerId;
-//         _listenPartnerLocation(_partnerId!);
-//       }
-//     });
-//   }
-//
-//   void _setupStaticMarkers() {
-//     if (order == null) return;
-//
-//     _pickupMarker = Marker(
-//       markerId: const MarkerId("pickup"),
-//       position: LatLng(order!.pickupLatitude, order!.pickupLongitude),
-//       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-//       infoWindow: const InfoWindow(title: "Pickup Location"),
-//     );
-//
-//     if (order!.dropLatitude != null && order!.dropLongitude != null) {
-//       _dropMarker = Marker(
-//         markerId: const MarkerId("drop"),
-//         position: LatLng(order!.dropLatitude!, order!.dropLongitude!),
-//         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-//         infoWindow: const InfoWindow(title: "Drop Location"),
-//       );
-//     }
-//   }
-//
-//   void _listenPartnerLocation(int partnerId) {
-//     WebSocketManager().subscribePartnerLocation(partnerId, (data) {
-//       final lat = double.parse(data["latitude"].toString());
-//       final lng = double.parse(data["longitude"].toString());
-//       final driverLatLng = LatLng(lat, lng);
-//
-//       if (!mounted) return;
-//
-//       setState(() {
-//         _driverMarker = Marker(
-//           markerId: const MarkerId("driver"),
-//           position: driverLatLng,
-//           icon: BitmapDescriptor.defaultMarkerWithHue(
-//             BitmapDescriptor.hueViolet,
-//           ),
-//           infoWindow: const InfoWindow(title: "Captain"),
-//         );
-//       });
-//
-//       _updateRouteAndCamera(driverLatLng);
-//     });
-//   }
-//
-//   // Fetch Route polyline from Google Directions API
-//   Future<void> _updateRouteAndCamera(LatLng driverLatLng) async {
-//     if (order == null) return;
-//
-//     LatLng origin;
-//     LatLng destination;
-//
-//     // Check Status to decide route endpoints
-//     if (status == "PICKED_UP" || status == "ONGOING") {
-//       // Driver has picked up: Route from Driver/Pickup -> Drop Location
-//       origin = driverLatLng;
-//       destination = LatLng(order!.dropLatitude!, order!.dropLongitude!);
-//     } else {
-//       // Driver on the way to pickup: Route from Driver -> Pickup Location
-//       origin = driverLatLng;
-//       destination = LatLng(order!.pickupLatitude, order!.pickupLongitude);
-//     }
-//
-//     // Fetch polylines dynamically
-//     await _fetchRoutePolylines(origin, destination);
-//     _fitCameraToBounds(origin, destination);
-//   }
-//
-//   Future<void> _fetchRoutePolylines(LatLng origin, LatLng destination) async {
-//     final _googleApiKey = ApiKeyService.getApiKey();
-//     final url = Uri.parse(
-//       'https://maps.googleapis.com/maps/api/directions/json'
-//       '?origin=${origin.latitude},${origin.longitude}'
-//       '&destination=${destination.latitude},${destination.longitude}'
-//       '&mode=driving'
-//       '&departure_time=now'
-//       '&traffic_model=best_guess'
-//       '&alternatives=false'
-//       '&key=$_googleApiKey',
-//     );
-//
-//     try {
-//       final response = await http.get(url);
-//       if (response.statusCode == 200) {
-//         final data = json.decode(response.body);
-//
-//         if (data['routes'] != null && (data['routes'] as List).isNotEmpty) {
-//           final points = data['routes'][0]['overview_polyline']['points'];
-//           final polylineCoordinates = _decodePolyline(points);
-//
-//           final durationText =
-//               data['routes'][0]['legs'][0]['duration']['text'] ?? "";
-//
-//           setState(() {
-//             _estimatedTime = durationText;
-//             _polylines = {
-//               Polyline(
-//                 polylineId: const PolylineId("trip_route"),
-//                 points: polylineCoordinates,
-//                 color: _AppColors.accent,
-//                 width: 5,
-//                 jointType: JointType.round,
-//                 startCap: Cap.roundCap,
-//                 endCap: Cap.roundCap,
-//               ),
-//             };
-//           });
-//         }
-//       }
-//     } catch (e) {
-//       debugPrint("Error fetching directions: $e");
-//     }
-//   }
-//
-//   // Decoding Google Encoded Polyline String
-//   List<LatLng> _decodePolyline(String encoded) {
-//     List<LatLng> polyline = [];
-//     int index = 0, len = encoded.length;
-//     int lat = 0, lng = 0;
-//
-//     while (index < len) {
-//       int b, shift = 0, result = 0;
-//       do {
-//         b = encoded.codeUnitAt(index++) - 63;
-//         result |= (b & 0x1f) << shift;
-//         shift += 5;
-//       } while (b >= 0x20);
-//       int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-//       lat += dlat;
-//
-//       shift = 0;
-//       result = 0;
-//       do {
-//         b = encoded.codeUnitAt(index++) - 63;
-//         result |= (b & 0x1f) << shift;
-//         shift += 5;
-//       } while (b >= 0x20);
-//       int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-//       lng += dlng;
-//
-//       polyline.add(LatLng(lat / 1E5, lng / 1E5));
-//     }
-//     return polyline;
-//   }
-//
-//   void _fitCameraToBounds(LatLng pos1, LatLng pos2) {
-//     if (_mapController == null) return;
-//
-//     final bounds = LatLngBounds(
-//       southwest: LatLng(
-//         pos1.latitude < pos2.latitude ? pos1.latitude : pos2.latitude,
-//         pos1.longitude < pos2.longitude ? pos1.longitude : pos2.longitude,
-//       ),
-//       northeast: LatLng(
-//         pos1.latitude > pos2.latitude ? pos1.latitude : pos2.latitude,
-//         pos1.longitude > pos2.longitude ? pos1.longitude : pos2.longitude,
-//       ),
-//     );
-//
-//     _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
-//   }
-//
-//   Future<void> _refreshOrderStatus() async {
-//     if (_orderId == null) return;
-//     try {
-//       final latestOrder = await DeliveryService.getOrderById(_orderId!);
-//       if (!mounted) return;
-//       setState(() {
-//         order = latestOrder;
-//         status = latestOrder.status;
-//         debugPrint("INSIDE SETSTATE -> $status");
-//       });
-//     } catch (e) {
-//       debugPrint("Refresh Error: $e");
-//     }
-//   }
-//
-//   String getStatusText(String status) {
-//     switch (status) {
-//       case "PENDING":
-//         return "Preparing your booking";
-//       case "SEARCHING_PARTNER":
-//         return "Finding a captain nearby";
-//       case "PARTNER_ASSIGNED":
-//         return "Captain assigned";
-//       case "PARTNER_ACCEPTED":
-//         return "Captain is on the way";
-//       case "ARRIVED":
-//         return "Captain has arrived";
-//       case "PICKED_UP":
-//       case "ONGOING":
-//         return "Heading to destination";
-//       case "COMPLETED":
-//         return "Trip completed";
-//       case "CANCELLED":
-//         return "Ride cancelled";
-//       default:
-//         return status;
-//     }
-//   }
-//
-//   Future<void> _callDriver() async {
-//     final phone = order?.partnerPhone;
-//     if (phone == null || phone.isEmpty) return;
-//     final uri = Uri(scheme: 'tel', path: phone);
-//     if (await canLaunchUrl(uri)) {
-//       await launchUrl(uri);
-//     }
-//   }
-//
-//   Future<void> _payOnline() async {
-//     if (order == null) return;
-//     try {
-//       _showProcessingDialog("Preparing payment...\nPlease wait.");
-//       final razorpayOrderId = await food_Authservice.createOrder(order!.fare);
-//       if (!mounted) return;
-//
-//       if (razorpayOrderId == null || razorpayOrderId.isEmpty) {
-//         _hideProcessingDialog();
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(content: Text("Unable to create payment order.")),
-//         );
-//         return;
-//       }
-//       _hideProcessingDialog();
-//
-//       final razorpay = RazorpayService();
-//       razorpay.onSuccess = (success) async {
-//         try {
-//           _showProcessingDialog("Capturing payment...");
-//           await food_Authservice.capturePayment(
-//             paymentId: success.paymentId!,
-//             amount: order!.fare,
-//           );
-//           _hideProcessingDialog();
-//
-//           _showProcessingDialog("Verifying payment...");
-//           final verify = await food_Authservice.verifyPayment(
-//             success.paymentId!,
-//           );
-//           _hideProcessingDialog();
-//
-//           if (verify != null && verify.status?.toLowerCase() == "captured") {
-//             _showPaymentSuccess();
-//           } else {
-//             _showPaymentFailed("Verification Pending or Failed");
-//           }
-//         } catch (e) {
-//           _hideProcessingDialog();
-//           _showPaymentFailed("Payment processing failed.");
-//         }
-//       };
-//
-//       razorpay.onError = (error) {
-//         _hideProcessingDialog();
-//         _showPaymentFailed(error.message ?? "Payment Failed");
-//       };
-//
-//       await razorpay.startPayment(
-//         orderId: razorpayOrderId,
-//         amount: order!.fare,
-//         description: "Ride Payment",
-//       );
-//     } catch (e) {
-//       _hideProcessingDialog();
-//       _showPaymentFailed("Unexpected error occurred.");
-//     }
-//   }
-//
-//   void _showPaymentSuccess() {
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (_) => AlertDialog(
-//         title: const Text("Payment Successful"),
-//         content: const Text("Your ride payment has been completed."),
-//         actions: [
-//           TextButton(
-//             onPressed: () {
-//               Navigator.pop(context);
-//               Navigator.pushNamedAndRemoveUntil(context, "/home", (_) => false);
-//             },
-//             child: const Text("OK"),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showPaymentFailed(String message) {
-//     showDialog(
-//       context: context,
-//       builder: (_) => AlertDialog(
-//         title: const Text("Payment Failed"),
-//         content: Text(message),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: const Text("Retry"),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showProcessingDialog(String message) {
-//     if (_paymentDialogShowing) return;
-//     _paymentDialogShowing = true;
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (_) => PopScope(
-//         canPop: false,
-//         child: AlertDialog(
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(16),
-//           ),
-//           content: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               const CircularProgressIndicator(),
-//               const SizedBox(height: 20),
-//               Text(
-//                 message,
-//                 textAlign: TextAlign.center,
-//                 style: const TextStyle(fontWeight: FontWeight.w600),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   void _hideProcessingDialog() {
-//     if (!_paymentDialogShowing) return;
-//     _paymentDialogShowing = false;
-//     Navigator.of(context, rootNavigator: true).pop();
-//   }
-//
-//   void _cancelRide() {
-//     showModalBottomSheet(
-//       context: context,
-//       backgroundColor: Colors.transparent,
-//       builder: (ctx) => _CancelRideSheet(
-//         onConfirm: () {
-//           Navigator.pop(ctx);
-//           Navigator.pop(context);
-//         },
-//       ),
-//     );
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: _AppColors.background,
-//       body: SafeArea(
-//         child: AnimatedSwitcher(
-//           duration: const Duration(milliseconds: 350),
-//           child: _buildBody(),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   Widget _buildBody() {
-//     if (status == "SEARCHING_PARTNER" || status == "PENDING") {
-//       debugPrint("Showing Searching View");
-//       return _SearchingView(
-//         key: const ValueKey("searching"),
-//         statusText: getStatusText(status),
-//         pulseController: _pulseController,
-//         onCancel: _cancelRide,
-//       );
-//     }
-//
-//     if (status == "PAYMENT_PENDING") {
-//       return _PaymentSelectionView(
-//         order: order,
-//         onCash: () => Navigator.of(context).maybePop(),
-//         onOnline: _payOnline,
-//       );
-//     }
-//
-//     if (status == "CANCELLED") {
-//       return const _ResultView(
-//         key: ValueKey('cancelled'),
-//         icon: Icons.cancel_rounded,
-//         iconColor: _AppColors.danger,
-//         title: "Ride cancelled",
-//         subtitle: "You can book another ride anytime.",
-//       );
-//     }
-//     debugPrint("Showing Driver View");
-//     return _DriverAssignedView(
-//       key: const ValueKey("driver"),
-//       order: order,
-//       status: status,
-//       etaText: _estimatedTime,
-//       polylines: _polylines,
-//       onCall: _callDriver,
-//       onCancel: _cancelRide,
-//       onRefresh: _refreshOrderStatus,
-//       driverMarker: _driverMarker,
-//       pickupMarker: _pickupMarker,
-//       dropMarker: _dropMarker,
-//       onMapCreated: (controller) => _mapController = controller,
-//     );
-//   }
-// }
-//
-// class _DriverAssignedView extends StatelessWidget {
-//   final OrderDetails? order;
-//   final String status;
-//   final String etaText;
-//   final Set<Polyline> polylines;
-//   final VoidCallback onCall;
-//   final VoidCallback onCancel;
-//   final VoidCallback onRefresh;
-//   final Marker? driverMarker;
-//   final Marker? pickupMarker;
-//   final Marker? dropMarker;
-//   final Function(GoogleMapController) onMapCreated;
-//
-//   const _DriverAssignedView({
-//     super.key,
-//     required this.order,
-//     required this.status,
-//     required this.etaText,
-//     required this.polylines,
-//     required this.onCall,
-//     required this.onCancel,
-//     required this.onRefresh,
-//     required this.driverMarker,
-//     required this.pickupMarker,
-//     required this.dropMarker,
-//     required this.onMapCreated,
-//   });
-//
-//   Set<Marker> _buildMapMarkers() {
-//     final Set<Marker> markers = {};
-//     if (pickupMarker != null) markers.add(pickupMarker!);
-//
-//     // Show Drop marker as well when trip has started
-//     if ((status == "PICKED_UP" || status == "ONGOING") && dropMarker != null) {
-//       markers.add(dropMarker!);
-//     }
-//     if (driverMarker != null) markers.add(driverMarker!);
-//     return markers;
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     if (order == null) {
-//       return const Center(child: CircularProgressIndicator());
-//     }
-//
-//     return Stack(
-//       children: [
-//         // Map Section
-//         Positioned.fill(
-//           child: GoogleMap(
-//             onMapCreated: onMapCreated,
-//             initialCameraPosition: CameraPosition(
-//               target: LatLng(order!.pickupLatitude, order!.pickupLongitude),
-//               zoom: 15,
-//             ),
-//             zoomControlsEnabled: false,
-//             myLocationButtonEnabled: false,
-//             markers: _buildMapMarkers(),
-//             polylines: polylines,
-//           ),
-//         ),
-//
-//         // Floating ETA Badge Header (Ola/Uber style)
-//         if (etaText.isNotEmpty)
-//           Positioned(
-//             top: 16,
-//             left: 16,
-//             right: 16,
-//             child: Center(
-//               child: Container(
-//                 padding: const EdgeInsets.symmetric(
-//                   horizontal: 16,
-//                   vertical: 10,
-//                 ),
-//                 decoration: BoxDecoration(
-//                   color: Colors.black,
-//                   borderRadius: BorderRadius.circular(24),
-//                   boxShadow: const [
-//                     BoxShadow(color: Colors.black26, blurRadius: 10),
-//                   ],
-//                 ),
-//                 child: Row(
-//                   mainAxisSize: MainAxisSize.min,
-//                   children: [
-//                     const Icon(
-//                       Icons.access_time_filled,
-//                       color: Colors.white,
-//                       size: 18,
-//                     ),
-//                     const SizedBox(width: 8),
-//                     Text(
-//                       status == "PICKED_UP" || status == "ONGOING"
-//                           ? "Reaching destination in $etaText"
-//                           : "Captain arriving in $etaText",
-//                       style: const TextStyle(
-//                         color: Colors.white,
-//                         fontWeight: FontWeight.bold,
-//                         fontSize: 13,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ),
-//
-//         // Bottom Sheet Driver Information Card
-//         Positioned(
-//           left: 0,
-//           right: 0,
-//           bottom: 0,
-//           child: SafeArea(
-//             top: false,
-//             child: Container(
-//               constraints: const BoxConstraints(maxHeight: 380),
-//               decoration: const BoxDecoration(
-//                 color: Colors.white,
-//                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-//                 boxShadow: [
-//                   BoxShadow(
-//                     color: Colors.black12,
-//                     blurRadius: 15,
-//                     offset: Offset(0, -3),
-//                   ),
-//                 ],
-//               ),
-//               child: SingleChildScrollView(
-//                 padding: const EdgeInsets.all(20),
-//                 child: _DriverCard(
-//                   order: order!,
-//                   status: status,
-//                   onCall: onCall,
-//                   onCancel: onCancel,
-//                   onRefresh: onRefresh,
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }
-//
-// class _DriverCard extends StatelessWidget {
-//   final OrderDetails order;
-//   final String status;
-//   final VoidCallback onCall;
-//   final VoidCallback onCancel;
-//   final VoidCallback onRefresh;
-//
-//   const _DriverCard({
-//     required this.order,
-//     required this.status,
-//     required this.onCall,
-//     required this.onCancel,
-//     required this.onRefresh,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     bool isOngoing = status == "PICKED_UP" || status == "ONGOING";
-//
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.stretch,
-//       mainAxisSize: MainAxisSize.min,
-//       children: [
-//         Row(
-//           children: [
-//             CircleAvatar(
-//               radius: 28,
-//               backgroundColor: _AppColors.background,
-//               child: const Icon(
-//                 Icons.person_rounded,
-//                 color: _AppColors.textPrimary,
-//                 size: 30,
-//               ),
-//             ),
-//             const SizedBox(width: 14),
-//             Expanded(
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text(
-//                     order.partnerName ?? "Captain Assigned",
-//                     overflow: TextOverflow.ellipsis,
-//                     style: const TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.bold,
-//                       color: _AppColors.textPrimary,
-//                     ),
-//                   ),
-//                   const SizedBox(height: 2),
-//                   Row(
-//                     children: [
-//                       const Icon(
-//                         Icons.star_rounded,
-//                         size: 16,
-//                         color: Colors.amber,
-//                       ),
-//                       const SizedBox(width: 4),
-//                       Text(
-//                         order.partnerPhone ?? "4.9",
-//                         style: const TextStyle(
-//                           fontSize: 13,
-//                           color: _AppColors.textSecondary,
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             InkWell(
-//               onTap: onCall,
-//               borderRadius: BorderRadius.circular(50),
-//               child: Container(
-//                 padding: const EdgeInsets.all(12),
-//                 decoration: const BoxDecoration(
-//                   color: _AppColors.success,
-//                   shape: BoxShape.circle,
-//                 ),
-//                 child: const Icon(Icons.call, color: Colors.white, size: 20),
-//               ),
-//             ),
-//           ],
-//         ),
-//         const SizedBox(height: 16),
-//
-//         // OTP Banner (Show ONLY before pickup)
-//         if (!isOngoing) ...[
-//           _OtpBanner(otp: "${order.pickupOtp}"),
-//           const SizedBox(height: 14),
-//         ] else ...[
-//           Container(
-//             padding: const EdgeInsets.all(14),
-//             decoration: BoxDecoration(
-//               color: _AppColors.accent.withOpacity(0.08),
-//               borderRadius: BorderRadius.circular(12),
-//             ),
-//             child: Row(
-//               children: const [
-//                 Icon(Icons.directions_car_rounded, color: _AppColors.accent),
-//                 SizedBox(width: 12),
-//                 Expanded(
-//                   child: Text(
-//                     "Trip in progress to drop location",
-//                     style: TextStyle(
-//                       fontWeight: FontWeight.bold,
-//                       color: _AppColors.textPrimary,
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//           const SizedBox(height: 14),
-//         ],
-//
-//         Row(
-//           children: [
-//             Expanded(
-//               child: OutlinedButton.icon(
-//                 onPressed: onRefresh,
-//                 icon: const Icon(Icons.refresh, size: 18),
-//                 label: const Text("Refresh Status"),
-//                 style: OutlinedButton.styleFrom(
-//                   padding: const EdgeInsets.symmetric(vertical: 12),
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(10),
-//                   ),
-//                 ),
-//               ),
-//             ),
-//             if (!isOngoing) ...[
-//               const SizedBox(width: 12),
-//               Expanded(
-//                 child: TextButton(
-//                   onPressed: onCancel,
-//                   style: TextButton.styleFrom(
-//                     foregroundColor: _AppColors.danger,
-//                     padding: const EdgeInsets.symmetric(vertical: 12),
-//                   ),
-//                   child: const Text(
-//                     "Cancel Ride",
-//                     style: TextStyle(fontWeight: FontWeight.bold),
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ],
-//         ),
-//       ],
-//     );
-//   }
-// }
-//
-// class _OtpBanner extends StatelessWidget {
-//   final String otp;
-//   const _OtpBanner({required this.otp});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-//       decoration: BoxDecoration(
-//         color: _AppColors.background,
-//         borderRadius: BorderRadius.circular(12),
-//         border: Border.all(color: Colors.black12),
-//       ),
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//         children: [
-//           const Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Text(
-//                 "START TRIP OTP",
-//                 style: TextStyle(
-//                   fontSize: 11,
-//                   fontWeight: FontWeight.bold,
-//                   color: _AppColors.textSecondary,
-//                 ),
-//               ),
-//               Text(
-//                 "Share with captain",
-//                 style: TextStyle(fontSize: 12, color: _AppColors.textSecondary),
-//               ),
-//             ],
-//           ),
-//           Row(
-//             children: otp.split('').map((digit) {
-//               return Container(
-//                 margin: const EdgeInsets.only(left: 4),
-//                 padding: const EdgeInsets.symmetric(
-//                   horizontal: 10,
-//                   vertical: 6,
-//                 ),
-//                 decoration: BoxDecoration(
-//                   color: Colors.black,
-//                   borderRadius: BorderRadius.circular(6),
-//                 ),
-//                 child: Text(
-//                   digit,
-//                   style: const TextStyle(
-//                     fontSize: 16,
-//                     fontWeight: FontWeight.bold,
-//                     color: Colors.white,
-//                   ),
-//                 ),
-//               );
-//             }).toList(),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-//
-// class _SearchingView extends StatelessWidget {
-//   final String statusText;
-//   final AnimationController pulseController;
-//   final VoidCallback onCancel;
-//
-//   const _SearchingView({
-//     super.key,
-//     required this.statusText,
-//     required this.pulseController,
-//     required this.onCancel,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(horizontal: 24),
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           const Spacer(flex: 2),
-//           SizedBox(
-//             width: 140,
-//             height: 140,
-//             child: AnimatedBuilder(
-//               animation: pulseController,
-//               builder: (context, _) {
-//                 return Stack(
-//                   alignment: Alignment.center,
-//                   children:
-//                       List.generate(3, (i) {
-//                         final t = (pulseController.value + i / 3) % 1.0;
-//                         return Opacity(
-//                           opacity: (1 - t) * 0.4,
-//                           child: Container(
-//                             width: 80 + t * 60,
-//                             height: 80 + t * 60,
-//                             decoration: const BoxDecoration(
-//                               shape: BoxShape.circle,
-//                               color: Colors.black,
-//                             ),
-//                           ),
-//                         );
-//                       })..add(
-//                         Container(
-//                           width: 70,
-//                           height: 70,
-//                           decoration: const BoxDecoration(
-//                             shape: BoxShape.circle,
-//                             color: Colors.black,
-//                           ),
-//                           child: const Icon(
-//                             Icons.local_taxi_rounded,
-//                             color: Colors.white,
-//                             size: 32,
-//                           ),
-//                         ),
-//                       ),
-//                 );
-//               },
-//             ),
-//           ),
-//           const SizedBox(height: 32),
-//           Text(
-//             statusText,
-//             textAlign: TextAlign.center,
-//             style: const TextStyle(
-//               fontSize: 22,
-//               fontWeight: FontWeight.bold,
-//               color: _AppColors.textPrimary,
-//             ),
-//           ),
-//           const SizedBox(height: 8),
-//           const Text(
-//             "Connecting you with a captain nearby...",
-//             textAlign: TextAlign.center,
-//             style: TextStyle(fontSize: 14, color: _AppColors.textSecondary),
-//           ),
-//           const Spacer(flex: 3),
-//           SizedBox(
-//             width: double.infinity,
-//             child: OutlinedButton(
-//               onPressed: onCancel,
-//               style: OutlinedButton.styleFrom(
-//                 foregroundColor: _AppColors.danger,
-//                 side: const BorderSide(color: _AppColors.danger, width: 1.2),
-//                 padding: const EdgeInsets.symmetric(vertical: 16),
-//                 shape: RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.circular(12),
-//                 ),
-//               ),
-//               child: const Text(
-//                 "Cancel Ride",
-//                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-//               ),
-//             ),
-//           ),
-//           const SizedBox(height: 24),
-//         ],
-//       ),
-//     );
-//   }
-// }
-//
-// class _ResultView extends StatelessWidget {
-//   final IconData icon;
-//   final Color iconColor;
-//   final String title;
-//   final String subtitle;
-//
-//   const _ResultView({
-//     super.key,
-//     required this.icon,
-//     required this.iconColor,
-//     required this.title,
-//     required this.subtitle,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.all(24),
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Icon(icon, size: 80, color: iconColor),
-//           const SizedBox(height: 20),
-//           Text(
-//             title,
-//             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-//           ),
-//           const SizedBox(height: 8),
-//           Text(
-//             subtitle,
-//             textAlign: TextAlign.center,
-//             style: const TextStyle(color: _AppColors.textSecondary),
-//           ),
-//           const SizedBox(height: 30),
-//           SizedBox(
-//             width: double.infinity,
-//             child: ElevatedButton(
-//               onPressed: () => Navigator.of(context).maybePop(),
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: Colors.black,
-//                 padding: const EdgeInsets.symmetric(vertical: 14),
-//               ),
-//               child: const Text("Done", style: TextStyle(color: Colors.white)),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-//
-// class _CancelRideSheet extends StatelessWidget {
-//   final VoidCallback onConfirm;
-//   const _CancelRideSheet({required this.onConfirm});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       decoration: const BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-//       ),
-//       padding: const EdgeInsets.all(24),
-//       child: Column(
-//         mainAxisSize: MainAxisSize.min,
-//         children: [
-//           const Text(
-//             "Cancel Ride?",
-//             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//           ),
-//           const SizedBox(height: 8),
-//           const Text(
-//             "Are you sure you want to cancel this booking?",
-//             textAlign: TextAlign.center,
-//             style: TextStyle(color: _AppColors.textSecondary),
-//           ),
-//           const SizedBox(height: 20),
-//           Row(
-//             children: [
-//               Expanded(
-//                 child: OutlinedButton(
-//                   onPressed: () => Navigator.pop(context),
-//                   child: const Text("Keep Ride"),
-//                 ),
-//               ),
-//               const SizedBox(width: 12),
-//               Expanded(
-//                 child: ElevatedButton(
-//                   onPressed: onConfirm,
-//                   style: ElevatedButton.styleFrom(
-//                     backgroundColor: _AppColors.danger,
-//                   ),
-//                   child: const Text(
-//                     "Cancel",
-//                     style: TextStyle(color: Colors.white),
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-//
-// class _PaymentSelectionView extends StatelessWidget {
-//   final OrderDetails? order;
-//   final VoidCallback onCash;
-//   final VoidCallback onOnline;
-//
-//   const _PaymentSelectionView({
-//     required this.order,
-//     required this.onCash,
-//     required this.onOnline,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.all(24),
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           const Icon(Icons.check_circle, color: _AppColors.success, size: 72),
-//           const SizedBox(height: 16),
-//           const Text(
-//             "Trip Completed",
-//             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-//           ),
-//           const SizedBox(height: 8),
-//           Text(
-//             "₹${order?.fare.toStringAsFixed(2) ?? "0.00"}",
-//             style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-//           ),
-//           const SizedBox(height: 32),
-//           SizedBox(
-//             width: double.infinity,
-//             child: ElevatedButton.icon(
-//               onPressed: onCash,
-//               icon: const Icon(Icons.money),
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: Colors.black,
-//                 padding: const EdgeInsets.symmetric(vertical: 14),
-//               ),
-//               label: const Text(
-//                 "Pay Cash",
-//                 style: TextStyle(color: Colors.white),
-//               ),
-//             ),
-//           ),
-//           const SizedBox(height: 12),
-//           SizedBox(
-//             width: double.infinity,
-//             child: OutlinedButton.icon(
-//               onPressed: onOnline,
-//               icon: const Icon(Icons.payment),
-//               style: OutlinedButton.styleFrom(
-//                 padding: const EdgeInsets.symmetric(vertical: 14),
-//               ),
-//               label: const Text("Pay Online"),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

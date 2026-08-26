@@ -2217,33 +2217,33 @@ class _HomePageState extends State<logistic_HomePage>
   Widget build(BuildContext context) {
     // ignore: deprecated_member_use
     return
-      // WillPopScope(
-      // onWillPop: () async {
-      //   if (_currentIndex != 0) {
-      //     setState(() {
-      //       _currentIndex = 0;
-      //     });
-      //     return false;
-      //   }
-      //   return false;
-      // },
-      // child:
-      Scaffold(
-        backgroundColor: _kBg,
-        body: RefreshIndicator(
-          color: _kPrimary,
-          onRefresh: () async {
-            await Future.delayed(const Duration(seconds: 1));
-            setState(() {});
-          },
-          child: CustomScrollView(
-            controller: widget.scrollController,
-            slivers: [
-              _buildSliverAppBar(),
-              SliverToBoxAdapter(child: LogisticsScreen()),
-            ],
-          ),
+    // WillPopScope(
+    // onWillPop: () async {
+    //   if (_currentIndex != 0) {
+    //     setState(() {
+    //       _currentIndex = 0;
+    //     });
+    //     return false;
+    //   }
+    //   return false;
+    // },
+    // child:
+    Scaffold(
+      backgroundColor: _kBg,
+      body: RefreshIndicator(
+        color: _kPrimary,
+        onRefresh: () async {
+          await Future.delayed(const Duration(seconds: 1));
+          setState(() {});
+        },
+        child: CustomScrollView(
+          controller: widget.scrollController,
+          slivers: [
+            _buildSliverAppBar(),
+            SliverToBoxAdapter(child: LogisticsScreen()),
+          ],
         ),
+      ),
       // ),
     );
   }

@@ -1,5 +1,4 @@
 import 'package:custom_cached_image/custom_cached_image.dart';
-
 import '../../../Models/promotions_model/promotions_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
@@ -116,7 +115,7 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
   }
 
   void _startImageTimer() {
-    _imageTimer?.cancel(); // ✅ cancel old timer
+    _imageTimer?.cancel();
 
     _imageTimer = Timer(const Duration(seconds: 6), () {
       if (!mounted || _isDisposed) return;
@@ -144,31 +143,50 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
     }
 
     final ad = widget.ads[currentIndex];
-    // debugPrint(
-    //   "Ad ${ad.campaignId} CTA: ${ad.callToAction} Raw: ${callToActionValues.reverse[ad.callToAction]}",
-    // );
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
+
       onTap: () async {
+        final ad = widget.ads[currentIndex];
+
         if (ad.callToAction != CallToAction.ORDER_NOW) {
           return;
         }
-        final ordertype = "DINE_IN";
-        //
-        //         debugPrint("✅ ORDER_NOW matched");
 
-        final result = await food_Authservice.createCart(ordertype);
-        //         debugPrint("✅ Cart created: $result");
+        final int vendorId = ad.vendorId ?? 0;
 
-        if (!mounted) return;
+        if (vendorId <= 0) {
+          if (!mounted) return;
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MenuScreen(vendorId: ad.vendorId ?? 0),
-          ),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Restaurant information is not available."),
+            ),
+          );
+
+          return;
+        }
+
+        try {
+          const String ordertype = "DINE_IN";
+
+          await food_Authservice.createCart(ordertype);
+
+          if (!mounted) return;
+
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => MenuScreen(vendorId: vendorId),
+            ),
+          );
+        } catch (e) {
+          if (!mounted) return;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Unable to open restaurant: $e")),
+          );
+        }
       },
 
       child: SizedBox(
@@ -238,22 +256,6 @@ class _BannerAdvertisementState extends State<BannerAdvertisement> {
       );
     }
 
-    // return SizedBox.expand(
-    //   key: ValueKey(imageUrl),
-    //   child: Image.network(
-    //     imageUrl,
-    //     fit: BoxFit.cover,
-    //
-    //     loadingBuilder: (context, child, progress) {
-    //       if (progress == null) return child;
-    //       return const Center(child: CircularProgressIndicator());
-    //     },
-    //
-    //     errorBuilder: (context, error, stackTrace) {
-    //       return const Center(child: Icon(Icons.broken_image));
-    //     },
-    //   ),
-    // );
     return SizedBox.expand(
       key: ValueKey(imageUrl),
       child: CustomCachedImage(

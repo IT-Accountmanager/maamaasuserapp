@@ -1,4 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../Models/delivery/deliverpartnerreview.dart';
 import '../../../Services/googleservices/googleapiservice.dart';
@@ -129,34 +131,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
   DeliveryPartnerReview? _postedReview;
   bool _loadingReview = true;
-
-  List<LatLng> _smoothRoute(List<LatLng> points) {
-    if (points.length < 3) {
-      return points;
-    }
-
-    final output = <LatLng>[];
-
-    output.add(points.first);
-
-    for (int i = 1; i < points.length - 1; i++) {
-      final prev = points[i - 1];
-
-      final current = points[i];
-
-      final next = points[i + 1];
-
-      final lat = (prev.latitude + current.latitude + next.latitude) / 3;
-
-      final lng = (prev.longitude + current.longitude + next.longitude) / 3;
-
-      output.add(LatLng(lat, lng));
-    }
-
-    output.add(points.last);
-
-    return output;
-  }
 
   @override
   void initState() {
@@ -502,73 +476,163 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
   Future<void> _loadCustomIcons() async {
     _vendorIcon = await _createCustomMarker(Icons.store, Colors.orange, 80);
     _customerIcon = await _createCustomMarker(Icons.home, Colors.blue, 80);
-    _bikeIcon = await _createDirectionalBikeIcon();
+    // _bikeIcon = await _createDirectionalBikeIcon();
+    _bikeIcon = await _loadBikeAssetIcon(context);
   }
 
-  Future<BitmapDescriptor> _createDirectionalBikeIcon() async {
-    const double size = 120;
-    final recorder = PictureRecorder();
-    final canvas = Canvas(recorder);
-    final center = Offset(size / 2, size / 2);
-
-    // Shadow
-    canvas.drawCircle(
-      center,
-      size / 2 - 4,
-      Paint()
-        // ignore: deprecated_member_use
-        ..color = Colors.black.withOpacity(0.18)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+  Future<BitmapDescriptor> _loadBikeAssetIcon(BuildContext context) async {
+    final Uint8List markerBytes = await _getBytesFromAsset(
+      'assets/bike_rider_topdown.png',
+      120, // target width in logical pixels
     );
-    // Circle background
-    canvas.drawCircle(
-      center,
-      size / 2 - 8,
-      Paint()..color = Colors.green.shade600,
-    );
-    // White ring
-    canvas.drawCircle(
-      center,
-      size / 2 - 8,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4,
-    );
-
-    // Bike icon
-    final bikeText = TextPainter(textDirection: TextDirection.ltr);
-    bikeText.text = TextSpan(
-      text: String.fromCharCode(Icons.delivery_dining.codePoint),
-      style: TextStyle(
-        fontSize: 48,
-        fontFamily: Icons.delivery_dining.fontFamily,
-        package: Icons.delivery_dining.fontPackage,
-        color: Colors.white,
-      ),
-    );
-    bikeText.layout();
-    bikeText.paint(
-      canvas,
-      Offset(center.dx - bikeText.width / 2, center.dy - bikeText.height / 2),
-    );
-
-    // Direction arrow at the top (always north — we use marker.rotation)
-    canvas.drawPath(
-      Path()
-        ..moveTo(center.dx, 6)
-        ..lineTo(center.dx - 9, 22)
-        ..lineTo(center.dx + 9, 22)
-        ..close(),
-      Paint()..color = Colors.white,
-    );
-
-    final picture = recorder.endRecording();
-    final image = await picture.toImage(size.toInt(), size.toInt());
-    final byteData = await image.toByteData(format: ImageByteFormat.png);
     // ignore: deprecated_member_use
-    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+    return BitmapDescriptor.fromBytes(markerBytes);
   }
+
+  Future<Uint8List> _getBytesFromAsset(String path, int width) async {
+    final ByteData data = await rootBundle.load(path);
+    final ui.Codec codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetWidth: width,
+    );
+    final ui.FrameInfo fi = await codec.getNextFrame();
+    final ByteData? byteData = await fi.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+    return byteData!.buffer.asUint8List();
+  }
+
+  // Future<BitmapDescriptor> _createPartnerPinIcon() async {
+  //   const double width = 110;
+  //   const double height = 140;
+  //   final recorder = PictureRecorder();
+  //   final canvas = Canvas(recorder);
+  //
+  //   const pinColor = Color(0xFFB3282D); // deep red, matches the reference
+  //   final r = width * 0.34;
+  //   final cx = width / 2;
+  //   final cy = r + 10;
+  //
+  //   final path = Path()
+  //     ..moveTo(cx - r, cy)
+  //     ..arcToPoint(
+  //       Offset(cx + r, cy),
+  //       radius: Radius.circular(r),
+  //       clockwise: true,
+  //       largeArc: true,
+  //     )
+  //     ..quadraticBezierTo(cx + r * 0.95, cy + r * 1.35, cx, height - 6)
+  //     ..quadraticBezierTo(cx - r * 0.95, cy + r * 1.35, cx - r, cy)
+  //     ..close();
+  //
+  //   // Shadow
+  //   canvas.drawPath(
+  //     path.shift(const Offset(0, 3)),
+  //     Paint()
+  //       ..color = Colors.black.withOpacity(0.25)
+  //       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+  //   );
+  //
+  //   // Pin body
+  //   canvas.drawPath(path, Paint()..color = pinColor);
+  //
+  //   // White outline for contrast
+  //   canvas.drawPath(
+  //     path,
+  //     Paint()
+  //       ..color = Colors.white
+  //       ..style = PaintingStyle.stroke
+  //       ..strokeWidth = 3,
+  //   );
+  //
+  //   // Scooter icon, centered in the round part
+  //   final iconPainter = TextPainter(textDirection: TextDirection.ltr);
+  //   iconPainter.text = TextSpan(
+  //     text: String.fromCharCode(Icons.two_wheeler.codePoint),
+  //     style: TextStyle(
+  //       fontSize: r * 1.15,
+  //       fontFamily: Icons.two_wheeler.fontFamily,
+  //       package: Icons.two_wheeler.fontPackage,
+  //       color: Colors.white,
+  //     ),
+  //   );
+  //   iconPainter.layout();
+  //   iconPainter.paint(
+  //     canvas,
+  //     Offset(cx - iconPainter.width / 2, cy - iconPainter.height / 2),
+  //   );
+  //
+  //   final picture = recorder.endRecording();
+  //   final image = await picture.toImage(width.toInt(), height.toInt());
+  //   final byteData = await image.toByteData(format: ImageByteFormat.png);
+  //   // ignore: deprecated_member_use
+  //   return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+  // }
+
+  // Future<BitmapDescriptor> _createDirectionalBikeIcon() async {
+  //   const double size = 120;
+  //   final recorder = PictureRecorder();
+  //   final canvas = Canvas(recorder);
+  //   final center = Offset(size / 2, size / 2);
+  //
+  //   // Shadow
+  //   canvas.drawCircle(
+  //     center,
+  //     size / 2 - 4,
+  //     Paint()
+  //       // ignore: deprecated_member_use
+  //       ..color = Colors.black.withOpacity(0.18)
+  //       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+  //   );
+  //   // Circle background
+  //   canvas.drawCircle(
+  //     center,
+  //     size / 2 - 8,
+  //     Paint()..color = Colors.green.shade600,
+  //   );
+  //   // White ring
+  //   canvas.drawCircle(
+  //     center,
+  //     size / 2 - 8,
+  //     Paint()
+  //       ..color = Colors.white
+  //       ..style = PaintingStyle.stroke
+  //       ..strokeWidth = 4,
+  //   );
+  //
+  //   // Bike icon
+  //   final bikeText = TextPainter(textDirection: TextDirection.ltr);
+  //   bikeText.text = TextSpan(
+  //     text: String.fromCharCode(Icons.delivery_dining.codePoint),
+  //     style: TextStyle(
+  //       fontSize: 48,
+  //       fontFamily: Icons.delivery_dining.fontFamily,
+  //       package: Icons.delivery_dining.fontPackage,
+  //       color: Colors.white,
+  //     ),
+  //   );
+  //   bikeText.layout();
+  //   bikeText.paint(
+  //     canvas,
+  //     Offset(center.dx - bikeText.width / 2, center.dy - bikeText.height / 2),
+  //   );
+  //
+  //   // Direction arrow at the top (always north — we use marker.rotation)
+  //   canvas.drawPath(
+  //     Path()
+  //       ..moveTo(center.dx, 6)
+  //       ..lineTo(center.dx - 9, 22)
+  //       ..lineTo(center.dx + 9, 22)
+  //       ..close(),
+  //     Paint()..color = Colors.white,
+  //   );
+  //
+  //   final picture = recorder.endRecording();
+  //   final image = await picture.toImage(size.toInt(), size.toInt());
+  //   final byteData = await image.toByteData(format: ImageByteFormat.png);
+  //   // ignore: deprecated_member_use
+  //   return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+  // }
 
   Future<BitmapDescriptor> _createCustomMarker(
     IconData icon,
@@ -607,18 +671,33 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     // Show vendor marker only before pickup
     if (_currentOrderStatus != OrderStatus.ontheway &&
         _currentOrderStatus != OrderStatus.completed) {
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('vendor'),
-          position: LatLng(
-            _delivery!.vendorLatitude,
-            _delivery!.vendorLongitude,
-          ),
-          icon:
-              _vendorIcon ??
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-          infoWindow: const InfoWindow(title: 'Restaurant'),
-        ),
+      // _markers.add(
+      //   Marker(
+      //     markerId: const MarkerId('vendor'),
+      //     position: LatLng(
+      //       _delivery!.vendorLatitude,
+      //       _delivery!.vendorLongitude,
+      //     ),
+      //     icon:
+      //         _vendorIcon ??
+      //         BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+      //     infoWindow: const InfoWindow(title: 'Restaurant'),
+      //   ),
+      Marker(
+        markerId: const MarkerId('partner'),
+        position: LatLng(_delivery!.vendorLatitude, _delivery!.vendorLongitude),
+        // icon: _bikeIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        icon:
+            _bikeIcon ??
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        anchor: const Offset(
+          0.5,
+          1.0,
+        ), // was (0.5, 0.5) — pin tip now touches the exact location
+        flat:
+            false, // was true — pin stays upright/billboard-style, doesn't tilt/rotate with map
+        zIndex: 2,
+        infoWindow: const InfoWindow(title: 'Delivery Partner'),
       );
     }
 
@@ -657,76 +736,8 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
   // ── Polyline ──────────────────────────────────────────────────────────────
 
-  // Future<void> _drawPolyline() async {
-  //   if (_googleApiKey == null || _delivery == null) return;
-  //
-  //   PointLatLng origin;
-  //   PointLatLng destination;
-  //
-  //   switch (_currentOrderStatus) {
-  //     case OrderStatus.waitingForPickup:
-  //       origin = PointLatLng(
-  //         _currentAnimatedPosition?.latitude ??
-  //             _delivery!.deliveryPartnerLatitude,
-  //         _currentAnimatedPosition?.longitude ??
-  //             _delivery!.deliveryPartnerLongitude,
-  //       );
-  //
-  //       destination = PointLatLng(
-  //         _delivery!.vendorLatitude,
-  //         _delivery!.vendorLongitude,
-  //       );
-  //       break;
-  //
-  //     case OrderStatus.ontheway:
-  //       origin = PointLatLng(
-  //         _currentAnimatedPosition?.latitude ??
-  //             _delivery!.deliveryPartnerLatitude,
-  //         _currentAnimatedPosition?.longitude ??
-  //             _delivery!.deliveryPartnerLongitude,
-  //       );
-  //
-  //       destination = PointLatLng(
-  //         _delivery!.userLatitude,
-  //         _delivery!.userLongitude,
-  //       );
-  //       break;
-  //
-  //     default:
-  //       origin = PointLatLng(
-  //         _delivery!.vendorLatitude,
-  //         _delivery!.vendorLongitude,
-  //       );
-  //
-  //       destination = PointLatLng(
-  //         _delivery!.userLatitude,
-  //         _delivery!.userLongitude,
-  //       );
-  //   }
-  //
-  //   final result = await PolylinePoints().getRouteBetweenCoordinates(
-  //     googleApiKey: _googleApiKey!,
-  //     request: PolylineRequest(
-  //       origin: origin,
-  //       destination: destination,
-  //       mode: TravelMode.driving,
-  //     ),
-  //   );
-  //
-  //   if (result.points.isNotEmpty) {
-  //     _fullRoutePoints = result.points
-  //         .map((e) => LatLng(e.latitude, e.longitude))
-  //         .toList();
-  //
-  //     _applyTrimmedPolyline(
-  //       _currentAnimatedPosition ?? LatLng(origin.latitude, origin.longitude),
-  //     );
-  //
-  //     setState(() {});
-  //   }
-  // }
-
   Future<void> _drawPolyline() async {
+    _googleApiKey = await ApiKeyService.getApiKey();
     if (_googleApiKey == null || _delivery == null) {
       debugPrint('❌ Google API key or delivery data is null');
       return;
@@ -1006,9 +1017,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
 
       _startPartnerAnimation(to, next);
     }
-    // if (_isRouteDeviation(to)) {
-    //   _refreshRoute(to);
-    // }
     if (_isRouteDeviation(to)) {
       _refreshRoute(to);
     } else {
@@ -1023,13 +1031,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     _moveController?.stop();
     _moveController?.dispose();
     _moveController = null;
-
-    // final bearing = _delivery != null
-    //     ? _calculateBearing(
-    //         to,
-    //         LatLng(_delivery!.userLatitude, _delivery!.userLongitude),
-    //       )
-    //     : _calculateBearing(from, to);
 
     final bearing = _calculateBearing(from, to);
 
@@ -1081,9 +1082,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
         _lastPartnerPosition = to;
         _currentAnimatedPosition = to;
         _isAnimating = false;
-
-        // Smooth pan: follow partner but don't disrupt user panning
-        // _mapController?.animateCamera(CameraUpdate.newLatLng(to));
 
         if (_followPartner) {
           if (_currentAnimatedPosition != null) {
@@ -1169,12 +1167,29 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     // ── Order-status subscription ────────────────────────────────────────
     if (!_wsOrderSubscribed) {
       _wsOrderSubscribed = true;
+      // WebSocketManager().subscribeOrderStatus(widget.orderId, (data) {
+      //   if (!mounted) return;
+      //   final newStatus = OrderStatus.fromString(
+      //     data['status'] as String? ?? '',
+      //   );
+      //   _handleStatusChange(newStatus);
+      // });
       WebSocketManager().subscribeOrderStatus(widget.orderId, (data) {
         if (!mounted) return;
+
         final newStatus = OrderStatus.fromString(
           data['status'] as String? ?? '',
         );
-        _handleStatusChange(newStatus);
+
+        // Status changed
+        if (newStatus != _currentOrderStatus) {
+          _handleStatusChange(newStatus);
+        }
+
+        // Partner assignment may happen without a status change.
+        if (data['partnerId'] != null) {
+          _refreshDeliveryData();
+        }
       });
     }
 
@@ -1235,26 +1250,44 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     });
   }
 
+  // void _handleStatusChange(OrderStatus newStatus) {
+  //   if (newStatus == _currentOrderStatus) return;
+  //
+  //   final wasOnTheWay =
+  //       _currentOrderStatus != OrderStatus.ontheway &&
+  //       newStatus == OrderStatus.ontheway;
+  //
+  //   setState(() {
+  //     _currentOrderStatus = newStatus;
+  //     _setupStaticMarkers();
+  //   });
+  //
+  //   _drawPolyline();
+  //
+  //   if (newStatus == OrderStatus.completed) {
+  //     _onDelivered();
+  //     _refreshDeliveryData();
+  //   } else if (newStatus == OrderStatus.cancelled) {
+  //     _refreshDeliveryData();
+  //   }
+  // }
+
   void _handleStatusChange(OrderStatus newStatus) {
     if (newStatus == _currentOrderStatus) return;
-
-    final wasOnTheWay =
-        _currentOrderStatus != OrderStatus.ontheway &&
-        newStatus == OrderStatus.ontheway;
 
     setState(() {
       _currentOrderStatus = newStatus;
       _setupStaticMarkers();
     });
 
-    // if (wasOnTheWay) _drawPolyline();
     _drawPolyline();
+
+    // Always refresh order data because partner assignment
+    // can happen before ON THE WAY.
+    _refreshDeliveryData();
 
     if (newStatus == OrderStatus.completed) {
       _onDelivered();
-      _refreshDeliveryData();
-    } else if (newStatus == OrderStatus.cancelled) {
-      _refreshDeliveryData();
     }
   }
 
@@ -1308,34 +1341,6 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     );
   }
 
-  // Widget _buildDeliveryTracking() {
-  //   return SlideTransition(
-  //     position: _slideAnimation,
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(20),
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.black.withOpacity(0.05),
-  //             blurRadius: 10,
-  //             offset: const Offset(0, 2),
-  //           ),
-  //         ],
-  //       ),
-  //       child: Column(
-  //         children: [
-  //           _buildStatusHeader(),
-  //           if (_currentOrderStatus == OrderStatus.ontheway ||
-  //               _currentOrderStatus == OrderStatus.waitingForPickup) ...[
-  //             _buildProgressMap(),
-  //           ],
-  //           _buildPartnerInfo(),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
   Widget _buildDeliveryTracking() {
     return SlideTransition(
       position: _slideAnimation,
@@ -1359,21 +1364,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                 _currentOrderStatus == OrderStatus.waitingForPickup) ...[
               _buildProgressMap(),
             ],
-
-            // _buildPartnerInfo(),
-            //
-            // // New Section
-            // // if (_currentOrderStatus == OrderStatus.completed)
-            // //   _buildRateDeliveryPartner(),
-            // if (_currentOrderStatus == OrderStatus.completed)
-            //   _loadingReview
-            //       ? const Padding(
-            //           padding: EdgeInsets.all(20),
-            //           child: Center(child: CircularProgressIndicator()),
-            //         )
-            //       : (_postedReview == null
-            //             ? _buildRateDeliveryPartner()
-            //             : _buildPostedReview()),
+            SizedBox(height: 10.h),
             _buildPartnerInfo(),
 
             if (_currentOrderStatus == OrderStatus.completed && _loadingReview)
@@ -1515,124 +1506,10 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-
-                // const SizedBox(height: 4),
-                if (isDelivered) ...[
-                  const SizedBox(height: 6),
-                  _buildDeliveryBadge(),
-                ],
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          if (!isDelivered) ...[
-            if (_etaLoading && _remainingEta == null)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            else if (_remainingEta != null)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'ETA',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      _formattedEta,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-          if (isDelivered && _deliveredInMinutes != null)
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.4),
-                  width: 1.5,
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '$_deliveredInMinutes',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      height: 1,
-                    ),
-                  ),
-                  Text(
-                    'min',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.85),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDeliveryBadge() {
-    final String label;
-    final Color color;
-    if (_deliveryWasEarly) {
-      label = '🚀 Early!';
-      color = const Color(0xFF1565C0);
-    } else if (_deliveryWasLate) {
-      label = '⏰ Late';
-      color = Colors.orange.shade700;
-    } else {
-      label = '✅ On Time';
-      color = const Color(0xFF2E7D32);
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }
@@ -1852,10 +1729,199 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
     return '${phone.substring(0, 2)}******${phone.substring(phone.length - 2)}';
   }
 
+  // Widget _buildPartnerInfo() {
+  //   final delivery = _delivery;
+  //
+  //   // Show partner details as soon as a partner is assigned.
+  //   // Do not wait for order status to become ON THE WAY.
+  //   final isPartnerAssigned =
+  //       delivery != null &&
+  //       delivery.partnerId != null &&
+  //       delivery.partnerId! > 0 &&
+  //       delivery.deliveryPartnerName.isNotEmpty;
+  //
+  //   if (!isPartnerAssigned) {
+  //     return const SizedBox.shrink();
+  //   }
+  //
+  //   return Container(
+  //     margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.grey.shade50,
+  //       borderRadius: BorderRadius.circular(16),
+  //       border: Border.all(color: Colors.grey.shade200),
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         /// Partner Details
+  //         Row(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             CircleAvatar(
+  //               radius: 24,
+  //               backgroundColor: Colors.green.shade100,
+  //               child: const Icon(Icons.person, color: Colors.green, size: 28),
+  //             ),
+  //
+  //             const SizedBox(width: 12),
+  //
+  //             Expanded(
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Row(
+  //                     children: [
+  //                       Expanded(
+  //                         child: Text(
+  //                           _delivery!.deliveryPartnerName,
+  //                           style: const TextStyle(
+  //                             fontSize: 16,
+  //                             fontWeight: FontWeight.bold,
+  //                           ),
+  //                         ),
+  //                       ),
+  //
+  //                       if (_currentOrderStatus != OrderStatus.completed)
+  //                         InkWell(
+  //                           onTap: () => _makePhoneCall(
+  //                             _delivery!.deliveryPartnerPhoneNumber,
+  //                           ),
+  //                           borderRadius: BorderRadius.circular(20),
+  //                           child: Container(
+  //                             padding: const EdgeInsets.all(8),
+  //                             decoration: BoxDecoration(
+  //                               color: Colors.green.shade50,
+  //                               shape: BoxShape.circle,
+  //                             ),
+  //                             child: const Icon(
+  //                               Icons.call,
+  //                               color: Colors.green,
+  //                               size: 20,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                     ],
+  //                   ),
+  //
+  //                   const SizedBox(height: 4),
+  //
+  //                   Text(
+  //                     "+91 ${maskPhoneNumber(_delivery!.deliveryPartnerPhoneNumber)}",
+  //                     style: TextStyle(
+  //                       color: Colors.grey.shade700,
+  //                       fontSize: 14,
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //
+  //         if (_currentOrderStatus != OrderStatus.completed) ...[
+  //           const SizedBox(height: 16),
+  //           const Divider(height: 1),
+  //           const SizedBox(height: 12),
+  //
+  //           Row(
+  //             children: [
+  //               Icon(Icons.two_wheeler, size: 18, color: Colors.grey.shade600),
+  //               const SizedBox(width: 8),
+  //
+  //               Expanded(
+  //                 child: Text(
+  //                   _delivery!.vehicleStatus.name.replaceAll("_", " "),
+  //                   style: TextStyle(color: Colors.grey.shade700),
+  //                 ),
+  //               ),
+  //
+  //               const Icon(Icons.lock_outline, size: 18),
+  //
+  //               const SizedBox(width: 6),
+  //
+  //               Text(
+  //                 "OTP ${_delivery?.userOtp ?? ""}",
+  //                 style: const TextStyle(fontWeight: FontWeight.w600),
+  //               ),
+  //             ],
+  //           ),
+  //         ],
+  //
+  //         if (_currentOrderStatus == OrderStatus.completed &&
+  //             _postedReview != null) ...[
+  //           const SizedBox(height: 16),
+  //           Divider(color: Colors.grey.shade300),
+  //           const SizedBox(height: 14),
+  //
+  //           Row(
+  //             children: [
+  //               const Icon(Icons.rate_review, color: Colors.orange, size: 20),
+  //               const SizedBox(width: 8),
+  //               const Text(
+  //                 "Your Rating",
+  //                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+  //               ),
+  //             ],
+  //           ),
+  //
+  //           const SizedBox(height: 10),
+  //
+  //           Row(
+  //             children: [
+  //               ...List.generate(
+  //                 5,
+  //                 (index) => Icon(
+  //                   index < _postedReview!.rating
+  //                       ? Icons.star_rounded
+  //                       : Icons.star_border_rounded,
+  //                   color: Colors.amber,
+  //                   size: 22,
+  //                 ),
+  //               ),
+  //
+  //               const SizedBox(width: 8),
+  //
+  //               Text(
+  //                 "${_postedReview!.rating}/5",
+  //                 style: const TextStyle(fontWeight: FontWeight.bold),
+  //               ),
+  //             ],
+  //           ),
+  //
+  //           if (_postedReview!.review.isNotEmpty) ...[
+  //             const SizedBox(height: 3),
+  //
+  //             Text(
+  //               _postedReview!.review,
+  //               style: TextStyle(color: Colors.grey.shade800, height: 1.4),
+  //             ),
+  //           ],
+  //         ],
+  //       ],
+  //     ),
+  //   );
+  // }
+
   Widget _buildPartnerInfo() {
-    if (_delivery?.deliveryPartnerName.isEmpty ?? true) {
+    final delivery = _delivery;
+
+    // Partner is assigned when partnerId and partner name are available.
+    final isPartnerAssigned =
+        delivery != null &&
+        delivery.partnerId != null &&
+        delivery.partnerId! > 0 &&
+        delivery.deliveryPartnerName.isNotEmpty;
+
+    if (!isPartnerAssigned) {
       return const SizedBox.shrink();
     }
+
+    // Partner has been assigned but has not yet started delivery to customer.
+    final isWaitingForPickup =
+        _currentOrderStatus != OrderStatus.ontheway &&
+        _currentOrderStatus != OrderStatus.completed;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -1888,7 +1954,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                       children: [
                         Expanded(
                           child: Text(
-                            _delivery!.deliveryPartnerName,
+                            delivery.deliveryPartnerName,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -1899,7 +1965,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                         if (_currentOrderStatus != OrderStatus.completed)
                           InkWell(
                             onTap: () => _makePhoneCall(
-                              _delivery!.deliveryPartnerPhoneNumber,
+                              delivery.deliveryPartnerPhoneNumber,
                             ),
                             borderRadius: BorderRadius.circular(20),
                             child: Container(
@@ -1921,7 +1987,7 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                     const SizedBox(height: 4),
 
                     Text(
-                      "+91 ${maskPhoneNumber(_delivery!.deliveryPartnerPhoneNumber)}",
+                      "+91 ${maskPhoneNumber(delivery.deliveryPartnerPhoneNumber)}",
                       style: TextStyle(
                         color: Colors.grey.shade700,
                         fontSize: 14,
@@ -1933,6 +1999,62 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
             ],
           ),
 
+          /// Partner is assigned and going to restaurant
+          if (isWaitingForPickup) ...[
+            const SizedBox(height: 16),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade100),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.two_wheeler,
+                    color: Colors.orange.shade700,
+                    size: 22,
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Delivery Partner Assigned",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange.shade900,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Text(
+                          "${delivery.deliveryPartnerName} is on the way "
+                          "to the restaurant to pick up your order.",
+                          style: TextStyle(
+                            color: Colors.orange.shade800,
+                            fontSize: 13,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          /// Vehicle + OTP
           if (_currentOrderStatus != OrderStatus.completed) ...[
             const SizedBox(height: 16),
             const Divider(height: 1),
@@ -1941,11 +2063,12 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
             Row(
               children: [
                 Icon(Icons.two_wheeler, size: 18, color: Colors.grey.shade600),
+
                 const SizedBox(width: 8),
 
                 Expanded(
                   child: Text(
-                    _delivery!.vehicleStatus.name.replaceAll("_", " "),
+                    delivery.vehicleStatus.name.replaceAll("_", " "),
                     style: TextStyle(color: Colors.grey.shade700),
                   ),
                 ),
@@ -1955,13 +2078,14 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
                 const SizedBox(width: 6),
 
                 Text(
-                  "OTP ${_delivery?.userOtp ?? ""}",
+                  "OTP ${delivery.userOtp ?? ""}",
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
           ],
 
+          /// Completed + Review
           if (_currentOrderStatus == OrderStatus.completed &&
               _postedReview != null) ...[
             const SizedBox(height: 16),
@@ -1971,7 +2095,9 @@ class _ModernDeliveryTrackingState extends State<ModernDeliveryTracking>
             Row(
               children: [
                 const Icon(Icons.rate_review, color: Colors.orange, size: 20),
+
                 const SizedBox(width: 8),
+
                 const Text(
                   "Your Rating",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),

@@ -208,6 +208,7 @@ import 'package:video_player/video_player.dart';
 
 import 'package:maamaas/screens/Food&beverages/Menu/menu_screen.dart';
 import '../../../Models/promotions_model/promotions_model.dart';
+import '../../../Services/Auth_service/food_authservice.dart';
 import '../../../widgets/safearea.dart';
 import '../referrznd earn.dart';
 
@@ -336,25 +337,69 @@ class PromotionPopup {
     // ORDER NOW
     // =========================================================
 
+    // if (ads.callToAction == CallToAction.ORDER_NOW) {
+    //   final int vendorId = ads.vendorId ?? 0;
+    //
+    //   if (vendorId <= 0) {
+    //     _showError(parentContext, 'Restaurant information is not available.');
+    //
+    //     return;
+    //   }
+    //
+    //   await Navigator.of(parentContext).push(
+    //     MaterialPageRoute(
+    //       builder: (context) {
+    //         return MenuScreen(vendorId: vendorId);
+    //       },
+    //     ),
+    //   );
+    //
+    //   return;
+    // }
     if (ads.callToAction == CallToAction.ORDER_NOW) {
+      debugPrint("✅ ORDER_NOW matched");
+
       final int vendorId = ads.vendorId ?? 0;
 
       if (vendorId <= 0) {
-        _showError(parentContext, 'Restaurant information is not available.');
-
+        _showError(
+          parentContext,
+          'Restaurant information is not available.',
+        );
         return;
       }
 
-      await Navigator.of(parentContext).push(
-        MaterialPageRoute(
-          builder: (context) {
-            return MenuScreen(vendorId: vendorId);
-          },
-        ),
-      );
+      final String ordertype = "DINE_IN";
+
+      try {
+        debugPrint("🛒 Creating cart with order type: $ordertype");
+
+        final result = await food_Authservice.createCart(ordertype);
+
+        debugPrint("✅ Cart created: $result");
+
+        // Navigate to MenuScreen after cart is created
+        await Navigator.of(parentContext).push(
+          MaterialPageRoute(
+            builder: (context) {
+              return MenuScreen(
+                vendorId: vendorId,
+              );
+            },
+          ),
+        );
+      } catch (e) {
+        debugPrint("❌ Failed to create cart: $e");
+
+        _showError(
+          parentContext,
+          'Unable to create cart. Please try again.',
+        );
+      }
 
       return;
     }
+
 
     // =========================================================
     // REFER AND EARN

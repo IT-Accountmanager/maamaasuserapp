@@ -151,11 +151,6 @@ class _RestaurentsState extends State<Restaurents> {
 
       if (!mounted) return;
 
-      // print("📍 RAW LOC: $loc");
-      // print("📍 ADDRESS CHECK: ${loc?.address}");
-      // print("📍 VALID: ${loc?.address.trim().isNotEmpty}");
-
-      // ✅ VALID LOCATION CHECK
       final isValidLocation = loc != null && loc.address.trim().isNotEmpty;
 
       if (isValidLocation) {
@@ -276,16 +271,40 @@ class _RestaurentsState extends State<Restaurents> {
   Future<void> _loadAds() async {
     try {
       final result = await promotion_Authservice.fetchcampaign();
+
       final filtered = result
           .where(
             (c) =>
                 c.addDisplayPosition == AddDisplayPosition.HOMEPAGE_BANNER &&
-                c.medium == Medium.APP,
+                c.medium == Medium.APP &&
+                c.approvalStatus == ApprovalStatus.APPROVED && c.status ==CampaignStatus.ACTIVE,
           )
           .toList();
-      if (mounted) setState(() => homepageAds = filtered);
+
+      debugPrint("📢 Homepage Banner Ads Count: ${filtered.length}");
+
+      if (filtered.isNotEmpty) {
+        for (final ad in filtered) {
+          debugPrint("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          debugPrint("📢 Homepage Banner Ad");
+          debugPrint("Campaign: ${ad.campaignName}");
+          debugPrint("Vendor ID: ${ad.vendorId}");
+          debugPrint("CTA: ${ad.callToAction}");
+          debugPrint("Display Position: ${ad.addDisplayPosition}");
+          debugPrint("Medium: ${ad.medium}");
+          debugPrint("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        }
+      } else {
+        debugPrint("❌ No Homepage Banner Ads found");
+      }
+
+      if (mounted) {
+        setState(() {
+          homepageAds = filtered;
+        });
+      }
     } catch (e) {
-      //       debugPrint('Ads error: $e');
+      debugPrint("❌ Ads error: $e");
     }
   }
 

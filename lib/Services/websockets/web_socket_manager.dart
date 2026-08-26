@@ -177,8 +177,8 @@ class WebSocketManager {
     _deliveryClient = StompClient(
       config: StompConfig(
         // url: 'ws://staging.maamaas.com:8080/delivery/ws',
-        url: 'ws://backend.maamaas.com/delivery/ws/websocket',
 
+        url: 'ws://backend.maamaas.com/delivery/ws/websocket',
         onConnect: (frame) {
           debugPrint("✅ Delivery Connected");
 
@@ -492,7 +492,6 @@ class WebSocketManager {
       config: StompConfig(
         // url: 'ws://staging.maamaas.com:8080/delivery/ws',
         url: 'ws://backend.maamaas.com/delivery/ws/websocket',
-
         onConnect: (frame) {
           _logisticsConnecting = false;
           debugPrint("✅ Logistics Connected");

@@ -573,12 +573,9 @@ class subscription_AuthService {
       final userId = prefs.getInt("userId") ?? 0;
       final url = "$baseUrlgateway/api/user/get/current/location/$userId";
 
-      // print("🌐 GET URL: $url");
 
       var response = await http.get(Uri.parse(url));
 
-      // print("📥 STATUS: ${response.statusCode}");
-      // print("📥 BODY: ${response.body}");
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         final jsonData = jsonDecode(response.body);
@@ -608,8 +605,6 @@ class subscription_AuthService {
       service: "subscription",
     );
 
-    // print("Account API: ${response.body}");
-
     if (response.statusCode == 200) {
       return UserAccount.fromJson(jsonDecode(response.body));
     }
@@ -622,10 +617,7 @@ class subscription_AuthService {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('userId');
 
-      // print("📌 User ID: $userId");
-
       if (userId == null) {
-        // print("❌ User ID is null");
         return null;
       }
 
@@ -633,9 +625,6 @@ class subscription_AuthService {
         "api/user/getprofile/$userId",
         service: "subscription",
       );
-      //
-      // print("📡 Status Code: ${response.statusCode}");
-      // print("📦 Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -643,34 +632,13 @@ class subscription_AuthService {
 
         return UserModel.fromJson(jsonData);
       } else {
-        // print("❌ API Error: ${response.statusCode}");
         return null;
       }
-    } catch (e, stack) {
-      // print("🚨 Exception: $e");
-      // print(stack);
+    } catch (e) {
       return null;
     }
   }
 
-  // static Future<ReferralHistoryResponse> getReferralHistory() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final userId = prefs.getInt('userId');
-  //   final endpoint = "subscription/api/user/referrals/given/$userId";
-  //
-  //   try {
-  //     final response = await ApiClient.get(
-  //       endpoint,
-  //       service: "subscription",
-  //     );
-  //
-  //     return ReferralHistoryResponse.fromJson(
-  //       response.body as Map<String, dynamic>,
-  //     );
-  //   } catch (e) {
-  //     throw Exception("Failed to load referral history: $e");
-  //   }
-  // }
   static Future<ReferralHistoryResponse> getReferralHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
@@ -678,16 +646,10 @@ class subscription_AuthService {
     try {
       final response = await ApiClient.get(endpoint, service: "subscription");
 
-      // print("API RESPONSE:");
-      // print(response.body);
-
       final Map<String, dynamic> jsonMap = jsonDecode(response.body);
 
       return ReferralHistoryResponse.fromJson(jsonMap);
-    } catch (e, s) {
-      // print("REFERRAL ERROR");
-      // print(e);
-      // print(s);
+    } catch (e) {
       rethrow;
     }
   }
@@ -724,54 +686,24 @@ class subscription_AuthService {
 
   static Future<bool> updateProfileName(String userName) async {
     try {
-      print("========================================");
-      print("STARTING UPDATE PROFILE NAME");
-      print("========================================");
-
-      // Get user ID
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('userId');
 
-      print("USER ID: $userId");
-
       if (userId == null) {
-        print("❌ USER ID IS NULL");
-        print("========================================");
         return false;
       }
 
-      // Prepare name
       final trimmedName = userName.trim();
 
-      print("OLD/ENTERED NAME: $userName");
-      print("TRIMMED NAME: $trimmedName");
-
       if (trimmedName.isEmpty) {
-        print("❌ NAME IS EMPTY");
-        print("========================================");
         return false;
       }
 
-      // Prepare profile data
       final profileData = {'userName': trimmedName};
-
-      print("PROFILE DATA MAP: $profileData");
-      print("PROFILE DATA TYPE: ${profileData.runtimeType}");
 
       final encodedProfileData = jsonEncode(profileData);
 
-      print("ENCODED PROFILE DATA: $encodedProfileData");
-      print("ENCODED DATA TYPE: ${encodedProfileData.runtimeType}");
-
-      // Endpoint
       final endpoint = "api/user/editprofile/$userId";
-
-      print("SERVICE: subscription");
-      print("METHOD: PUT");
-      print("ENDPOINT: $endpoint");
-
-      // Send request
-      print("SENDING UPDATE PROFILE REQUEST...");
 
       final response = await ApiClient.sendMultipartRequest(
         service: "subscription",
@@ -781,96 +713,33 @@ class subscription_AuthService {
         files: {},
       );
 
-      print("========================================");
-      print("UPDATE PROFILE RESPONSE");
-      print("STATUS CODE: ${response.statusCode}");
-      print("RESPONSE BODY: ${response.body}");
-      print("========================================");
-
       final success = response.statusCode == 200 || response.statusCode == 201;
 
-      print("UPDATE SUCCESS: $success");
-      print("========================================");
-
       return success;
-    } catch (e, stackTrace) {
-      print("========================================");
-      print("❌ UPDATE PROFILE NAME ERROR");
-      print("ERROR: $e");
-      print("ERROR TYPE: ${e.runtimeType}");
-      print("STACK TRACE:");
-      print(stackTrace);
-      print("========================================");
-
+    } catch (e) {
       return false;
     }
   }
 
-  // static Future<bool> updateProfileName(String userName) async {
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final userId = prefs.getInt('userId');
-  //     final endpoint = "api/user/editprofile/$userId";
-  //     final body = {userName};
-  //
-  //     if (userId == null) {
-  //       return false;
-  //     }
-  //
-  //     final response = await ApiClient.put(
-  //       service: "subscription",
-  //       endpoint,
-  //       body,
-  //     );
-  //
-  //     return response.statusCode == 200 || response.statusCode == 201;
-  //     print(response.body);
-  //   } catch (e) {
-  //     print("Update profile name error: $e");
-  //     return false;
-  //   }
-  // }
-
   static Future<bool> logout() async {
-    //     debugPrint("🚪 Logout started");
-
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt('userId');
-      //
-      //       debugPrint("👤 User ID: $userId");
-      //
-      //       debugPrint("🔐 Calling AUTH logout Services...");
-
       await ApiClient.post("api/auth/logout", {}, service: "subscription");
-
       if (userId != null) {
-        //         debugPrint("🔔 Deleting notification token for userId=$userId");
-
         await ApiClient.delete(
           "api/user/delete-token/$userId",
           service: "notification",
         );
       }
-    } catch (e) {
-      //       debugPrint("❌ Logout API error: $e");
     } finally {
-      //       debugPrint("🧹 Clearing local storage...");
-
-      // 🔐 Clear secure storage
       await _secureStorage.deleteAll();
 
-      // Verify secure storage
-      final secureData = await _secureStorage.readAll();
-      //       debugPrint("🔐 Remaining SecureStorage: $secureData");
+      await _secureStorage.readAll();
 
-      // 📦 Clear shared preferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-
-      // Verify shared prefs
-      final newPrefs = await SharedPreferences.getInstance();
-      //       debugPrint("📭 Remaining SharedPrefs: ${newPrefs.getKeys()}");
+      await SharedPreferences.getInstance();
     }
 
     return true;

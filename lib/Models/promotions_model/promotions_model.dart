@@ -1,9 +1,12 @@
+
 class Campaign {
   final int campaignId;
+  final ApprovalStatus? approvalStatus;
   final String? campaignName;
   final String? description;
   final Goal? goal;
   final Medium? medium;
+  final CampaignStatus? status ;
 
   final AppType? appType;
   final String? customerId;
@@ -34,6 +37,8 @@ class Campaign {
   Campaign({
     required this.campaignId,
     this.campaignName,
+    this.approvalStatus,
+    this.status,
 
     this.description,
     this.goal,
@@ -71,8 +76,10 @@ class Campaign {
     campaignId: json["id"],
     campaignName: json["campaignName"],
     description: json["description"],
+    approvalStatus: approvalStatusValues.map[json["approvalStatus"]],
     goal: goalValues.map[json["goal"]],
     medium: mediumValues.map[json["medium"]],
+    status:statusvalues.map[json["status"]],
 
     appType: appTypeValues.map[json["appType"]],
     // status: statusValues.map[json["status"]],
@@ -111,10 +118,11 @@ class Campaign {
 
   Map<String, dynamic> toJson() => {
     "campaignName": campaignName,
-
+    "approvalStatus": approvalStatus,
     "description": description,
     "goal": goalValues.reverse[goal],
     "medium": mediumValues.reverse[medium],
+    "status":statusvalues.reverse[status],
 
     "appType": appTypeValues.reverse[appType],
 
@@ -157,6 +165,9 @@ bool _parseBool(dynamic value) {
 
 // ignore: constant_identifier_names
 enum Goal { BRANDING, DISCOUNT, LEADS, EVENTS, SPONSORSHIP }
+
+enum ApprovalStatus { PENDING, APPROVED, REJECTED}
+enum CampaignStatus {DRAFT,SCHEDULED,ACTIVE,PAUSED,COMPLETED,CANCELLED }
 
 // ignore: constant_identifier_names
 enum Medium { APP, DIGITAL, PHYSICAL }
@@ -257,6 +268,19 @@ final goalValues = EnumValues({
   "LEADS": Goal.LEADS,
   "EVENTS": Goal.EVENTS,
   "SPONSORSHIP": Goal.SPONSORSHIP,
+});
+final approvalStatusValues = EnumValues({
+  "PENDING": ApprovalStatus.PENDING,
+  "APPROVED": ApprovalStatus.APPROVED,
+  "REJECTED": ApprovalStatus.REJECTED,
+});
+final statusvalues =EnumValues({
+  "DRAFT":CampaignStatus .DRAFT,
+  "ACTIVE" :CampaignStatus .ACTIVE,
+  "SCHEDULED":CampaignStatus .SCHEDULED,
+  "PAUSED":CampaignStatus .PAUSED,
+  "COMPLETED":CampaignStatus .COMPLETED,
+  "CANCELLED ":CampaignStatus .CANCELLED,
 });
 
 final mediumValues = EnumValues({

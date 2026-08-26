@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Models/promotions_model/promotions_model.dart';
@@ -99,6 +100,7 @@ class promotion_Authservice {
 
       if (response.statusCode == 200) {
         final dynamic decodedData = jsonDecode(response.body);
+        debugPrint("resposnse body : ${response.body}");
 
         final List<dynamic> campaignList = decodedData is List
             ? decodedData

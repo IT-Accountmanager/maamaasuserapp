@@ -166,6 +166,7 @@ class DeliveryService {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final Map<String, dynamic> data = jsonDecode(response.body);
+      debugPrint("response :${response.body}");
       return BookRideResponse.fromJson(data);
     }
 

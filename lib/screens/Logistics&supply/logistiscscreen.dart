@@ -88,13 +88,84 @@ class _LogisticsScreenState extends State<LogisticsScreen>
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 20.h),
+          padding: EdgeInsets.fromLTRB(5.w, 20.h, 5.w, 20.h),
           child: const PassengerForm(),
         ),
       ),
     );
   }
 }
+
+// class LogisticsScreen extends StatefulWidget {
+//   const LogisticsScreen({super.key});
+//
+//   @override
+//   State<LogisticsScreen> createState() => _LogisticsScreenState();
+// }
+//
+// class _LogisticsScreenState extends State<LogisticsScreen> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return SizedBox(
+//       height: MediaQuery.of(context).size.height,
+//       child: Stack(
+//         children: [
+//           // ─────────────────────────────────────────
+//           // FULL SCREEN GOOGLE MAP
+//           // ─────────────────────────────────────────
+//           Positioned.fill(
+//             child: GoogleMap(
+//               initialCameraPosition: const CameraPosition(
+//                 target: LatLng(17.3850, 78.4867),
+//                 zoom: 14,
+//               ),
+//               myLocationEnabled: true,
+//               myLocationButtonEnabled: true,
+//               zoomControlsEnabled: false,
+//               mapToolbarEnabled: false,
+//             ),
+//           ),
+//
+//           // ─────────────────────────────────────────
+//           // DRAGGABLE BOTTOM SHEET
+//           // ─────────────────────────────────────────
+//           DraggableScrollableSheet(
+//             initialChildSize: 0.38,
+//             minChildSize: 0.25,
+//             maxChildSize: 0.90,
+//             snap: true,
+//             snapSizes: const [0.38, 0.65, 0.90],
+//             builder: (BuildContext context, ScrollController scrollController) {
+//               return Container(
+//                 decoration: BoxDecoration(
+//                   color: Colors.white,
+//                   borderRadius: BorderRadius.vertical(
+//                     top: Radius.circular(24.r),
+//                   ),
+//                   boxShadow: const [
+//                     BoxShadow(
+//                       color: Colors.black26,
+//                       blurRadius: 15,
+//                       offset: Offset(0, -4),
+//                     ),
+//                   ],
+//                 ),
+//                 child: SingleChildScrollView(
+//                   controller: scrollController,
+//                   physics: const ClampingScrollPhysics(),
+//                   child: Padding(
+//                     padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 30.h),
+//                     child: PassengerForm(scrollController: scrollController),
+//                   ),
+//                 ),
+//               );
+//             },
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 // ─── Shared Form Shell ────────────────────────────────────────────────────────
 
@@ -229,8 +300,9 @@ class _LocationFieldState extends State<LocationField> {
 
 // ─── Passenger Form ───────────────────────────────────────────────────────────
 class PassengerForm extends StatefulWidget {
-  const PassengerForm({super.key});
-  @override
+  final ScrollController? scrollController;
+
+  const PassengerForm({super.key, this.scrollController});
   // ignore: library_private_types_in_public_api
   _PassengerFormState createState() => _PassengerFormState();
 }
@@ -382,142 +454,208 @@ class _PassengerFormState extends State<PassengerForm> {
       // print(e);
     }
   }
-
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
+    return SizedBox(
+      height: MediaQuery.of(context).size.height,
+      child: Stack(
         children: [
-          // Google Map
-          SizedBox(
-            height: 250.h,
-            width: double.infinity,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16.r),
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(
-                    pickupLocation?.latitude ?? 17.3850,
-                    pickupLocation?.longitude ?? 78.4867,
-                  ),
-                  zoom: 14,
+          // =====================================================
+          // GOOGLE MAP - FULL SCREEN
+          // =====================================================
+          Positioned.fill(
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(
+                  pickupLocation?.latitude ?? 17.3850,
+                  pickupLocation?.longitude ?? 78.4867,
                 ),
-                myLocationEnabled: true,
-                myLocationButtonEnabled: true,
-                zoomControlsEnabled: false,
-                mapToolbarEnabled: false,
-
-                // Prevent conflicts with SingleChildScrollView
-                scrollGesturesEnabled: false,
-                zoomGesturesEnabled: false,
-                rotateGesturesEnabled: false,
-                tiltGesturesEnabled: false,
-
-                markers: {
-                  if (pickupLocation != null)
-                    Marker(
-                      markerId: const MarkerId('pickup'),
-                      position: LatLng(
-                        pickupLocation!.latitude,
-                        pickupLocation!.longitude,
-                      ),
-                      infoWindow: const InfoWindow(title: 'Pickup'),
-                    ),
-                  if (dropLocation != null)
-                    Marker(
-                      markerId: const MarkerId('drop'),
-                      position: LatLng(
-                        dropLocation!.latitude,
-                        dropLocation!.longitude,
-                      ),
-                      infoWindow: const InfoWindow(title: 'Drop'),
-                    ),
-                },
+                zoom: 14,
               ),
+
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+
+              markers: {
+                if (pickupLocation != null)
+                  Marker(
+                    markerId: const MarkerId('pickup'),
+                    position: LatLng(
+                      pickupLocation!.latitude,
+                      pickupLocation!.longitude,
+                    ),
+                    infoWindow: const InfoWindow(title: 'Pickup'),
+                  ),
+
+                if (dropLocation != null)
+                  Marker(
+                    markerId: const MarkerId('drop'),
+                    position: LatLng(
+                      dropLocation!.latitude,
+                      dropLocation!.longitude,
+                    ),
+                    infoWindow: const InfoWindow(title: 'Drop'),
+                  ),
+              },
             ),
           ),
 
-          SizedBox(height: 20.h),
+          // =====================================================
+          // DRAGGABLE BOTTOM SHEET
+          // =====================================================
+          DraggableScrollableSheet(
+            initialChildSize: 0.38,
+            minChildSize: 0.25,
+            maxChildSize: 0.90,
 
-          // _sectionLabel('Passengers'),
-          // _modernTextField(
-          //   controller: noofpeopleController,
-          //   hint: 'Number of passengers',
-          //   icon: Icons.person_outline_rounded,
-          //   keyboardType: TextInputType.number,
-          //   onChanged: (v) {
-          //     setState(() {
-          //       noOfPeople = int.tryParse(v) ?? 0;
-          //     });
-          //     fetchAvailableVehicles();
-          //   },
-          // ),
-          // SizedBox(height: 16.h),
+            snap: true,
 
-          // _sectionLabel('Pickup & Drop'),
-          // LocationField(
-          //   label: 'Pickup Location',
-          //   controller: pickupController,
-          //   icon: Icons.trip_origin_rounded,
-          //   onLocationSelected: (location) {
-          //     setState(() {
-          //       pickupLocation = location;
-          //     });
-          //     fetchAvailableVehicles();
-          //   },
-          // ),
-          LocationField(
-            label: 'Pickup Location',
-            controller: pickupController,
-            icon: Icons.trip_origin_rounded,
-            recentLocationsProvider: () => _recentLocations,
-            onLocationSelected: (location) async {
-              pickupLocation = location;
+            snapSizes: const [0.38, 0.65, 0.90],
 
-              await RecentLocationService.saveLocation(location.address);
+            builder: (BuildContext context, ScrollController sheetController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(24.r),
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 15,
+                      offset: Offset(0, -4),
+                    ),
+                  ],
+                ),
 
-              _loadRecentLocations();
+                child: SingleChildScrollView(
+                  controller: sheetController,
 
-              fetchAvailableVehicles();
+                  padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 30.h),
 
-              setState(() {});
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      // =================================================
+                      // DRAG HANDLE
+                      // =================================================
+                      Center(
+                        child: Container(
+                          width: 42.w,
+                          height: 5.h,
+                          margin: EdgeInsets.only(bottom: 18.h),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                        ),
+                      ),
+
+                      // =================================================
+                      // PICKUP LOCATION
+                      // =================================================
+                      LocationField(
+                        label: 'Pickup Location',
+                        controller: pickupController,
+                        icon: Icons.trip_origin_rounded,
+
+                        recentLocationsProvider: () => _recentLocations,
+
+                        onLocationSelected: (location) async {
+                          setState(() {
+                            pickupLocation = location;
+                            selectedVehicle = null;
+                            availableVehicles = [];
+                          });
+
+                          await RecentLocationService.saveLocation(
+                            location.address,
+                          );
+
+                          _loadRecentLocations();
+
+                          fetchAvailableVehicles();
+                        },
+                      ),
+
+                      SizedBox(height: 10.h),
+
+                      // =================================================
+                      // DROP LOCATION
+                      // =================================================
+                      LocationField(
+                        label: 'Drop Location',
+                        controller: dropController,
+                        icon: Icons.location_on_rounded,
+
+                        recentLocationsProvider: () => _recentLocations,
+
+                        onLocationSelected: (location) async {
+                          setState(() {
+                            dropLocation = location;
+                            selectedVehicle = null;
+                            availableVehicles = [];
+                          });
+
+                          await RecentLocationService.saveLocation(
+                            location.address,
+                          );
+
+                          _loadRecentLocations();
+
+                          fetchAvailableVehicles();
+                        },
+                      ),
+
+                      SizedBox(height: 18.h),
+
+                      // =================================================
+                      // VEHICLE SECTION
+                      // =================================================
+                      _vehicleSection(),
+
+                      SizedBox(height: 15.h),
+
+                      // =================================================
+                      // BOOK NOW
+                      // =================================================
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52.h,
+
+                        child: ElevatedButton(
+                          onPressed: selectedVehicle != null ? _bookRide : null,
+
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _kPrimary,
+                            foregroundColor: Colors.white,
+
+                            disabledBackgroundColor: Colors.grey.shade300,
+
+                            disabledForegroundColor: Colors.grey.shade600,
+
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r),
+                            ),
+                          ),
+
+                          child: Text(
+                            'Book Now',
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
-          ),
-
-          SizedBox(height: 10.h),
-
-          LocationField(
-            label: 'Drop Location',
-            controller: dropController,
-            icon: Icons.location_on_rounded,
-            recentLocationsProvider: () => _recentLocations,
-            onLocationSelected: (location) async {
-              dropLocation = location;
-
-              await RecentLocationService.saveLocation(location.address);
-
-              _loadRecentLocations();
-
-              fetchAvailableVehicles();
-
-              setState(() {});
-            },
-          ),
-
-          // SizedBox(height: 16.h),
-          //
-          // const DateTimePickerField(),
-          SizedBox(height: 16.h),
-
-          _vehicleSection(),
-
-          SizedBox(
-            width: double.infinity,
-            height: 52.h,
-            child: ElevatedButton(
-              onPressed: selectedVehicle != null ? _bookRide : null,
-              child: const Text("Book Now"),
-            ),
           ),
         ],
       ),
@@ -605,40 +743,6 @@ class _PassengerFormState extends State<PassengerForm> {
     );
   }
 
-  Widget _modernTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    Function(String)? onChanged,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      onChanged: onChanged,
-      style: TextStyle(color: _kText, fontSize: 14.sp),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: _kTextSub, fontSize: 14.sp),
-        prefixIcon: Icon(icon, color: _kTextSub, size: 20.sp),
-        filled: true,
-        fillColor: _kBg,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16.r),
-          borderSide: const BorderSide(color: _kBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16.r),
-          borderSide: const BorderSide(color: _kBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16.r),
-          borderSide: const BorderSide(color: _kPrimary, width: 1.5),
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      ),
-    );
-  }
 
   Widget locationField(
     String label,

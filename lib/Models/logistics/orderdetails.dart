@@ -98,7 +98,7 @@ class OrderDetails {
       pickupOtp: json['pickupOtp'],
 
       appType: json['appType'] ?? '',
-      status: json['paymentStatus'] ?? '',
+      status: json['status'] ?? '',
 
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),

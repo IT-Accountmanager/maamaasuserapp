@@ -1248,13 +1248,15 @@ class _ReferralList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sortedReferrals = [...referrals]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: referrals.length,
       separatorBuilder: (_, __) => SizedBox(height: 10.h),
       itemBuilder: (_, i) => _ReferralCard(
-        referral: referrals[i],
+        referral: sortedReferrals[i],
         cfg: cfg,
         statusLabel: statusLabel,
         statusColor: statusColor,
